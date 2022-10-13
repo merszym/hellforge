@@ -47,7 +47,7 @@
 
                 <script src="{% static 'location.js' %}"></script>
                 {% if object.geo %}
-                    <script> drawJson({{object.geo | safe }}) </script>
+                    <script> drawJson({{object.geo | safe }}); fitBounds() </script>
                 {% endif %}
                 <button class='btn btn-primary' onclick="saveLayer()">Save</button>
             </div>

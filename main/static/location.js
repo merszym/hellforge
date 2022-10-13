@@ -1,4 +1,4 @@
-var map = L.map('map').setView([51.505, -0.09], 13);
+var map = L.map('map').setView([51.34, 12.39], 5);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -37,4 +37,7 @@ function drawJson(json){
     L.geoJSON(json, {
         onEachFeature: onEachFeature
     });
+}
+function fitBounds(){
+    map.fitBounds(drawnItems.getBounds());
 }
