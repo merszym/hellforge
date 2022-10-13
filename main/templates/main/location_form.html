@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+{% load static %}
+<head>
+    <title>Location creation</title>
+    <link
+       rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css"
+       integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14="
+       crossorigin=""
+    />
+    <script
+        src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js"
+        integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg="
+        crossorigin=""></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"
+        integrity="sha512-ozq8xQKq6urvuU6jNgkfqAmT7jKN2XumbrX1JiB3TnF7tI48DPI4Gy1GXKD/V3EExgAs1V+pRO7vwtS1LHg0Gw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw-src.css"
+        integrity="sha512-vJfMKRRm4c4UupyPwGUZI8U651mSzbmmPgR3sdE3LcwBPsdGeARvUM5EcSTg34DK8YIRiIo+oJwNfZPMKEQyug=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+
+<body>
+<h1>Location creation</h1>
+<form id="locationform" method="POST">
+    {% csrf_token %}
+    <input type="text" placeholder="Title" name="name">
+    <textarea id='geojson' type="text" name="geo" style="display:none;"></textarea>
+
+    <div style="height: 720px;width:50%" id="map"></div>
+
+    <script src="{% static 'location.js' %}"></script>
+
+    <button onclick="saveLayer()">Save</button>
+</form>
+</body>
+
+</html>
