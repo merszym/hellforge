@@ -1,0 +1,23 @@
+{% extends 'main/base.html' %}
+
+{% block headline %}References{% endblock %}
+{% block body %}
+<h3>New Reference</h3>
+<form method="POST" enctype="multipart/form-data">
+{% csrf_token %}
+{% for field in form %}
+    {% if field.name != 'pdf' %}
+    <div class="form-group" style="width:50%;">
+        <label class="form-label" for="location-name">{{field.name|title}}</label>
+        <input class="form-input" type="text" id="location-name" name="{{field.name}}" placeholder="{{field.text}}" required
+        value={% if object.name %} "{{object.name}}" {% endif %} >
+    </div>
+    {% else %}
+        {{field}}<br>
+    {% endif %}
+{% endfor %}
+    <br>
+    <button class="btn btn-primary">Send</button>
+</form>
+
+{% endblock %}

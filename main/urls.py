@@ -5,7 +5,8 @@ from site_aligner import settings
 urlpatterns = [
     path('locs/edit/<int:pk>', views.LocationDetailView.as_view(), name='location_update'),
     path('locs/add', views.LocationCreateView.as_view(), name='location_add'),
-    path('locs', views.LocationListView.as_view(), name='location_list')
+    path('locs', views.LocationListView.as_view(), name='location_list'),
+    path('ref/add', views.ReferenceCreateView.as_view(), name='ref_add'),
 ]
 if settings.DEBUG:
     from django.contrib.staticfiles.urls import staticfiles_urlpatterns

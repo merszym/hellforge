@@ -3,10 +3,17 @@ from django.urls import reverse
 
 class Reference(models.Model):
     title = models.CharField('title', max_length=200)
+    author = models.CharField('author', max_length=200, blank=True, null=True)
+    tags = models.CharField('tags', max_length=200, blank=True, null=True)
     doi = models.CharField('doi', max_length=200)
     link = models.CharField('link', max_length=2000, blank=True, null=True)
     pdf = models.FileField('pdf', upload_to='papers/', blank=True, null=True)
 
+    def __str__(self):
+        return self.author if self.author else self.title
+
+    def get_absolute_url(self):
+        return reverse('ref_add')
 
 class Date(models.Model):
     upper = models.IntegerField('upper bound')
@@ -21,7 +28,7 @@ class Location(models.Model):
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
 
     def get_absolute_url(self):
-        return(reverse('location_update', kwargs={'pk': self.pk}))
+        return reverse('location_update', kwargs={'pk': self.pk})
 
     def __str__(self):
         return self.name
