@@ -21,7 +21,11 @@
 {% endblock %}
 {% block headline %} Location creation {% endblock %}
 {% block body %}
+{% if object %}
+<h3>Edit Location: {{object.name}}</h3>
+{% else %}
 <h3>Add a location</h3>
+{% endif %}
 <form id="locationform" method="POST">
     <div class='columns'>
         <div class="column">
@@ -34,11 +38,17 @@
                 <h4>Add Location Data</h4>
                 <div class="form-group" style="width:50%;">
                     <label class="form-label" for="location-name">Location title</label>
-                    <input class="form-input" type="text" id="location-name" name="name" placeholder="Location title" required>
+                    <input class="form-input" type="text" id="location-name" name="name" placeholder="Location title" required
+                     value={% if object.name %} "{{object.name}}" {% endif %} >
                 </div>
-                <textarea id='geojson' type="text" name="geo" style="display:none;" required></textarea>
+                <textarea id='geojson' type="text" name="geo" style="display:none;" required>
+                    {% if object.geo %} {{object.geo|safe}} {% endif %}
+                </textarea>
 
                 <script src="{% static 'location.js' %}"></script>
+                {% if object.geo %}
+                    <script> drawJson({{object.geo | safe }}) </script>
+                {% endif %}
                 <button class='btn btn-primary' onclick="saveLayer()">Save</button>
             </div>
             <br>

@@ -10,7 +10,8 @@ map.addLayer(drawnItems);
 var drawControl = new L.Control.Draw({
     draw: {
         polyline: false,
-        circlemarker: false
+        circlemarker: false,
+        circle:false
     },
     edit: {
         featureGroup: drawnItems
@@ -26,4 +27,14 @@ map.on('draw:created', function (e) {
 function saveLayer(){
     var json = drawnItems.toGeoJSON();
     document.getElementById('geojson').innerHTML = JSON.stringify(json);
+}
+
+function onEachFeature(feature, layer){
+    drawnItems.addLayer(layer)
+}
+
+function drawJson(json){
+    L.geoJSON(json, {
+        onEachFeature: onEachFeature
+    });
 }

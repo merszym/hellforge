@@ -1,4 +1,4 @@
-from django.views.generic import CreateView, ListView
+from django.views.generic import CreateView, ListView, UpdateView
 from .models import Location
 
 class LocationCreateView(CreateView):
@@ -7,3 +7,7 @@ class LocationCreateView(CreateView):
 
 class LocationListView(ListView):
     model = Location
+
+class LocationDetailView(UpdateView):
+    model = Location
+    fields = ['name','geo']

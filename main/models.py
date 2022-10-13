@@ -21,7 +21,7 @@ class Location(models.Model):
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
 
     def get_absolute_url(self):
-        return(reverse('location_list'))
+        return(reverse('location_update', kwargs={'pk': self.pk}))
 
     def __str__(self):
         return self.name
