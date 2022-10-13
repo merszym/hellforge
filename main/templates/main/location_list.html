@@ -1,16 +1,9 @@
-<!DOCTYPE html>
-<html>
-{% load static %}
-<head>
-</head>
-
-<body>
-<h1>Location List</h1>
+{% extends 'main/base.html' %}
+{% block headline %}Location List{% endblock %}
+{% block body %}
 <ul>
 {% for obj in object_list %}
-    <li>{{obj}}</li>
+    <li><a href="{% url 'location_update' obj.pk %}">{{obj}}</li>
 {% endfor %}
 </ul>
-</body>
-
-</html>
+{% endblock %}
