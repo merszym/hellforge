@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-exp.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-icons.min.css">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <section>
+        <div class='panel-header bg-primary' style='margin-top:-4px; padding: 20px;'>
+            <h1>{% block headline %}{% endblock %}</h1>
+            {% block breadcrumps %}{% endblock %}
+        </div>
+        <div class='panel' style='padding:1%'>
+            <div class='panel-body'>
+                {% block body %}{% endblock %}
+            </div>
+        </div>
+    </section>
+</body>
+</html>
