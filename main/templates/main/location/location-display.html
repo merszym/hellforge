@@ -1,0 +1,5 @@
+<table class="table" id="location-list" style="border-spacing:5px">
+    {% for loc in object.loc.all %}
+        <tr><td id="loc_{{loc.pk}}">{{loc.name}}</td><td></td></tr>
+    {% endfor %}
+</table><br>

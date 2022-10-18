@@ -1,0 +1,50 @@
+{% extends "main/base.html" %}
+{% block headline %} Site creation {% endblock %}
+{% block body %}
+{% if object %}
+<h1>Edit Site: {{object.name}}</h1>
+{% else %}
+<h1>Add a Site</h1>
+{% endif %}
+<div class='columns'>
+    <div class="column">
+        <div class="my-2">
+            <h2>Site Data</h2>
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label" for="site-name">Name</label>
+                    <input class="form-input" type="text" id="site-name" name="name" placeholder="Site name" required
+                    value={% if object.name %} "{{object.name}}" {% endif %} >
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="site-type">Type</label>
+                    <input class="form-input" type="text" id="site-type" name="type" placeholder="Site type" required
+                    value={% if object.name %} "{{object.type}}" {% endif %} >
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="site-elevation">Elevation</label>
+                    <input class="form-input" type="number" id="site-elevation" name="elevation" placeholder="Site elevation"
+                    value={% if object.name %} "{{object.elevation}}" {% endif %} >
+                </div>
+                <textarea type="text" id="reflist" name="reflist" style="display:none;"></textarea>
+                <textarea type="text" id="loclist" name="loclist" style="display:none;" required></textarea>
+                <button class='btn btn-primary' type="submit">Save Site</button>
+            </form>
+        </div>
+    </div>
+    <div class="column">
+        <div class="my-2">
+            <h2>Location</h2>
+            {% include 'main/location/location-display.html' %}
+            {% include 'main/location/location-search.html' %}
+        </div>
+        <br>
+        <div clas="my-2">
+            <h2 style="margin-bottom:0px"> References </h2>
+            {% include 'main/references/reference-display.html' %}
+            {% include 'main/references/reference-search.html' %}
+        </div>
+
+</div>
+{% endblock %}

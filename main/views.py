@@ -1,6 +1,6 @@
 from django.views.generic import CreateView, ListView, UpdateView
-from .models import Location, Reference
-from .forms import LocationForm, ReferenceForm
+from .models import Location, Reference, Site
+from .forms import LocationForm, ReferenceForm, SiteForm
 
 ## Location Model
 class LocationCreateView(CreateView):
@@ -52,3 +52,24 @@ class ReferenceListView(ListView):
 class ReferenceUpdateView(UpdateView):
     model = Reference
     fields = "__all__"
+
+class SiteCreateView(CreateView):
+    model = Site
+    form_class = SiteForm
+    extra_context = {'reference_form': ReferenceForm}
+
+    def get_context_data(self, **kwargs):
+        context = super(SiteCreateView, self).get_context_data(**kwargs)
+        context.update(self.extra_context)
+        return context
+
+    def form_valid(self, form):
+        self.object = form.save()
+        refs = [int(x) for x in form.cleaned_data.get('reflist').split(',') if x != '']
+        locs = [int(x) for x in form.cleaned_data.get('loclist').split(',') if x != '']
+        for pk in refs:
+            self.object.ref.add(Reference.objects.get(pk=pk))
+        for pk in locs:
+            self.object.loc.add(Location.objects.get(pk=pk))
+        self.object.save()
+        return super().form_valid(form)

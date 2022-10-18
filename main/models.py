@@ -62,6 +62,12 @@ class Site(models.Model):
     elevation = models.IntegerField('elevation', blank=True)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
 
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse('site_add')
+
 
 class Profile(models.Model):
     name = models.CharField('name', max_length=200)

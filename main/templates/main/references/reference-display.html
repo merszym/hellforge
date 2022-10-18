@@ -1,0 +1,8 @@
+<div>
+    <h6>Saved References:</h6>
+    <table class="table" id="reference-list" style="border-spacing:5px">
+        {% for ref in object.ref.all %}
+            <tr><td id="ref_{{ref.pk}}">{{ref.short}}</td><td>{{ref.title}}</td><td></td></tr>
+        {% endfor %}
+    </table><br>
+</div>

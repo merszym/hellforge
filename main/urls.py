@@ -10,8 +10,10 @@ urlpatterns = [
     path('refs/add', views.ReferenceCreateView.as_view(), name='ref_add'),
     path('refs', views.ReferenceListView.as_view(), name='ref_list'),
     path('refs/edit/<int:pk>', views.ReferenceUpdateView.as_view(), name='ref_update'),
+    path('sites/add', views.SiteCreateView.as_view(), name='site_add'),
     path('ajax/refs/add', ajax.save_ref, name='ajax_ref_add'),
-    path('ajax/refs/search', ajax.search_ref, name='ajax_ref_search')
+    path('ajax/refs/search', ajax.search_ref, name='ajax_ref_search'),
+    path('ajax/locs/search', ajax.search_loc, name='ajax_loc_search')
 
 
 ]

@@ -1,121 +1,114 @@
-var map = L.map('map').setView([51.34, 12.39], 5);
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-}).addTo(map);
+try{
+    var map = L.map('map').setView([51.34, 12.39], 5);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
 
-var drawnItems = new L.FeatureGroup();
-map.addLayer(drawnItems);
+    var drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
 
-var drawControl = new L.Control.Draw({
-    draw: {
-        polyline: false,
-        circlemarker: false,
-        circle:false
-    },
-    edit: {
-        featureGroup: drawnItems
-    }
-});
-map.addControl(drawControl);
-
-map.on('draw:created', function (e) {
-    layer = e.layer;
-    drawnItems.addLayer(layer);
-});
-
-function saveLayer(){
-    var json = drawnItems.toGeoJSON();
-    document.getElementById('geojson').innerHTML = JSON.stringify(json);
-}
-
-function onEachFeature(feature, layer){
-    drawnItems.addLayer(layer)
-}
-
-function drawJson(json){
-    L.geoJSON(json, {
-        onEachFeature: onEachFeature
+    var drawControl = new L.Control.Draw({
+        draw: {
+            polyline: false,
+            circlemarker: false,
+            circle:false
+        },
+        edit: {
+            featureGroup: drawnItems
+        }
     });
-}
-function fitBounds(){
-    map.fitBounds(drawnItems.getBounds());
-}
+    map.addControl(drawControl);
 
+    map.on('draw:created', function (e) {
+        layer = e.layer;
+        drawnItems.addLayer(layer);
+    });
 
-$('.openModal').on('click', function(){
-    $('#modal-id').removeClass('inactive')
-    $('#modal-id').addClass('active')
-});
+    function saveLayer(){
+        var json = drawnItems.toGeoJSON();
+        document.getElementById('geojson').innerHTML = JSON.stringify(json);
+    }
 
-$('#modal-close').on('click', function(){
-    $('#modal-id').addClass('inactive')
-    $('#modal-id').removeClass('active')
-});
+    function onEachFeature(feature, layer){
+        drawnItems.addLayer(layer)
+    }
 
-$(".addReference").on("click", function(){
-    $.ajax({
-        type: "POST",
-        url: $('#ajax_add_ref').attr('data-url'),
-        data: $("#reference-form").serialize(),
-        }).done(function(data){
-            $('#reference-list').append(
-                `<tr><td id="ref_${data['pk']}">${data['short']}</td><td>${data['title']}</td><td>-</td></tr>`
-            )
-            $('#reflist').html($('#reflist').html()+','+data['pk'])
+    function drawJson(json){
+        L.geoJSON(json, {
+            onEachFeature: onEachFeature
         });
-});
+    }
+    function fitBounds(){
+        map.fitBounds(drawnItems.getBounds());
+    }
+}
+catch(err){
+    //if no map is shown and leaflet not loaded
+}
 
-//Searching for references
-var searchFunction = function( data ) {
+var searchLocation = function( data ) {
     $.ajax({
         type: "post",
-        url: $('#ref-search').attr("data-url"),
+        url: $('#loc-search').attr("data-url"),
         data: {
             'keyword': data,
         },
         success: function(respond) {
-            $('.search-appear').html(
+            if(Object.keys(respond).length === 0){
+                locadd = $('#loc-search-appear').attr('data-url');
+                $('.loc-search-appear').html(
+                `<div style='padding:10px;'>
+                    <a class="btn btn-primary btn tooltip" target="_blank" href="${locadd}" data-tooltip="Add Location">
+                        <i class="icon icon-plus"></i>
+                    </a>
+                </div>
                 `
-                <table class="table table-striped table-hover">
-                <thead>
-                    <tr>
-                    <th>Reference</th>
-                    <th></th>
-                    <th></th>
-                    </tr>
-                </thead>
-                <tbody id='search-tbody'>
-                </tbody>
-                </table>
-                `
+                )
+            }
+            else{
 
-            )
-            for (const [key, value] of Object.entries(respond)) {
-                $('#search-tbody').append(
-                    `<tr>
-                    <td id=search_short_${key}>${value.split(';;')[0]}</td>
-                    <td id=search_title_${key}>${value.split(';;')[1]}</td>
-                    <td><span class='btn search-item' id=search_result_${key}>Add</span></td>
-                    </tr>
+                $('.loc-search-appear').html(
+                    `
+                    <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                        <th>Location</th>
+                        <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id='loc-search-tbody'>
+                    </tbody>
+                    </table>
                     `
                 )
+                for (const [key, value] of Object.entries(respond)) {
+                    $('#loc-search-tbody').append(
+                        `<tr>
+                        <td id=loc_search_val_${key}>${value}</td>
+                        <td><span class='btn search-loc-item' id=loc_search_result_${key}>Take</span></td>
+                        </tr>
+                        `
+                    )
+                }
             }
         }
     });
   }
 
-$('#ref-search').on('keyup paste',function(){
-    if(this.value.length >= 3)
-        searchFunction(this.value);
+$('#loc-search').on('keyup paste',function(){
+    if(this.value.length >= 3){
+        console.log(this.value)
+        searchLocation(this.value);
+    }
   });
 
-$("body").on("click",'.search-item', function(){
-    pk = this.id.split('_')[2]
-    short = $(`#search_short_${pk}`).html()
-    title = $(`#search_title_${pk}`).html()
-    $('#reference-list').append(
-        `<tr><td id="ref_${pk}">${short}</td><td>${title}</td><td>-</td></tr>`
+$("body").on("click",'.search-loc-item', function(){
+    pk = this.id.split('_')[3]
+    val = $(`#loc_search_val_${pk}`).html()
+    $('#location-list').html(
+        `<tr><td id="loc_${pk}">${val}</td><td>-</td></tr>`
     )
-    $('#reflist').html($('#reflist').html()+','+pk)
+    $('#loclist').html(pk)
+    $('.loc-search-appear').html('')
 });
