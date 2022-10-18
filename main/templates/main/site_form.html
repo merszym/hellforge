@@ -19,8 +19,12 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="site-type">Type</label>
-                    <input class="form-input" type="text" id="site-type" name="type" placeholder="Site type" required
-                    value={% if object.name %} "{{object.type}}" {% endif %} >
+                    <select class="form-select" id="site-type" name="type" required>
+                        <option selected>Cave</option>
+                        <option>Open Air Site</option>
+                        <option>Rockshelter</option>
+                        <option>Other</option>
+                      </select>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="site-elevation">Elevation</label>
@@ -33,18 +37,18 @@
             </form>
         </div>
     </div>
-    <div class="column">
+    <div class="column" style="border: solid 2px rgb(44, 114, 17)">
         <div class="my-2">
-            <h2>Location</h2>
+            <h3 style="margin-bottom:0px">Location</h3>
             {% include 'main/location/location-display.html' %}
             {% include 'main/location/location-search.html' %}
         </div>
         <br>
         <div clas="my-2">
-            <h2 style="margin-bottom:0px"> References </h2>
+            <h3 style="margin-bottom:0px"> References </h3>
             {% include 'main/references/reference-display.html' %}
             {% include 'main/references/reference-search.html' %}
         </div>
-
+    </div>
 </div>
 {% endblock %}
