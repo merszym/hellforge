@@ -2,7 +2,11 @@
 
 {% block headline %}References{% endblock %}
 {% block body %}
+{% if form.author.value %}
+<h3>Edit: {{form.author.value}}</h3>
+{% else %}
 <h3>New Reference</h3>
+{% endif %}
 <form method="POST" enctype="multipart/form-data">
 {% csrf_token %}
 {% for field in form %}
@@ -10,7 +14,7 @@
     <div class="form-group" style="width:50%;">
         <label class="form-label" for="location-name">{{field.name|title}}</label>
         <input class="form-input" type="text" id="location-name" name="{{field.name}}" placeholder="{{field.text}}" required
-        value={% if object.name %} "{{object.name}}" {% endif %} >
+        value={% if field.value %} "{{field.value}}" {% endif %} >
     </div>
     {% else %}
         {{field}}<br>

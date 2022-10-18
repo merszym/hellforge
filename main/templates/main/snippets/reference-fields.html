@@ -1,0 +1,11 @@
+{% for field in reference_form %}
+    {% if field.name != 'pdf' %}
+    <div class="form-group" style="width:50%;">
+        <label class="form-label" for="location-name">{{field.name|title}}*</label>
+        <input class="form-input" type="text" id="location-name" name="{{field.name}}" placeholder="{{field.name}}" required
+        value={% if field.value %} "{{field.value}}" {% endif %}>
+    </div>
+    {% else %}
+        {{field}}<br>
+    {% endif %}
+{% endfor %}

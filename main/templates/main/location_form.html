@@ -22,41 +22,73 @@
 {% block headline %} Location creation {% endblock %}
 {% block body %}
 {% if object %}
-<h3>Edit Location: {{object.name}}</h3>
+<h1>Edit Location: {{object.name}}</h1>
 {% else %}
-<h3>Add a location</h3>
+<h1>Add a location</h1>
 {% endif %}
-<form id="locationform" method="POST">
+
     <div class='columns'>
         <div class="column">
             <div style="height: 720px;" id="map"></div>
         </div>
-
         <div class="column">
-            {% csrf_token %}
             <div class="my-2">
-                <h4>Add Location Data</h4>
-                <div class="form-group" style="width:50%;">
-                    <label class="form-label" for="location-name">Location title</label>
-                    <input class="form-input" type="text" id="location-name" name="name" placeholder="Location title" required
-                     value={% if object.name %} "{{object.name}}" {% endif %} >
-                </div>
-                <textarea id='geojson' type="text" name="geo" style="display:none;" required>
-                    {% if object.geo %} {{object.geo|safe}} {% endif %}
-                </textarea>
-
-                <script src="{% static 'location.js' %}"></script>
-                {% if object.geo %}
-                    <script> drawJson({{object.geo | safe }}); fitBounds() </script>
-                {% endif %}
-                <button class='btn btn-primary' onclick="saveLayer()">Save</button>
+                <h2>Location Title</h2>
+                <form id="locationform" method="POST">
+                    {% csrf_token %}
+                    <div class="form-group" style="width:50%;">
+                        <input class="form-input" type="text" id="location-name" name="name" placeholder="Location title" required
+                        value={% if object.name %} "{{object.name}}" {% endif %} >
+                    </div>
+                    <textarea id='geojson' type="text" name="geo" style="display:none;" required>
+                        {% if object.geo %} {{object.geo|safe}} {% endif %}
+                    </textarea>
+                    <textarea type="text" id="reflist" name="reflist" style="display:none;"></textarea>
+                    <button class='btn btn-primary' onclick="saveLayer()">Save Location</button>
+                </form>
             </div>
             <br>
-            <div class="my-2">
-                <h4> References </h4>
-                #TODO
+            <h3 style="margin-bottom:0px"> References </h3>
+            <div>
+                <h6>Saved References:</h6>
+                <table class="table" id="reference-list" style="border-spacing:5px">
+                    {% for ref in object.ref.all %}
+                        <tr><td id="ref_{{ref.pk}}">{{ref.short}}</td><td>{{ref.title}}</td><td></td></tr>
+                    {% endfor %}
+                </table><br>
+            </div>
+            <h6>Add References:</h6>
+            <div class="has-icon-left">
+                <input class="form-input" type="text" id="ref-search" placeholder="Search" style="width:50%;" data-url="{% url 'ajax_ref_search'%}">
+                <i class="form-icon icon icon-search"></i>
+            </div>
+            <div class="search-appear"></div>
+            <div class="my-2 p-2">
+                <span class='btn openModal'>Add New Reference</span>
+                <!-- Modal for Reference -->
+                <div class="modal inactive" id="modal-id">
+                    <a href="#close" class="modal-overlay" aria-label="Close"></a>
+                    <div class="modal-container">
+                        <div class="modal-header">
+                            <a id="modal-close" class="btn btn-clear float-right" style="cursor:pointer;" aria-label="Close"></a>
+                        <div class="modal-title h5">Add Reference</div>
+                    </div>
+                    <div class="modal-body">
+                        <div class="content">
+                            <form id="reference-form" method="POST" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                {% include 'main/snippets/reference-fields.html' %}
+                                <br>
+                                <span id='ajax_add_ref' class='btn addReference' data-url='{% url "ajax_ref_add" %}'>Add</span>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</form>
+    <script src="{% static 'location.js' %}"></script>
+    {% if object.geo %}
+        <script> drawJson({{object.geo | safe }}); fitBounds() </script>
+    {% endif %}
 {% endblock %}
