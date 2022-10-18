@@ -73,3 +73,27 @@ class SiteCreateView(CreateView):
             self.object.loc.add(Location.objects.get(pk=pk))
         self.object.save()
         return super().form_valid(form)
+
+class SiteListView(ListView):
+    model = Site
+
+class SiteUpdateView(UpdateView):
+    model = Site
+    form_class = SiteForm
+    extra_context = {'reference_form': ReferenceForm}
+
+    def get_context_data(self, **kwargs):
+        context = super(SiteUpdateView, self).get_context_data(**kwargs)
+        context.update(self.extra_context)
+        return context
+
+    def form_valid(self, form):
+        self.object = form.save()
+        refs = [int(x) for x in form.cleaned_data.get('reflist').split(',') if x != '']
+        locs = [int(x) for x in form.cleaned_data.get('loclist').split(',') if x != '']
+        for pk in refs:
+            self.object.ref.add(Reference.objects.get(pk=pk))
+        for pk in locs:
+            self.object.loc.add(Location.objects.get(pk=pk))
+        self.object.save()
+        return super().form_valid(form)

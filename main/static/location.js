@@ -67,7 +67,6 @@ var searchLocation = function( data ) {
                 )
             }
             else{
-
                 $('.loc-search-appear').html(
                     `
                     <table class="table table-striped table-hover">

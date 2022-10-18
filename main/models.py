@@ -66,7 +66,7 @@ class Site(models.Model):
         return self.name
 
     def get_absolute_url(self):
-        return reverse('site_add')
+        return reverse('site_update', kwargs={'pk': self.pk})
 
 
 class Profile(models.Model):
