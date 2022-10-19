@@ -1,6 +1,7 @@
-from .forms import ReferenceForm
+from .forms import ReferenceForm, ProfileForm
 from django.http import JsonResponse
-from .models import Reference, Location
+from django.shortcuts import render
+from .models import Reference, Location, Site, Profile
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 
@@ -11,6 +12,21 @@ def save_ref(request):
         obj.refresh_from_db()
         return JsonResponse({"pk":obj.id, 'title':obj.title, 'short':obj.short})
     return JsonResponse({"pk":False})
+
+def save_profile(request,site_id):
+    form = ProfileForm(request.POST)
+    print(form)
+    print(site_id)
+    if form.is_valid():
+        obj = form.save(commit=False)
+        obj.site = Site.objects.get(pk=site_id)
+        obj.save()
+        return JsonResponse({"pk":obj.id, 'name':obj.name})
+    return JsonResponse({"pk":False})
+
+def get_profile(request, pk):
+    profile = Profile.objects.get(pk=pk)
+    return render(request,'main/profile/profile-detail.html', {'object':profile})
 
 @csrf_exempt
 def search_ref(request):

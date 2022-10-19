@@ -1,5 +1,10 @@
 from django import forms
-from .models import Location, Reference, Site
+from .models import Location, Reference, Site, Profile
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model=Profile
+        fields = ['name', 'type']
 
 class ReferenceForm(forms.ModelForm):
     class Meta:

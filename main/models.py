@@ -66,14 +66,16 @@ class Site(models.Model):
         return self.name
 
     def get_absolute_url(self):
-        return reverse('site_update', kwargs={'pk': self.pk})
+        return reverse('site_detail', kwargs={'pk': self.pk})
 
 
 class Profile(models.Model):
     name = models.CharField('name', max_length=200)
     site = models.ForeignKey(Site, verbose_name=u'site', on_delete=models.PROTECT)
     type = models.CharField('type', max_length=200, blank=True)
-    ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
+
+    def __str__(self):
+        return f"{self.site.name}: {self.name}"
 
 
 class Layer(models.Model):

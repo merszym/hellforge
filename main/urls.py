@@ -13,9 +13,12 @@ urlpatterns = [
     path('sites/add', views.SiteCreateView.as_view(), name='site_add'),
     path('sites', views.SiteListView.as_view(), name='site_list'),
     path('sites/edit/<int:pk>', views.SiteUpdateView.as_view(), name='site_update'),
+    path('sites/<int:pk>', views.SiteDetailView.as_view(), name='site_detail'),
     path('ajax/refs/add', ajax.save_ref, name='ajax_ref_add'),
     path('ajax/refs/search', ajax.search_ref, name='ajax_ref_search'),
-    path('ajax/locs/search', ajax.search_loc, name='ajax_loc_search')
+    path('ajax/locs/search', ajax.search_loc, name='ajax_loc_search'),
+    path('ajax/profile/add/<int:site_id>', ajax.save_profile, name='ajax_profile_add'),
+    path('ajax/profile/<int:pk>', ajax.get_profile, name='ajax_profile_detail'),
 ]
 
 if settings.DEBUG:

@@ -1,23 +1,7 @@
 {% extends "main/base.html" %}
 {% block head %}
-{% load static %}
-    <title>Location creation</title>
-    <link
-       rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css"
-       integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14="
-       crossorigin=""/>
-    <script
-        src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js"
-        integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg="
-        crossorigin=""></script>
-    <script
-        src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"
-        integrity="sha512-ozq8xQKq6urvuU6jNgkfqAmT7jKN2XumbrX1JiB3TnF7tI48DPI4Gy1GXKD/V3EExgAs1V+pRO7vwtS1LHg0Gw=="
-        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <link
-        rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw-src.css"
-        integrity="sha512-vJfMKRRm4c4UupyPwGUZI8U651mSzbmmPgR3sdE3LcwBPsdGeARvUM5EcSTg34DK8YIRiIo+oJwNfZPMKEQyug=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
+<title>Location creation</title>
+{% include 'main/location/location-head.html' %}
 {% endblock %}
 {% block headline %} Location creation {% endblock %}
 {% block body %}
@@ -26,7 +10,7 @@
 {% else %}
 <h1>Add a location</h1>
 {% endif %}
-
+{% load static %}
     <div class='columns'>
         <div class="column">
             <div style="height: 720px;" id="map"></div>

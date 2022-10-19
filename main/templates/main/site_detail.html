@@ -1,0 +1,96 @@
+{% extends 'main/base.html' %}
+{% block head %}
+<title>Site: {{object.name}}</title>
+{% include 'main/location/location-head.html' %}
+{% endblock %}
+{% block headline %}Site{% endblock %}
+{% block body %}
+{% load static %}
+<div class='columns'>
+    <div class="column">
+        <div class="my-2">
+            <h2>{{object.name}}</h2>
+            <a class="btn-link" href="{% url 'site_update' object.pk %}">edit</a>
+            <table class="table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Elevation</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>{{object.name}}</td>
+                    <td>{{object.type}}</td>
+                    <td>{{object.elevation}}m</td>
+                  </tr>
+                </tbody>
+              </table>
+            <br>
+            <div style="height: 480px;" id="map"></div>
+        </div>
+        {% if object.ref.first %}
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                <th>References</th>
+                <th></th>
+                </tr>
+            </thead>
+            <tbody id='search-tbody'>
+            {% for ref in object.ref.all %}
+            <tr>
+                <td><a href="{% url 'ref_update' ref.pk %}" class="btn-link">{{ref.short}}</a></td>
+                <td>{{ref.title}}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+    <div class="column">
+        <div class="modal" id="modal-profile">
+            <a href="#close" class="modal-overlay" aria-label="Close"></a>
+            <div class="modal-container">
+                <div class="modal-header">
+                <span id="modal-profile-close" class="btn btn-clear float-right" aria-label="Close"></span>
+                <div class="modal-title h5">New Profile</div>
+                </div>
+                <div class="modal-body">
+                    <div class="content">
+                        <form id='profile-form' method="POST">
+                        {% csrf_token %}
+                        {% for field in profile_form %}
+                        <div class="form-group">
+                            <label class="form-label" for="{{field.name}}_id">{{field.name|title}}</label>
+                            <input class="form-input" type="text" id="{{field.name}}_id" name="{{field.name}}" placeholder="{{field.name}}" required>
+                        </div>
+                        {% endfor %}
+                        <span id='profile-submit' class="btn btn-primary" data-url="{% url 'ajax_profile_add' object.pk%}">Add</span>
+                        </form>
+                        <br>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <ul class="tab tab-block" id="profile-list">
+            {% for profile in object.profile_set.all %}
+            <li class="tab-item {% if forloop.counter == 1 %}active{% endif %}" data-url="{% url 'ajax_profile_detail' profile.pk %}">
+                <a href="#">{{profile.name}}</a>
+            </li>
+            {% endfor %}
+            <li class="tab-item" id="before-profile-add">
+                <span style="margin:5px;" class="btn btn-primary" id="profile-add" data-url="{% url 'ajax_profile_detail' 1 %}"> Add Profile </span>
+            </li>
+        </ul>
+        <div id='profile-detail'>
+        </div>
+    </div>
+</div>
+<script src="{% static 'location.js' %}"></script>
+    {% if object.loc.first.geo %}
+        <script> drawJson({{object.loc.first.geo | safe }}); fitBounds() </script>
+    {% endif %}
+    <script src="{% static 'site.js' %}"></script>
+{% endblock %}
