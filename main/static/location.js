@@ -111,3 +111,24 @@ $("body").on("click",'.search-loc-item', function(){
     $('#loclist').html(pk)
     $('.loc-search-appear').html('')
 });
+
+// add layer by coordinates
+$('#coordinates-span').on('click', function(){
+    coords = $('#coordinates').val()
+    lat = parseFloat(coords.split(',')[0])
+    long = parseFloat(coords.split(',')[1])
+
+    //geojson uses long-lat order -.-
+    json = {"type": "FeatureCollection",
+        "features": [{
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+                "type": "Point",
+                "coordinates": [long, lat]
+            }
+        }]
+    }
+    drawJson(json)
+    fitBounds()
+});

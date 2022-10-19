@@ -33,7 +33,14 @@
         </div>
         <div class="column">
             <div class="my-2">
-                <h2>Location Title</h2>
+                <h3>Find By Coordinates</h3>
+                <div class="form-group" style="width:50%;">
+                    <div style="position: relative;">
+                        <input class="form-input" type="text" id="coordinates" placeholder="Latitude,Longitude">
+                        <span id="coordinates-span" style="position:absolute; top:0; right:0" class="btn">Find</span>
+                    </div>
+                </div>
+                <h3>Location Title</h3>
                 <form id="locationform" method="POST">
                     {% csrf_token %}
                     <div class="form-group" style="width:50%;">
