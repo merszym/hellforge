@@ -69,10 +69,18 @@ class Site(models.Model):
     def get_absolute_url(self):
         return reverse('site_detail', kwargs={'pk': self.pk})
 
+    @property
+    def layers(self):
+        layers = []
+        for profile in self.profile.all():
+            for layer in profile.layer.all():
+                layers.append(layer)
+        return sorted(list(set(layers)), key=lambda x: x.pos)
+
 
 class Profile(models.Model):
     name = models.CharField('name', max_length=200)
-    site = models.ForeignKey(Site, verbose_name=u'site', on_delete=models.PROTECT)
+    site = models.ForeignKey(Site, verbose_name=u'site', on_delete=models.PROTECT, related_name='profile')
     type = models.CharField('type', max_length=200, blank=True)
 
     def __str__(self):
@@ -81,7 +89,7 @@ class Profile(models.Model):
     @property
     def other_layers(self):
         layers = []
-        for profile in Profile.objects.filter(site=self.site).exclude(id=self.pk).all():
+        for profile in self.site.profile.exclude(id=self.pk).all():
             for layer in profile.layer.all():
                 if layer not in self.layer.all():
                     layers.append(layer)
@@ -102,6 +110,9 @@ class Layer(models.Model):
     checkpoint = models.ManyToManyField(Checkpoint, verbose_name=u'checkpoint', blank=True)
     date = models.ManyToManyField(Date, verbose_name=u"date", blank=True)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
+
+    class Meta:
+        ordering = ['pos']
 
     @property
     def in_profile(self):

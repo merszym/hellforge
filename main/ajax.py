@@ -40,7 +40,7 @@ def search_loc(request):
     q = Location.objects.filter(Q(name__contains=kw))
     return JsonResponse({x.pk:x.name for x in q})
 
-@csrf_exempt
+
 def save_layer(request,profile_id):
     profile = Profile.objects.get(pk=profile_id)
     try:
@@ -54,3 +54,19 @@ def save_layer(request,profile_id):
         layer.save()
         layer.profile.add(profile)
     return JsonResponse({"pk":layer.pk, 'name':layer.name})
+
+def update_layer_positions(request, site_id):
+    site = Site.objects.get(pk=site_id)
+    #find the position that has changed
+    new_positions = [int(x) for x in request.GET['new_positions'].split(',')]
+    layers = [x for x in site.layers if x.pk in new_positions]
+    for old,new in zip(layers,new_positions):
+        pos = old.pos
+        l = Layer.objects.get(pk=new)
+        l.pos = pos
+        l.save()
+    return JsonResponse({'data':True})
+
+
+
+

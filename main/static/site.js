@@ -1,5 +1,4 @@
 function getProfile(pk=null){
-    console.log('get_profile')
     if(pk != null){
         url = $('#profile-add').attr('data-url').replace('1',pk)
     } else {
@@ -11,6 +10,7 @@ function getProfile(pk=null){
             url: url,
             }).done(function(data){
                 $('#profile-detail').html(data)
+                makeSortable()
             });
         }
 }
@@ -48,5 +48,28 @@ $('.tab-block').on('click','.tab-item', function(){
     $(this).addClass('active')
     getProfile()
 });
+
+function makeSortable(){
+    $("#layer_tbody").sortable({
+        items:'tr',
+        cursor:'move',
+        stop: function( event, ui ) {
+            //get the new order of layers
+            positions = []
+            $(".table_row").each(function(ind){
+                pos = $(this).attr('id')
+                if(pos){
+                    positions.push(pos.split('_')[1])
+                }
+            });
+            //make ajax call to save udpdates pos
+            $.ajax({
+                type: "GET",
+                url: $('#layer_tbody').attr('data-url'),
+                data: {'new_positions':positions.join(',')},
+                });
+        },
+    });
+};
 
 getProfile()

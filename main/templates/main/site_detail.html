@@ -1,11 +1,12 @@
 {% extends 'main/base.html' %}
 {% block head %}
+{% load static %}
 <title>Site: {{object.name}}</title>
 {% include 'main/location/location-head.html' %}
+<script src="{% static 'jquery-ui.js' %}"></script>
 {% endblock %}
 {% block headline %}Site{% endblock %}
 {% block body %}
-{% load static %}
 <div class='columns'>
     <div class="column col-5">
         <div class="my-2">
@@ -77,7 +78,7 @@
                 </div>
             </div>
             <ul class="tab tab-block" id="profile-list">
-                {% for profile in object.profile_set.all %}
+                {% for profile in object.profile.all %}
                 <li class="tab-item {% if forloop.counter == 1 %}active{% endif %}" data-url="{% url 'ajax_profile_detail' profile.pk %}">
                     <a style="cursor:pointer;">{{profile.name}}</a>
                 </li>

@@ -6,6 +6,7 @@
     <table class="table table-striped table-hover">
         <thead>
           <tr>
+            <th></th>
             <th>Age</th>
             <th>Name</th>
             <th>Epoch</th>
@@ -13,9 +14,10 @@
             <th>Samples</th>
           </tr>
         </thead>
-        <tbody id="layer_tbody">
+        <tbody id="layer_tbody" data-url="{% url 'ajax_layer_pos_update' object.site.pk %}">
             {% for layer in object.layer.all %}
-            <tr>
+            <tr class="table_row" id="layer_{{layer.pk}}">
+                <td><i class="icon icon-resize-vert"></i></td>
                 <td>{{layer.age_summary}}</td>
                 <td>{{layer.name}}</td>
                 <td>{{layer.epoch}}</td>
