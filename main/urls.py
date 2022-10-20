@@ -19,6 +19,7 @@ urlpatterns = [
     path('ajax/locs/search', ajax.search_loc, name='ajax_loc_search'),
     path('ajax/profile/add/<int:site_id>', ajax.save_profile, name='ajax_profile_add'),
     path('ajax/profile/<int:pk>', ajax.get_profile, name='ajax_profile_detail'),
+    path('ajax/layer/add/<int:profile_id>', ajax.save_layer, name='ajax_layer_add')
 ]
 
 if settings.DEBUG:

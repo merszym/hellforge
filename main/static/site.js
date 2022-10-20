@@ -1,17 +1,24 @@
-
-function getProfile(){
-    url = $('.tab-item.active').attr('data-url')
-    $.ajax({
-        type: "GET",
-        url: url,
-        }).done(function(data){
-            $('#profile-detail').html(data)
-        });
+function getProfile(pk=null){
+    console.log('get_profile')
+    if(pk != null){
+        url = $('#profile-add').attr('data-url').replace('1',pk)
+    } else {
+        url = $('.tab-item.active').attr('data-url')
+    }
+    if(url){
+        $.ajax({
+            type: "GET",
+            url: url,
+            }).done(function(data){
+                $('#profile-detail').html(data)
+            });
+        }
 }
 
 $('#profile-add').on('click', function(){
     $('#modal-profile').addClass('active')
 });
+
 $('#modal-profile-close').on('click', function(){
     $('#modal-profile').removeClass('active')
 });
@@ -32,9 +39,10 @@ $('#profile-submit').on('click', function(){
             </li>
             `
             ).insertBefore($('#before-profile-add'))
+            getProfile(data['pk'])
         });
-        getProfile()
-})
+});
+
 $('.tab-block').on('click','.tab-item', function(){
     $('.tab-item').removeClass('active')
     $(this).addClass('active')

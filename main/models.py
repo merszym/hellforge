@@ -1,5 +1,6 @@
 from django.db import models
 from django.urls import reverse
+from django.db.models import Q
 
 class Reference(models.Model):
     title = models.CharField('title', max_length=200)
@@ -77,10 +78,24 @@ class Profile(models.Model):
     def __str__(self):
         return f"{self.site.name}: {self.name}"
 
+    @property
+    def other_layers(self):
+        layers = []
+        for profile in Profile.objects.filter(site=self.site).exclude(id=self.pk).all():
+            for layer in profile.layer.all():
+                if layer not in self.layer.all():
+                    layers.append(layer)
+        return set(layers)
+
+
+    @property
+    def other_profiles(self):
+        return Profile.objects.filter(site=self.site).exclude(id=self.pk)
+
 
 class Layer(models.Model):
     name = models.CharField('name', max_length=200)
-    profile = models.ForeignKey(Profile, verbose_name='profile', related_name='layer', on_delete=models.PROTECT)
+    profile = models.ManyToManyField(Profile, verbose_name='profile', related_name='layer')
     pos = models.IntegerField('position in profile')
     culture = models.ForeignKey(Culture, verbose_name=u"culture", related_name='layer', on_delete=models.PROTECT, blank=True, null=True)
     epoch = models.ForeignKey(Epoch, verbose_name=u"epoch", related_name='layer', on_delete=models.PROTECT, blank=True, null=True)
@@ -88,6 +103,21 @@ class Layer(models.Model):
     date = models.ManyToManyField(Date, verbose_name=u"date", blank=True)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
 
+    @property
+    def in_profile(self):
+        return ",".join([x.name for x in self.profile.all()])
+
+    @property
+    def site(self):
+        sites = [x.site.name for x in self.profile.all()]
+        return sites[0]
+
+    def __str__(self):
+        return f"{self.site}:{self.name}"
+
+    @property
+    def age_summary(self):
+        return 'old'
 
 class Sample(models.Model):
     name = models.CharField('name', max_length=200)

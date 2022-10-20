@@ -1,7 +1,7 @@
 from .forms import ReferenceForm, ProfileForm
 from django.http import JsonResponse
 from django.shortcuts import render
-from .models import Reference, Location, Site, Profile
+from .models import Reference, Location, Site, Profile, Layer
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 
@@ -15,8 +15,6 @@ def save_ref(request):
 
 def save_profile(request,site_id):
     form = ProfileForm(request.POST)
-    print(form)
-    print(site_id)
     if form.is_valid():
         obj = form.save(commit=False)
         obj.site = Site.objects.get(pk=site_id)
@@ -41,3 +39,18 @@ def search_loc(request):
     kw = data['keyword']
     q = Location.objects.filter(Q(name__contains=kw))
     return JsonResponse({x.pk:x.name for x in q})
+
+@csrf_exempt
+def save_layer(request,profile_id):
+    profile = Profile.objects.get(pk=profile_id)
+    try:
+        layer = Layer.objects.get(pk=int(request.GET['layer']))
+        layer.profile.add(profile)
+    except KeyError:
+        layers = [x.pos for x in Layer.objects.filter(profile__id=profile.pk).all()]
+        layers.extend([x.pos for x in profile.other_layers])
+        last = max(layers) if len(layers)>0 else 0
+        layer = Layer(name=f"Layer {last+1}", pos=last+1)
+        layer.save()
+        layer.profile.add(profile)
+    return JsonResponse({"pk":layer.pk, 'name':layer.name})
