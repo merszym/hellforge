@@ -143,7 +143,10 @@ class Layer(models.Model):
     @property
     def site(self):
         sites = [x.site for x in self.profile.all()]
-        return sites[0]
+        if len(sites)>0:
+            return sites[0]
+        else:
+            return Site(name='unset')
 
     def __str__(self):
         return f"{self.site.name}:{self.name}"
