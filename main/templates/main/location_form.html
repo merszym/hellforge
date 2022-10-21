@@ -31,6 +31,11 @@
                         <input class="form-input" type="text" id="location-name" name="name" placeholder="Location title" required
                         value={% if object.name %} "{{object.name}}" {% endif %} >
                     </div>
+                    <div class="form-group">
+                        <label class="form-label" for="location-name">Description</label>
+                        <textarea class="form-input" type="text" id="location-description" name="description" placeholder="Location description"
+                         >{% if object.description %} {{object.description}} {% endif %}</textarea>
+                    </div>
                     <textarea id='geojson' type="text" name="geo" style="display:none;" required>
                         {% if object.geo %} {{object.geo|safe}} {% endif %}
                     </textarea>

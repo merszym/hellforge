@@ -18,11 +18,18 @@ class Date(models.Model):
     upper = models.IntegerField('upper bound')
     lower = models.IntegerField('lower bound')
     method = models.CharField('dating method', max_length=200)
+    description = models.TextField('description', blank=True)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
 
+    def get_absolute_url(self):
+        return reverse('date_update', kwargs={'pk': self.id})
+
+    def __str__(self):
+        return f"{self.upper} - {self.lower} (by: {self.method})"
 
 class Location(models.Model):
     name = models.CharField('name', max_length=200)
+    description = models.TextField('description', blank=True)
     geo = models.JSONField('geojson', blank=True, null=True)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
 
@@ -35,6 +42,7 @@ class Location(models.Model):
 
 class Checkpoint(models.Model):
     name = models.CharField('name', max_length=200)
+    description = models.TextField('description', blank=True)
     category = models.CharField('category', max_length=200,blank=True, null=True)
     type = models.CharField('type', max_length=200,blank=True, null=True)
     date = models.ManyToManyField(Date, verbose_name=u'date',blank=True)
@@ -44,20 +52,33 @@ class Checkpoint(models.Model):
 
 class Culture(models.Model):
     name = models.CharField('name', max_length=200)
-    date = models.ManyToManyField(Date, verbose_name =u"time")
+    description = models.TextField('description', blank=True)
+    date = models.ManyToManyField(Date, verbose_name =u"date")
     loc = models.ManyToManyField(Location, verbose_name=u"location")
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
 
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse('culture_update', kwargs={'pk':self.id})
 
 class Epoch(models.Model):
     name = models.CharField('name', max_length=200)
-    date = models.ManyToManyField(Date, verbose_name =u"time")
+    description = models.TextField('description', blank=True)
+    date = models.ManyToManyField(Date, verbose_name =u"date")
     loc = models.ManyToManyField(Location, verbose_name=u"location")
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
 
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse('epoch_list')
 
 class Site(models.Model):
     name = models.CharField('name', max_length=200)
+    description = models.TextField('description', blank=True)
     type = models.CharField('type', max_length=200, blank=True)
     loc = models.ManyToManyField(Location, verbose_name=u"location")
     elevation = models.IntegerField('elevation', blank=True)
@@ -103,6 +124,7 @@ class Profile(models.Model):
 
 class Layer(models.Model):
     name = models.CharField('name', max_length=200)
+    description = models.TextField('description', blank=True)
     profile = models.ManyToManyField(Profile, verbose_name='profile', related_name='layer')
     pos = models.IntegerField('position in profile')
     culture = models.ForeignKey(Culture, verbose_name=u"culture", related_name='layer', on_delete=models.PROTECT, blank=True, null=True)
@@ -120,20 +142,24 @@ class Layer(models.Model):
 
     @property
     def site(self):
-        sites = [x.site.name for x in self.profile.all()]
+        sites = [x.site for x in self.profile.all()]
         return sites[0]
 
     def __str__(self):
-        return f"{self.site}:{self.name}"
+        return f"{self.site.name}:{self.name}"
 
     @property
     def age_summary(self):
         return 'old'
 
+    def get_absolute_url(self):
+        site = self.site
+        print(site)
+        return reverse('site_detail', kwargs={'pk':site.id})
+
 class Sample(models.Model):
     name = models.CharField('name', max_length=200)
+    description = models.TextField('description', blank=True)
     layer = models.ForeignKey(Layer, verbose_name=u"layer", related_name='sample', on_delete=models.PROTECT)
     date = models.ManyToManyField(Date, verbose_name=u"date", blank=True)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
-
-

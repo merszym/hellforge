@@ -1,9 +1,18 @@
-from .forms import ReferenceForm, ProfileForm
+from .forms import ReferenceForm, ProfileForm, DateForm
 from django.http import JsonResponse
 from django.shortcuts import render
 from .models import Reference, Location, Site, Profile, Layer
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
+
+
+def save_date(request):
+    form = DateForm(request.POST)
+    if form.is_valid():
+        obj = form.save()
+        obj.refresh_from_db()
+        return JsonResponse({"pk":obj.id, 'upper':obj.upper, 'lower':obj.lower, 'method':obj.method})
+    return JsonResponse({"pk":False})
 
 def save_ref(request):
     form = ReferenceForm(request.POST)
@@ -39,7 +48,6 @@ def search_loc(request):
     kw = data['keyword']
     q = Location.objects.filter(Q(name__contains=kw))
     return JsonResponse({x.pk:x.name for x in q})
-
 
 def save_layer(request,profile_id):
     profile = Profile.objects.get(pk=profile_id)

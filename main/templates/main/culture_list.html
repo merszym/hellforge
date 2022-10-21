@@ -1,0 +1,19 @@
+{% extends 'main/base.html' %}
+{% block headline %}
+{% if type %}
+Epoch List
+{% else %}
+Culture List
+{% endif %}
+{% endblock %}
+{% block body %}
+<ul>
+{% for obj in object_list %}
+    {% if type %}
+    <li><a href="{% url 'epoch_update' obj.pk %}">{{obj}}</li>
+    {% else %}
+    <li><a href="{% url 'culture_update' obj.pk %}">{{obj}}</li>
+    {% endif %}
+{% endfor %}
+</ul>
+{% endblock %}

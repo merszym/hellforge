@@ -9,9 +9,11 @@
             <th></th>
             <th>Age</th>
             <th>Name</th>
+            <th>Description</th>
             <th>Epoch</th>
             <th>Culture</th>
             <th>Samples</th>
+            <th></th>
           </tr>
         </thead>
         <tbody id="layer_tbody" data-url="{% url 'ajax_layer_pos_update' object.site.pk %}">
@@ -20,9 +22,11 @@
                 <td><i class="icon icon-resize-vert"></i></td>
                 <td>{{layer.age_summary}}</td>
                 <td>{{layer.name}}</td>
+                <td>{{layer.description}}</td>
                 <td>{{layer.epoch}}</td>
                 <td>{{layer.culture}}</td>
                 <td>{{layer.sample_set.all.count}}</td>
+                <td><a class="btn-link" href="{% url 'layer_update' layer.pk%}">edit</a></td>
             </tr>
             {% endfor %}
         </tbody>

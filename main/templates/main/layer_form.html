@@ -1,0 +1,35 @@
+{% extends "main/base.html" %}
+{% block headline %} Layer update {% endblock %}
+{% block body %}
+<h1>Edit Layer: {{object.name}}</h1>
+
+<div class='columns'>
+    <div class="column">
+        <div class="my-2">
+            <h2>Layer Data</h2>
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label" for="layer-name">Name</label>
+                    <input class="form-input" type="text" id="layer-name" name="name" placeholder="Site name" required
+                    value={% if object.name %} "{{object.name}}" {% endif %} >
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="layer-description">Description</label>
+                    <textarea class="form-input" type="text" id="layer-description" name="description" placeholder="Layer description"
+                     >{% if object.description %} {{object.description}} {% endif %}</textarea>
+                </div>
+                <textarea type="text" id="reflist" name="reflist" style="display:none;"></textarea>
+                <button class='btn btn-primary' type="submit">Save Layer</button>
+            </form>
+        </div>
+    </div>
+    <div class="column" style="border: solid 2px rgb(44, 114, 17)">
+        <div clas="my-2">
+            <h3 style="margin-bottom:0px"> References </h3>
+            {% include 'main/references/reference-display.html' %}
+            {% include 'main/references/reference-search.html' %}
+        </div>
+    </div>
+</div>
+{% endblock %}

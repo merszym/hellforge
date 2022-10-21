@@ -18,6 +18,11 @@
                     value={% if object.name %} "{{object.name}}" {% endif %} >
                 </div>
                 <div class="form-group">
+                    <label class="form-label" for="site-name">Description</label>
+                    <textarea class="form-input" type="text" id="site-description" name="description" placeholder="Site description"
+                     >{% if object.description %} {{object.description}} {% endif %}</textarea>
+                </div>
+                <div class="form-group">
                     <label class="form-label" for="site-type">Type</label>
                     <select class="form-select" id="site-type" name="type" required>
                         <option selected>Cave</option>

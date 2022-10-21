@@ -1,0 +1,60 @@
+{% extends "main/base.html" %}
+{% block headline %} {{type}} {% endblock %}
+{% block body %}
+{% if object %}
+    <h1>Edit {{type}}: {{object.name}}</h1>
+{% else %}
+    <h1>New {{type}}</h1>
+{% endif %}
+
+<div class='columns'>
+    <div class="column">
+        <div class="my-2">
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label" for="{{type|lower}}-name">{{type}} Name</label>
+                    <input class="form-input" type="text" id="{{type|lower}}-name" name="name" placeholder="{{type}} Name" required
+                    value={% if object.name %} "{{object.name}}" {% endif %} >
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="{type|lower}}-description">Description</label>
+                    <textarea class="form-input" type="text" id="{type|lower}}-description" name="description" placeholder="{{type}} description"
+                     >{% if object.description %} {{object.description}} {% endif %}</textarea>
+                </div>
+                <textarea type="text" id="reflist" name="reflist" style="display:none;"></textarea>
+                <textarea type="text" id="datelist" name="datelist" style="display:none;">
+                {% if object.date.first %} {% for date in object.date.all %}
+                        {{date.pk}},
+                {% endfor %} {% endif %}
+                </textarea>
+                <textarea type="text" id="loclist" name="loclist" style="display:none;" required>
+                    {% if object.loc %}
+                        {% for loc in object.loc.all %}
+                            {{loc.pk}},
+                        {% endfor %}
+                    {% endif %}
+                </textarea>
+                <button class='btn btn-primary' type="submit">Save {{type}}</button>
+            </form>
+        </div>
+    </div>
+    <div class="column" style="border: solid 2px rgb(44, 114, 17)">
+        <div class="my-2">
+            <h3 style="margin-bottom:0px">Location</h3>
+            {% include 'main/location/location-display.html' %}
+            {% include 'main/location/location-search.html' %}
+        </div>
+        <div clas="my-2">
+            <h3 style="margin-bottom:0px"> References </h3>
+            {% include 'main/references/reference-display.html' %}
+            {% include 'main/references/reference-search.html' %}
+        </div>
+        <div clas="my-2">
+            <h3 style="margin-bottom:0px"> Dating </h3>
+            {% include 'main/dating/dating-display.html' %}
+            {% include 'main/dating/dating-search.html' %}
+        </div>
+    </div>
+</div>
+{% endblock %}
