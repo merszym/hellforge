@@ -20,6 +20,8 @@
                      >{% if object.description %} {{object.description}} {% endif %}</textarea>
                 </div>
                 <textarea type="text" id="reflist" name="reflist" style="display:none;"></textarea>
+                <textarea type="text" id="culturelist" name="culturelist" style="display:none;"></textarea>
+                <textarea type="text" id="epochlist" name="epochlist" style="display:none;"></textarea>
                 <button class='btn btn-primary' type="submit">Save Layer</button>
             </form>
         </div>
@@ -29,6 +31,20 @@
             <h3 style="margin-bottom:0px"> References </h3>
             {% include 'main/references/reference-display.html' %}
             {% include 'main/references/reference-search.html' %}
+        </div>
+        <div clas="my-2">
+            <h3 style="margin-bottom:0px"> Culture </h3>
+            {% include 'main/culture/culture-display.html' %}
+            {% include 'main/culture/culture-search.html' %}
+        </div>
+        <div clas="my-2">
+            <h3 style="margin-bottom:0px"> Epoch </h3>
+            {% include 'main/epoch/epoch-display.html' %}
+            {% include 'main/epoch/epoch-search.html' %}
+        </div>
+        <div clas="my-2">
+            <h3 style="margin-bottom:0px"> Checkpoints </h3>
+            <br><br><br>
         </div>
     </div>
 </div>

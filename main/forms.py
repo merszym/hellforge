@@ -41,10 +41,13 @@ class SiteForm(forms.ModelForm):
 
 class LayerForm(forms.ModelForm):
     reflist = forms.CharField(required=False)
+    culturelist = forms.CharField(required=False)
+    epochlist = forms.CharField(required=False)
+    checkpointlist = forms.CharField(required=False)
 
     class Meta:
         model = Layer
-        fields = ['name','description','reflist']
+        fields = ['name','description','reflist','culturelist','epochlist','checkpointlist']
 
 
 class EpochForm(forms.ModelForm):

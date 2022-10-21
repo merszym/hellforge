@@ -1,0 +1,5 @@
+<table class="table" id="epoch-list" style="border-spacing:5px">
+    {% if object.epoch %}
+        <tr><td id="epoch_{{object.epoch.pk}}"><a class="btn-link" target="_blank" href="{% url 'epoch_update' object.epoch.pk %}">{{object.epoch.name}}</a></td><td></td></tr>
+    {% endif %}
+</table><br>

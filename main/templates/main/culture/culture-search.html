@@ -1,0 +1,9 @@
+{% load static %}
+<h6>Choose Culture</h6>
+<div class="has-icon-left">
+    <input class="form-input" type="text" id="culture-search" placeholder="Search Culture" style="width:50%;" data-url="{% url 'ajax_culture_search' %}">
+    <i class="form-icon icon icon-search"></i>
+</div>
+<div id="culture-search-appear" class="culture-search-appear" data-url="{% url 'culture_add' %}"></div>
+<div class="my-2 p-2">
+<script src="{% static 'culture.js' %}"></script>

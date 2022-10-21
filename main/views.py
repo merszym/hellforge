@@ -1,6 +1,7 @@
 from django.views.generic import CreateView, ListView, UpdateView, DetailView
 from .models import Location, Reference, Site, Layer, Culture, Date, Epoch
 from .forms import LocationForm, ReferenceForm, SiteForm, ProfileForm, LayerForm, CultureForm, DateForm, DateUpdateForm, EpochForm
+import re
 
 ## Locations ##
 
@@ -128,6 +129,12 @@ class LayerUpdateView(UpdateView):
     def form_valid(self, form):
         self.object = form.save()
         refs = [int(x) for x in form.cleaned_data.get('reflist').split(',') if x != '']
+        culture = form.cleaned_data.get('culturelist')
+        epoch = form.cleaned_data.get('epochlist')
+        if bool(re.search(r'[0-9]+',culture)):
+            self.object.culture = Culture.objects.get(pk=int(re.search(r'[0-9]+',culture).group()))
+        if bool(re.search(r'[0-9]+',epoch)):
+            self.object.epoch = Epoch.objects.get(pk=int(re.search(r'[0-9]+',epoch).group()))
         for pk in refs:
             self.object.ref.add(Reference.objects.get(pk=pk))
         self.object.save()
@@ -245,7 +252,6 @@ class EpochCreateView(CreateView):
     model = Epoch
     form_class = EpochForm
     template_name = 'main/culture_form.html'
-
     extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm, 'type':'Epoch'}
 
     def get_context_data(self, **kwargs):

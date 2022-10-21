@@ -1,0 +1,9 @@
+{% load static %}
+<h6>Choose epoch</h6>
+<div class="has-icon-left">
+    <input class="form-input" type="text" id="epoch-search" placeholder="Search epoch" style="width:50%;" data-url="{% url 'ajax_epoch_search' %}">
+    <i class="form-icon icon icon-search"></i>
+</div>
+<div id="epoch-search-appear" class="epoch-search-appear" data-url="{% url 'epoch_add' %}"></div>
+<div class="my-2 p-2">
+<script src="{% static 'epoch.js' %}"></script>
