@@ -1,7 +1,9 @@
-<div>
-    <table class="table" id="reference-list" style="border-spacing:5px">
-        {% for ref in object.ref.all %}
-            <tr><td id="ref_{{ref.pk}}"><a target="_blank" class="btn-link" href="{% url 'ref_update' ref.pk %}">{{ref.short}}</a></td><td>{{ref.title}}</td><td></td></tr>
-        {% endfor %}
-    </table><br>
-</div>
+<br>
+{% if object.ref.first %}
+<strong>References: </strong>
+{% endif %}
+<table class="table" id="reference-list" style="border-spacing:5px">
+    {% for ref in object.ref.all %}
+        <tr><td id="ref_{{ref.pk}}"><a target="_blank" class="btn-link" href="{% url 'ref_update' ref.pk %}">{{ref.short}}</a></td><td>{{ref.title}}</td><td></td></tr>
+    {% endfor %}
+</table>

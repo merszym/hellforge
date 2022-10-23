@@ -2,6 +2,7 @@ from django.views.generic import CreateView, ListView, UpdateView, DetailView
 from .models import Location, Reference, Site, Layer, Culture, Date, Epoch
 from .forms import LocationForm, ReferenceForm, SiteForm, ProfileForm, LayerForm, CultureForm, DateForm, DateUpdateForm, EpochForm
 import re
+import statistics
 
 ## Locations ##
 
@@ -119,7 +120,7 @@ class SiteDetailView(DetailView):
 class LayerUpdateView(UpdateView):
     model = Layer
     form_class = LayerForm
-    extra_context = {'reference_form': ReferenceForm}
+    extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm}
 
     def get_context_data(self, **kwargs):
         context = super(LayerUpdateView, self).get_context_data(**kwargs)
@@ -129,6 +130,7 @@ class LayerUpdateView(UpdateView):
     def form_valid(self, form):
         self.object = form.save()
         refs = [int(x) for x in form.cleaned_data.get('reflist').split(',') if x != '']
+        dates = [int(x) for x in form.cleaned_data.get('datelist').split(',') if x != '']
         culture = form.cleaned_data.get('culturelist')
         epoch = form.cleaned_data.get('epochlist')
         if bool(re.search(r'[0-9]+',culture)):
@@ -137,6 +139,11 @@ class LayerUpdateView(UpdateView):
             self.object.epoch = Epoch.objects.get(pk=int(re.search(r'[0-9]+',epoch).group()))
         for pk in refs:
             self.object.ref.add(Reference.objects.get(pk=pk))
+        for pk in dates:
+            self.object.date.add(Date.objects.get(pk=pk))
+        if self.object.date.first():
+            self.object.mean_lower = statistics.mean([x.lower for x in self.object.date.all()])
+            self.object.mean_upper = statistics.mean([x.lower for x in self.object.date.all()])
         self.object.save()
         return super().form_valid(form)
 
@@ -163,9 +170,11 @@ class CultureUpdateView(UpdateView):
             self.object.loc.clear()
             for pk in locs:
                 self.object.loc.add(Location.objects.get(pk=pk))
-        print(dates)
         for pk in dates:
             self.object.date.add(Date.objects.get(pk=pk))
+        if self.object.date.first():
+            self.object.mean_lower = statistics.mean([x.lower for x in self.object.date.all()])
+            self.object.mean_upper = statistics.mean([x.lower for x in self.object.date.all()])
         self.object.save()
         return super().form_valid(form)
 
@@ -192,6 +201,9 @@ class CultureCreateView(CreateView):
             self.object.loc.add(Location.objects.get(pk=pk))
         for pk in dates:
             self.object.date.add(Date.objects.get(pk=pk))
+        if self.object.date.first():
+            self.object.mean_lower = statistics.mean([x.lower for x in self.object.date.all()])
+            self.object.mean_upper = statistics.mean([x.lower for x in self.object.date.all()])
         self.object.save()
         return super().form_valid(form)
 
@@ -244,6 +256,9 @@ class EpochUpdateView(UpdateView):
                 self.object.loc.add(Location.objects.get(pk=pk))
         for pk in dates:
             self.object.date.add(Date.objects.get(pk=pk))
+        if self.object.date.first():
+            self.object.mean_lower = statistics.mean([x.lower for x in self.object.date.all()])
+            self.object.mean_upper = statistics.mean([x.lower for x in self.object.date.all()])
         self.object.save()
         return super().form_valid(form)
 
@@ -271,6 +286,9 @@ class EpochCreateView(CreateView):
             self.object.loc.add(Location.objects.get(pk=pk))
         for pk in dates:
             self.object.date.add(Date.objects.get(pk=pk))
+        if self.object.date.first():
+            self.object.mean_lower = statistics.mean([x.lower for x in self.object.date.all()])
+            self.object.mean_upper = statistics.mean([x.lower for x in self.object.date.all()])
         self.object.save()
         return super().form_valid(form)
 

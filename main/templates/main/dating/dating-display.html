@@ -1,7 +1,11 @@
-<div>
-    <table class="table" id="dating-list" style="border-spacing:5px">
-        {% for date in object.date.all %}
-            <tr><td id="date_{{date.pk}}"><a target="_blank" class="btn-link" href="{% url 'date_update' date.pk %}">{{date.upper}}-{{date.lower}}</a></td><td>{{date.method}}</td><td></td></tr>
-        {% endfor %}
-    </table><br>
-</div>
+<table id="dating-list" style="border-spacing:5px">
+{% for date in object.date.all %}
+    <tr>
+        <td><strong>Dating:</strong></td>
+        <td id="date_{{date.pk}}">
+            <a target="_blank" class="btn-link" href="{% url 'date_update' date.pk %}">{{date}}</a>
+        </td>
+        <td>(Method: {{date.method}})</td>
+    </tr>
+{% endfor %}
+</table>

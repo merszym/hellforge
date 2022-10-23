@@ -1,5 +1,8 @@
-<table class="table" id="location-list" style="border-spacing:5px">
+<table id="location-list" style="border-spacing:5px">
     {% for loc in object.loc.all %}
-        <tr><td id="loc_{{loc.pk}}"><a class="btn-link" target="_blank" href="{% url 'location_update' loc.pk %}">{{loc.name}}</a></td><td></td></tr>
+        <tr>
+            <td><strong>Location:</strong></td>
+            <td id="loc_{{loc.pk}}"><a class="btn-link" target="_blank" href="{% url 'location_update' loc.pk %}">{{loc.name}}</a></td>
+        </tr>
     {% endfor %}
-</table><br>
+</table>

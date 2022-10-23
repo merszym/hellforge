@@ -5,14 +5,14 @@
 {% include 'main/location/location-head.html' %}
 <script src="{% static 'jquery-ui.js' %}"></script>
 {% endblock %}
-{% block headline %}Site{% endblock %}
+{% block headline %} <a href="{% url 'site_list' %}">Site</a>{% endblock %}
 {% block body %}
 <div class='columns'>
-    <div class="column col-5">
+    <div class="column col-5" style="position:relative;">
+        <a class="btn btn-primary" href="{% url 'site_update' object.pk %}" style="position:absolute; right:5%; top:10px"><i class="icon icon-edit"></i></a>
         <div class="my-2">
             <h2>{{object.name}}</h2>
             <p>{{object.description}}</p>
-            <a class="btn-link" href="{% url 'site_update' object.pk %}">edit</a>
             <table class="table">
                 <thead>
                   <tr>

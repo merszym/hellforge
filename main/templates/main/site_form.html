@@ -10,6 +10,8 @@
     <div class="column">
         <div class="my-2">
             <h2>Site Data</h2>
+            {% include 'main/location/location-display.html' %}
+
             <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="form-group">
@@ -44,20 +46,18 @@
                     {% endfor %}
                 {% endif %}
                 </textarea>
+                {% include 'main/references/reference-display.html' %}
+                <br>
                 <button class='btn btn-primary' type="submit">Save Site</button>
             </form>
         </div>
     </div>
-    <div class="column" style="border: solid 2px rgb(44, 114, 17)">
+    <div class="column" style="border-left: solid 2px grey">
+        <h3> Edit Associated Information </h3>
         <div class="my-2">
-            <h3 style="margin-bottom:0px">Location</h3>
-            {% include 'main/location/location-display.html' %}
             {% include 'main/location/location-search.html' %}
         </div>
-        <br>
         <div clas="my-2">
-            <h3 style="margin-bottom:0px"> References </h3>
-            {% include 'main/references/reference-display.html' %}
             {% include 'main/references/reference-search.html' %}
         </div>
     </div>

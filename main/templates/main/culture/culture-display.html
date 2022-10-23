@@ -1,5 +1,5 @@
-<table class="table" id="culture-list" style="border-spacing:5px">
+<table id="culture-list" style="border-spacing:5px">
     {% if object.culture %}
-        <tr><td id="culture_{{object.culture.pk}}"><a class="btn-link" target="_blank" href="{% url 'culture_update' object.culture.pk %}">{{object.culture.name}}</a></td><td></td></tr>
+    <tr><td><strong>Culture:</strong></td><td id="culture_{{object.culture.pk}}"><a class="btn-link" target="_blank" href="{% url 'culture_update' object.culture.pk %}">{{object.culture.name}}</a></td></tr>
     {% endif %}
-</table><br>
+</table>

@@ -6,7 +6,10 @@
 <div class='columns'>
     <div class="column">
         <div class="my-2">
-            <h2>Layer Data</h2>
+            <h3>Layer Data</h3>
+            {% include 'main/culture/culture-display.html' %}
+            {% include 'main/epoch/epoch-display.html' %}
+            {% include 'main/dating/dating-display.html' %}
             <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="form-group">
@@ -19,32 +22,34 @@
                     <textarea class="form-input" type="text" id="layer-description" name="description" placeholder="Layer description"
                      >{% if object.description %} {{object.description}} {% endif %}</textarea>
                 </div>
+                <div class="form-group">
+                    <label class="form-label" for="layer-site_use">Site Usage (this layer)</label>
+                    <textarea class="form-input" type="text" id="layer-site_use" name="site_use" placeholder="Site Use in Layer"
+                     >{% if object.site_use %} {{object.site_use}} {% endif %}</textarea>
+                </div>
+                {% include 'main/references/reference-display.html' %}
                 <textarea type="text" id="reflist" name="reflist" style="display:none;"></textarea>
                 <textarea type="text" id="culturelist" name="culturelist" style="display:none;"></textarea>
                 <textarea type="text" id="epochlist" name="epochlist" style="display:none;"></textarea>
+                <textarea type="text" id="datelist" name="datelist" style="display:none;"></textarea>
+                <br>
                 <button class='btn btn-primary' type="submit">Save Layer</button>
             </form>
         </div>
     </div>
-    <div class="column" style="border: solid 2px rgb(44, 114, 17)">
+    <div class="column" style="border-left: solid 2px grey">
+        <h3> Edit Associated Information </h3>
         <div clas="my-2">
-            <h3 style="margin-bottom:0px"> References </h3>
-            {% include 'main/references/reference-display.html' %}
             {% include 'main/references/reference-search.html' %}
         </div>
         <div clas="my-2">
-            <h3 style="margin-bottom:0px"> Culture </h3>
-            {% include 'main/culture/culture-display.html' %}
             {% include 'main/culture/culture-search.html' %}
         </div>
         <div clas="my-2">
-            <h3 style="margin-bottom:0px"> Epoch </h3>
-            {% include 'main/epoch/epoch-display.html' %}
             {% include 'main/epoch/epoch-search.html' %}
         </div>
         <div clas="my-2">
-            <h3 style="margin-bottom:0px"> Checkpoints </h3>
-            <br><br><br>
+            {% include 'main/dating/dating-search.html' %}
         </div>
     </div>
 </div>

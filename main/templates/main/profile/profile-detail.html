@@ -9,10 +9,10 @@
             <th></th>
             <th>Age</th>
             <th>Name</th>
+            <th>Site Usage</th>
             <th>Description</th>
-            <th>Epoch</th>
             <th>Culture</th>
-            <th>Samples</th>
+            <th>Epoch</th>
             <th></th>
           </tr>
         </thead>
@@ -20,13 +20,21 @@
             {% for layer in object.layer.all %}
             <tr class="table_row" id="layer_{{layer.pk}}">
                 <td><i class="icon icon-resize-vert"></i></td>
-                <td>{{layer.age_summary}}</td>
+                <td>
+                  {{layer.age_depth}}<br>
+                  {{layer.age_summary}}
+                </td>
                 <td>{{layer.name}}</td>
+                <td>{{layer.site_use}}</td>
                 <td>{{layer.description}}</td>
-                <td>{{layer.epoch}}</td>
-                <td>{{layer.culture}}</td>
-                <td>{{layer.sample_set.all.count}}</td>
-                <td><a class="btn-link" href="{% url 'layer_update' layer.pk%}">edit</a></td>
+                <td>{{layer.culture}}<br>
+                  {{layer.culture.age_summary}}
+                </td>
+                <td>
+                  {{layer.epoch}}<br>
+                  {{layer.epoch.age_summary}}
+                </td>
+                <td><a class="btn-link" href="{% url 'layer_update' layer.pk%}"><i class="icon icon-edit"></i></a></td>
             </tr>
             {% endfor %}
         </tbody>
@@ -65,7 +73,10 @@
         {% for layer in object.other_layers %}
             <tr>
                 <td>{{layer.in_profile}}</td>
-                <td>{{layer.age_summary}}</td>
+                <td>
+                  {{layer.age_summary}}<br>
+                  {{layer.age_depth}}
+                </td>
                 <td>{{layer.name}}</td>
                 <td>{{layer.epoch}}</td>
                 <td>{{layer.culture}}</td>

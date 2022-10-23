@@ -1,5 +1,5 @@
 {% extends "main/base.html" %}
-{% block headline %} {{type}} {% endblock %}
+{% block headline %} {{type}} Update {% endblock %}
 {% block body %}
 {% if object %}
     <h1>Edit {{type}}: {{object.name}}</h1>
@@ -9,7 +9,10 @@
 
 <div class='columns'>
     <div class="column">
+        <h3>{{type}} Data</h3>
         <div class="my-2">
+            {% include 'main/location/location-display.html' %}
+            {% include 'main/dating/dating-display.html' %}
             <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="form-group">
@@ -22,6 +25,14 @@
                     <textarea class="form-input" type="text" id="{type|lower}}-description" name="description" placeholder="{{type}} description"
                      >{% if object.description %} {{object.description}} {% endif %}</textarea>
                 </div>
+                {% if type == 'Culture' %}
+                <div class="form-group">
+                    <label class="form-label" for="culture-hominin_group">Associated Hominin Group</label>
+                    <input class="form-input" type="text" id="culture-hominin_group" name="hominin_group" placeholder="Associated Hominin Group" required
+                    value={% if object.hominin_group %} "{{object.hominin_group}}" {% endif %} >
+                </div>
+                {% endif %}
+
                 <textarea type="text" id="reflist" name="reflist" style="display:none;"></textarea>
                 <textarea type="text" id="datelist" name="datelist" style="display:none;">
                 {% if object.date.first %} {% for date in object.date.all %}
@@ -35,24 +46,22 @@
                         {% endfor %}
                     {% endif %}
                 </textarea>
+                {% include 'main/references/reference-display.html' %}
+                <br>
                 <button class='btn btn-primary' type="submit">Save {{type}}</button>
             </form>
         </div>
     </div>
-    <div class="column" style="border: solid 2px rgb(44, 114, 17)">
+
+    <div class="column" style="border-left: solid 2px grey">
+        <h3>Edit Associated Information</h3>
         <div class="my-2">
-            <h3 style="margin-bottom:0px">Location</h3>
-            {% include 'main/location/location-display.html' %}
             {% include 'main/location/location-search.html' %}
         </div>
         <div clas="my-2">
-            <h3 style="margin-bottom:0px"> References </h3>
-            {% include 'main/references/reference-display.html' %}
             {% include 'main/references/reference-search.html' %}
         </div>
         <div clas="my-2">
-            <h3 style="margin-bottom:0px"> Dating </h3>
-            {% include 'main/dating/dating-display.html' %}
             {% include 'main/dating/dating-search.html' %}
         </div>
     </div>

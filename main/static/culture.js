@@ -57,7 +57,10 @@ $("body").on("click",'.search-culture-item', function(){
     pk = this.id.split('_')[3]
     val = $(`#culture_search_val_${pk}`).html()
     $('#culture-list').html(
-        `<tr><td id="culture_${pk}">${val}</td><td>-</td></tr>`
+        `<tr>
+            <td><strong>Culture:</strong></td>
+            <td id="culture_${pk}">${val}</td>
+        </tr>`
     )
     $('#culturelist').html(pk) // #TODO: Add to model
     $('.culture-search-appear').html('')
