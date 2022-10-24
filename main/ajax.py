@@ -1,7 +1,7 @@
 from .forms import ReferenceForm, ProfileForm, DateForm
 from django.http import JsonResponse
 from django.shortcuts import render
-from .models import Reference, Location, Site, Profile, Layer, Culture, Epoch
+from .models import Reference, Location, Site, Profile, Layer, Culture, Epoch, Checkpoint
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 
@@ -62,6 +62,13 @@ def search_epoch(request):
     kw = data['keyword']
     q = Epoch.objects.filter(Q(name__contains=kw) | Q(description__contains=kw ))
     return JsonResponse({x.pk:x.name for x in q})
+
+@csrf_exempt
+def search_cp(request):
+    data = {x:v[0] for (x,v) in dict(request.POST).items()}
+    kw = data['keyword']
+    q = Checkpoint.objects.filter(Q(name__contains=kw) | Q(description__contains=kw ) | Q(category__contains=kw ) | Q(type__contains=kw ))
+    return JsonResponse({x.pk: f"{x.name};;{x.type}" for x in q})
 
 def save_layer(request,profile_id):
     profile = Profile.objects.get(pk=profile_id)

@@ -10,6 +10,7 @@
             {% include 'main/culture/culture-display.html' %}
             {% include 'main/epoch/epoch-display.html' %}
             {% include 'main/dating/dating-display.html' %}
+            {% include 'main/checkpoint/checkpoint-display.html' %}
             <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="form-group">
@@ -32,6 +33,7 @@
                 <textarea type="text" id="culturelist" name="culturelist" style="display:none;"></textarea>
                 <textarea type="text" id="epochlist" name="epochlist" style="display:none;"></textarea>
                 <textarea type="text" id="datelist" name="datelist" style="display:none;"></textarea>
+                <textarea type="text" id="checkpointlist" name="checkpointlist" style="display:none;"></textarea>
                 <br>
                 <button class='btn btn-primary' type="submit">Save Layer</button>
             </form>
@@ -50,6 +52,9 @@
         </div>
         <div clas="my-2">
             {% include 'main/dating/dating-search.html' %}
+        </div>
+        <div clas="my-2">
+            {% include 'main/checkpoint/checkpoint-search.html' %}
         </div>
     </div>
 </div>

@@ -11,6 +11,7 @@
             <th>Name</th>
             <th>Site Usage</th>
             <th>Description</th>
+            <th>Checkpoints</th>
             <th>Culture</th>
             <th>Epoch</th>
             <th></th>
@@ -27,6 +28,13 @@
                 <td>{{layer.name}}</td>
                 <td>{{layer.site_use}}</td>
                 <td>{{layer.description}}</td>
+                <td>{% for checkpoint in layer.checkpoint.all %}
+                  <div>{{checkpoint.name}}<br>
+                      {{checkpoint.age_summary}}
+                  </div>
+                {% empty %}
+                {% endfor %}
+                </td>
                 <td>{{layer.culture}}<br>
                   {{layer.culture.age_summary}}
                 </td>

@@ -1,5 +1,5 @@
 from django import forms
-from .models import Location, Reference, Site, Profile, Layer, Culture, Date, Epoch
+from .models import Location, Reference, Site, Profile, Layer, Culture, Date, Epoch, Checkpoint
 
 class ProfileForm(forms.ModelForm):
     class Meta:
@@ -68,3 +68,13 @@ class CultureForm(forms.ModelForm):
     class Meta:
         model = Culture
         fields = ['name','description','hominin_group','reflist','loclist', 'datelist']
+
+
+class CheckpointForm(forms.ModelForm):
+    reflist = forms.CharField(required=False)
+    loclist = forms.CharField(required=False)
+    datelist = forms.CharField(required=False)
+
+    class Meta:
+        model = Checkpoint
+        fields = ['name','description','category','type','reflist','loclist', 'datelist']

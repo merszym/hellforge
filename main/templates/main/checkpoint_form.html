@@ -1,0 +1,79 @@
+{% extends "main/base.html" %}
+{% block headline %} Checkpoint {% endblock %}
+{% block body %}
+{% if object %}
+    <h1>Edit Checkpoint: {{object.name}}</h1>
+{% else %}
+    <h1>New Checkpoint</h1>
+{% endif %}
+
+<div class='columns'>
+    <div class="column">
+        <h3>Checkpoint Data</h3>
+        <div class="my-2">
+            {% include 'main/location/location-display.html' %}
+            {% include 'main/dating/dating-display.html' %}
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label" for="checkpoint-name">checkpoint Name</label>
+                    <input class="form-input" type="text" id="checkpoint-name" name="name" placeholder="checkpoint Name" required
+                    value={% if object.name %} "{{object.name}}" {% endif %} >
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="checkpoint-description">Description</label>
+                    <textarea class="form-input" type="text" id="checkpoint-description" name="description" placeholder="Checkpoint description"
+                     >{% if object.description %} {{object.description}} {% endif %}</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="checkpoint-category">Category</label>
+                    <select class="form-select" id="checkpoint-category" name="category" required>
+                        {% if object.category %}
+                        <option>{{object.category}}</option>
+                        {% endif %}
+                        <option>-</option>
+                        <option>Geological</option>
+                        <option>Cultural</option>
+                        <option>Biological</option>
+                      </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="checkpoint-type">Type</label>
+                    <input class="form-input" type="text" id="checkpoint-type" name="type" placeholder="type" required
+                    value={% if object.type %} "{{object.type}}" {% endif %} >
+                </div>
+
+                <textarea type="text" id="reflist" name="reflist" style="display:none;"></textarea>
+                <textarea type="text" id="datelist" name="datelist" style="display:none;">
+                {% if object.date.first %} {% for date in object.date.all %}
+                        {{date.pk}},
+                {% endfor %} {% endif %}
+                </textarea>
+                <textarea type="text" id="loclist" name="loclist" style="display:none;" required>
+                    {% if object.loc %}
+                        {% for loc in object.loc.all %}
+                            {{loc.pk}},
+                        {% endfor %}
+                    {% endif %}
+                </textarea>
+                {% include 'main/references/reference-display.html' %}
+                <br>
+                <button class='btn btn-primary' type="submit">Save Checkpoint</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="column" style="border-left: solid 2px grey">
+        <h3>Edit Associated Information</h3>
+        <div class="my-2">
+            {% include 'main/location/location-search.html' %}
+        </div>
+        <div clas="my-2">
+            {% include 'main/references/reference-search.html' %}
+        </div>
+        <div clas="my-2">
+            {% include 'main/dating/dating-search.html' %}
+        </div>
+    </div>
+</div>
+{% endblock %}

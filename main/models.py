@@ -47,16 +47,30 @@ class Checkpoint(models.Model):
     category = models.CharField('category', max_length=200,blank=True, null=True)
     type = models.CharField('type', max_length=200,blank=True, null=True)
     date = models.ManyToManyField(Date, verbose_name=u'date',blank=True)
+    mean_upper = models.IntegerField(blank=True, default=100000)
+    mean_lower = models.IntegerField(blank=True, default=0)
     loc = models.ManyToManyField(Location, verbose_name=u"location", blank=True)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
 
+    @property
+    def age_summary(self):
+        ## Todo: Make a real summary...
+        if self.date.first():
+            return self.date.first()
+        return 'Date Unset'
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse('checkpoint_update', kwargs={'pk':self.id})
 
 class Culture(models.Model):
     name = models.CharField('name', max_length=200)
     description = models.TextField('description', blank=True)
     hominin_group = models.CharField('hominin_group', max_length=500, blank=True)
     date = models.ManyToManyField(Date, verbose_name =u"date")
-    mean_upper = models.IntegerField(blank=True, default=1000000)
+    mean_upper = models.IntegerField(blank=True, default=100000)
     mean_lower = models.IntegerField(blank=True, default=0)
     loc = models.ManyToManyField(Location, verbose_name=u"location")
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
@@ -119,6 +133,10 @@ class Site(models.Model):
 
     def get_absolute_url(self):
         return reverse('site_detail', kwargs={'pk': self.pk})
+
+    @property
+    def checkpoints(self):
+        return set([y.first() for y in [x.checkpoint.all() for x in self.layers] if y.first()])
 
     @property
     def cultures(self):

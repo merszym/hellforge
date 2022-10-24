@@ -118,6 +118,24 @@
     )
 </script>
 {% endfor %}
+{% for checkpoint in object.checkpoints %}
+<script>
+    groups.push(
+        {
+        'id': "{{checkpoint.type|lower}}",
+        'content': "Checkpoint<br>{{checkpoint.type}}",
+        }
+    );
+    data.push(
+        {
+        'start': new Date(parseInt("{{checkpoint.mean_upper}}")*-1,1,1),
+        'end': new Date(parseInt("{{checkpoint.mean_lower}}")*-1,1,1),
+        'content': "{{checkpoint.name}} ({{checkpoint.date.first}})",
+        'group':"{{checkpoint.type|lower}}"
+        }
+    );
+</script>
+{% endfor %}
 {% for layer in object.layers %}
 <script>
     data.push(
