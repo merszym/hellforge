@@ -107,6 +107,7 @@
 <script>
     var data = []
     var groups = []
+    var added_groups = []
 </script>
 {% for culture in object.cultures %}
 <script>
@@ -120,12 +121,17 @@
 {% endfor %}
 {% for checkpoint in object.checkpoints %}
 <script>
-    groups.push(
+    cp = "{{checkpoint.type|lower}}"
+    if(added_groups.includes(cp)==false){
+        groups.push(
         {
-        'id': "{{checkpoint.type|lower}}",
+        'id': cp,
         'content': "Checkpoint<br>{{checkpoint.type}}",
         }
     );
+    added_groups.push(cp)
+    }
+
     data.push(
         {
         'start': new Date(parseInt("{{checkpoint.mean_upper}}")*-1,1,1),
