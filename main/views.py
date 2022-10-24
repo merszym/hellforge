@@ -143,7 +143,7 @@ class LayerUpdateView(UpdateView):
             self.object.date.add(Date.objects.get(pk=pk))
         if self.object.date.first():
             self.object.mean_lower = statistics.mean([x.lower for x in self.object.date.all()])
-            self.object.mean_upper = statistics.mean([x.lower for x in self.object.date.all()])
+            self.object.mean_upper = statistics.mean([x.upper for x in self.object.date.all()])
         self.object.save()
         return super().form_valid(form)
 

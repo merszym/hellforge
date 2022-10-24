@@ -117,6 +117,10 @@ class Site(models.Model):
         return reverse('site_detail', kwargs={'pk': self.pk})
 
     @property
+    def cultures(self):
+        return set([x.culture for x in self.layers])
+
+    @property
     def layers(self):
         layers = []
         for profile in self.profile.all():

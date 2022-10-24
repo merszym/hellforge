@@ -3,6 +3,7 @@
 {% load static %}
 <title>Site: {{object.name}}</title>
 {% include 'main/location/location-head.html' %}
+{% include 'main/timeline/timeline-head.html' %}
 <script src="{% static 'jquery-ui.js' %}"></script>
 {% endblock %}
 {% block headline %} <a href="{% url 'site_list' %}">Site</a>{% endblock %}
@@ -100,6 +101,41 @@
         </div>
     </div>
 </div>
+<h2>Timeline</h2>
+{% if object.layers %}
+{% include 'main/timeline/timeline-body.html' %}
+<script>
+    var data = []
+    var groups = []
+</script>
+{% for culture in object.cultures %}
+<script>
+    console.log('{{culture}}')
+    groups.push(
+        {
+        'id': "{{culture.name|lower}}",
+        'content': "{{culture}}",
+        }
+    )
+</script>
+{% endfor %}
+{% for layer in object.layers %}
+<script>
+    data.push(
+        {
+        'start': new Date(parseInt("{{layer.mean_upper}}")*-1,1,1),
+        'end': new Date(parseInt("{{layer.mean_lower}}")*-1,1,1),
+        'content': "{{layer.name}} ({{layer.date.first}})",
+        'group':"{{layer.culture.name|lower}}"
+        }
+    )
+</script>
+{% endfor %}
+<script>
+    var items = new vis.DataSet(data);
+    var timeline = new vis.Timeline(container, items, groups, options);
+</script>
+{% endif %}
 <script src="{% static 'location.js' %}"></script>
     {% if object.loc.first.geo %}
         <script> drawJson({{object.loc.first.geo | safe }}); fitBounds() </script>
