@@ -6,7 +6,7 @@
 {% include 'main/timeline/timeline-head.html' %}
 <script src="{% static 'jquery-ui.js' %}"></script>
 {% endblock %}
-{% block headline %} <a href="{% url 'site_list' %}">Site</a>{% endblock %}
+{% block headline %} <a style='color:white' href="{% url 'site_list' %}">Site</a>{% endblock %}
 {% block body %}
 <div class='columns'>
     <div class="column col-5" style="position:relative;">
@@ -110,7 +110,6 @@
 </script>
 {% for culture in object.cultures %}
 <script>
-    console.log('{{culture}}')
     groups.push(
         {
         'id': "{{culture.name|lower}}",

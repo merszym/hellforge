@@ -1,9 +1,73 @@
 {% extends 'main/base.html' %}
+{% block head %}
+{% include 'main/location/location-head.html' %}
+{% endblock %}
 {% block headline %}Site List{% endblock %}
 {% block body %}
-<ul>
-{% for obj in object_list %}
-    <li><a href="{% url 'site_detail' obj.pk %}">{{obj}}</li>
-{% endfor %}
-</ul>
+{% load static %}
+<div class='columns'>
+    <div class="column col-5">
+        <div class="my-2">
+            <div style="height: 480px;" id="map"></div>
+        </div>
+    </div>
+    <div class="column">
+        <div class="my-2">
+            <div class="has-icon-left">
+                <input class="form-input" id="site-list-search" type="text" placeholder="Find Site" style="width:50%;">
+                <i class="form-icon icon icon-search"></i>
+            </div>
+            <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Country</th>
+                    <th>Type</th>
+                    <th>Elevation</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% for object in object_list %}
+                        <tr id="site_{{object.pk}}">
+                            <td>{{object.name}}</td>
+                            <td>{{object.country}}</td>
+                            <td>{{object.type}}</td>
+                            <td>{{object.elevation}} m</td>
+                        </tr>
+
+                    {% endfor %}
+                </tbody>
+              </table>
+        </div>
+    </div>
+</div>
+<script src="{% static 'location.js' %}"></script>
+    {% for object in object_list %}
+        <script>
+        var json = {{object.loc.first.geo | safe }}
+        json.features[0].properties['popupContent'] = `
+            <strong>{{object.name}}</strong><br>
+            <a href={% url 'site_detail' object.pk %} class=btn-link>Details</a>
+            `
+        json.features[0].properties['id'] = "{{object.pk}}"
+        drawJson(json);
+        </script>
+    {% endfor %}
+    <script>
+        fitBounds()
+        $('tr').on('click', function(){
+            var pk = $(this).attr('id').split('_')[1]
+            openPopup(parseInt(pk))
+        })
+        $('#site-list-search').on("keyup", function() {
+            var value = $("#site-list-search").val().toLowerCase();
+            $("tr").filter(function() {
+                if($(this).text().toLowerCase().indexOf(value) > -1){
+                    $(this).show()
+                } else {
+                    $(this).hide()
+                }
+            });
+        });
+    </script>
 {% endblock %}

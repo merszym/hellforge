@@ -48,7 +48,6 @@ var searchCulture = function( data ) {
 
 $('#culture-search').on('keyup paste',function(){
     if(this.value.length >= 3){
-        console.log(this.value)
         searchCulture(this.value);
     }
   });

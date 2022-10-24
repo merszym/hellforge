@@ -48,7 +48,6 @@ var searchepoch = function( data ) {
 
 $('#epoch-search').on('keyup paste',function(){
     if(this.value.length >= 3){
-        console.log(this.value)
         searchepoch(this.value);
     }
   });

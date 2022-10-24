@@ -104,11 +104,15 @@ class Epoch(models.Model):
 
 class Site(models.Model):
     name = models.CharField('name', max_length=200)
+    country = models.CharField('country', max_length=200, blank=True)
     description = models.TextField('description', blank=True)
     type = models.CharField('type', max_length=200, blank=True)
     loc = models.ManyToManyField(Location, verbose_name=u"location")
     elevation = models.IntegerField('elevation', blank=True)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
+
+    class Meta:
+        ordering = ['name']
 
     def __str__(self):
         return self.name

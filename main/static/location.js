@@ -31,6 +31,12 @@ try{
     }
 
     function onEachFeature(feature, layer){
+        if (feature.properties && feature.properties.popupContent) {
+            layer.bindPopup(feature.properties.popupContent);
+        }
+        if (feature.properties && feature.properties.id) {
+            layer.options.id = feature.properties.id;
+        }
         drawnItems.addLayer(layer)
     }
 
@@ -41,6 +47,13 @@ try{
     }
     function fitBounds(){
         map.fitBounds(drawnItems.getBounds());
+    }
+    function openPopup(id){
+        drawnItems.eachLayer(function (layer) {
+            if (layer.options.id == id){
+                layer.togglePopup()
+            }
+        });
     }
 }
 catch(err){
@@ -97,7 +110,6 @@ var searchLocation = function( data ) {
 
 $('#loc-search').on('keyup paste',function(){
     if(this.value.length >= 3){
-        console.log(this.value)
         searchLocation(this.value);
     }
   });
