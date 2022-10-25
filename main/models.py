@@ -231,7 +231,6 @@ class Layer(models.Model):
 
     def get_absolute_url(self):
         site = self.site
-        print(site)
         return reverse('site_detail', kwargs={'pk':site.id})
 
 class Sample(models.Model):
