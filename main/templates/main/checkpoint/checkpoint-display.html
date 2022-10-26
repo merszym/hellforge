@@ -1,9 +1,16 @@
-<br>
-{% if object.checkpoint.first %}
-<strong>Checkpoints: </strong>
-{% endif %}
-<table class="table" id="cp-list" style="border-spacing:5px">
+<table id="cp-list">
+    {% if object.checkpoint.first %}
+    <tr>
+        <td><strong>Checkpoints:</strong></td>
+        <td></td>
+        <td></td>
+    </tr>
+    {% endif %}
     {% for cp in object.checkpoint.all %}
-        <tr><td id="cp_{{cp.pk}}"><a target="_blank" class="btn-link" href="{% url 'checkpoint_update' cp.pk %}">{{cp.name}}</a></td><td>{{cp.type}}</td><td></td></tr>
+        <tr>
+            <td></td>
+            <td id="cp_{{cp.pk}}"><a target="_blank" class="btn-link" href="{% url 'checkpoint_update' cp.pk %}">{{cp.name}}</a></td>
+            <td>{{cp.type}}</td>
+        </tr>
     {% endfor %}
 </table>

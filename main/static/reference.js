@@ -66,12 +66,27 @@ $('#ref-search').on('keyup paste',function(){
   });
 
 $("body").on("click",'.search-item', function(){
-    console.log($('#id_ref'))
     pk = this.id.split('_')[2]
     short = $(`#search_short_${pk}`).html()
     title = $(`#search_title_${pk}`).html()
     $('#reference-list').append(
-        `<tr><td id="ref_${pk}">${short}</td><td>${title}</td><td>-</td></tr>`
+        `<tr id="ref_display_row_${pk}">
+            <td id="ref_${pk}">${short}</td>
+            <td>${title}</td>
+            <td><i id="ref_delete_${pk}" class="icon btn btn-primary icon-delete ref_delete"></i></td>
+        </tr>`
     )
-    $('#id_ref').append(`<option value="${pk}" selected></option>`)
+    $('#id_ref').append(`<option id="ref_option_${pk}" value="${pk}" selected></option>`)
+});
+
+$("body").on("click",'.ref_delete', function(){
+    pk = this.id.split('_')[2]
+    ele = $(`#ref_option_${pk}`)
+    if(ele.attr('selected')){
+        ele.removeAttr('selected')
+        $(`#ref_display_row_${pk} > td`).addClass('del')
+    } else {
+        ele.attr('selected','selected')
+        $(`#ref_display_row_${pk} > td`).removeClass('del')
+    }
 });

@@ -4,6 +4,10 @@
 {% endif %}
 <table class="table" id="reference-list" style="border-spacing:5px">
     {% for ref in object.ref.all %}
-        <tr><td id="ref_{{ref.pk}}"><a target="_blank" class="btn-link" href="{% url 'ref_update' ref.pk %}">{{ref.short}}</a></td><td>{{ref.title}}</td><td></td></tr>
+        <tr id="ref_display_row_{{ref.pk}}">
+            <td id="ref_{{ref.pk}}"><a target="_blank" class="btn-link" href="{% url 'ref_update' ref.pk %}">{{ref.short}}</a></td>
+            <td>{{ref.title}}</td>
+            <td><i id="ref_delete_{{ref.pk}}" class="icon btn btn-primary icon-delete ref_delete"></i></td>
+        </tr>
     {% endfor %}
 </table>

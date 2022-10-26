@@ -1,5 +1,8 @@
-<table id="epoch-list" style="border-spacing:5px">
+<table id="epoch-list">
     {% if object.epoch %}
-    <tr><td><strong>Epoch:</strong></td><td id="epoch_{{object.culture.pk}}"><a class="btn-link" target="_blank" href="{% url 'epoch_update' object.epoch.pk %}">{{object.epoch.name}}</a></td></tr>
+    <tr>
+        <td><strong>Epoch:</strong></td>
+        <td id="epoch_{{object.culture.pk}}"><a class="btn-link" target="_blank" href="{% url 'epoch_update' object.epoch.pk %}">{{object.epoch.name}}</a></td>
+    </tr>
     {% endif %}
 </table>

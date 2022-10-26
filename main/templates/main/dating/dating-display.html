@@ -1,11 +1,20 @@
-<table id="dating-list" style="border-spacing:5px">
+<table id="dating-list">
+{% if object.date.first %}
+<tr>
+    <td><strong>Dating:</strong></td>
+    <td></td>
+    <td></td>
+    <td></td>
+</tr>
+{% endif %}
 {% for date in object.date.all %}
-    <tr>
-        <td><strong>Dating:</strong></td>
+    <tr id="date_display_row_{{date.pk}}">
+        <td></td>
         <td id="date_{{date.pk}}">
             <a target="_blank" class="btn-link" href="{% url 'date_update' date.pk %}">{{date}}</a>
         </td>
-        <td>(Method: {{date.method}})</td>
+        <td>{{date.method}}</td>
+        <td><i id="date_delete_{{date.pk}}" class="icon btn btn-primary icon-delete date_delete"></i></td>
     </tr>
 {% endfor %}
 </table>

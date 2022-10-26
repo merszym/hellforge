@@ -11,7 +11,7 @@ def save_date(request):
     if form.is_valid():
         obj = form.save()
         obj.refresh_from_db()
-        return JsonResponse({"pk":obj.id, 'upper':obj.upper, 'lower':obj.lower, 'method':obj.method})
+        return JsonResponse({"pk":obj.id, 'date':str(obj), 'upper':obj.upper, 'lower':obj.lower, 'method':obj.method})
     return JsonResponse({"pk":False})
 
 def save_ref(request):
