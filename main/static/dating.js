@@ -16,6 +16,8 @@ $(".addDate").on("click", function(){
             $('#dating-list').append(
                 `<tr><td id="date_${data['pk']}">${data['upper']}-${data['lower']}</td><td>${data['method']}</td><td></td></tr>`
             )
-            $('#datelist').html($('#datelist').html()+data['pk']+',')
+            $('#id_date').append(
+                `<option value="${data['pk']}" selected></option>`
+            )
         });
 });

@@ -16,7 +16,7 @@
             <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="form-group">
-                    <label class="form-label" for="checkpoint-name">checkpoint Name</label>
+                    <label class="form-label" for="checkpoint-name">Checkpoint Name</label>
                     <input class="form-input" type="text" id="checkpoint-name" name="name" placeholder="checkpoint Name" required
                     value={% if object.name %} "{{object.name}}" {% endif %} >
                 </div>
@@ -29,7 +29,7 @@
                     <label class="form-label" for="checkpoint-category">Category</label>
                     <select class="form-select" id="checkpoint-category" name="category" required>
                         {% if object.category %}
-                        <option>{{object.category}}</option>
+                        <option selected>{{object.category}}</option>
                         {% endif %}
                         <option>-</option>
                         <option>Geological</option>
@@ -42,20 +42,10 @@
                     <input class="form-input" type="text" id="checkpoint-type" name="type" placeholder="type" required
                     value={% if object.type %} "{{object.type}}" {% endif %} >
                 </div>
-
-                <textarea type="text" id="reflist" name="reflist" style="display:none;"></textarea>
-                <textarea type="text" id="datelist" name="datelist" style="display:none;">
-                {% if object.date.first %} {% for date in object.date.all %}
-                        {{date.pk}},
-                {% endfor %} {% endif %}
-                </textarea>
-                <textarea type="text" id="loclist" name="loclist" style="display:none;" required>
-                    {% if object.loc %}
-                        {% for loc in object.loc.all %}
-                            {{loc.pk}},
-                        {% endfor %}
-                    {% endif %}
-                </textarea>
+                {% include 'main/references/reference-formfield.html' %}
+                {% include 'main/dating/dating-formfield.html' %}
+                {% include 'main/location/location-formfield.html' %}
+                <!-- Reference Display -->
                 {% include 'main/references/reference-display.html' %}
                 <br>
                 <button class='btn btn-primary' type="submit">Save Checkpoint</button>

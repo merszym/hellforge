@@ -1,0 +1,5 @@
+<select name="ref" id="id_ref" multiple="" style="display:none;">
+    {% for ref in object.ref.all %}
+    <option value="{{ref.pk}}" selected></option>
+    {% endfor %}
+</select>

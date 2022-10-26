@@ -1,4 +1,4 @@
-var searchepoch = function( data ) {
+var searchEpoch = function( data ) {
     $.ajax({
         type: "post",
         url: $('#epoch-search').attr("data-url"),
@@ -48,7 +48,7 @@ var searchepoch = function( data ) {
 
 $('#epoch-search').on('keyup paste',function(){
     if(this.value.length >= 3){
-        searchepoch(this.value);
+        searchEpoch(this.value);
     }
   });
 
@@ -58,6 +58,8 @@ $("body").on("click",'.search-epoch-item', function(){
     $('#epoch-list').html(
         `<tr><td id="epoch_${pk}">${val}</td><td>-</td></tr>`
     )
-    $('#epochlist').html(pk) // #TODO: Add to model
+    $('#epoch-input').html(
+        `<option value="${pk}" selected></option>`
+        )
     $('.epoch-search-appear').html('')
 });

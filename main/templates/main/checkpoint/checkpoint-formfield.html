@@ -1,0 +1,5 @@
+<select name="checkpoint" id="id_checkpoint" multiple="" style="display:none;">
+    {% for cp in object.checkpoint.all %}
+    <option value="{{cp.pk}}" selected></option>
+    {% endfor %}
+</select>

@@ -43,14 +43,9 @@
                     <input class="form-input" type="number" id="site-elevation" name="elevation" placeholder="Site elevation"
                     value={% if object.name %} "{{object.elevation}}" {% endif %} >
                 </div>
-                <textarea type="text" id="reflist" name="reflist" style="display:none;"></textarea>
-                <textarea type="text" id="loclist" name="loclist" style="display:none;" required>
-                {% if object.loc %}
-                    {% for loc in object.loc.all %}
-                        {{loc.pk}},
-                    {% endfor %}
-                {% endif %}
-                </textarea>
+                {% include 'main/references/reference-formfield.html' %}
+                {% include 'main/location/location-formfield.html' %}
+                <!-- list references -->
                 {% include 'main/references/reference-display.html' %}
                 <br>
                 <button class='btn btn-primary' type="submit">Save Site</button>

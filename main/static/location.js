@@ -120,8 +120,9 @@ $("body").on("click",'.search-loc-item', function(){
     $('#location-list').html(
         `<tr><td id="loc_${pk}">${val}</td><td>-</td></tr>`
     )
-    $('#loclist').html(pk)
-    $('.loc-search-appear').html('')
+    $('#id_loc').html(
+        `<option value="${pk}" selected></option>`
+    )
 });
 
 // add layer by coordinates

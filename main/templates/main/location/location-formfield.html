@@ -1,0 +1,5 @@
+<select name="loc" id="id_loc" multiple="" style="display:none;">
+    {% for loc in object.loc.all %}
+    <option value="{{loc.pk}}" selected></option>
+    {% endfor %}
+</select>

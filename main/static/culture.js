@@ -53,7 +53,7 @@ $('#culture-search').on('keyup paste',function(){
   });
 
 $("body").on("click",'.search-culture-item', function(){
-    pk = this.id.split('_')[3]
+    pk = $(this).attr('id').split('_')[3]
     val = $(`#culture_search_val_${pk}`).html()
     $('#culture-list').html(
         `<tr>
@@ -61,6 +61,8 @@ $("body").on("click",'.search-culture-item', function(){
             <td id="culture_${pk}">${val}</td>
         </tr>`
     )
-    $('#culturelist').html(pk) // #TODO: Add to model
+    $('#culture-input').html(
+        `<option value="${pk}"></option>`
+    )
     $('.culture-search-appear').html('')
 });

@@ -31,7 +31,7 @@
                         <textarea class="form-input" type="text" id="location-description" name="description" placeholder="Location description"
                          >{% if object.description %} {{object.description}} {% endif %}</textarea>
                     </div>
-                    <textarea type="text" id="reflist" name="reflist" style="display:none;"></textarea>
+                    {% include 'main/references/reference-formfield.html' %}
                     <button class='btn btn-primary' onclick="saveLayer()">Save Date</button>
                 </form>
             </div>

@@ -39,7 +39,7 @@
                     <textarea id='geojson' type="text" name="geo" style="display:none;" required>
                         {% if object.geo %} {{object.geo|safe}} {% endif %}
                     </textarea>
-                    <textarea type="text" id="reflist" name="reflist" style="display:none;"></textarea>
+                     {% include 'main/references/reference-formfield.html' %}
                     <button class='btn btn-primary' onclick="saveLayer()">Save Location</button>
                 </form>
             </div>

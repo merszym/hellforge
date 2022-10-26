@@ -1,5 +1,5 @@
 //Searching for Checkpoint
-var searchFunction = function( data ) {
+var cpSearchFunction = function( data ) {
     $.ajax({
         type: "post",
         url: $('#cp-search').attr("data-url"),
@@ -39,7 +39,7 @@ var searchFunction = function( data ) {
 
 $('#cp-search').on('keyup paste',function(){
     if(this.value.length >= 3)
-        searchFunction(this.value);
+        cpSearchFunction(this.value);
   });
 
 $("body").on("click",'.cp-search-item', function(){
@@ -49,5 +49,7 @@ $("body").on("click",'.cp-search-item', function(){
     $('#cp-list').append(
         `<tr><td id="ref_${pk}">${cpname}</td><td>${type}</td><td></td></tr>`
     )
-    $('#checkpointlist').html($('#checkpointlist').html()+','+pk)
+    $('#id_checkpoint').append(
+        `<option value="${pk}" selected></option>`
+        )
 });

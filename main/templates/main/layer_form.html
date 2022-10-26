@@ -28,12 +28,13 @@
                     <textarea class="form-input" type="text" id="layer-site_use" name="site_use" placeholder="Site Use in Layer"
                      >{% if object.site_use %} {{object.site_use}} {% endif %}</textarea>
                 </div>
+                {% include 'main/references/reference-formfield.html' %}
+                {% include 'main/dating/dating-formfield.html' %}
+                {% include 'main/epoch/epoch-formfield.html' %}
+                {% include 'main/culture/culture-formfield.html' %}
+                {% include 'main/checkpoint/checkpoint-formfield.html' %}
+                <!-- Display references -->
                 {% include 'main/references/reference-display.html' %}
-                <textarea type="text" id="reflist" name="reflist" style="display:none;"></textarea>
-                <textarea type="text" id="culturelist" name="culturelist" style="display:none;"></textarea>
-                <textarea type="text" id="epochlist" name="epochlist" style="display:none;"></textarea>
-                <textarea type="text" id="datelist" name="datelist" style="display:none;"></textarea>
-                <textarea type="text" id="checkpointlist" name="checkpointlist" style="display:none;"></textarea>
                 <br>
                 <button class='btn btn-primary' type="submit">Save Layer</button>
             </form>

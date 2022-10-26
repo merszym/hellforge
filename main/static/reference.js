@@ -17,7 +17,7 @@ $(".addReference").on("click", function(){
             $('#reference-list').append(
                 `<tr><td id="ref_${data['pk']}">${data['short']}</td><td>${data['title']}</td><td>-</td></tr>`
             )
-            $('#reflist').html($('#reflist').html()+','+data['pk'])
+            $('#id_ref').append(`<option value="${data['pk']}" selected></option>`)
         });
 });
 
@@ -66,11 +66,12 @@ $('#ref-search').on('keyup paste',function(){
   });
 
 $("body").on("click",'.search-item', function(){
+    console.log($('#id_ref'))
     pk = this.id.split('_')[2]
     short = $(`#search_short_${pk}`).html()
     title = $(`#search_title_${pk}`).html()
     $('#reference-list').append(
         `<tr><td id="ref_${pk}">${short}</td><td>${title}</td><td>-</td></tr>`
     )
-    $('#reflist').html($('#reflist').html()+','+pk)
+    $('#id_ref').append(`<option value="${pk}" selected></option>`)
 });
