@@ -4,8 +4,8 @@ from .forms import LocationForm, ReferenceForm, SiteForm, ProfileForm, LayerForm
 import re
 import statistics
 
-## Locations ##
 
+## Locations ##
 class LocationCreateView(CreateView):
     model = Location
     form_class = LocationForm
@@ -16,8 +16,10 @@ class LocationCreateView(CreateView):
         context.update(self.extra_context)
         return context
 
+
 class LocationListView(ListView):
     model = Location
+
 
 class LocationUpdateView(UpdateView):
     model = Location
@@ -29,21 +31,23 @@ class LocationUpdateView(UpdateView):
         context.update(self.extra_context)
         return context
 
-## References ##
 
+## References ##
 class ReferenceCreateView(CreateView):
     model = Reference
     fields = "__all__"
 
+
 class ReferenceListView(ListView):
     model = Reference
+
 
 class ReferenceUpdateView(UpdateView):
     model = Reference
     fields = "__all__"
 
-## Sites ##
 
+## Sites ##
 class SiteCreateView(CreateView):
     model = Site
     form_class = SiteForm
@@ -54,8 +58,10 @@ class SiteCreateView(CreateView):
         context.update(self.extra_context)
         return context
 
+
 class SiteListView(ListView):
     model = Site
+
 
 class SiteUpdateView(UpdateView):
     model = Site
@@ -67,6 +73,7 @@ class SiteUpdateView(UpdateView):
         context.update(self.extra_context)
         return context
 
+
 class SiteDetailView(DetailView):
     model = Site
     extra_context = {'profile_form': ProfileForm}
@@ -76,8 +83,8 @@ class SiteDetailView(DetailView):
         context.update(self.extra_context)
         return context
 
-## Layers ##
 
+## Layers ##
 class LayerUpdateView(UpdateView):
     model = Layer
     form_class = LayerForm
@@ -88,16 +95,8 @@ class LayerUpdateView(UpdateView):
         context.update(self.extra_context)
         return context
 
-    def form_valid(self, form):
-        self.object = form.save()
-        if self.object.date.first():
-            self.object.mean_lower = statistics.mean([x.lower for x in self.object.date.all()])
-            self.object.mean_upper = statistics.mean([x.upper for x in self.object.date.all()])
-        self.object.save()
-        return super().form_valid(form)
 
 ## Cultures ##
-
 class CultureUpdateView(UpdateView):
     model = Culture
     form_class = CultureForm
@@ -107,14 +106,6 @@ class CultureUpdateView(UpdateView):
         context = super(CultureUpdateView, self).get_context_data(**kwargs)
         context.update(self.extra_context)
         return context
-
-    def form_valid(self, form):
-        self.object = form.save()
-        if self.object.date.first():
-            self.object.mean_lower = statistics.mean([x.lower for x in self.object.date.all()])
-            self.object.mean_upper = statistics.mean([x.upper for x in self.object.date.all()])
-        self.object.save()
-        return super().form_valid(form)
 
 
 class CultureCreateView(CreateView):
@@ -127,19 +118,12 @@ class CultureCreateView(CreateView):
         context.update(self.extra_context)
         return context
 
-    def form_valid(self, form):
-        self.object = form.save()
-        if self.object.date.first():
-            self.object.mean_lower = statistics.mean([x.lower for x in self.object.date.all()])
-            self.object.mean_upper = statistics.mean([x.upper for x in self.object.date.all()])
-        self.object.save()
-        return super().form_valid(form)
 
 class CultureListView(ListView):
     model = Culture
 
-## Dates ##
 
+## Dates ##
 class DateUpdateView(UpdateView):
     model = Date
     form_class = DateUpdateForm
@@ -150,8 +134,8 @@ class DateUpdateView(UpdateView):
         context.update(self.extra_context)
         return context
 
-## Epoch ##
 
+## Epoch ##
 class EpochUpdateView(UpdateView):
     model = Epoch
     template_name = 'main/culture_form.html'
@@ -162,14 +146,6 @@ class EpochUpdateView(UpdateView):
         context = super(EpochUpdateView, self).get_context_data(**kwargs)
         context.update(self.extra_context)
         return context
-
-    def form_valid(self, form):
-        self.object = form.save()
-        if self.object.date.first():
-            self.object.mean_lower = statistics.mean([x.lower for x in self.object.date.all()])
-            self.object.mean_upper = statistics.mean([x.upper for x in self.object.date.all()])
-        self.object.save()
-        return super().form_valid(form)
 
 
 class EpochCreateView(CreateView):
@@ -183,13 +159,6 @@ class EpochCreateView(CreateView):
         context.update(self.extra_context)
         return context
 
-    def form_valid(self, form):
-        self.object = form.save()
-        if self.object.date.first():
-            self.object.mean_lower = statistics.mean([x.lower for x in self.object.date.all()])
-            self.object.mean_upper = statistics.mean([x.upper for x in self.object.date.all()])
-        self.object.save()
-        return super().form_valid(form)
 
 class EpochListView(ListView):
     model = Epoch
@@ -201,8 +170,8 @@ class EpochListView(ListView):
         context.update(self.extra_context)
         return context
 
-## Checkpoints
 
+## Checkpoints
 class CheckpointCreateView(CreateView):
     model = Checkpoint
     form_class = CheckpointForm
@@ -213,13 +182,6 @@ class CheckpointCreateView(CreateView):
         context.update(self.extra_context)
         return context
 
-    def form_valid(self, form):
-        self.object = form.save()
-        if self.object.date.first():
-            self.object.mean_lower = statistics.mean([x.lower for x in self.object.date.all()])
-            self.object.mean_upper = statistics.mean([x.upper for x in self.object.date.all()])
-        self.object.save()
-        return super().form_valid(form)
 
 class CheckpointUpdateView(UpdateView):
     model = Checkpoint
@@ -230,11 +192,3 @@ class CheckpointUpdateView(UpdateView):
         context = super(CheckpointUpdateView, self).get_context_data(**kwargs)
         context.update(self.extra_context)
         return context
-
-    def form_valid(self, form):
-        self.object = form.save()
-        if self.object.date.first():
-            self.object.mean_lower = statistics.mean([x.lower for x in self.object.date.all()])
-            self.object.mean_upper = statistics.mean([x.upper for x in self.object.date.all()])
-        self.object.save()
-        return super().form_valid(form)
