@@ -9,9 +9,12 @@
         </div>
         <div class="card-body">
             {{ref.title}} <br><br>
-            {% if ref.doi %}
-                <a class="btn" href="https://doi.org/{{ref.doi}}" target="_blank">Open</a>
+            {% if ref.link %}
+                <a class="btn" href="{{ref.link}}" target="_blank">Open</a>
             {% endif %}
+        </div>
+        <div class="card-footer">
+            <p class="text-gray">{{ref.tags}}</p>
         </div>
       </div>
     </div>

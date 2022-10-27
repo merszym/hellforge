@@ -1,7 +1,7 @@
-from .forms import ReferenceForm, ProfileForm, DateForm
+from .forms import ReferenceForm, ProfileForm, DateForm, ContactForm
 from django.http import JsonResponse
 from django.shortcuts import render
-from .models import Reference, Location, Site, Profile, Layer, Culture, Epoch, Checkpoint
+from .models import Reference, Location, Site, Profile, Layer, Culture, Epoch, Checkpoint, ContactPerson
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 
@@ -22,6 +22,14 @@ def save_ref(request):
         return JsonResponse({"pk":obj.id, 'title':obj.title, 'short':obj.short})
     return JsonResponse({"pk":False})
 
+def save_contact(request):
+    form = ContactForm(request.POST)
+    if form.is_valid():
+        obj = form.save()
+        obj.refresh_from_db()
+        return JsonResponse({"pk":obj.id, 'name':obj.name})
+    return JsonResponse({"pk":False})
+
 def save_profile(request,site_id):
     form = ProfileForm(request.POST)
     if form.is_valid():
@@ -39,8 +47,15 @@ def get_profile(request, pk):
 def search_ref(request):
     data = {x:v[0] for (x,v) in dict(request.POST).items()}
     kw = data['keyword']
-    q = Reference.objects.filter(Q(short__contains=kw) | Q(title__contains=kw ))
+    q = Reference.objects.filter(Q(short__contains=kw) | Q(title__contains=kw ) | Q(tags__contains=kw ))
     return JsonResponse({x.pk:f"{x.short};;{x.title}" for x in q})
+
+@csrf_exempt
+def search_contact(request):
+    data = {x:v[0] for (x,v) in dict(request.POST).items()}
+    kw = data['keyword']
+    q = ContactPerson.objects.filter(Q(name__contains=kw) | Q(email__contains=kw ) | Q(affiliation__contains=kw ))
+    return JsonResponse({x.pk:f"{x.name}" for x in q})
 
 @csrf_exempt
 def search_loc(request):
@@ -70,6 +85,23 @@ def search_cp(request):
     q = Checkpoint.objects.filter(Q(name__contains=kw) | Q(description__contains=kw ) | Q(category__contains=kw ) | Q(type__contains=kw ))
     return JsonResponse({x.pk: f"{x.name};;{x.type}" for x in q})
 
+def clone_layer(request, pk):
+    new_layer = Layer.objects.get(pk=pk)
+    new_layer.pk = None
+    # find the last postion:
+    layers = [x.pos for x in Layer.objects.filter(site__id=Layer.objects.get(pk=pk).site.pk).all()]
+    last = max(layers)
+    new_layer.pos = last+1
+    new_layer.save()
+    layer = Layer.objects.get(pk=pk)
+    for profile in layer.profile.all():
+        new_layer.profile.add(profile)
+    for ref in layer.ref.all():
+        new_layer.ref.add(ref)
+    for cp in layer.checkpoint.all():
+        new_layer.checkpoint.add(cp)
+    return JsonResponse({'pk':new_layer.pk})
+
 def save_layer(request,profile_id):
     """
     add a new layer to an existing profile
@@ -80,8 +112,7 @@ def save_layer(request,profile_id):
         layer.profile.add(profile)
         layer.site = profile.site
     except KeyError:
-        layers = [x.pos for x in Layer.objects.filter(profile__id=profile.pk).all()]
-        layers.extend([x.pos for x in profile.other_layers])
+        layers = [x.pos for x in Layer.objects.filter(site__id=profile.site.pk).all()]
         last = max(layers) if len(layers)>0 else 0
         layer = Layer(name=f"Layer {last+1}", pos=last+1, site=profile.site)
         layer.save()

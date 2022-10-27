@@ -3,7 +3,6 @@ from django.dispatch import receiver
 from main.models import Layer, Culture, Epoch, Checkpoint, Site
 import statistics
 
-@receiver(post_save, sender=Layer)
 @receiver(post_save, sender=Culture)
 @receiver(post_save, sender=Epoch)
 @receiver(post_save, sender=Checkpoint)
@@ -26,3 +25,5 @@ def update_layer(sender, instance, **kwargs):
     if not instance.site:
         instance.site = instance.profile.first().site
         instance.save()
+
+    calculate_mean_datings(sender, instance)

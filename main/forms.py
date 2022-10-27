@@ -1,5 +1,5 @@
 from django import forms
-from .models import Location, Reference, Site, Profile, Layer, Culture, Date, Epoch, Checkpoint
+from .models import Location, Reference, Site, Profile, Layer, Culture, Date, Epoch, Checkpoint, ContactPerson
 
 class ProfileForm(forms.ModelForm):
     class Meta:
@@ -21,6 +21,11 @@ class ReferenceForm(forms.ModelForm):
         model=Reference
         fields = "__all__"
 
+class ContactForm(forms.ModelForm):
+    class Meta:
+        model = ContactPerson
+        fields = '__all__'
+
 class LocationForm(forms.ModelForm):
     class Meta:
         model=Location
@@ -29,7 +34,7 @@ class LocationForm(forms.ModelForm):
 class SiteForm(forms.ModelForm):
     class Meta:
         model = Site
-        fields = ['name','country', 'type', 'elevation','description','ref','loc']
+        fields = ['name','country', 'type', 'elevation','description','ref','loc','contact']
 
 
 class LayerForm(forms.ModelForm):

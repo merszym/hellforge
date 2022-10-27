@@ -72,4 +72,8 @@ function makeSortable(){
     });
 };
 
+$('#site_description').on('click', function(){
+    $('#site_description_content').toggle()
+})
+
 getProfile()

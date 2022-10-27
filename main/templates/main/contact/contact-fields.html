@@ -1,0 +1,7 @@
+{% for field in contact_form %}
+    <div class="form-group" style="width:50%;">
+        <label class="form-label" for="location-name">{{field.name|title}}*</label>
+        <input class="form-input" type="text" id="location-name" name="{{field.name}}" placeholder="{{field.name}}" required
+        value={% if field.value %} "{{field.value}}" {% endif %}>
+    </div>
+{% endfor %}

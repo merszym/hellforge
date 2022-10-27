@@ -27,8 +27,10 @@ urlpatterns = [
     path('checkpoints/edit/<int:pk>', views.CheckpointUpdateView.as_view(), name='checkpoint_update'),
     path('date/edit/<int:pk>', views.DateUpdateView.as_view(), name='date_update'),
     path('ajax/refs/add', ajax.save_ref, name='ajax_ref_add'),
+    path('ajax/contact/add', ajax.save_contact, name='ajax_contact_add'),
     path('ajax/date/add', ajax.save_date, name='ajax_date_add'),
     path('ajax/refs/search', ajax.search_ref, name='ajax_ref_search'),
+    path('ajax/contact/search', ajax.search_contact, name='ajax_contact_search'),
     path('ajax/cp/search', ajax.search_cp, name='ajax_cp_search'),
     path('ajax/locs/search', ajax.search_loc, name='ajax_loc_search'),
     path('ajax/culture/search', ajax.search_culture, name='ajax_culture_search'),
@@ -37,6 +39,7 @@ urlpatterns = [
     path('ajax/profile/<int:pk>', ajax.get_profile, name='ajax_profile_detail'),
     path('ajax/layer/add/<int:profile_id>', ajax.save_layer, name='ajax_layer_add'),
     path('ajax/layer/remove/<int:profile_id>', ajax.remove_otherlayer, name='ajax_otherlayer_delete'),
+    path('ajax/layer/clone/<int:pk>', ajax.clone_layer, name='ajax_layer_clone'),
     path('ajax/layer/update_pos/<int:site_id>', ajax.update_layer_positions, name='ajax_layer_pos_update')
 ]
 

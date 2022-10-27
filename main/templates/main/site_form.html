@@ -11,7 +11,7 @@
         <div class="my-2">
             <h2>Site Data</h2>
             {% include 'main/location/location-display.html' %}
-
+            {% include 'main/contact/contact-display.html' %}
             <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="form-group">
@@ -45,6 +45,7 @@
                 </div>
                 {% include 'main/references/reference-formfield.html' %}
                 {% include 'main/location/location-formfield.html' %}
+                {% include 'main/contact/contact-formfield.html' %}
                 <!-- list references -->
                 {% include 'main/references/reference-display.html' %}
                 <br>
@@ -59,6 +60,9 @@
         </div>
         <div clas="my-2">
             {% include 'main/references/reference-search.html' %}
+        </div>
+        <div clas="my-2">
+            {% include 'main/contact/contact-search.html' %}
         </div>
     </div>
 </div>

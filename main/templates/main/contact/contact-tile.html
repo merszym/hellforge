@@ -1,0 +1,16 @@
+<div class="tile tile-centered">
+    <div class="tile-icon">
+        <button class="btn btn-primary example-tile-icon c-auto">
+            <i class="icon icon-people" centered></i>
+        </button>
+    </div>
+    <div class="tile-content">
+      <div class="tile-title">{{contact.name}}</div>
+      <small class="tile-subtitle text-gray">{{contact.affiliation}}</small>
+    </div>
+    <div class="tile-action">
+      <button class="btn btn-link" onclick="location.href='mailto:{{contact.email}}';">
+        <i class="icon icon-2x icon-mail"></i>
+      </button>
+    </div>
+</div>

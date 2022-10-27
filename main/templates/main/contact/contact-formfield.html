@@ -1,0 +1,5 @@
+<select name="contact" id="id_contact" multiple="" style="display:none;">
+    {% for contact in object.contact.all %}
+    <option id="contact_option_{{contact.pk}}" value="{{contact.pk}}" selected></option>
+    {% endfor %}
+</select>

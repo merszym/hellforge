@@ -11,16 +11,20 @@
     <table class="table table-striped table-hover">
         <thead>
           <tr>
+            <th></th>
             {% include 'main/profile/layer-tablehead.html' %}
+            <th></th>
             <th></th>
             <th></th>
           </tr>
         </thead>
         <tbody id="layer_tbody" data-url="{% url 'ajax_layer_pos_update' object.site.pk %}">
             {% for layer in object.layer.all %}
-            <tr>
+            <tr class="table_row" id="layer_{{layer.pk}}">
+              <td><i class="icon icon-resize-vert"></i></td>
               {% include 'main/profile/layer-tablecells.html' %}
-              <td><span class="btn remove_other_layer" id="remove_layer_{{layer.pk}}" data-url="{% url 'ajax_otherlayer_delete' object.pk %}?layer={{layer.pk}}"><i class="icon icon-downward"></span></td>
+              <td><span class="btn clone_layer tooltip tooltip-left" data-tooltip="Clone this layer" id="clone_layer_{{layer.pk}}" data-url="{% url 'ajax_layer_clone' layer.pk %}"><i class="icon icon-plus"></span></td>
+              <td><span class="btn remove_other_layer tooltip tooltip-left" data-tooltip="Remove from Profile" id="remove_layer_{{layer.pk}}" data-url="{% url 'ajax_otherlayer_delete' object.pk %}?layer={{layer.pk}}"><i class="icon icon-downward"></span></td>
             </tr>
             {% endfor %}
         </tbody>

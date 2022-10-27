@@ -13,7 +13,6 @@
         <a class="btn btn-primary" href="{% url 'site_update' object.pk %}" style="position:absolute; right:5%; top:10px"><i class="icon icon-edit"></i></a>
         <div class="my-2">
             <h2>{{object.name}}</h2>
-            <p>{{object.description}}</p>
             <table class="table">
                 <thead>
                   <tr>
@@ -43,12 +42,25 @@
                 </tbody>
               </table>
             <br>
-            <div style="height: 480px;" id="map"></div>
+            {% if object.contact.first %}
+            <h5> Contact Person </h5>
+            {% for contact in object.contact.all %}
+                {% include 'main/contact/contact-tile.html' %}
+            {% endfor %}
+            <br>
+            {% endif %}
+            <div style="height: 480px;" id="map"></div><br>
         </div>
     </div>
     <div class="column">
         <div class="my-2">
-            <h4 style="color:grey;">Profiles and Layers</h4>
+            <div style="display: flex; gap: 20px;">
+                <h3> Site description </h3>
+                <span id='site_description' class="btn btn-primary tooltip tooltip-bottom" data-tooltip="Toogle Description"><i class="icon icon-arrow-down"></i></span>
+            </div>
+            <p id="site_description_content" style="display:none;">{{object.description|safe}}</p>
+            <br>
+            <h3 class="text-grey">Profiles and Layers</h3>
             <div class="modal" id="modal-profile">
                 <a href="#close" class="modal-overlay" aria-label="Close"></a>
                 <div class="modal-container">
@@ -101,12 +113,11 @@
 <script>
     var data = []
     var groups = []
-    var added_groups = []
+    var added = []
 </script>
 {% for culture in object.cultures %}
 <script>
-    groups.push(
-        {
+    groups.push({
         'id': "{{culture.name|lower}}",
         'content': "{{culture}}",
         }
@@ -116,24 +127,27 @@
 {% for checkpoint in object.checkpoints %}
 <script>
     cp = "{{checkpoint.type|lower}}"
-    if(added_groups.includes(cp)==false){
+    if(added.includes(cp)==false){
         groups.push(
         {
         'id': cp,
         'content': "Checkpoint<br>{{checkpoint.type}}",
         }
     );
-    added_groups.push(cp)
+    added.push(cp)
     }
-
-    data.push(
-        {
-        'start': new Date(parseInt("{{checkpoint.mean_upper}}")*-1,1,1),
-        'end': new Date(parseInt("{{checkpoint.mean_lower}}")*-1,1,1),
-        'content': "{{checkpoint.name}} ({{checkpoint.date.first}})",
-        'group':"{{checkpoint.type|lower}}"
-        }
-    );
+    content = "{{checkpoint.name}} ({{checkpoint.date.first}})"
+    if(added.includes(content)==false){
+        data.push(
+            {
+            'start': new Date(parseInt("{{checkpoint.mean_upper}}")*-1,1,1),
+            'end': new Date(parseInt("{{checkpoint.mean_lower}}")*-1,1,1),
+            'content': content,
+            'group':"{{checkpoint.type|lower}}"
+            }
+        );
+        added.push(content)
+    }
 </script>
 {% endfor %}
 {% for layer in object.layers %}

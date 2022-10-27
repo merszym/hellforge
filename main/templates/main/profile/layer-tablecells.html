@@ -1,10 +1,8 @@
+<td><strong>{{layer.name}}</strong></td>
 <td>
     {{layer.age_summary}}<br>
     {{layer.age_depth}}
 </td>
-<td>{{layer.name}}</td>
-<td>{{layer.site_use}}</td>
-<td>{{layer.description}}</td>
 <td>
 {% for checkpoint in layer.checkpoint.all %}
     <div>{{checkpoint.name}}<br>

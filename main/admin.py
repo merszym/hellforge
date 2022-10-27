@@ -11,5 +11,6 @@ admin.site.register(Site)
 admin.site.register(Profile)
 admin.site.register(Layer)
 admin.site.register(Sample)
+admin.site.register(ContactPerson)
 
 

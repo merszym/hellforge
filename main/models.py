@@ -2,6 +2,14 @@ from django.db import models
 from django.urls import reverse
 from django.db.models import Q
 
+class ContactPerson(models.Model):
+    name = models.CharField('name', max_length=300)
+    email = models.CharField('email',max_length=300)
+    affiliation = models.CharField('affiliation', max_length=300, blank=True)
+
+    def __str__(self):
+        return self.name
+
 class Reference(models.Model):
     title = models.CharField('title', max_length=200)
     short = models.CharField('short', max_length=200, blank=True, null=True)
@@ -14,6 +22,13 @@ class Reference(models.Model):
     def get_absolute_url(self):
         return reverse('ref_add')
 
+    @property
+    def link(self):
+        if self.doi.startswith('http'):
+            return self.doi
+        else:
+            return f'https://doi.org/{self.doi}'
+
 class Date(models.Model):
     upper = models.IntegerField('upper bound')
     lower = models.IntegerField('lower bound')
@@ -25,7 +40,7 @@ class Date(models.Model):
         return reverse('date_update', kwargs={'pk': self.id})
 
     def __str__(self):
-        return f"{self.upper:,} - {self.lower:,} kya"
+        return f"{self.upper:,} - {self.lower:,} ya"
 
 class Location(models.Model):
     name = models.CharField('name', max_length=200)
@@ -118,6 +133,7 @@ class Epoch(models.Model):
         return reverse('epoch_list')
 
 class Site(models.Model):
+    contact = models.ManyToManyField(ContactPerson, blank=True, verbose_name=u'contact', related_name='site')
     name = models.CharField('name', max_length=200)
     country = models.CharField('country', max_length=200, blank=True)
     description = models.TextField('description', blank=True)
@@ -137,7 +153,7 @@ class Site(models.Model):
 
     @property
     def checkpoints(self):
-        return set([y.first() for y in [x.checkpoint.all() for x in self.layers] if y.first()])
+        return Checkpoint.objects.filter(layer__in=self.layer.all()).all()
 
     @property
     def cultures(self):
@@ -145,10 +161,7 @@ class Site(models.Model):
 
     @property
     def layers(self):
-        layers = []
-        for profile in self.profile.all():
-            for layer in profile.layer.all():
-                layers.append(layer)
+        layers = [x for x in self.layer.all()]
         return sorted(list(set(layers)), key=lambda x: x.pos)
 
 
@@ -183,7 +196,7 @@ class Layer(models.Model):
     pos = models.IntegerField('position in profile')
     culture = models.ForeignKey(Culture, verbose_name=u"culture", related_name='layer', on_delete=models.PROTECT, blank=True, null=True)
     epoch = models.ForeignKey(Epoch, verbose_name=u"epoch", related_name='layer', on_delete=models.PROTECT, blank=True, null=True)
-    checkpoint = models.ManyToManyField(Checkpoint, verbose_name=u'checkpoint', blank=True)
+    checkpoint = models.ManyToManyField(Checkpoint, verbose_name=u'checkpoint', blank=True, related_name='layer')
     date = models.ManyToManyField(Date, verbose_name=u"date", blank=True)
     mean_upper = models.IntegerField(blank=True, default=1000000)
     mean_lower = models.IntegerField(blank=True, default=0)
@@ -191,6 +204,10 @@ class Layer(models.Model):
 
     class Meta:
         ordering = ['pos']
+
+    @property
+    def checkpoints(self):
+        return [x for x in self.checkpoint.all()]
 
     @property
     def in_profile(self):

@@ -23,7 +23,16 @@ $('.add_other_layer').on('click', function(){
 $('.remove_other_layer').on('click', function(){
     layer = $(this).attr('id').split('_')[2]
     profile = $('.add_layer').attr('id').split('_')[1]
-    console.log(layer, profile)
+    $.ajax({
+        type: "GET",
+        url: $(this).attr('data-url')
+        }).done(function(data){
+            getProfile(profile)
+        });
+});
+
+$('.clone_layer').on('click', function(){
+    profile = $('.add_layer').attr('id').split('_')[1]
     $.ajax({
         type: "GET",
         url: $(this).attr('data-url')

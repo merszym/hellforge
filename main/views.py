@@ -1,7 +1,7 @@
 from django.views.generic import CreateView, ListView, UpdateView, DetailView, DeleteView
 from django.urls import reverse
 from .models import Location, Reference, Site, Layer, Culture, Date, Epoch, Checkpoint, Profile
-from .forms import LocationForm, ReferenceForm, SiteForm, ProfileForm, LayerForm, CultureForm, DateForm, DateUpdateForm, EpochForm, CheckpointForm
+from .forms import LocationForm, ReferenceForm, SiteForm, ProfileForm, LayerForm, CultureForm, DateForm, DateUpdateForm, EpochForm, CheckpointForm, ContactForm
 import re
 import statistics
 
@@ -52,7 +52,7 @@ class ReferenceUpdateView(UpdateView):
 class SiteCreateView(CreateView):
     model = Site
     form_class = SiteForm
-    extra_context = {'reference_form': ReferenceForm}
+    extra_context = {'reference_form': ReferenceForm, 'contact_form': ContactForm}
 
     def get_context_data(self, **kwargs):
         context = super(SiteCreateView, self).get_context_data(**kwargs)
@@ -67,7 +67,7 @@ class SiteListView(ListView):
 class SiteUpdateView(UpdateView):
     model = Site
     form_class = SiteForm
-    extra_context = {'reference_form': ReferenceForm}
+    extra_context = {'reference_form': ReferenceForm, 'contact_form': ContactForm}
 
     def get_context_data(self, **kwargs):
         context = super(SiteUpdateView, self).get_context_data(**kwargs)
@@ -130,8 +130,8 @@ class CultureUpdateView(UpdateView):
 
 class CultureCreateView(CreateView):
     model = Culture
-    fields = CultureForm
-    extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm,  'type':'Culture'}
+    form_class = CultureForm
+    extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm, 'type':'Culture'}
 
     def get_context_data(self, **kwargs):
         context = super(CultureCreateView, self).get_context_data(**kwargs)
