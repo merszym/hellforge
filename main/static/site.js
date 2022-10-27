@@ -35,7 +35,7 @@ $('#profile-submit').on('click', function(){
             $(
             `
             <li class="tab-item active" data-url="${url}">
-                <a href='#'>${data['name']}</a>
+                <a class="c-hand">${data['name']}</a>
             </li>
             `
             ).insertBefore($('#before-profile-add'))

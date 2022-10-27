@@ -1,6 +1,11 @@
 <section class="m-2">
   {% load static %}
-    <h3>{{object.name}}</h3>
+    <div style="position: relative;">
+      <h3>{{object.name}}</h3>
+      <a class="btn btn-primary tooltip tooltip-left" href="{% url 'profile_delete' object.pk %}"
+          data-tooltip="Delete the Profile" style="position:absolute; right:5%; top:10px">
+          <i class="icon icon-delete"></i></a>
+    </div>
     <h5>Layers</h5>
     {% if object.layer.first %}
     <table class="table table-striped table-hover">

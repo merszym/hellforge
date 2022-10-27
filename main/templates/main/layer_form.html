@@ -4,7 +4,8 @@
 <h1>Edit Layer: {{object.name}}</h1>
 
 <div class='columns'>
-    <div class="column">
+    <div class="column" style="position:relative;">
+        <a class="btn btn-primary" href="{% url 'layer_delete' object.pk %}" style="position:absolute; right:5%; top:10px"><i class="icon icon-delete"></i></a>
         <div class="my-2">
             <h3>Layer Data</h3>
             {% include 'main/culture/culture-display.html' %}

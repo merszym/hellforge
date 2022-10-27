@@ -1,5 +1,6 @@
-from django.views.generic import CreateView, ListView, UpdateView, DetailView
-from .models import Location, Reference, Site, Layer, Culture, Date, Epoch, Checkpoint
+from django.views.generic import CreateView, ListView, UpdateView, DetailView, DeleteView
+from django.urls import reverse
+from .models import Location, Reference, Site, Layer, Culture, Date, Epoch, Checkpoint, Profile
 from .forms import LocationForm, ReferenceForm, SiteForm, ProfileForm, LayerForm, CultureForm, DateForm, DateUpdateForm, EpochForm, CheckpointForm
 import re
 import statistics
@@ -83,6 +84,15 @@ class SiteDetailView(DetailView):
         context.update(self.extra_context)
         return context
 
+## Profiles ##
+
+class ProfileDeleteView(DeleteView):
+    model = Profile
+    template_name = 'main/confirm_delete.html'
+
+    def get_success_url(self):
+        return reverse('site_detail', kwargs={'pk':self.get_object().site.id})
+
 
 ## Layers ##
 class LayerUpdateView(UpdateView):
@@ -94,6 +104,16 @@ class LayerUpdateView(UpdateView):
         context = super(LayerUpdateView, self).get_context_data(**kwargs)
         context.update(self.extra_context)
         return context
+
+class LayerDeleteView(DeleteView):
+    model = Layer
+    template_name = 'main/confirm_delete.html'
+
+    def get_success_url(self):
+        if self.get_object().site:
+            return reverse('site_detail', kwargs={'pk':self.get_object().site.id})
+        else:
+            return reverse('site_detail', kwargs={'pk':self.get_object().profile.first().site.id})
 
 
 ## Cultures ##

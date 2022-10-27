@@ -1,6 +1,6 @@
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, m2m_changed
 from django.dispatch import receiver
-from main.models import Layer, Culture, Epoch, Checkpoint
+from main.models import Layer, Culture, Epoch, Checkpoint, Site
 import statistics
 
 @receiver(post_save, sender=Layer)
@@ -20,3 +20,9 @@ def calculate_mean_datings(sender, instance, **kwargs):
             instance.mean_lower = mean_lower
             instance.mean_upper = mean_upper
             instance.save()
+
+@receiver(post_save, sender=Layer)
+def update_layer(sender, instance, **kwargs):
+    if not instance.site:
+        instance.site = instance.profile.first().site
+        instance.save()

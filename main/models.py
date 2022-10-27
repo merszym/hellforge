@@ -164,12 +164,10 @@ class Profile(models.Model):
     @property
     def other_layers(self):
         layers = []
-        for profile in self.site.profile.exclude(id=self.pk).all():
-            for layer in profile.layer.all():
-                if layer not in self.layer.all():
-                    layers.append(layer)
+        for layer in self.site.layer.all():
+            if layer not in self.layer.all():
+                layers.append(layer)
         return set(layers)
-
 
     @property
     def other_profiles(self):
@@ -182,6 +180,7 @@ class Layer(models.Model):
     site_use = models.TextField('site use', blank=True)
     characteristics = models.TextField('characteristics', blank=True)
     profile = models.ManyToManyField(Profile, verbose_name='profile', related_name='layer')
+    site = models.ForeignKey(Site, verbose_name=u'site', related_name='layer', on_delete=models.CASCADE, blank=True, null=True)
     pos = models.IntegerField('position in profile')
     culture = models.ForeignKey(Culture, verbose_name=u"culture", related_name='layer', on_delete=models.PROTECT, blank=True, null=True)
     epoch = models.ForeignKey(Epoch, verbose_name=u"epoch", related_name='layer', on_delete=models.PROTECT, blank=True, null=True)
@@ -198,16 +197,10 @@ class Layer(models.Model):
     def in_profile(self):
         return ",".join([x.name for x in self.profile.all()])
 
-    @property
-    def site(self):
-        sites = [x.site for x in self.profile.all()]
-        if len(sites)>0:
-            return sites[0]
-        else:
-            return Site(name='unset')
-
     def __str__(self):
-        return f"{self.site.name}:{self.name}"
+        if self.site:
+            return f"{self.site.name}:{self.name}"
+        return f"Unset:{self.name}"
 
     @property
     def age_summary(self):
@@ -232,8 +225,7 @@ class Layer(models.Model):
         return 'Unset'
 
     def get_absolute_url(self):
-        site = self.site
-        return reverse('site_detail', kwargs={'pk':site.id})
+        return reverse('site_detail', kwargs={'pk':self.site.id})
 
 class Sample(models.Model):
     name = models.CharField('name', max_length=200)
@@ -241,7 +233,6 @@ class Sample(models.Model):
     layer = models.ForeignKey(Layer, verbose_name=u"layer", related_name='sample', on_delete=models.PROTECT)
     date = models.ManyToManyField(Date, verbose_name=u"date", blank=True)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
-
 
 class MammalianAssemblage(models.Model):
     layer = models.ForeignKey(Layer, verbose_name=u'layer', related_name='mammalian_assemblage', blank=True, on_delete=models.CASCADE)

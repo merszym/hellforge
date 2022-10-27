@@ -71,15 +71,19 @@ def search_cp(request):
     return JsonResponse({x.pk: f"{x.name};;{x.type}" for x in q})
 
 def save_layer(request,profile_id):
+    """
+    add a new layer to an existing profile
+    """
     profile = Profile.objects.get(pk=profile_id)
     try:
         layer = Layer.objects.get(pk=int(request.GET['layer']))
         layer.profile.add(profile)
+        layer.site = profile.site
     except KeyError:
         layers = [x.pos for x in Layer.objects.filter(profile__id=profile.pk).all()]
         layers.extend([x.pos for x in profile.other_layers])
         last = max(layers) if len(layers)>0 else 0
-        layer = Layer(name=f"Layer {last+1}", pos=last+1)
+        layer = Layer(name=f"Layer {last+1}", pos=last+1, site=profile.site)
         layer.save()
         layer.profile.add(profile)
     return JsonResponse({"pk":layer.pk, 'name':layer.name})
