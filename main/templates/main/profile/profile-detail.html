@@ -11,46 +11,16 @@
     <table class="table table-striped table-hover">
         <thead>
           <tr>
-            <th></th>
-            <th>Age</th>
-            <th>Name</th>
-            <th>Site Usage</th>
-            <th>Description</th>
-            <th>Checkpoints</th>
-            <th>Culture</th>
-            <th>Epoch</th>
+            {% include 'main/profile/layer-tablehead.html' %}
             <th></th>
             <th></th>
           </tr>
         </thead>
         <tbody id="layer_tbody" data-url="{% url 'ajax_layer_pos_update' object.site.pk %}">
             {% for layer in object.layer.all %}
-            <tr class="table_row" id="layer_{{layer.pk}}">
-                <td><i class="icon icon-resize-vert"></i></td>
-                <td>
-                  {{layer.age_depth}}<br>
-                  {{layer.age_summary}}
-                </td>
-                <td>{{layer.name}}</td>
-                <td>{{layer.site_use}}</td>
-                <td>{{layer.description}}</td>
-                <td>
-                {% for checkpoint in layer.checkpoint.all %}
-                  <div>{{checkpoint.name}}<br>
-                      {{checkpoint.age_summary}}
-                  </div>
-                {% empty %}
-                {% endfor %}
-                </td>
-                <td>{{layer.culture}}<br>
-                  {{layer.culture.age_summary}}
-                </td>
-                <td>
-                  {{layer.epoch}}<br>
-                  {{layer.epoch.age_summary}}
-                </td>
-                <td><a class="btn-link" href="{% url 'layer_update' layer.pk%}"><i class="icon icon-edit"></i></a></td>
-                <td><span class="btn remove_other_layer" id="remove_layer_{{layer.pk}}" data-url="{% url 'ajax_otherlayer_delete' object.pk %}?layer={{layer.pk}}"><i class="icon icon-downward"></span></td>
+            <tr>
+              {% include 'main/profile/layer-tablecells.html' %}
+              <td><span class="btn remove_other_layer" id="remove_layer_{{layer.pk}}" data-url="{% url 'ajax_otherlayer_delete' object.pk %}?layer={{layer.pk}}"><i class="icon icon-downward"></span></td>
             </tr>
             {% endfor %}
         </tbody>
@@ -75,49 +45,20 @@
     <div>
         <h5> Add Layer from other profile </h5>
         <table  class="table table-striped table-hover">
-        <thead>
-          <tr>
-            <th>Profile</th>
-            <th>Age</th>
-            <th>Name</th>
-            <th>Site Usage</th>
-            <th>Description</th>
-            <th>Checkpoints</th>
-            <th>Culture</th>
-            <th>Epoch</th>
-            <th></th>
-            <th></th>
-          </tr>
-        </thead>
+          <thead>
+            <tr>
+              <th>Profile</th>
+              {% include 'main/profile/layer-tablehead.html' %}
+              <th></th>
+              <th></th>
+            </tr>
         <tbody id="other_profile_layer_tbody">
         {% for layer in object.other_layers %}
-            <tr>
-                <td>{{layer.in_profile}}</td>
-                <td>
-                  {{layer.age_summary}}<br>
-                  {{layer.age_depth}}
-                </td>
-                <td>{{layer.name}}</td>
-                <td>{{layer.site_use}}</td>
-                <td>{{layer.description}}</td>
-                <td>
-                {% for checkpoint in layer.checkpoint.all %}
-                  <div>{{checkpoint.name}}<br>
-                      {{checkpoint.age_summary}}
-                  </div>
-                {% empty %}
-                {% endfor %}
-                </td>
-                <td>{{layer.culture}}<br>
-                  {{layer.culture.age_summary}}
-                </td>
-                <td>
-                  {{layer.epoch}}<br>
-                  {{layer.epoch.age_summary}}
-                </td>
-                <td><a class="btn-link" href="{% url 'layer_update' layer.pk%}"><i class="icon icon-edit"></i></a></td>
-                <td><span class="btn add_other_layer" id="other_layer_{{layer.pk}}"><i class="icon icon-upward"></span></td>
-            </tr>
+          <tr>
+            <td>{{layer.in_profile}}</td>
+            {% include 'main/profile/layer-tablecells.html' %}
+            <td><span class="btn add_other_layer" id="other_layer_{{layer.pk}}"><i class="icon icon-upward"></span></td>
+          </tr>
         {% endfor %}
         </tbody>
         </table><br>

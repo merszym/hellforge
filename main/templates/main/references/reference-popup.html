@@ -1,0 +1,18 @@
+<div class="popover popover-left" style="z-index: 9999;">
+    <span class="btn btn-link">{{ref.short}}</span>
+    <div class="popover-container">
+      <div class="card">
+        <div class="card-header" style="position:relative;">
+            <a class="btn btn-primary" href="{% url 'ref_update' ref.pk %}" style="position:absolute; right:5%; top:10px"><i class="icon icon-edit"></i></a>
+            <h5>Reference</h5>
+            {{ref.short}}
+        </div>
+        <div class="card-body">
+            {{ref.title}} <br><br>
+            {% if ref.doi %}
+                <a class="btn" href="https://doi.org/{{ref.doi}}" target="_blank">Open</a>
+            {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>

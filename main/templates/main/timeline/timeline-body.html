@@ -8,6 +8,15 @@
     'zoomMin': 31556926000001,
     'showCurrentTime': false,
     'max': new Date(0,1,1),
-    'timeAxis': {scale: 'year', step: 2000}
+    'timeAxis': {scale: 'year', step: 2000},
+    'order': function(a,b){
+      if (a.start < b.start) {
+        return -1;
+      }
+      if (a.start > b.start) {
+        return 1;
+      }
+        return 0;
+    }
   };
 </script>

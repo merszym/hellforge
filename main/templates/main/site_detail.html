@@ -9,7 +9,7 @@
 {% block headline %} <a style='color:white' href="{% url 'site_list' %}">Site</a>{% endblock %}
 {% block body %}
 <div class='columns'>
-    <div class="column col-5" style="position:relative;">
+    <div class="column col-4" style="position:relative;">
         <a class="btn btn-primary" href="{% url 'site_update' object.pk %}" style="position:absolute; right:5%; top:10px"><i class="icon icon-edit"></i></a>
         <div class="my-2">
             <h2>{{object.name}}</h2>
@@ -21,6 +21,9 @@
                     <th>Country</th>
                     <th>Type</th>
                     <th>Elevation</th>
+                    {% if object.ref.first %}
+                    <th>References</th>
+                    {% endif %}
                   </tr>
                 </thead>
                 <tbody>
@@ -28,31 +31,20 @@
                     <td>{{object.name}}</td>
                     <td>{{object.country}}</td>
                     <td>{{object.type}}</td>
-                    <td>{{object.elevation}}m</td>
+                    <td>{{object.elevation}} m</td>
+                    {% if object.ref.first %}
+                    <td>
+                        {% for ref in object.ref.all %}
+                            {% include 'main/references/reference-popup.html' %}<br>
+                        {% endfor %}
+                    </td>
+                    {% endif %}
                   </tr>
                 </tbody>
               </table>
             <br>
             <div style="height: 480px;" id="map"></div>
         </div>
-        {% if object.ref.first %}
-        <table class="table table-striped table-hover">
-            <thead>
-                <tr>
-                <th>References</th>
-                <th></th>
-                </tr>
-            </thead>
-            <tbody id='search-tbody'>
-            {% for ref in object.ref.all %}
-            <tr>
-                <td><a href="{% url 'ref_update' ref.pk %}" class="btn-link">{{ref.short}}</a></td>
-                <td>{{ref.title}}</td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-        {% endif %}
     </div>
     <div class="column">
         <div class="my-2">
@@ -103,8 +95,8 @@
         </div>
     </div>
 </div>
-<h2>Timeline</h2>
 {% if object.layers %}
+<h2>Timeline</h2>
 {% include 'main/timeline/timeline-body.html' %}
 <script>
     var data = []

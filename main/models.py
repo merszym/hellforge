@@ -7,7 +7,6 @@ class Reference(models.Model):
     short = models.CharField('short', max_length=200, blank=True, null=True)
     tags = models.TextField('tags',blank=True)
     doi = models.CharField('doi', max_length=200)
-    pdf = models.FileField('pdf', upload_to='papers/', blank=True, null=True)
 
     def __str__(self):
         return self.short if self.short else self.title
