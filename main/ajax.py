@@ -88,6 +88,16 @@ def save_layer(request,profile_id):
         layer.profile.add(profile)
     return JsonResponse({"pk":layer.pk, 'name':layer.name})
 
+def remove_otherlayer(request,profile_id):
+    """
+    remove a layer from an existing profile (dont delete the layer itself)
+    """
+    profile = Profile.objects.get(pk=profile_id)
+    layer = Layer.objects.get(pk=int(request.GET['layer']))
+    layer.profile.remove(profile)
+    return JsonResponse({"pk":layer.pk, 'name':layer.name})
+
+
 def update_layer_positions(request, site_id):
     site = Site.objects.get(pk=site_id)
     #find the position that has changed
