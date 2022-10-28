@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-exp.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-icons.min.css">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/spectre-exp.css' %}">
+    <link rel="stylesheet" href="{% static 'css/spectre.css' %}">
+    <link rel="stylesheet" href="{% static 'css/spectre-icons.css' %}">
     <script  src="https://code.jquery.com/jquery-3.6.1.js" integrity="sha256-3zlB5s2uwoUzrXK3BT7AX3FyvojsraNFxCc2vC/7pNI="
          crossorigin="anonymous"></script>
     {% block head %}{% endblock %}

@@ -100,6 +100,8 @@ def clone_layer(request, pk):
         new_layer.ref.add(ref)
     for cp in layer.checkpoint.all():
         new_layer.checkpoint.add(cp)
+    for date in layer.date.all():
+        new_layer.date.add(date)
     return JsonResponse({'pk':new_layer.pk})
 
 def save_layer(request,profile_id):

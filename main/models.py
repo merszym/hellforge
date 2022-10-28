@@ -6,6 +6,7 @@ class ContactPerson(models.Model):
     name = models.CharField('name', max_length=300)
     email = models.CharField('email',max_length=300)
     affiliation = models.CharField('affiliation', max_length=300, blank=True)
+    tags = models.CharField('tag', max_length=300, blank=True, null=True)
 
     def __str__(self):
         return self.name

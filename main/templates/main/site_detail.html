@@ -4,7 +4,7 @@
 <title>Site: {{object.name}}</title>
 {% include 'main/location/location-head.html' %}
 {% include 'main/timeline/timeline-head.html' %}
-<script src="{% static 'jquery-ui.js' %}"></script>
+<script src="{% static 'js/jquery-ui.js' %}"></script>
 {% endblock %}
 {% block headline %} <a style='color:white' href="{% url 'site_list' %}">Site</a>{% endblock %}
 {% block body %}
@@ -58,7 +58,7 @@
                 <h3> Site description </h3>
                 <span id='site_description' class="btn btn-primary tooltip tooltip-bottom" data-tooltip="Toogle Description"><i class="icon icon-arrow-down"></i></span>
             </div>
-            <p id="site_description_content" style="display:none;">{{object.description|safe}}</p>
+            <div id="site_description_content" style="display:none;">{{object.description|safe}}</div>
             <br>
             <h3 class="text-grey">Profiles and Layers</h3>
             <div class="modal" id="modal-profile">
@@ -167,9 +167,9 @@
     var timeline = new vis.Timeline(container, items, groups, options);
 </script>
 {% endif %}
-<script src="{% static 'location.js' %}"></script>
+<script src="{% static 'js/location.js' %}"></script>
     {% if object.loc.first.geo %}
         <script> drawJson({{object.loc.first.geo | safe }}); fitBounds() </script>
     {% endif %}
-    <script src="{% static 'site.js' %}"></script>
+    <script src="{% static 'js/site.js' %}"></script>
 {% endblock %}

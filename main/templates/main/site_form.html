@@ -32,7 +32,12 @@
                 <div class="form-group">
                     <label class="form-label" for="site-type">Type</label>
                     <select class="form-select" id="site-type" name="type" required>
-                        <option selected>Cave</option>
+                        {% if object.type %}
+                        <option selected>{{object.type}}</option>
+                        {% else %}
+                        <option selected>---</option>
+                        {% endif %}
+                        <option>Cave</option>
                         <option>Open Air Site</option>
                         <option>Rockshelter</option>
                         <option>Other</option>

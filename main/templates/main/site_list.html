@@ -41,7 +41,7 @@
         </div>
     </div>
 </div>
-<script src="{% static 'location.js' %}"></script>
+<script src="{% static 'js/location.js' %}"></script>
     {% for object in object_list %}
         <script>
         var json = {{object.loc.first.geo | safe }}
