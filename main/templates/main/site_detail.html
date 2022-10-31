@@ -120,6 +120,7 @@
     groups.push({
         'id': "{{culture.name|lower}}",
         'content': "{{culture}}",
+        'order':parseInt("{{culture.date.first.upper}}")
         }
     )
 </script>
@@ -132,6 +133,7 @@
         {
         'id': cp,
         'content': "Checkpoint<br>{{checkpoint.type}}",
+        'order':parseInt("{{checkpoint.date.first.upper}}")+500000 //put checkpoints last in order
         }
     );
     added.push(cp)
