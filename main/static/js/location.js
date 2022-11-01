@@ -12,12 +12,13 @@ try{
         draw: {
             polyline: false,
             circlemarker: false,
-            circle:false
+            circle:false,
         },
         edit: {
-            featureGroup: drawnItems
+            featureGroup: drawnItems,
         }
     });
+
     map.addControl(drawControl);
 
     map.on('draw:created', function (e) {
@@ -37,6 +38,21 @@ try{
         if (feature.properties && feature.properties.id) {
             layer.options.id = feature.properties.id;
         }
+        //make colorful icons in case the propoerty is set
+        if (feature.properties && feature.properties.color) {
+            layer.setIcon(
+                new L.DivIcon({
+                    html: `
+                        <svg style='z-index:2000' width="40" height="40" viewBox="0 0 512 512" version="1.1" preserveAspectRatio="none"  xmlns="http://www.w3.org/2000/svg">
+                            <path d="M256,0C167.641,0,96,71.625,96,160c0,24.75,5.625,48.219,15.672,69.125C112.234,230.313,256,512,256,512l142.594-279.375   C409.719,210.844,416,186.156,416,160C416,71.625,344.375,0,256,0z" fill="${feature.properties.color}"></path>
+                        </svg>`,
+                    className: "",
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 40],
+                    popupAnchor:  [0, -20]
+                })
+            )
+        }
         drawnItems.addLayer(layer)
     }
 
@@ -55,9 +71,8 @@ try{
             }
         });
     }
-}
-catch(err){
-    //if no map is shown and leaflet not loaded
+} catch {
+    //;
 }
 
 var searchLocation = function( data ) {

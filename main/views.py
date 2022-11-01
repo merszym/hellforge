@@ -4,6 +4,7 @@ from .models import Location, Reference, Site, Layer, Culture, Date, Epoch, Chec
 from .forms import LocationForm, ReferenceForm, SiteForm, ProfileForm, LayerForm, CultureForm, DateForm, DateUpdateForm, EpochForm, CheckpointForm, ContactForm
 import re
 import statistics
+import seaborn as sns
 
 
 ## Locations ##
@@ -117,6 +118,58 @@ class LayerDeleteView(DeleteView):
 
 
 ## Cultures ##
+class CultureDetailView(DetailView):
+    model = Culture
+
+    # create the nested groups for the timeline template
+    def get_context_data(self, **kwargs):
+        context = super(CultureDetailView, self).get_context_data(**kwargs)
+        items = []
+        groupdata = []
+        geo = {
+            "type": "FeatureCollection",
+            "features": []
+        }
+        for cult in sorted(self.object.all_cultures, key=lambda x: x.lowest_date):
+            sites = sorted(list(set([x.site for x in cult.layer.all()])), key=lambda x: x.lowest_date(cult.pk))
+            site_color_dict = {site.name.lower():f"{col}" for site,col in zip(sites, sns.color_palette('husl', len(sites)).as_hex()) }
+            groupdata.append({
+                'id':cult.name.lower(),
+                'treeLevel':2,
+                'content':cult.name,
+                'nestedGroups': [f"{cult.name.lower()}-{site.name.lower()}" for site in sites ],
+            })
+            for site in sites:
+                geo['features'].append({
+                    "type": "Feature",
+                    "properties": {
+                        'color':f'{site_color_dict[site.name.lower()]}',
+                        'popupContent':f"<strong>{site.name}</strong><br><a href={reverse('site_detail', kwargs={'pk': site.id})} class=btn-link>Details</a>"
+                        },
+                    "geometry": site.geometry
+                })
+                groupdata.append({
+                    'id':f"{cult.name.lower()}-{site.name.lower()}",
+                    'content':site.name,
+                    'treeLevel':3
+                })
+            for layer in cult.layer.all():
+                items.append({
+                    'start': int(layer.mean_upper)*-1,
+                    'end': int(layer.mean_lower)*-1,
+                    'content': f"{layer.name} {layer.date.first()}",
+                    'group': f"{cult.name.lower()}-{layer.site.name.lower()}",
+                    'style': f"background-color: {site_color_dict[layer.site.name.lower()]};"
+                })
+        context['itemdata'] = items
+        context['timelinedata'] = groupdata
+        # get the geodata for leaflet
+        context['geo'] = geo
+        return context
+
+
+
+
 class CultureUpdateView(UpdateView):
     model = Culture
     form_class = CultureForm

@@ -12,7 +12,7 @@ Culture List
     {% if type %}
     <li><a href="{% url 'epoch_update' obj.pk %}">{{obj}}</li>
     {% else %}
-    <li><a href="{% url 'culture_update' obj.pk %}">{{obj}}</li>
+    <li><a href="{% url 'culture_detail' obj.pk %}">{{obj}}</li>
     {% endif %}
 {% endfor %}
 </ul>

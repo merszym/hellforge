@@ -1,6 +1,7 @@
 from django.db import models
 from django.urls import reverse
 from django.db.models import Q
+import json
 
 class ContactPerson(models.Model):
     name = models.CharField('name', max_length=300)
@@ -88,11 +89,24 @@ class Culture(models.Model):
     parent = models.ForeignKey('self', verbose_name=u'parent', related_name='child', blank=True, null=True, on_delete=models.SET_NULL)
     mean_upper = models.IntegerField(blank=True, default=100000)
     mean_lower = models.IntegerField(blank=True, default=0)
-    loc = models.ManyToManyField(Location, verbose_name=u"location")
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
 
     class Meta:
         ordering = ['mean_upper']
+
+    @property
+    def lowest_date(self):
+        """For sorting cultures by date, get all layers assigned to that culture and return the minimum"""
+        try:
+            return max(x.lowest_date for x in self.layer.all())
+        except:
+            return -1
+
+
+    @property
+    def all_cultures(self):
+        #TODO: recursively go through all children!
+        return Culture.objects.filter(Q(pk=self.id) | Q(parent__id = self.id))
 
     @property
     def age_summary(self):
@@ -148,6 +162,22 @@ class Site(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def geometry(self):
+        try:
+            geo = json.loads(self.loc.first().geo)
+        except:
+            geo = self.loc.first().geo
+        return geo['features'][0]['geometry']
+
+    def lowest_date(self, cult=None):
+        if cult:
+            layers = Layer.objects.filter( Q(culture_id=cult) & Q(site_id = self.id) )
+            if layers:
+                return max(x.lowest_date for x in layers.all())
+            return -1
+
 
     def get_absolute_url(self):
         return reverse('site_detail', kwargs={'pk': self.pk})
@@ -205,6 +235,23 @@ class Layer(models.Model):
 
     class Meta:
         ordering = ['pos']
+
+    def get_upper_sibling(self):
+        return self.site.layers.filter(pos > self.pos).first()
+
+    def get_lower_sibling(self):
+        return self.site.layers.filter(pos < self.pos).first()
+
+    @property
+    def lowest_date(self):
+        """For sorting Layers by date, get all Dates and return the minimum"""
+        # try direct dating:
+        if self.date.first():
+            return max(x.upper for x in self.date.all())
+        if self.mean_upper:
+            return self.mean_upper
+        #TODO: test
+        return 20000
 
     @property
     def checkpoints(self):

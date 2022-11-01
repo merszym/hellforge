@@ -1,0 +1,37 @@
+{% extends 'main/base.html' %}
+{% block head %}
+<title>Culture: {{object.name}}</title>
+{% include 'main/location/location-head.html' %}
+{% include 'main/timeline/timeline-head.html' %}
+{% endblock %}
+{% block body %}
+{% load static %}
+
+<div class='columns'>
+    <div class="column col-6" style="position:relative;">
+        <a class="btn btn-primary" href="{% url 'culture_update' object.pk %}" style="position:absolute; right:5%; top:10px"><i class="icon icon-edit"></i></a>
+        <div class="my-2">
+            <h2>{{object.name}}</h2>
+            <div style="height: 480px;" id="map"></div><br>
+        </div>
+    </div>
+
+    <div class="column">
+    </div>
+</div>
+    <h2>Timeline</h2>
+    {% include 'main/timeline/timeline-body.html' %}
+    <script>
+        var groups = {{timelinedata|safe}}
+        var data= {{itemdata|safe}}
+        data.forEach(element => {
+            element.start = new Date(element.start, 1,1);
+            element.end = new Date(element.end,1,1);
+        });
+        var items = new vis.DataSet(data);
+        var timeline = new vis.Timeline(container, items, groups, options);
+    </script>
+    <script src="{% static 'js/location.js' %}"></script>
+    <script> drawJson({{geo | safe }}); fitBounds();</script>
+    <script src="{% static 'js/site.js' %}"></script>
+{% endblock %}

@@ -20,6 +20,7 @@ urlpatterns = [
     path('cultures/edit/<int:pk>', views.CultureUpdateView.as_view(), name='culture_update'),
     path('cultures/add', views.CultureCreateView.as_view(), name='culture_add'),
     path('cultures', views.CultureListView.as_view(), name='culture_list'),
+    path('cultures/<int:pk>', views.CultureDetailView.as_view(), name='culture_detail'),
     path('epochs/edit/<int:pk>', views.EpochUpdateView.as_view(), name='epoch_update'),
     path('epochs/add', views.EpochCreateView.as_view(), name='epoch_add'),
     path('epochs', views.EpochListView.as_view(), name='epoch_list'),

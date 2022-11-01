@@ -26,7 +26,9 @@
     <div class="column">
         <h3>{{type}} Data</h3>
         <div class="my-2">
+            {% if type == 'Epoch' %}
             {% include 'main/location/location-display.html' %}
+            {% endif %}
             {% include 'main/dating/dating-display.html' %}
             {% include 'main/culture/culture-display.html' %}
             {% include 'main/epoch/epoch-display.html' %}
@@ -58,7 +60,9 @@
                 {% endif %}
                 {% include 'main/references/reference-formfield.html' %}
                 {% include 'main/dating/dating-formfield.html' %}
-                {% include 'main/location/location-formfield.html' %}
+                {% if type == 'Epoch' %}
+                    {% include 'main/location/location-formfield.html' %}
+                {% endif %}
                 <!-- Show the references -->
                 {% include 'main/references/reference-display.html' %}
                 <br>
@@ -69,9 +73,11 @@
 
     <div class="column" style="border-left: solid 2px grey">
         <h3>Edit Associated Information</h3>
+        {% if type == 'Epoch' %}
         <div class="my-2">
             {% include 'main/location/location-search.html' %}
         </div>
+        {% endif %}
         <div clas="my-2">
             <h6> Set Umbrella {{type}} </h6>
             {% if type == 'Culture' %}
