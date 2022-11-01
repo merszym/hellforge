@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 from . import ajax
-from site_aligner import settings
+from hellforge import settings
 
 urlpatterns = [
     path('locs/edit/<int:pk>', views.LocationUpdateView.as_view(), name='location_update'),

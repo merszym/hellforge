@@ -32,7 +32,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'site_aligner.urls'
+ROOT_URLCONF = 'hellforge.urls'
 
 TEMPLATES = [
     {
@@ -50,7 +50,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'site_aligner.wsgi.application'
+WSGI_APPLICATION = 'hellforge.wsgi.application'
 
 
 # Database
