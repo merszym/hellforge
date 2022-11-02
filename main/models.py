@@ -31,6 +31,13 @@ class Reference(models.Model):
         else:
             return f'https://doi.org/{self.doi}'
 
+    @property
+    def scihub(self):
+        if self.doi.startswith('http'):
+            return self.doi
+        else:
+            return f'https://sci-hub.ee/{self.doi}'
+
 class Date(models.Model):
     upper = models.IntegerField('upper bound')
     lower = models.IntegerField('lower bound')
@@ -100,7 +107,7 @@ class Culture(models.Model):
     # Additional funcitons
     @property
     def age_summary(self):
-        return f"{self.upper} - {self.lower} ya"
+        return f"{self.upper:,} - {self.lower:,} ya"
 
     @property
     def children(self):
@@ -232,10 +239,10 @@ class Layer(models.Model):
         ordering = ['pos']
 
     def get_upper_sibling(self):
-        return Layer.objects.filter(Q(pos__gt = self.pos) & Q(site=self.site)).first()
+        return Layer.objects.filter(Q(pos__lt = self.pos) & Q(site=self.site) & Q(date__isnull=False)).last()
 
     def get_lower_sibling(self):
-        return Layer.objects.filter(Q(pos__lt = self.pos) & Q(site=self.site)).first()
+        return Layer.objects.filter(Q(pos__gt = self.pos) & Q(site=self.site) & Q(date__isnull=False)).first()
 
     @property
     def lowest_date(self):
@@ -262,10 +269,7 @@ class Layer(models.Model):
 
     @property
     def age_summary(self):
-        if self.date.first():
-            return self.date.first()
-        else:
-            return Date(upper=self.mean_upper, lower=self.mean_lower)
+        return Date(upper=self.mean_upper, lower=self.mean_lower)
 
     @property
     def age_depth(self):

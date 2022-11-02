@@ -1,7 +1,11 @@
 <td><strong>{{layer.name}}</strong></td>
 <td>
+    {% if layer.date.first %}
+    {% include 'main/dating/dating-popup.html' %}<br>
+    {% else %}
     {{layer.age_summary}}<br>
     {{layer.age_depth}}
+    {% endif %}
 </td>
 <td>
 {% for checkpoint in layer.checkpoint.all %}
@@ -10,8 +14,10 @@
     </div>
 {% endfor %}
 </td>
-<td><a class="btn-link" href="{% url 'culture_detail' layer.culture.pk %}">{{layer.culture}}</a><br>
+<td>{% if layer.culture %}
+    <a class="btn-link" href="{% url 'culture_detail' layer.culture.pk %}">{{layer.culture}}</a><br>
     {{layer.culture.age_summary}}
+    {% endif %}
 </td>
 <td>
     {{layer.epoch}}<br>

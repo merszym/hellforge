@@ -1,0 +1,30 @@
+<div class="popover popover-right">
+    <span style="padding-left:0px;" class="btn btn-link">{{layer.age_summary}}</span>
+    <div class="popover-container">
+      <div class="card">
+        <div class="card-header">
+            <h5>Layer Dates</h5>
+        </div>
+        <div class="card-body">
+          <table class="table table-scroll">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Method</th>
+                <th>Edit</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for date in layer.date.all %}
+              <tr>
+                <td>{{date}}</td>
+                <td>{{date.method}}</td>
+                <td><a href="{% url 'date_update' date.pk %}"><i class="icon icon-edit"></i></a></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>

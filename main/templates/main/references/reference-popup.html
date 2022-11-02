@@ -10,7 +10,10 @@
         <div class="card-body">
             {{ref.title}} <br><br>
             {% if ref.link %}
-                <a class="btn" href="{{ref.link}}" target="_blank">Open</a>
+                <div style="display:flex;gap:10px">
+                  <a class="btn" href="{{ref.link}}" target="_blank">Open</a>
+                  <a class="btn" href="{{ref.scihub}}" target="_blank">Sci-Hub</a>
+                </div>
             {% endif %}
         </div>
         <div class="card-footer">

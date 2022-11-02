@@ -6,28 +6,27 @@ import statistics
 
 def calculate_layer_dates(layer):
     """Calculate the layer date for DISPLAY in the overviews, use heuristics if no direct date is set"""
+    upper_sibling = layer.get_upper_sibling()
+    lower_sibling = layer.get_lower_sibling()
+    upper = layer.mean_upper
+    lower = layer.mean_lower
+    if layer.culture:
+        upper = layer.culture.upper
+        lower = layer.culture.lower
+
+    if upper_sibling:
+        if lower_sibling:
+            upper = statistics.mean([upper_sibling.mean_upper, lower_sibling.mean_upper])
+            lower = statistics.mean([upper_sibling.mean_lower, lower_sibling.mean_lower])
+        else:
+            lower = upper_sibling.mean_upper
+    if lower_sibling and not upper_sibling:
+        upper = lower_sibling.mean_lower
+
     # get direct date upper, lower
     if layer.date.first():
         upper = statistics.mean([x.upper for x in layer.date.all()])
-    # get the lower bounds of underlying layer
-    elif layer.get_lower_sibling():
-        upper = layer.get_lower_sibling().mean_lower
-    # or get the date of the assigned culture
-    elif layer.culture:
-        upper = layer.culture.upper
-    else:
-        upper = layer.mean_upper
-
-    if layer.date.first():
         lower = statistics.mean([x.lower for x in layer.date.all()])
-    # get the lower bounds of underlying layer
-    elif layer.get_upper_sibling():
-        lower = layer.get_upper_sibling().mean_upper
-    # or get the date of the assigned culture
-    elif layer.culture:
-        lower = layer.culture.lower
-    else:
-        lower = layer.mean_lower
     return upper,lower
 
 
@@ -42,7 +41,6 @@ def update_layer(sender, instance, **kwargs):
         instance.save()
 
     upper, lower = calculate_layer_dates(instance)
-    print(instance, upper, lower)
     if (instance.mean_lower != lower) or (instance.mean_upper != upper):
         instance.mean_lower = lower
         instance.mean_upper = upper

@@ -138,12 +138,12 @@
     );
     added.push(cp)
     }
-    content = "{{checkpoint.name}} ({{checkpoint.date.first}})"
+    content = "{{checkpoint.name}} | {{checkpoint.date.first}}"
     if(added.includes(content)==false){
         data.push(
             {
-            'start': new Date(parseInt("{{checkpoint.date.first.upper}}")*-1,1,1),
-            'end': new Date(parseInt("{{checkpoint.date.first.lower}}")*-1,1,1),
+            'start': new Date(parseInt("{{checkpoint.date.first.upper}}")*-1,0,1),
+            'end': new Date(parseInt("{{checkpoint.date.first.lower}}")*-1,0,1),
             'content': content,
             'group':"{{checkpoint.type|lower}}"
             }
@@ -156,9 +156,9 @@
 <script>
     data.push(
         {
-        'start': new Date(parseInt("{{layer.mean_upper}}")*-1,1,1),
-        'end': new Date(parseInt("{{layer.mean_lower}}")*-1,1,1),
-        'content': "{{layer.name}} ({{layer.date.first}})",
+        'start': new Date(parseInt("{{layer.mean_upper}}")*-1,0,1),
+        'end': new Date(parseInt("{{layer.mean_lower}}")*-1,0,1),
+        'content': "{{layer.name}} | {{layer.age_summary}}",
         'group':"{{layer.culture.name|lower}}"
         }
     )

@@ -79,7 +79,6 @@ $("body").on("click",'.contact-search-item', function(){
 $("body").on("click",'.contact_delete', function(){
     pk = this.id.split('_')[2]
     ele = $(`#contact_option_${pk}`)
-    console.log(ele)
     if(ele.attr('selected')){
         ele.removeAttr('selected')
         $(`#contact_display_row_${pk} > td`).addClass('del')
