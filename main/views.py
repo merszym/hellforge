@@ -130,9 +130,13 @@ class CultureDetailView(DetailView):
             "type": "FeatureCollection",
             "features": []
         }
+        all_sites = sorted(list(set(self.object.all_sites)), key=lambda x: x.lowest_date())
+        site_color_dict = {site.name.lower():f"{col}" for site,col in zip(all_sites, sns.color_palette('husl', len(all_sites)).as_hex()) }
+
         for cult in sorted(self.object.all_cultures, key=lambda x: x.lowest_date):
             sites = sorted(list(set([x.site for x in cult.layer.all()])), key=lambda x: x.lowest_date(cult.pk))
-            site_color_dict = {site.name.lower():f"{col}" for site,col in zip(sites, sns.color_palette('husl', len(sites)).as_hex()) }
+            if len(sites)==0:
+                continue
             groupdata.append({
                 'id':cult.name.lower(),
                 'treeLevel':2,
@@ -163,7 +167,6 @@ class CultureDetailView(DetailView):
                 })
         context['itemdata'] = items
         context['timelinedata'] = groupdata
-        # get the geodata for leaflet
         context['geo'] = geo
         return context
 

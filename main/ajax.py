@@ -135,7 +135,7 @@ def update_layer_positions(request, site_id):
     site = Site.objects.get(pk=site_id)
     #find the position that has changed
     new_positions = [int(x) for x in request.GET['new_positions'].split(',')]
-    layers = [x for x in site.layers if x.pk in new_positions]
+    layers = [x for x in site.layer.all() if x.pk in new_positions]
     for old,new in zip(layers,new_positions):
         pos = old.pos
         l = Layer.objects.get(pk=new)

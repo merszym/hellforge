@@ -102,11 +102,30 @@ class Culture(models.Model):
         except:
             return -1
 
+    @property
+    def children(self):
+        return Culture.objects.filter(parent__id = self.id).all()
 
     @property
     def all_cultures(self):
-        #TODO: recursively go through all children!
-        return Culture.objects.filter(Q(pk=self.id) | Q(parent__id = self.id))
+        cultures = list(Culture.objects.filter(pk=self.id).all())
+        children = list(Culture.objects.filter(parent__id = self.id).all())
+        if len(children) == 0: #lowest branch
+            return cultures
+        # else: walk down the branches
+        else:
+            for cult in children:
+                cultures.extend(cult.all_cultures)
+        return cultures
+
+    @property
+    def all_sites(self):
+        sites = []
+        for cult in self.all_cultures:
+            sites.extend(
+                list(Site.objects.filter(layer__culture__pk=cult.pk).all())
+            )
+        return sites
 
     @property
     def age_summary(self):
@@ -119,7 +138,7 @@ class Culture(models.Model):
         return self.name
 
     def get_absolute_url(self):
-        return reverse('culture_update', kwargs={'pk':self.id})
+        return reverse('culture_detail', kwargs={'pk':self.id})
 
 class Epoch(models.Model):
     name = models.CharField('name', max_length=200)
@@ -166,18 +185,17 @@ class Site(models.Model):
     @property
     def geometry(self):
         try:
-            geo = json.loads(self.loc.first().geo)
+            return json.loads(self.loc.first().geo)['features'][0]['geometry']
         except:
-            geo = self.loc.first().geo
-        return geo['features'][0]['geometry']
+            return self.loc.first().geo['features'][0]['geometry']
 
     def lowest_date(self, cult=None):
-        if cult:
-            layers = Layer.objects.filter( Q(culture_id=cult) & Q(site_id = self.id) )
-            if layers:
-                return max(x.lowest_date for x in layers.all())
+        try:
+            if cult:
+                return max(x.lowest_date for x in Layer.objects.filter( Q(culture_id=cult) & Q(site_id = self.id) ).all())
+            return max(x.lowest_date for x in self.layer.all())
+        except:
             return -1
-
 
     def get_absolute_url(self):
         return reverse('site_detail', kwargs={'pk': self.pk})
@@ -188,12 +206,7 @@ class Site(models.Model):
 
     @property
     def cultures(self):
-        return set([x.culture for x in self.layers])
-
-    @property
-    def layers(self):
-        layers = [x for x in self.layer.all()]
-        return sorted(list(set(layers)), key=lambda x: x.pos)
+        return set([x.culture for x in self.layer.all()])
 
 
 class Profile(models.Model):
@@ -206,11 +219,7 @@ class Profile(models.Model):
 
     @property
     def other_layers(self):
-        layers = []
-        for layer in self.site.layer.all():
-            if layer not in self.layer.all():
-                layers.append(layer)
-        return set(layers)
+        return Layer.objects.filter(Q(site=self.site)).exclude(profile=self)
 
     @property
     def other_profiles(self):
@@ -250,8 +259,7 @@ class Layer(models.Model):
             return max(x.upper for x in self.date.all())
         if self.mean_upper:
             return self.mean_upper
-        #TODO: test
-        return 20000
+        return -1
 
     @property
     def checkpoints(self):

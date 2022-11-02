@@ -107,7 +107,7 @@
         </div>
     </div>
 </div>
-{% if object.layers %}
+{% if object.layer.first %}
 <h2>Timeline</h2>
 {% include 'main/timeline/timeline-body.html' %}
 <script>
@@ -152,7 +152,7 @@
     }
 </script>
 {% endfor %}
-{% for layer in object.layers %}
+{% for layer in object.layer.all %}
 <script>
     data.push(
         {
