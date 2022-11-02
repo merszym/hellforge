@@ -89,9 +89,11 @@
         <div clas="my-2">
             {% include 'main/references/reference-search.html' %}
         </div>
+        {% if type == 'Epoch' %}
         <div clas="my-2">
             {% include 'main/dating/dating-search.html' %}
         </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

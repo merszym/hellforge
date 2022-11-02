@@ -133,7 +133,7 @@ class CultureDetailView(DetailView):
         all_sites = sorted(list(set(self.object.all_sites)), key=lambda x: x.lowest_date())
         site_color_dict = {site.name.lower():f"{col}" for site,col in zip(all_sites, sns.color_palette('husl', len(all_sites)).as_hex()) }
 
-        for cult in sorted(self.object.all_cultures, key=lambda x: x.lowest_date):
+        for cult in sorted(self.object.all_cultures, key=lambda x: x.lower):
             sites = sorted(list(set([x.site for x in cult.layer.all()])), key=lambda x: x.lowest_date(cult.pk))
             if len(sites)==0:
                 continue
@@ -158,10 +158,11 @@ class CultureDetailView(DetailView):
                     'treeLevel':3
                 })
             for layer in cult.layer.all():
+                date = layer.date.first() if layer.date.first() else 'Context Date'
                 items.append({
                     'start': int(layer.mean_upper)*-1,
                     'end': int(layer.mean_lower)*-1,
-                    'content': f"{layer.name} {layer.date.first()}",
+                    'content': f"{layer.name} | {date}",
                     'group': f"{cult.name.lower()}-{layer.site.name.lower()}",
                     'style': f"background-color: {site_color_dict[layer.site.name.lower()]};"
                 })

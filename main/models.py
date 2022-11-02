@@ -63,8 +63,6 @@ class Checkpoint(models.Model):
     category = models.CharField('category', max_length=200,blank=True, null=True)
     type = models.CharField('type', max_length=200,blank=True, null=True)
     date = models.ManyToManyField(Date, verbose_name=u'date',blank=True)
-    mean_upper = models.IntegerField(blank=True, default=100000)
-    mean_lower = models.IntegerField(blank=True, default=0)
     loc = models.ManyToManyField(Location, verbose_name=u"location", blank=True)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
 
@@ -85,22 +83,24 @@ class Culture(models.Model):
     name = models.CharField('name', max_length=200)
     description = models.TextField('description', blank=True)
     hominin_group = models.CharField('hominin_group', max_length=500, blank=True)
-    date = models.ManyToManyField(Date, verbose_name =u"date")
     parent = models.ForeignKey('self', verbose_name=u'parent', related_name='child', blank=True, null=True, on_delete=models.SET_NULL)
-    mean_upper = models.IntegerField(blank=True, default=100000)
-    mean_lower = models.IntegerField(blank=True, default=0)
+    upper = models.IntegerField(blank=True, default=100000)
+    lower = models.IntegerField(blank=True, default=0)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
 
     class Meta:
-        ordering = ['mean_upper']
+        ordering = ['upper']
 
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse('culture_detail', kwargs={'pk':self.id})
+
+    # Additional funcitons
     @property
-    def lowest_date(self):
-        """For sorting cultures by date, get all layers assigned to that culture and return the minimum"""
-        try:
-            return max(x.lowest_date for x in self.layer.all())
-        except:
-            return -1
+    def age_summary(self):
+        return f"{self.upper} - {self.lower} ya"
 
     @property
     def children(self):
@@ -127,31 +127,17 @@ class Culture(models.Model):
             )
         return sites
 
-    @property
-    def age_summary(self):
-        ## Todo: Make a real summary...
-        if self.date.first():
-            return self.date.first()
-        return 'Date Unset'
-
-    def __str__(self):
-        return self.name
-
-    def get_absolute_url(self):
-        return reverse('culture_detail', kwargs={'pk':self.id})
 
 class Epoch(models.Model):
     name = models.CharField('name', max_length=200)
     description = models.TextField('description', blank=True)
     date = models.ManyToManyField(Date, verbose_name =u"date")
     parent = models.ForeignKey('self', verbose_name=u'parent', related_name='child', null=True, blank=True, on_delete=models.SET_NULL)
-    mean_upper = models.IntegerField(blank=True, default=1000000)
-    mean_lower = models.IntegerField(blank=True, default=0)
     loc = models.ManyToManyField(Location, verbose_name=u"location")
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
 
     class Meta:
-        ordering = ['mean_upper']
+        ordering = ['date__upper']
 
     @property
     def age_summary(self):
@@ -246,10 +232,10 @@ class Layer(models.Model):
         ordering = ['pos']
 
     def get_upper_sibling(self):
-        return self.site.layers.filter(pos > self.pos).first()
+        return Layer.objects.filter(Q(pos__gt = self.pos) & Q(site=self.site)).first()
 
     def get_lower_sibling(self):
-        return self.site.layers.filter(pos < self.pos).first()
+        return Layer.objects.filter(Q(pos__lt = self.pos) & Q(site=self.site)).first()
 
     @property
     def lowest_date(self):
@@ -276,25 +262,16 @@ class Layer(models.Model):
 
     @property
     def age_summary(self):
-        ## Todo: Make a real summary...
         if self.date.first():
             return self.date.first()
-        if self.culture:
-            return self.culture.date.first()
-        if self.epoch:
-            return self.epoch.date.first()
-        return 'Unset'
+        else:
+            return Date(upper=self.mean_upper, lower=self.mean_lower)
 
     @property
     def age_depth(self):
-        ## Todo: Make a real summary...
         if self.date.first():
-            return 'direct dating'
-        if self.culture:
-            return 'culture'
-        if self.epoch:
-            return 'epoch'
-        return 'Unset'
+            return 'Direct dating'
+        return 'Context'
 
     def get_absolute_url(self):
         return reverse('site_detail', kwargs={'pk':self.site.id})

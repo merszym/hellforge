@@ -10,7 +10,7 @@
     </div>
 {% endfor %}
 </td>
-<td>{{layer.culture}}<br>
+<td><a class="btn-link" href="{% url 'culture_detail' layer.culture.pk %}">{{layer.culture}}</a><br>
     {{layer.culture.age_summary}}
 </td>
 <td>

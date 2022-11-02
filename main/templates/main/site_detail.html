@@ -120,7 +120,7 @@
     groups.push({
         'id': "{{culture.name|lower}}",
         'content': "{{culture}}",
-        'order':parseInt("{{culture.date.first.upper}}")
+        'order':parseInt("{{culture.upper}}")
         }
     )
 </script>
@@ -142,8 +142,8 @@
     if(added.includes(content)==false){
         data.push(
             {
-            'start': new Date(parseInt("{{checkpoint.mean_upper}}")*-1,1,1),
-            'end': new Date(parseInt("{{checkpoint.mean_lower}}")*-1,1,1),
+            'start': new Date(parseInt("{{checkpoint.date.first.upper}}")*-1,1,1),
+            'end': new Date(parseInt("{{checkpoint.date.first.lower}}")*-1,1,1),
             'content': content,
             'group':"{{checkpoint.type|lower}}"
             }

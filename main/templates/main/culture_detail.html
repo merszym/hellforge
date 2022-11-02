@@ -4,7 +4,7 @@
 {% include 'main/location/location-head.html' %}
 {% include 'main/timeline/timeline-head.html' %}
 {% endblock %}
-{% block headline %}{{object.name}}{% endblock %}
+{% block headline %}<a href="{% url 'culture_list' %}">{{object.name}}</a>{% endblock %}
 
 {% block body %}
 {% load static %}
@@ -16,18 +16,42 @@
             <h2>{{object.name}} Sites</h2>
             <div style="height: 480px;" id="map"></div><br>
             <h4>Culture</h4>
-            <p><strong>Associated Hominin Group: </strong>{{object.hominin_group}}</p>
-            <p><strong>Description: </strong>{{object.description}}</p>
-            {% if object.children %}
-            <h5>Children</h5>
-            {% for child in object.children %}
-            <p><a href="{% url 'culture_detail' child.pk %}">{{child.name}}</a></p>
-            {% endfor %}
-            {% endif %}
-            {% if object.parent %}
-            <h5>Parent</h5>
-            <p><a href="{% url 'culture_detail' object.parent.pk %}">{{object.parent.name}}</a></p>
-            {% endif %}
+            <table class="table">
+                <thead>
+                  <tr>
+                    <th>Associated Hominin</th>
+                    <th>Parent Culture</th>
+                    <th>Children</th>
+                    {% if object.ref.first %}
+                    <th>References</th>
+                    {% endif %}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>{{object.hominin_group}}</td>
+                    <td>
+                    {% if object.parent %}
+                    <a class='btn-link' href="{% url 'culture_detail' object.parent.pk %}">{{object.parent.name}}</a>
+                    {% endif %}
+                    </td>
+                    <td>
+                    {% for child in object.children %}
+                    <a class='btn-link' href="{% url 'culture_detail' child.pk %}">{{child.name}}</a><br>
+                    {% endfor %}
+                    </td>
+                    {% if object.ref.first %}
+                    <td>
+                        {% for ref in object.ref.all %}
+                            {% include 'main/references/reference-popup.html' %}<br>
+                        {% endfor %}
+                    </td>
+                    {% endif %}
+                  </tr>
+                </tbody>
+              </table>
+            <br>
+            <p>{{object.description}}</p>
         </div>
     </div>
     <div class="column">
