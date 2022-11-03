@@ -16,7 +16,7 @@ class Reference(models.Model):
     title = models.CharField('title', max_length=200)
     short = models.CharField('short', max_length=200, blank=True, null=True)
     tags = models.TextField('tags',blank=True)
-    doi = models.CharField('doi', max_length=200)
+    doi = models.CharField('doi', max_length=500)
 
     def __str__(self):
         return self.short if self.short else self.title

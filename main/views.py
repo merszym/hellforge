@@ -1,11 +1,15 @@
 from django.views.generic import CreateView, ListView, UpdateView, DetailView, DeleteView
 from django.urls import reverse
+from django.shortcuts import render
 from .models import Location, Reference, Site, Layer, Culture, Date, Epoch, Checkpoint, Profile
 from .forms import LocationForm, ReferenceForm, SiteForm, ProfileForm, LayerForm, CultureForm, DateForm, DateUpdateForm, EpochForm, CheckpointForm, ContactForm
 import re
 import statistics
 import seaborn as sns
 
+#
+def landing(request):
+    return render(request, 'main/landing.html')
 
 ## Locations ##
 class LocationCreateView(CreateView):
@@ -87,15 +91,15 @@ class SiteDetailView(DetailView):
         groups = []
         for culture in self.object.cultures:
             groups.append({
-                'id': f"{culture.name.lower()}",
-                'content': f"{culture}",
-                'order': culture.upper
+                'id': f"{culture.name.lower() if culture else 'None'}",
+                'content': f"{culture if culture else 'None'}",
+                'order': culture.upper if culture else 'None'
                 })
         for checkpoint in self.object.checkpoints:
             groups.append({
                 'id': f"{checkpoint.type.lower()}",
                 'content': f"Checkpoint<br>{checkpoint.type}",
-                'order':checkpoint.date.first().upper+500000
+                'order':checkpoint.date.first().upper+1000000
                 })
             data.append({
                 'start': checkpoint.date.first().upper *-31556952-(1970*31556952000),
@@ -108,7 +112,7 @@ class SiteDetailView(DetailView):
                 'start': layer.mean_upper *-31556952-(1970*31556952000),
                 'end': layer.mean_lower *-31556952-(1970*31556952000),
                 'content': f"{layer.name} | {layer.age_summary}",
-                'group':f"{layer.culture.name.lower()}"
+                'group':f"{layer.culture.name.lower() if layer.culture else 'None'}"
                 })
         context['groupdata'] = list({v['id']:v for v in groups}.values())
         context['itemdata'] = list({v['content']:v for v in data}.values())
