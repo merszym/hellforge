@@ -63,8 +63,8 @@
             var groups = {{timelinedata|safe}}
             var data= {{itemdata|safe}}
             data.forEach(element => {
-                element.start = new Date(element.start, 1,1);
-                element.end = new Date(element.end,1,1);
+                element.start = new Date(element.start);
+                element.end = new Date(element.end);
             });
             var items = new vis.DataSet(data);
             var timeline = new vis.Timeline(container, items, groups, options);

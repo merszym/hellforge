@@ -3,13 +3,16 @@
   // DOM element where the Timeline will be attached
   var container = document.getElementById('visualization');
   var options = {
+    'margin':2,
     'width': '100%',
     'zoomMax': 9.4670778000002E+15,
-    'zoomMin': 31556926000001,
+    'zoomMin': 31556926001,
+    'zoomKey':'shiftKey',
     'showCurrentTime': false,
-    'max': new Date(0,0,1),
-    'timeAxis': {scale: 'year', step: 5000},
-    'horizontalScroll':true,
+    'max': new Date(-1920*31556952000),
+    'timeAxis': {scale: 'year', step: 20},
+    //'start': new Date(-1970*31556952000),
+    'orientation':'both',
     'order': function(a,b){
       if (a.start < b.start) {
         return -1;
@@ -18,6 +21,11 @@
         return 1;
       }
         return 0;
+    },
+    'format': {
+      minorLabels: function(date, scale, step) {
+        return `${parseInt(date.format("YYYY"))*-1} kya`;
+      }
     }
   };
 </script>

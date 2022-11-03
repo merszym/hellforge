@@ -83,6 +83,35 @@ class SiteDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super(SiteDetailView, self).get_context_data(**kwargs)
         context.update(self.extra_context)
+        data = []
+        groups = []
+        for culture in self.object.cultures:
+            groups.append({
+                'id': f"{culture.name.lower()}",
+                'content': f"{culture}",
+                'order': culture.upper
+                })
+        for checkpoint in self.object.checkpoints:
+            groups.append({
+                'id': f"{checkpoint.type.lower()}",
+                'content': f"Checkpoint<br>{checkpoint.type}",
+                'order':checkpoint.date.first().upper+500000
+                })
+            data.append({
+                'start': checkpoint.date.first().upper *-31556952-(1970*31556952000),
+                'end': checkpoint.date.first().lower *-31556952-(1970*31556952000),
+                'content': f"{checkpoint.name} | {checkpoint.date.first()}",
+                'group': f"{checkpoint.type.lower()}"
+                })
+        for layer in self.object.layer.all():
+            data.append({
+                'start': layer.mean_upper *-31556952-(1970*31556952000),
+                'end': layer.mean_lower *-31556952-(1970*31556952000),
+                'content': f"{layer.name} | {layer.age_summary}",
+                'group':f"{layer.culture.name.lower()}"
+                })
+        context['groupdata'] = list({v['id']:v for v in groups}.values())
+        context['itemdata'] = list({v['content']:v for v in data}.values())
         return context
 
 ## Profiles ##
@@ -161,8 +190,8 @@ class CultureDetailView(DetailView):
             for layer in cult.layer.all():
                 date = layer.age_summary if layer.date.first() else 'Context Date'
                 items.append({
-                    'start': int(layer.mean_upper)*-1,
-                    'end': int(layer.mean_lower)*-1,
+                    'start': int(layer.mean_upper)*-31556952-(1970*31556952000), #1/1000 year in ms, start with year 0
+                    'end': int(layer.mean_lower)*-31556952-(1970*31556952000),
                     'content': f"{layer.name} | {date}",
                     'group': f"{cult.name.lower()}-{layer.site.name.lower()}",
                     'style': f"background-color: {site_color_dict[layer.site.name.lower()]};"

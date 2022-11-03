@@ -111,60 +111,12 @@
 <h2>Timeline</h2>
 {% include 'main/timeline/timeline-body.html' %}
 <script>
-    var data = []
-    var groups = []
-    var added = []
-</script>
-{% for culture in object.cultures %}
-<script>
-    groups.push({
-        'id': "{{culture.name|lower}}",
-        'content': "{{culture}}",
-        'order':parseInt("{{culture.upper}}")
-        }
-    )
-</script>
-{% endfor %}
-{% for checkpoint in object.checkpoints %}
-<script>
-    cp = "{{checkpoint.type|lower}}"
-    if(added.includes(cp)==false){
-        groups.push(
-        {
-        'id': cp,
-        'content': "Checkpoint<br>{{checkpoint.type}}",
-        'order':parseInt("{{checkpoint.date.first.upper}}")+500000 //put checkpoints last in order
-        }
-    );
-    added.push(cp)
-    }
-    content = "{{checkpoint.name}} | {{checkpoint.date.first}}"
-    if(added.includes(content)==false){
-        data.push(
-            {
-            'start': new Date(parseInt("{{checkpoint.date.first.upper}}")*-1,0,1),
-            'end': new Date(parseInt("{{checkpoint.date.first.lower}}")*-1,0,1),
-            'content': content,
-            'group':"{{checkpoint.type|lower}}"
-            }
-        );
-        added.push(content)
-    }
-</script>
-{% endfor %}
-{% for layer in object.layer.all %}
-<script>
-    data.push(
-        {
-        'start': new Date(parseInt("{{layer.mean_upper}}")*-1,0,1),
-        'end': new Date(parseInt("{{layer.mean_lower}}")*-1,0,1),
-        'content': "{{layer.name}} | {{layer.age_summary}}",
-        'group':"{{layer.culture.name|lower}}"
-        }
-    )
-</script>
-{% endfor %}
-<script>
+    var groups = {{groupdata|safe}}
+    var data= {{itemdata|safe}}
+    data.forEach(element => {
+        element.start = new Date(element.start);
+        element.end = new Date(element.end);
+    });
     var items = new vis.DataSet(data);
     var timeline = new vis.Timeline(container, items, groups, options);
 </script>
