@@ -163,11 +163,24 @@ class CultureDetailView(DetailView):
             "type": "FeatureCollection",
             "features": []
         }
-        all_sites = sorted(list(set(self.object.all_sites)), key=lambda x: x.lowest_date())
-        site_color_dict = {site.name.lower():f"{col}" for site,col in zip(all_sites, sns.color_palette('husl', len(all_sites)).as_hex()) }
+        nochildren = self.request.GET.get('nochildren',False)
+        query = sorted(self.object.all_cultures(nochildren=nochildren), key=lambda x: x.upper)
+        # get the colors right
+        ordered_sites = sorted(
+                        self.object.all_sites(nochildren=nochildren),
+                        key=lambda x: (x[0].upper, x[1].lowest_date(cult=self.object, nochildren=nochildren))
+                    )
+        all_sites = []
+        [all_sites.append(site.name) for (cult,site) in ordered_sites if site.name not in all_sites]
 
-        for cult in sorted(self.object.all_cultures, key=lambda x: x.upper):
-            sites = sorted(list(set([x.site for x in cult.layer.all()])), key=lambda x: x.lowest_date(cult.pk))
+        site_color_dict = {site.lower():f"{col}" for site,col in zip(all_sites, sns.color_palette('husl', len(all_sites)).as_hex()) }
+        for cult in query:
+            ordered_sites = sorted(
+                        cult.all_sites(nochildren=True),
+                        key=lambda x: x[1].lowest_date(cult=cult)
+                    )
+            sites = []
+            [sites.append(site) for (cult,site) in ordered_sites if site not in sites]
             if len(sites)==0:
                 continue
             groupdata.append({
@@ -188,7 +201,7 @@ class CultureDetailView(DetailView):
                 })
                 groupdata.append({
                     'id':f"{cult.name.lower()}-{site.name.lower()}",
-                    'content':site.name,
+                    'content':f'{site.name}: <a href="{reverse("site_detail", kwargs={"pk":site.pk})}" class="btn-link">view</a>',
                     'treeLevel':3
                 })
             for layer in cult.layer.all():

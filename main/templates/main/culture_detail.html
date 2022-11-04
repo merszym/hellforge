@@ -4,7 +4,7 @@
 {% include 'main/location/location-head.html' %}
 {% include 'main/timeline/timeline-head.html' %}
 {% endblock %}
-{% block headline %}<a href="{% url 'culture_list' %}">{{object.name}}</a>{% endblock %}
+{% block headline %}<a href="{% url 'culture_list' %}">Culture</a>{% endblock %}
 
 {% block body %}
 {% load static %}
@@ -57,6 +57,10 @@
     <div class="column">
         <div class="my-2">
             <h2>Timeline</h2>
+            <div style="display:flex; gap:10px;">
+              <a class="btn" href="{% url 'culture_detail' object.pk %}?nochildren=1">Show without Children</a>
+              <a class="btn" href="{% url 'culture_detail' object.pk %}">Show with Children</a>
+            </div>
             {% include 'main/timeline/timeline-body.html' %}
     </div>
         <script>

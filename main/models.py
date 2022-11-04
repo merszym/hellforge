@@ -113,24 +113,22 @@ class Culture(models.Model):
     def children(self):
         return Culture.objects.filter(parent__id = self.id).all()
 
-    @property
-    def all_cultures(self):
+    def all_cultures(self, nochildren=False):
         cultures = list(Culture.objects.filter(pk=self.id).all())
         children = list(Culture.objects.filter(parent__id = self.id).all())
-        if len(children) == 0: #lowest branch
+        if len(children) == 0 or nochildren: #lowest branch
             return cultures
         # else: walk down the branches
         else:
             for cult in children:
-                cultures.extend(cult.all_cultures)
+                cultures.extend(cult.all_cultures())
         return cultures
 
-    @property
-    def all_sites(self):
+    def all_sites(self, nochildren=False):
         sites = []
-        for cult in self.all_cultures:
+        for cult in self.all_cultures(nochildren=nochildren):
             sites.extend(
-                list(Site.objects.filter(layer__culture__pk=cult.pk).all())
+                [(cult, site) for site in Site.objects.filter(layer__culture__pk=cult.pk).all()]
             )
         return sites
 
@@ -182,9 +180,9 @@ class Site(models.Model):
         except:
             return self.loc.first().geo['features'][0]['geometry']
 
-    def lowest_date(self, cult=None):
+    def lowest_date(self, cult=None, nochildren=False):
         try:
-            if cult:
+            if cult or nochildren:
                 return max(x.lowest_date for x in Layer.objects.filter( Q(culture_id=cult) & Q(site_id = self.id) ).all())
             return max(x.lowest_date for x in self.layer.all())
         except:
@@ -248,8 +246,8 @@ class Layer(models.Model):
     def lowest_date(self):
         """For sorting Layers by date, get all Dates and return the minimum"""
         # try direct dating:
-        if self.date.first():
-            return max(x.upper for x in self.date.all())
+        #if self.date.first():
+        #    return max(x.upper for x in self.date.all())
         if self.mean_upper:
             return self.mean_upper
         return -1
