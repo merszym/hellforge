@@ -13,7 +13,7 @@ class ContactPerson(models.Model):
         return self.name
 
 class Reference(models.Model):
-    title = models.CharField('title', max_length=200)
+    title = models.CharField('title', max_length=500)
     short = models.CharField('short', max_length=200, blank=True, null=True)
     tags = models.TextField('tags',blank=True)
     doi = models.CharField('doi', max_length=500)
