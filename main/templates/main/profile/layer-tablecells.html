@@ -9,7 +9,7 @@
 </td>
 <td>
 {% for checkpoint in layer.checkpoint.all %}
-    <div>{{checkpoint.name}}<br>
+    <div><a href="{% url 'checkpoint_update' checkpoint.pk%}" class="btn-link">{{checkpoint.name}}</a><br>
         {{checkpoint.age_summary}}
     </div>
 {% endfor %}

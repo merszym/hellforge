@@ -14,10 +14,10 @@
     //'start': new Date(-1970*31556952000),
     'orientation':'both',
     'order': function(a,b){
-      if (a.start < b.start) {
+      if (a.pos > b.pos) {
         return -1;
       }
-      if (a.start > b.start) {
+      if (a.pos < b.pos) {
         return 1;
       }
         return 0;

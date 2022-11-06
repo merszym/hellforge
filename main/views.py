@@ -111,6 +111,7 @@ class SiteDetailView(DetailView):
             data.append({
                 'start': layer.mean_upper *-31556952-(1970*31556952000),
                 'end': layer.mean_lower *-31556952-(1970*31556952000),
+                'pos':int(layer.pos),
                 'content': f"{layer.name} | {layer.age_summary}",
                 'group':f"{layer.culture.name.lower() if layer.culture else 'None'}"
                 })

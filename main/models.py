@@ -237,10 +237,12 @@ class Layer(models.Model):
         ordering = ['pos']
 
     def get_upper_sibling(self):
-        return Layer.objects.filter(Q(pos__lt = self.pos) & Q(site=self.site) & Q(date__isnull=False)).last()
+        return Layer.objects.filter(Q(pos__lt = self.pos) & Q(site=self.site) &
+            (Q(date__isnull=False) | Q(checkpoint__isnull=False))  ).last()
 
     def get_lower_sibling(self):
-        return Layer.objects.filter(Q(pos__gt = self.pos) & Q(site=self.site) & Q(date__isnull=False)).first()
+        return Layer.objects.filter(Q(pos__gt = self.pos) & Q(site=self.site) &
+            (Q(date__isnull=False) | Q(checkpoint__isnull=False)) ).first()
 
     @property
     def lowest_date(self):
@@ -276,7 +278,7 @@ class Layer(models.Model):
         return 'Context'
 
     def get_absolute_url(self):
-        return reverse('site_detail', kwargs={'pk':self.site.id})
+        return f"{reverse('site_detail', kwargs={'pk':self.site.id})}#profile"
 
 class Sample(models.Model):
     name = models.CharField('name', max_length=200)
