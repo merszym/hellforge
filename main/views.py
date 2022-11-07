@@ -89,7 +89,7 @@ class SiteDetailView(DetailView):
         context.update(self.extra_context)
         data = []
         groups = []
-        for culture in self.object.cultures:
+        for culture in sorted(self.object.cultures, key=lambda x: x.upper if x else 0):
             groups.append({
                 'id': f"{culture.name.lower() if culture else 'None'}",
                 'content': f"{culture if culture else 'None'}",
@@ -111,7 +111,7 @@ class SiteDetailView(DetailView):
             data.append({
                 'start': layer.mean_upper *-31556952-(1970*31556952000),
                 'end': layer.mean_lower *-31556952-(1970*31556952000),
-                'pos':int(layer.pos),
+                'order':int(layer.pos),
                 'content': f"{layer.name} | {layer.age_summary}",
                 'group':f"{layer.culture.name.lower() if layer.culture else 'None'}"
                 })
@@ -165,7 +165,7 @@ class CultureDetailView(DetailView):
             "features": []
         }
         nochildren = self.request.GET.get('nochildren',False)
-        query = sorted(self.object.all_cultures(nochildren=nochildren), key=lambda x: x.upper)
+        query = sorted(self.object.all_cultures(nochildren=nochildren), key=lambda x: x.upper*-1)
         # get the colors right
         ordered_sites = sorted(
                         self.object.all_sites(nochildren=nochildren),
@@ -178,7 +178,7 @@ class CultureDetailView(DetailView):
         for cult in query:
             ordered_sites = sorted(
                         cult.all_sites(nochildren=True),
-                        key=lambda x: x[1].lowest_date(cult=cult)
+                        key=lambda x: x[1].lowest_date(cult=cult)*-1
                     )
             sites = []
             [sites.append(site) for (cult,site) in ordered_sites if site not in sites]
@@ -191,7 +191,9 @@ class CultureDetailView(DetailView):
                 'order':int(cult.upper),
                 'nestedGroups': [f"{cult.name.lower()}-{site.name.lower()}" for site in sites ],
             })
+            site_date_dict = {}
             for site in sites:
+                site_date_dict[site.name] = []
                 geo['features'].append({
                     "type": "Feature",
                     "properties": {
@@ -206,20 +208,20 @@ class CultureDetailView(DetailView):
                     'treeLevel':3
                 })
             for layer in cult.layer.all():
-                date = layer.age_summary if layer.date.first() else 'Context Date'
+                site_date_dict[layer.site.name].extend([int(layer.mean_lower), int(layer.mean_upper)])
+
+            for k,v in site_date_dict.items():
                 items.append({
-                    'start': int(layer.mean_upper)*-31556952-(1970*31556952000), #1/1000 year in ms, start with year 0
-                    'end': int(layer.mean_lower)*-31556952-(1970*31556952000),
-                    'content': f"{layer.name} | {date}",
-                    'group': f"{cult.name.lower()}-{layer.site.name.lower()}",
-                    'style': f"background-color: {site_color_dict[layer.site.name.lower()]};"
+                    'start': max(v)*-31556952-(1970*31556952000), #1/1000 year in ms, start with year 0
+                    'end': min(v)*-31556952-(1970*31556952000),
+                    'content': f"{k} | {max(v)} - {min(v)}",
+                    'group': f"{cult.name.lower()}-{k.lower()}",
+                    'style': f"background-color: {site_color_dict[k.lower()]};"
                 })
         context['itemdata'] = items
         context['timelinedata'] = groupdata
         context['geo'] = geo
         return context
-
-
 
 
 class CultureUpdateView(UpdateView):
@@ -246,6 +248,37 @@ class CultureCreateView(CreateView):
 
 class CultureListView(ListView):
     model = Culture
+
+    def get_context_data(self, **kwargs):
+        context = super(CultureListView, self).get_context_data(**kwargs)
+        items = []
+        groupdata = []
+
+        query = Culture.objects.filter(parent__isnull=True)
+
+        for n,cult in enumerate(query):
+            groupdata.append({
+                'id':cult.name.lower(),
+                'content':f"<a class='btn-link' href={reverse('culture_detail', kwargs={'pk':cult.pk})}>{cult.name}</a> | {cult.upper} - {cult.lower} ya",
+                'treeLevel':2,
+                'nestedGroups': [int(f'{n}{m}') for m,subcult in enumerate(cult.all_cultures(noself=True)) ],
+            })
+            for m,subcult in enumerate(cult.all_cultures(noself=True)):
+                groupdata.append({
+                    'id':int(f'{n}{m}'),
+                    'content':f"{subcult} <a class='btn-link' href={reverse('culture_detail', kwargs={'pk':subcult.pk})}>view</a>",
+                    'order':int(f'{n}{m}'),
+                    'treeLevel':3,
+                })
+                items.append({
+                    'start': int(subcult.upper)*-31556952-(1970*31556952000), #1/1000 year in ms, start with year 0
+                    'end': int(subcult.lower)*-31556952-(1970*31556952000),
+                    'content': f"{subcult} | {subcult.upper} - {subcult.lower}",
+                    'group': int(f'{n}{m}'),
+                })
+        context['itemdata'] = items
+        context['timelinedata'] = groupdata
+        return context
 
 
 ## Dates ##

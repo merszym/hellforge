@@ -96,7 +96,7 @@ class Culture(models.Model):
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
 
     class Meta:
-        ordering = ['upper']
+        ordering = ['-upper']
 
     def __str__(self):
         return self.name
@@ -113,8 +113,11 @@ class Culture(models.Model):
     def children(self):
         return Culture.objects.filter(parent__id = self.id).all()
 
-    def all_cultures(self, nochildren=False):
-        cultures = list(Culture.objects.filter(pk=self.id).all())
+    def all_cultures(self, nochildren=False, noself=False):
+        if not noself:
+            cultures = list(Culture.objects.filter(pk=self.id).all())
+        else:
+            cultures = []
         children = list(Culture.objects.filter(parent__id = self.id).all())
         if len(children) == 0 or nochildren: #lowest branch
             return cultures

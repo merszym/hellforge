@@ -56,7 +56,6 @@ def update_layer(sender, instance, **kwargs):
     """
     if not instance.site:
         instance.site = instance.profile.first().site
-        instance.save()
 
     upper, lower = calculate_layer_dates(instance)
     if (instance.mean_lower != lower) or (instance.mean_upper != upper):
@@ -66,24 +65,33 @@ def update_layer(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender=Layer)
+@receiver(post_save, sender=Culture)
 def calc_culture_range(sender, instance, **kwargs):
     """
-    When layers are updated/saved, set the upper and lower bounds of the associated cultures
+    When layers are updated/saved, set the upper and lower bounds of the associated cultures.
+    Include the children-cultures!
     """
-    culture = instance.culture
+    try:
+        culture = instance.culture
+    except:
+        culture = instance
     if culture:
         dates = []
         # if a culture was not directly dated...
         mean_lower = []
         mean_upper = []
-        for layer in Layer.objects.filter(culture=culture.pk):
-            dates.extend(list(layer.date.all()))
-            mean_lower.append(layer.mean_lower)
-            mean_upper.append(layer.mean_upper)
+        for cult in culture.all_cultures():
+            for layer in Layer.objects.filter(culture=cult.pk):
+                dates.extend(list(layer.date.all()))
+                mean_lower.append(layer.mean_lower)
+                mean_upper.append(layer.mean_upper)
         if len(dates) >= 1:
-            culture.upper = max([x.upper for x in dates])
-            culture.lower = min([x.lower for x in dates])
+            upper = max([x.upper for x in dates])
+            lower = min([x.lower for x in dates])
         else:
-            culture.upper = max(mean_upper)
-            culture.lower = min(mean_lower)
-        culture.save()
+            upper = max(mean_upper)
+            lower = min(mean_lower)
+        if (culture.upper != upper) and (culture.lower != lower):
+            culture.upper = upper
+            culture.lower = lower
+            culture.save()

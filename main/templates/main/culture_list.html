@@ -1,4 +1,10 @@
 {% extends 'main/base.html' %}
+{% load static %}
+{% block head %}
+{% include 'main/timeline/timeline-head.html' %}
+<title>All Cultures</title>
+{% endblock %}
+
 {% block headline %}
 {% if type %}
 Epoch List
@@ -7,13 +13,22 @@ Culture List
 {% endif %}
 {% endblock %}
 {% block body %}
-<ul>
-{% for obj in object_list %}
-    {% if type %}
-    <li><a href="{% url 'epoch_update' obj.pk %}">{{obj}}</li>
-    {% else %}
-    <li><a href="{% url 'culture_detail' obj.pk %}">{{obj}}</li>
-    {% endif %}
-{% endfor %}
-</ul>
+<div class="column">
+    <div class="my-2">
+        <h2>Timeline</h2>
+        <div style="display:flex; gap:10px;">
+        </div>
+        {% include 'main/timeline/timeline-body.html' %}
+</div>
+    <script>
+        var groups = {{timelinedata|safe}}
+        var data= {{itemdata|safe}}
+        data.forEach(element => {
+            element.start = new Date(element.start);
+            element.end = new Date(element.end);
+        });
+        var items = new vis.DataSet(data);
+        var timeline = new vis.Timeline(container, items, groups, options);
+    </script>
+
 {% endblock %}
