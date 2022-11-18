@@ -88,9 +88,12 @@ def calc_culture_range(sender, instance, **kwargs):
         if len(dates) >= 1:
             upper = max([x.upper for x in dates])
             lower = min([x.lower for x in dates])
-        else:
+        elif len(mean_lower) >= 1:
             upper = max(mean_upper)
             lower = min(mean_lower)
+        else:
+            upper = 100000
+            lower = 0
         if (culture.upper != upper) and (culture.lower != lower):
             culture.upper = upper
             culture.lower = lower

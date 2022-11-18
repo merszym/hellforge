@@ -91,8 +91,8 @@ class Culture(models.Model):
     description = models.TextField('description', blank=True)
     hominin_group = models.CharField('hominin_group', max_length=500, blank=True)
     parent = models.ForeignKey('self', verbose_name=u'parent', related_name='child', blank=True, null=True, on_delete=models.SET_NULL)
-    upper = models.IntegerField(blank=True, default=100000)
-    lower = models.IntegerField(blank=True, default=0)
+    upper = models.IntegerField(blank=True, default=100000, null=True)
+    lower = models.IntegerField(blank=True, default=0, null=True)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
 
     class Meta:

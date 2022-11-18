@@ -95,17 +95,13 @@ class SiteDetailView(DetailView):
                 'content': f"{culture if culture else 'None'}",
                 'order': culture.upper if culture else 'None'
                 })
-        for checkpoint in self.object.checkpoints:
-            groups.append({
-                'id': f"{checkpoint.type.lower()}",
-                'content': f"Checkpoint<br>{checkpoint.type}",
-                'order':checkpoint.date.first().upper+1000000
-                })
+        for checkpoint,color in zip(self.object.checkpoints, sns.color_palette('husl', len(self.object.checkpoints)).as_hex() ):
             data.append({
                 'start': checkpoint.date.first().upper *-31556952-(1970*31556952000),
                 'end': checkpoint.date.first().lower *-31556952-(1970*31556952000),
-                'content': f"{checkpoint.name} | {checkpoint.date.first()}",
-                'group': f"{checkpoint.type.lower()}"
+                'type':'background',
+                'style': f"border-left: solid 2px {color};border-right: solid 2px {color}",
+                'content': f"<a href={reverse('checkpoint_update', kwargs={'pk':checkpoint.id})} class='btn-link'>{checkpoint.name}</a>",
                 })
         for layer in self.object.layer.all():
             data.append({
