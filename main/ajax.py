@@ -1,10 +1,49 @@
 from .forms import ReferenceForm, ProfileForm, DateForm, ContactForm
 from django.http import JsonResponse
 from django.shortcuts import render
-from .models import Reference, Location, Site, Profile, Layer, Culture, Epoch, Checkpoint, ContactPerson
+from .models import Reference, Location, Site, Profile, Layer, Culture, Epoch, Checkpoint, ContactPerson, Image, Gallery
 from django.db.models import Q
+from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
+import json
 
+models = {
+    'site': Site
+}
+
+@csrf_exempt
+def upload_image(request):
+    data = {k:v[0] for k,v in dict(request.GET).items()}
+    model = models[data['model']]
+    object = model.objects.get(pk=data['id'])
+
+    if object.gallery:
+        gallery = object.gallery
+    else:
+        gallery = Gallery(title=f"{str(object)}: Gallery")
+        gallery.save()
+        object.gallery = gallery
+        object.save()
+
+    img = dict(request.FILES)['image'][0]
+    image = Image(image=img, gallery=gallery)
+    image.save()
+    image.refresh_from_db()
+
+    if image.pk:
+        success = 1
+        url = image.image.url
+    else:
+        success = 0
+        url = ''
+
+    res = {
+    "success" : success,
+    "file": {
+        "url" : url,
+        }
+    }
+    return JsonResponse(res)
 
 def save_date(request):
     form = DateForm(request.POST)
@@ -143,6 +182,27 @@ def update_layer_positions(request, site_id):
         l.save()
     return JsonResponse({'data':True})
 
+def get_description(request):
+    data = request.GET.dict()
+    model = models[data['model']]
+    object = model.objects.get(pk=data['id'])
+    if object.new_description:
+        data = json.loads(object.new_description)
+    else:
+        data = dict({})
+    return JsonResponse(data)
+
+@csrf_exempt
+def save_description(request):
+    data = request.GET.dict()
+    model = models[data['model']]
+    object = model.objects.get(pk=data['id'])
+
+    data = ';'.join([x.replace('nbsp','') for x in request.POST.keys()])
+    data = json.loads(data)
 
 
+    object.new_description = json.dumps(data)
+    object.save()
 
+    return JsonResponse({'data':True, 'redirect': reverse('site_detail', kwargs={'pk': object.id})})

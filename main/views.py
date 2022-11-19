@@ -2,12 +2,15 @@ from django.views.generic import CreateView, ListView, UpdateView, DetailView, D
 from django.urls import reverse
 from django.shortcuts import render
 from .models import Location, Reference, Site, Layer, Culture, Date, Epoch, Checkpoint, Profile
-from .forms import LocationForm, ReferenceForm, SiteForm, ProfileForm, LayerForm, CultureForm, DateForm, DateUpdateForm, EpochForm, CheckpointForm, ContactForm
+from .forms import LocationForm, ReferenceForm, SiteForm, ProfileForm, LayerForm, CultureForm, \
+    DateForm, DateUpdateForm, EpochForm, CheckpointForm, ContactForm
 import re
 import statistics
 import seaborn as sns
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
-#
+
 def landing(request):
     return render(request, 'main/landing.html')
 
@@ -79,6 +82,15 @@ class SiteUpdateView(UpdateView):
         context.update(self.extra_context)
         return context
 
+class SiteDescriptionUpdateView(DetailView):
+    model = Site
+    template_name = 'main/site-description-update.html'
+    extra_context = {'readonly': False}
+
+    def get_context_data(self, **kwargs):
+        context = super(SiteDescriptionUpdateView, self).get_context_data(**kwargs)
+        context.update(self.extra_context)
+        return context
 
 class SiteDetailView(DetailView):
     model = Site

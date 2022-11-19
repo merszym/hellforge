@@ -72,8 +72,16 @@ function makeSortable(){
     });
 };
 
-$('#site_description').on('click', function(){
+$('#description-pop').on('click', function(){
     $('#site_description_content').toggle()
+    $('#description-pop').toggleClass('btn-primary');
 })
+
+$('#profile-pop').on('click', function(){
+    $('#site_profile_content').toggle()
+    $('#profile-pop').toggleClass('btn-primary');
+})
+
+$('#profile-pop').click()
 
 getProfile()

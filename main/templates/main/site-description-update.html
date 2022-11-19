@@ -1,0 +1,14 @@
+{% extends 'main/base.html' %}
+{% block head %}
+<title>{{object}}</title>
+{% include 'main/editor/editor-head.html' %}
+
+{% endblock %}
+{% block headline %}
+Edit Description
+{% endblock %}
+
+{% block body %}
+{% include 'main/editor/editor-body.html' %}
+
+{% endblock %}

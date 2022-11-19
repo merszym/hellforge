@@ -1,4 +1,5 @@
 from django.urls import path
+from django.conf.urls.static import static
 from . import views
 from . import ajax
 from hellforge import settings
@@ -14,6 +15,7 @@ urlpatterns = [
     path('sites/add', views.SiteCreateView.as_view(), name='site_add'),
     path('sites', views.SiteListView.as_view(), name='site_list'),
     path('sites/edit/<int:pk>', views.SiteUpdateView.as_view(), name='site_update'),
+    path('sites/edit/desc/<int:pk>', views.SiteDescriptionUpdateView.as_view(), name='site_description_update'),
     path('sites/<int:pk>', views.SiteDetailView.as_view(), name='site_detail'),
     path('layers/edit/<int:pk>', views.LayerUpdateView.as_view(), name='layer_update'),
     path('layers/remove/<int:pk>', views.LayerDeleteView.as_view(), name='layer_delete'),
@@ -28,6 +30,8 @@ urlpatterns = [
     path('checkpoints/add', views.CheckpointCreateView.as_view(), name='checkpoint_add'),
     path('checkpoints/edit/<int:pk>', views.CheckpointUpdateView.as_view(), name='checkpoint_update'),
     path('date/edit/<int:pk>', views.DateUpdateView.as_view(), name='date_update'),
+    path('ajax/editor/save', ajax.save_description, name='ajax_description_save'),
+    path('ajax/editor/get', ajax.get_description, name='ajax_description_get'),
     path('ajax/refs/add', ajax.save_ref, name='ajax_ref_add'),
     path('ajax/contact/add', ajax.save_contact, name='ajax_contact_add'),
     path('ajax/date/add', ajax.save_date, name='ajax_date_add'),
@@ -42,8 +46,11 @@ urlpatterns = [
     path('ajax/layer/add/<int:profile_id>', ajax.save_layer, name='ajax_layer_add'),
     path('ajax/layer/remove/<int:profile_id>', ajax.remove_otherlayer, name='ajax_otherlayer_delete'),
     path('ajax/layer/clone/<int:pk>', ajax.clone_layer, name='ajax_layer_clone'),
-    path('ajax/layer/update_pos/<int:site_id>', ajax.update_layer_positions, name='ajax_layer_pos_update')
+    path('ajax/layer/update_pos/<int:site_id>', ajax.update_layer_positions, name='ajax_layer_pos_update'),
+    path('ajax/upload', ajax.upload_image, name='upload'),
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
     from django.contrib.staticfiles.urls import staticfiles_urlpatterns

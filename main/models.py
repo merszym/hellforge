@@ -3,6 +3,7 @@ from django.urls import reverse
 from django.db.models import Q
 import json
 
+
 class ContactPerson(models.Model):
     name = models.CharField('name', max_length=300)
     email = models.CharField('email',max_length=300)
@@ -160,11 +161,33 @@ class Epoch(models.Model):
     def get_absolute_url(self):
         return reverse('epoch_list')
 
+
+class Gallery(models.Model):
+    title = models.CharField("title",max_length=200, blank=True, null=True)
+
+def get_image_path(instance, filename):
+    # instance = Image instance
+    # filename = original filename
+    return f'descr/{instance.gallery.model.model}/{instance.gallery.model.name.replace(" ","_")}/{filename.replace(" ","_")}'
+
+class Image(models.Model):
+    gallery = models.ForeignKey(Gallery, on_delete=models.CASCADE)
+    image = models.ImageField('image', upload_to=get_image_path)
+    title = models.CharField("title", max_length=200, blank=True)
+    alt = models.TextField("alt", null=True, blank=True)
+
+    def __str__(self):
+        if self.title:
+            return self.title
+        return f"{self.gallery.title}.{self.image.name }"
+
 class Site(models.Model):
     contact = models.ManyToManyField(ContactPerson, blank=True, verbose_name=u'contact', related_name='site')
     name = models.CharField('name', max_length=200)
     country = models.CharField('country', max_length=200, blank=True)
     description = models.TextField('description', blank=True)
+    new_description = models.JSONField('new_description', blank=True, null=True)
+    gallery = models.OneToOneField(Gallery, blank=True, null=True, verbose_name=u'gallery', related_name='model', on_delete=models.SET_NULL)
     type = models.CharField('type', max_length=200, blank=True)
     loc = models.ManyToManyField(Location, verbose_name=u"location")
     elevation = models.IntegerField('elevation', blank=True)
@@ -175,6 +198,11 @@ class Site(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def model(self):
+        # this is for the description only, to send uploaded images to the correct model
+        return 'site'
 
     @property
     def geometry(self):

@@ -1,5 +1,5 @@
 from django import forms
-from .models import Location, Reference, Site, Profile, Layer, Culture, Date, Epoch, Checkpoint, ContactPerson
+from .models import Location, Reference, Site, Profile, Layer, Culture, Date, Epoch, Checkpoint, ContactPerson, Image
 
 class ProfileForm(forms.ModelForm):
     class Meta:
