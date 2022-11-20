@@ -47,10 +47,10 @@ $.getJSON({
         saveButton.addEventListener('click', function () {
         editor.save()
             .then((savedData) => {
-                $.ajax({
-                    type: "post",
+                $.post({
+                    dataType:"json",
                     url: $('#description-save').attr("data-url"),
-                    data: JSON.stringify(savedData).trim(),
+                    data: {'data': JSON.stringify(savedData)},
                     success: function(respond){
                         window.location.replace(respond['redirect']);
                     }

@@ -198,9 +198,8 @@ def save_description(request):
     model = models[data['model']]
     object = model.objects.get(pk=data['id'])
 
-    data = ';'.join([x.replace('nbsp','') for x in request.POST.keys()])
-    data = json.loads(data)
-
+    data = request.POST.dict()
+    data = json.loads(data['data'])
 
     object.new_description = json.dumps(data)
     object.save()

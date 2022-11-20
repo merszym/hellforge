@@ -34,7 +34,7 @@ class LocationForm(forms.ModelForm):
 class SiteForm(forms.ModelForm):
     class Meta:
         model = Site
-        fields = ['name','country', 'type', 'elevation','description','ref','loc','contact']
+        fields = ['name','country', 'type', 'elevation','ref','loc','contact']
 
 
 class LayerForm(forms.ModelForm):
