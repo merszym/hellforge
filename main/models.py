@@ -185,7 +185,6 @@ class Site(models.Model):
     contact = models.ManyToManyField(ContactPerson, blank=True, verbose_name=u'contact', related_name='site')
     name = models.CharField('name', max_length=200)
     country = models.CharField('country', max_length=200, blank=True)
-    description = models.TextField('description', blank=True)
     new_description = models.JSONField('new_description', blank=True, null=True)
     gallery = models.OneToOneField(Gallery, blank=True, null=True, verbose_name=u'gallery', related_name='model', on_delete=models.SET_NULL)
     type = models.CharField('type', max_length=200, blank=True)
