@@ -9,63 +9,69 @@
 {% endblock %}
 {% block headline %} <a style='color:white' href="{% url 'site_list' %}">Site</a>{% endblock %}
 {% block body %}
-<div class='columns'>
-    <div class="column col-4" style="position:relative;">
+<div class='columns' style="padding:10px;">
+    <div class="column col-4" id='mobile'>
         <a class="btn btn-primary" href="{% url 'site_update' object.pk %}" style="position:absolute; right:5%; top:10px"><i class="icon icon-edit"></i></a>
         <div class="my-2">
             <h2>{{object.name}}</h2>
-            <table class="table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Country</th>
-                    <th>Type</th>
-                    <th>Elevation</th>
-                    {% if object.ref.first %}
-                    <th>References</th>
-                    {% endif %}
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>{{object.name}}</td>
-                    <td>{{object.country}}</td>
-                    <td>{{object.type}}</td>
-                    <td>{{object.elevation}} m</td>
-                    {% if object.ref.first %}
-                    <td>
-                        {% for ref in object.ref.all %}
-                            {% include 'main/references/reference-popup.html' %}<br>
-                        {% endfor %}
-                    </td>
-                    {% endif %}
-                  </tr>
-                </tbody>
-              </table>
-            <br>
-            {% if object.contact.first %}
-            <h5> Contact Person </h5>
-            {% for contact in object.contact.all %}
-                {% include 'main/contact/contact-tile.html' %}
-            {% endfor %}
-            <br>
-            {% endif %}
-            <div style="height: 480px;" id="map"></div><br>
+            <div class="btn-group">
+                <button id='btn-overview' class="btn btn-primary overview-toggle">Overview</button>
+                <button id='btn-descr' class="btn overview-toggle">Description</button>
+            </div>
+            <div id="description-overview" style="padding:10px;" class="panel">
+                <br>
+                <table class="table" style="margin-bottom:20px;">
+                    <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Country</th>
+                        <th>Type</th>
+                        <th>Elevation</th>
+                        {% if object.ref.first %}
+                        <th>References</th>
+                        {% endif %}
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>{{object.name}}</td>
+                        <td>{{object.country}}</td>
+                        <td>{{object.type}}</td>
+                        <td>{{object.elevation}} m</td>
+                        {% if object.ref.first %}
+                        <td>
+                            {% for ref in object.ref.all %}
+                                {% include 'main/references/reference-popup.html' %}<br>
+                            {% endfor %}
+                        </td>
+                        {% endif %}
+                    </tr>
+                    </tbody>
+                </table>
+                {% if object.contact.first %}
+                <h5> Contact Person </h5>
+                {% for contact in object.contact.all %}
+                    {% include 'main/contact/contact-tile.html' %}
+                {% endfor %}
+                <br>
+                {% endif %}
+                <div style="height: 480px;" id="map"></div><br>
+            </div>
+            <div id="description-description" class="panel" style="display:none;">
+                <div class="panel-header">
+                    <a class="btn btn-primary" href="{% url 'site_description_update' object.pk %}">
+                        <i class="icon icon-edit"></i>
+                    </a>
+                </div>
+                <div class="panel-body" style="max-height:720px;">
+                    {% include 'main/editor/editor-body.html' %}
+                </div>
+            </div>
         </div>
     </div>
     <div class="column">
         <div class="my-2">
-            <div style="display: flex; gap: 20px;">
-                <span id='description-pop' class="btn tooltip tooltip-bottom" data-tooltip="Toggle Description" >Description</span>
-                <span id='profile-pop' class="btn tooltip tooltip-bottom" data-tooltip="Toggle Profiles" >Profiles and Layers</span>
-            </div>
-
-            <div id="site_description_content" style="display:none;position: relative;">
-                <a class="btn btn-primary" href="{% url 'site_description_update' object.pk %}" style="position:absolute; right:5%; top:10px; z-index: 20;"><i class="icon icon-edit"></i></a>
-                {% include 'main/editor/editor-body.html' %}
-            </div>
-            <br>
-            <div id="site_profile_content" style="display:none">
+            <div id="site_profile_content">
                 <h3 class="text-grey" id="profile">Profiles and Layers</h3>
                 <div class="modal" id="modal-profile">
                     <a href="#close" class="modal-overlay" aria-label="Close"></a>

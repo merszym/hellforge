@@ -72,16 +72,25 @@ function makeSortable(){
     });
 };
 
-$('#description-pop').on('click', function(){
-    $('#site_description_content').toggle()
-    $('#description-pop').toggleClass('btn-primary');
+$('.overview-toggle').on('click', function(){
+    $('.overview-toggle').removeClass('btn-primary')
+    $(this).addClass('btn-primary')
+    if($(this).attr('id')=='btn-overview'){
+        $('#description-overview').show()
+        $('#description-description').hide()
+    } else{
+        $('#description-overview').hide()
+        $('#description-description').show()
+    }
 })
 
-$('#profile-pop').on('click', function(){
-    $('#site_profile_content').toggle()
-    $('#profile-pop').toggleClass('btn-primary');
-})
-
-$('#profile-pop').click()
+$(window).resize(function resize(){
+    if ($(window).width() < 1000) {
+        $('#mobile').removeClass('col-4')
+    } else {
+        $('#mobile').addClass('col-4')
+    }
+}).trigger('resize');
 
 getProfile()
+resize()
