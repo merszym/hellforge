@@ -189,7 +189,7 @@ def get_description(request):
     if object.new_description:
         data = json.loads(object.new_description)
     else:
-        data = dict({})
+        data = dict({'empty':True, 'model': data['model']})
     return JsonResponse(data)
 
 @csrf_exempt
