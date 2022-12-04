@@ -48,7 +48,6 @@ def calculate_layer_dates(layer):
         lower = statistics.mean([x.lower for x in layer.date.all()])
     return upper,lower
 
-
 @receiver(post_save, sender=Layer)
 def update_layer(sender, instance, **kwargs):
     """
@@ -62,7 +61,6 @@ def update_layer(sender, instance, **kwargs):
         instance.mean_lower = lower
         instance.mean_upper = upper
         instance.save()
-
 
 @receiver(post_save, sender=Layer)
 @receiver(post_save, sender=Culture)
@@ -94,7 +92,3 @@ def calc_culture_range(sender, instance, **kwargs):
         else:
             upper = 100000
             lower = 0
-        if (culture.upper != upper) and (culture.lower != lower):
-            culture.upper = upper
-            culture.lower = lower
-            culture.save()

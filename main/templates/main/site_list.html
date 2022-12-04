@@ -6,6 +6,15 @@
 {% block headline %}Site List{% endblock %}
 {% block body %}
 {% load static %}
+<style>
+.site_done_False {
+    background-color: red;
+}
+.site_done_True {
+    background-color: inherit;
+}
+
+</style>
 <div class='columns'>
     <div class="column col-7">
         <div class="my-2">
@@ -29,7 +38,7 @@
                 </thead>
                 <tbody>
                     {% for object in object_list %}
-                        <tr id="site_{{object.pk}}">
+                        <tr id="site_{{object.pk}}" class="site_done_{{object.site_done}}">
                             <td>{{object.name}}</td>
                             <td>{{object.country}}</td>
                             <td>{{object.type}}</td>

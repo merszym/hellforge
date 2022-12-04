@@ -67,10 +67,8 @@ class SiteCreateView(CreateView):
         context.update(self.extra_context)
         return context
 
-
 class SiteListView(ListView):
     model = Site
-
 
 class SiteUpdateView(UpdateView):
     model = Site
@@ -112,17 +110,24 @@ class SiteDetailView(DetailView):
                 'start': checkpoint.date.first().upper *-31556952-(1970*31556952000),
                 'end': checkpoint.date.first().lower *-31556952-(1970*31556952000),
                 'type':'background',
-                'style': f"border-left: solid 2px {color};border-right: solid 2px {color}",
+                #'style': f"border-left: solid 2px {color};border-right: solid 2px {color};",
                 'content': f"<a href={reverse('checkpoint_update', kwargs={'pk':checkpoint.id})} class='btn-link'>{checkpoint.name}</a>",
                 })
         for layer in self.object.layer.all():
-            data.append({
+            layerdata = {
                 'start': layer.mean_upper *-31556952-(1970*31556952000),
-                'end': layer.mean_lower *-31556952-(1970*31556952000),
                 'order':int(layer.pos),
                 'content': f"{layer.name} | {layer.age_summary}",
-                'group':f"{layer.culture.name.lower() if layer.culture else 'None'}"
+                'group':f"{layer.culture.name.lower() if layer.culture else 'None'}",
+                'type':'point'
+                }
+            # if range instead of point
+            if layer.mean_lower != layer.mean_upper:
+                layerdata.update({
+                    'end': layer.mean_lower *-31556952-(1970*31556952000),
+                    'type': 'range'
                 })
+            data.append(layerdata)
         context['groupdata'] = list({v['id']:v for v in groups}.values())
         context['itemdata'] = list({v['content']:v for v in data}.values())
         return context
@@ -135,7 +140,6 @@ class ProfileDeleteView(DeleteView):
 
     def get_success_url(self):
         return reverse('site_detail', kwargs={'pk':self.get_object().site.id})
-
 
 ## Layers ##
 class LayerUpdateView(UpdateView):
@@ -157,7 +161,6 @@ class LayerDeleteView(DeleteView):
             return reverse('site_detail', kwargs={'pk':self.get_object().site.id})
         else:
             return reverse('site_detail', kwargs={'pk':self.get_object().profile.first().site.id})
-
 
 ## Cultures ##
 class CultureDetailView(DetailView):
@@ -219,13 +222,20 @@ class CultureDetailView(DetailView):
                 site_date_dict[layer.site.name].extend([int(layer.mean_lower), int(layer.mean_upper)])
 
             for k,v in site_date_dict.items():
-                items.append({
+                culturedata = {
                     'start': max(v)*-31556952-(1970*31556952000), #1/1000 year in ms, start with year 0
-                    'end': min(v)*-31556952-(1970*31556952000),
-                    'content': f"{k} | {max(v)} - {min(v)}",
+                    'content': f"{k} | {max(v):,} ya",
                     'group': f"{cult.name.lower()}-{k.lower()}",
-                    'style': f"background-color: {site_color_dict[k.lower()]};"
-                })
+                    'type':'point'
+                }
+                if max(v) != min(v):
+                    culturedata.update({
+                        'end': min(v)*-31556952-(1970*31556952000),
+                        'content': f"{k} | {max(v):,} - {min(v):,} ya",
+                        'style': f"background-color: {site_color_dict[k.lower()]};",
+                        'type':'range'
+                    })
+                items.append(culturedata)
         context['itemdata'] = items
         context['timelinedata'] = groupdata
         context['geo'] = geo

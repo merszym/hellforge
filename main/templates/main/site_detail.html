@@ -10,8 +10,10 @@
 {% block headline %} <a style='color:white' href="{% url 'site_list' %}">Site</a>{% endblock %}
 {% block body %}
 <div class='columns' style="padding:10px;">
-    <div class="column col-4" id='mobile'>
-        <a class="btn btn-primary" href="{% url 'site_update' object.pk %}" style="position:absolute; right:5%; top:10px"><i class="icon icon-edit"></i></a>
+    <div class="column col-4" id='mobile' style="position:relative;">
+        <a class="btn btn-primary tooltip tooltip-left" href="{% url 'site_update' object.pk %}" style="position:absolute; right:5%; top:10px" data-tooltip="Edit Site">
+            <i class="icon icon-edit"></i>
+        </a>
         <div class="my-2">
             <h2>{{object.name}}</h2>
             <div class="btn-group">
@@ -58,10 +60,13 @@
                 <div style="height: 480px;" id="map"></div><br>
             </div>
             <div id="description-description" class="panel" style="display:none;">
-                <div class="panel-header">
-                    <a class="btn btn-primary" href="{% url 'site_description_update' object.pk %}">
+                <div class="panel-header" style="position:relative;">
+                    <a class="btn btn-primary tooltip tooltip-right" href="{% url 'site_description_update' object.pk %}" data-tooltip="Edit Description">
                         <i class="icon icon-edit"></i>
                     </a>
+                    <span id="resize-editor" class="btn btn-primary tooltip tooltip-left" style="position:absolute; right: 15px" data-tooltip="Toggle Full Width">
+                        <i class="icon icon-resize-horiz"></i>
+                    </span>
                 </div>
                 <div class="panel-body" style="max-height:720px;">
                     {% include 'main/editor/editor-body.html' %}

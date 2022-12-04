@@ -46,6 +46,7 @@ urlpatterns = [
     path('ajax/layer/add/<int:profile_id>', ajax.save_layer, name='ajax_layer_add'),
     path('ajax/layer/remove/<int:profile_id>', ajax.remove_otherlayer, name='ajax_otherlayer_delete'),
     path('ajax/layer/clone/<int:pk>', ajax.clone_layer, name='ajax_layer_clone'),
+    path('ajax/layer/search', ajax.search_layer, name='ajax_layer_search'),
     path('ajax/layer/update_pos/<int:site_id>', ajax.update_layer_positions, name='ajax_layer_pos_update'),
     path('ajax/upload', ajax.upload_image, name='upload'),
 ]

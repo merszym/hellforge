@@ -124,6 +124,14 @@ def search_cp(request):
     q = Checkpoint.objects.filter(Q(name__contains=kw) | Q(description__contains=kw ) | Q(category__contains=kw ) | Q(type__contains=kw ))
     return JsonResponse({x.pk: f"{x.name};;{x.type}" for x in q})
 
+@csrf_exempt
+def search_layer(request):
+    data = {x:v[0] for (x,v) in dict(request.POST).items()}
+    kw = data['keyword']
+    q = Layer.objects.filter(Q(name__contains=kw) | Q(site__name__contains=kw ) )
+    print(q)
+    return JsonResponse({x.pk: f"{x.name};;{x.site}" for x in q})
+
 def clone_layer(request, pk):
     new_layer = Layer.objects.get(pk=pk)
     new_layer.pk = None

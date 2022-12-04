@@ -50,7 +50,9 @@ class Date(models.Model):
         return reverse('date_update', kwargs={'pk': self.id})
 
     def __str__(self):
-        return f"{self.upper:,} - {self.lower:,} ya"
+        if self.upper != self.lower:
+            return f"{self.upper:,} - {self.lower:,} ya"
+        return f"{self.upper:,} ya"
 
 class Location(models.Model):
     name = models.CharField('name', max_length=200)
@@ -229,6 +231,13 @@ class Site(models.Model):
     def cultures(self):
         return set([x.culture for x in self.layer.all()])
 
+    @property
+    def has_related_site(self):
+        for layer in self.layer.all():
+            if len(layer.related.all()) > 0:
+                return True
+        return False
+
 
 class Profile(models.Model):
     name = models.CharField('name', max_length=200)
@@ -258,6 +267,7 @@ class Layer(models.Model):
     culture = models.ForeignKey(Culture, verbose_name=u"culture", related_name='layer', on_delete=models.PROTECT, blank=True, null=True)
     epoch = models.ForeignKey(Epoch, verbose_name=u"epoch", related_name='layer', on_delete=models.PROTECT, blank=True, null=True)
     checkpoint = models.ManyToManyField(Checkpoint, verbose_name=u'checkpoint', blank=True, related_name='layer')
+    related = models.ManyToManyField('self', verbose_name=u'related layers', blank=True)
     date = models.ManyToManyField(Date, verbose_name=u"date", blank=True)
     mean_upper = models.IntegerField(blank=True, default=1000000)
     mean_lower = models.IntegerField(blank=True, default=0)
@@ -300,12 +310,6 @@ class Layer(models.Model):
     @property
     def age_summary(self):
         return Date(upper=self.mean_upper, lower=self.mean_lower)
-
-    @property
-    def age_depth(self):
-        if self.date.first():
-            return 'Direct dating'
-        return 'Context'
 
     def get_absolute_url(self):
         return f"{reverse('site_detail', kwargs={'pk':self.site.id})}#profile"

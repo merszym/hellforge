@@ -84,10 +84,17 @@ $('.overview-toggle').on('click', function(){
     }
 })
 
+$("#resize-editor").on('click', function(){
+    $('#mobile').toggleClass('col-4')
+    $('#mobile').toggleClass('col-12')
+});
+
 $(window).resize(function resize(){
     if ($(window).width() < 1000) {
         $('#mobile').removeClass('col-4')
+        $('#mobile').addClass('col-12')
     } else {
+        $('#mobile').removeClass('col-12')
         $('#mobile').addClass('col-4')
     }
 }).trigger('resize');

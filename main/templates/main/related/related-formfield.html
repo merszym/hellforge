@@ -1,0 +1,5 @@
+<select name="related" id="id_related" multiple="" style="display:none;">
+    {% for rel in object.related.all %}
+    <option id="related_option_{{rel.pk}}" value="{{rel.pk}}" selected></option>
+    {% endfor %}
+</select>

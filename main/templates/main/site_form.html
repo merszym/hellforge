@@ -43,6 +43,11 @@
                     <input class="form-input" type="number" id="site-elevation" name="elevation" placeholder="Site elevation"
                     value={% if object.name %} "{{object.elevation}}" {% endif %} >
                 </div>
+                {% for field in form %}
+                    {% if field.name == 'site_done' %}
+                        Site Done:{{field}}<br>
+                    {% endif %}
+                {% endfor %}
                 {% include 'main/references/reference-formfield.html' %}
                 {% include 'main/location/location-formfield.html' %}
                 {% include 'main/contact/contact-formfield.html' %}
