@@ -11,8 +11,14 @@ def calculate_layer_dates(layer):
     upper = 100000
     lower = 0
     if layer.culture:
-        upper = layer.culture.upper
-        lower = layer.culture.lower
+        #get the median of upper and lower dates of the given culture
+        dates = []
+        for cult in layer.culture.all_cultures():
+            for lay in Layer.objects.filter(culture=cult.pk):
+                dates.extend(list(lay.date.all()))
+        if len(dates)>0:
+            upper = statistics.median([x.upper for x in dates])
+            lower = statistics.median([x.lower for x in dates])
     if layer.epoch:
         epdate = layer.epoch.date.first()
         if upper > epdate.upper:
