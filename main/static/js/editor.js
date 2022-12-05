@@ -60,24 +60,25 @@ $.getJSON({
             tunes: ['footnotes'],
             data: respond
         });
-
-        const saveButton = document.getElementById('saveButton');
-
-        saveButton.addEventListener('click', function () {
-        editor.save()
-            .then((savedData) => {
-                $.post({
-                    dataType:"json",
-                    url: $('#description-save').attr("data-url"),
-                    data: {'data': JSON.stringify(savedData)},
-                    success: function(respond){
-                        window.location.replace(respond['redirect']);
-                    }
+        // for read-only-mode
+        if($('#saveButton').length){
+            const saveButton = document.getElementById('saveButton');
+            saveButton.addEventListener('click', function () {
+            editor.save()
+                .then((savedData) => {
+                    $.post({
+                        dataType:"json",
+                        url: $('#description-save').attr("data-url"),
+                        data: {'data': JSON.stringify(savedData)},
+                        success: function(respond){
+                            window.location.replace(respond['redirect']);
+                        }
+                    });
+                })
+                .catch((error) => {
+                    console.error('Saving error', error);
                 });
-            })
-            .catch((error) => {
-                console.error('Saving error', error);
             });
-        });
+        }
     }
 })

@@ -15,7 +15,7 @@
 {% endfor %}
 </td>
 {% if layer.related.first %}
-<td><
+<td>
 {% for rel in layer.related.all %}
     <div><a href="{% url 'site_detail' rel.site.pk%}" class="btn-link">{{rel.site}}</a><br>
         <span class="text-gray" style="font-size:11pt;">{{rel.name}}</span>

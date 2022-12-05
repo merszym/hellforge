@@ -114,15 +114,18 @@ class SiteDetailView(DetailView):
                 'content': f"<a href={reverse('checkpoint_update', kwargs={'pk':checkpoint.id})} class='btn-link'>{checkpoint.name}</a>",
                 })
         for layer in self.object.layer.all():
+            if not layer.date.first() and not self.request.GET.get('include_undated', False):
+                continue
             layerdata = {
                 'start': layer.mean_upper *-31556952-(1970*31556952000),
                 'order':int(layer.pos),
                 'content': f"{layer.name} | {layer.age_summary}",
                 'group':f"{layer.culture.name.lower() if layer.culture else 'None'}",
+                'style':f'background-color:{"lightgreen" if layer.date.first() else "salmon"}',
                 'type':'point'
                 }
             # if range instead of point
-            if layer.mean_lower != layer.mean_upper:
+            if (layer.mean_lower != layer.mean_upper):
                 layerdata.update({
                     'end': layer.mean_lower *-31556952-(1970*31556952000),
                     'type': 'range'

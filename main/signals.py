@@ -19,6 +19,8 @@ def calculate_layer_dates(layer):
         if len(dates)>0:
             upper = statistics.median([x.upper for x in dates])
             lower = statistics.median([x.lower for x in dates])
+            if int(upper) < int(lower):
+                upper,lower = lower,upper
     if layer.epoch:
         epdate = layer.epoch.date.first()
         if upper > epdate.upper:
@@ -47,7 +49,9 @@ def calculate_layer_dates(layer):
     if lower_sibling and not upper_sibling:
         if (lower_sibling.mean_upper - lower_sibling.mean_lower) < (upper-lower):
             upper = lower_sibling.mean_lower
-
+    #sometimes context dates are just weird
+    if lower > upper:
+        lower = upper
     # get direct date upper, lower
     if layer.date.first():
         upper = statistics.mean([x.upper for x in layer.date.all()])
@@ -61,6 +65,12 @@ def update_layer(sender, instance, **kwargs):
     """
     if not instance.site:
         instance.site = instance.profile.first().site
+        instance.save()
+
+    if not instance.mean_lower:
+        instance.mean_lower = lower
+        instance.mean_upper = upper
+        instance.save()
 
     upper, lower = calculate_layer_dates(instance)
     if (instance.mean_lower != lower) or (instance.mean_upper != upper):
@@ -98,3 +108,7 @@ def calc_culture_range(sender, instance, **kwargs):
         else:
             upper = 100000
             lower = 0
+        if (culture.upper != upper) or (culture.lower != lower):
+            culture.upper = upper
+            culture.lower = lower
+            culture.save()

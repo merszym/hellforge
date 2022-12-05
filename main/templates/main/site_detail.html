@@ -127,13 +127,17 @@
 </div>
 {% if object.layer.first %}
 <h2>Timeline</h2>
+<a href="{% url 'site_detail' object.pk %}?include_undated=1"><span class="btn" style="background-color: salmon;">Include undated</span></a>
+<a href="{% url 'site_detail' object.pk %}"><span class="btn" style="background-color: lightgreen;">Show dated</span></a>
 {% include 'main/timeline/timeline-body.html' %}
 <script>
     var groups = {{groupdata|safe}}
     var data= {{itemdata|safe}}
     data.forEach(element => {
         element.start = new Date(element.start);
-        element.end = new Date(element.end);
+        if(element.end){
+            element.end = new Date(element.end);
+        }
     });
     var items = new vis.DataSet(data);
     var timeline = new vis.Timeline(container, items, groups, options);

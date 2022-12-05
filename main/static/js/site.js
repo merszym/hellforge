@@ -100,4 +100,3 @@ $(window).resize(function resize(){
 }).trigger('resize');
 
 getProfile()
-resize()
