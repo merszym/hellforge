@@ -29,7 +29,6 @@
             {% if type == 'Epoch' %}
             {% include 'main/location/location-display.html' %}
             {% endif %}
-            {% include 'main/dating/dating-display.html' %}
             {% include 'main/culture/culture-display.html' %}
             {% include 'main/epoch/epoch-display.html' %}
             <form method="POST" enctype="multipart/form-data">
@@ -40,10 +39,23 @@
                     value={% if object.name %} "{{object.name}}" {% endif %} >
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="{type|lower}}-description">Description</label>
+                    <label class="form-label" for="{{type|lower}}-description">Description</label>
                     <textarea class="form-input" type="text" id="{type|lower}}-description" name="description" placeholder="{{type}} description"
                      >{% if object.description %} {{object.description}} {% endif %}</textarea>
                 </div>
+                {% if type == 'Epoch' %}
+                <div class="divider text-center" data-content="Dating"></div>
+                <div class="form-group">
+                    <label class="form-label" for="{{type|lower}}-upper">Upper Bound</label>
+                    <input class="form-input" type="number" id="{{type|lower}}-upper" name="upper" placeholder="{{type}} Upper" required
+                    value={% if object.date %} "{{object.date.first.upper}}" {% endif %} >
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="{{type|lower}}-lower">Lower Bound</label>
+                    <input class="form-input" type="number" id="{{type|lower}}-lower" name="lower" placeholder="{{type}} Lower" required
+                    value={% if object.date %} "{{object.date.first.lower}}" {% endif %} >
+                </div>
+                {% endif %}
                 {% if type == 'Culture' %}
                 <div class="form-group">
                     <label class="form-label" for="culture-hominin_group">Associated Hominin Group</label>
@@ -59,7 +71,6 @@
                 </select>
                 {% endif %}
                 {% include 'main/references/reference-formfield.html' %}
-                {% include 'main/dating/dating-formfield.html' %}
                 {% if type == 'Epoch' %}
                     {% include 'main/location/location-formfield.html' %}
                 {% endif %}
@@ -89,11 +100,6 @@
         <div clas="my-2">
             {% include 'main/references/reference-search.html' %}
         </div>
-        {% if type == 'Epoch' %}
-        <div clas="my-2">
-            {% include 'main/dating/dating-search.html' %}
-        </div>
-        {% endif %}
     </div>
 </div>
 {% endblock %}

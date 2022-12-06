@@ -1,15 +1,25 @@
 from .forms import ReferenceForm, ProfileForm, DateForm, ContactForm
 from django.http import JsonResponse
 from django.shortcuts import render
-from .models import Reference, Location, Site, Profile, Layer, Culture, Epoch, Checkpoint, ContactPerson, Image, Gallery
+from .models import Reference, Location, Site, Profile, Layer, Culture, Epoch, Checkpoint, ContactPerson, Image, Gallery, DatingMethod
 from django.db.models import Q
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 import json
 
 models = {
-    'site': Site
+    'site': Site,
+    'layer': Layer
 }
+
+def fill_modal(request):
+    choice = request.GET.get('type', False)
+    if choice=='dating':
+        html = render(request,'main/dating/dating-modal-content.html',{'datingoptions': DatingMethod.objects.all()})
+    if choice=='culture':
+        html = render(request,'main/culture/culture-modal-content.html')
+    return html
+
 
 @csrf_exempt
 def upload_image(request):
@@ -48,10 +58,22 @@ def upload_image(request):
 def save_date(request):
     form = DateForm(request.POST)
     if form.is_valid():
-        obj = form.save()
-        obj.refresh_from_db()
-        return JsonResponse({"pk":obj.id, 'date':str(obj), 'upper':obj.upper, 'lower':obj.lower, 'method':obj.method})
-    return JsonResponse({"pk":False})
+        validation = any([form.cleaned_data.get(x,False) for x in ['estimate','upper','lower']])
+        # validate that dates exist
+        if validation:
+            obj = form.save()
+            obj.refresh_from_db()
+            #if we have an associated model (e.g. Layer)
+            if dat := form.cleaned_data.get('info', False):
+                model,pk = dat.split(',')
+                instance = models[model].objects.get(pk=int(pk))
+                instance.date.add(obj)
+                instance.save() #not needed for adding, but for date-calculations
+            return JsonResponse({"status":True})
+        if not validation:
+            form.add_error('estimate', 'Please provide a Date')
+            form.add_error('upper', 'Or provide a Range')
+    return render(request,'main/dating/dating-modal-content.html',{'datingoptions': DatingMethod.objects.all(), 'form':form})
 
 def save_ref(request):
     form = ReferenceForm(request.POST)

@@ -5,12 +5,10 @@
 
 <div class='columns'>
     <div class="column" style="position:relative;">
-        <a class="btn btn-primary" href="{% url 'layer_delete' object.pk %}" style="position:absolute; right:5%; top:10px"><i class="icon icon-delete"></i></a>
         <div class="my-2">
             <h3>Layer Data</h3>
             {% include 'main/culture/culture-display.html' %}
             {% include 'main/epoch/epoch-display.html' %}
-            {% include 'main/dating/dating-display.html' %}
             {% include 'main/checkpoint/checkpoint-display.html' %}
             {% include 'main/related/related-display.html' %}
             <form method="POST" enctype="multipart/form-data">
@@ -31,7 +29,6 @@
                      >{% if object.site_use %} {{object.site_use}} {% endif %}</textarea>
                 </div>
                 {% include 'main/references/reference-formfield.html' %}
-                {% include 'main/dating/dating-formfield.html' %}
                 {% include 'main/epoch/epoch-formfield.html' %}
                 {% include 'main/culture/culture-formfield.html' %}
                 {% include 'main/checkpoint/checkpoint-formfield.html' %}
@@ -53,9 +50,6 @@
         </div>
         <div clas="my-2">
             {% include 'main/epoch/epoch-search.html' %}
-        </div>
-        <div clas="my-2">
-            {% include 'main/dating/dating-search.html' %}
         </div>
         <div clas="my-2">
             {% include 'main/checkpoint/checkpoint-search.html' %}

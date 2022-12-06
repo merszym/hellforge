@@ -1,0 +1,18 @@
+{% load static %}
+<!-- Modal content for Culture -->
+<a href="#close" class="modal-overlay" aria-label="Close"></a>
+<div class="modal-container">
+    <div class="modal-header">
+        <a id="modal-close" class="btn btn-clear float-right" style="cursor:pointer;" aria-label="Close"></a>
+    <div class="modal-title h5">Add Culture</div>
+</div>
+<div class="modal-body">
+    <div class="content">
+        COMING SOON
+        {% include 'main/culture/culture-display.html' %}
+        <div clas="my-2">
+            {% include 'main/culture/culture-search.html' %}
+        </div>
+        {% include 'main/culture/culture-formfield.html' %}
+    </div>
+</div>

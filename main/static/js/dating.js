@@ -1,30 +1,16 @@
-$('.DateModal').on('click', function(){
-    $('#dating-modal').addClass('active')
-});
-
-$('#dating-modal-close').on('click', function(){
-    $('#dating-modal').removeClass('active')
-});
-
-$(".addDate").on("click", function(){
-    $('#dating-modal').removeClass('active')
+$("body").on("click", '.addDate', function(){
     $.ajax({
         type: "POST",
         url: $('#ajax_add_date').attr('data-url'),
         data: $("#dating-form").serialize(),
         }).done(function(data){
-            pk = data['pk']
-            $('#dating-list').append(
-                `<tr id=date_display_row_${pk} >
-                    <td></td>
-                    <td id="date_${pk}">${data['date']}</td>
-                    <td>${data['method']}</td>
-                    <td><i id="date_delete_${pk}" class="icon btn btn-primary icon-delete date_delete"></i></td>
-                </tr>`
-            )
-            $('#id_date').append(
-                `<option id="date_option_${pk}" value="${pk}" selected></option>`
-            )
+            if(data['status']){
+                location.reload();
+            } else {
+                ele = $('#info')
+                $('#modal-blank').html(data)
+                $('#dating-form').append(ele)
+            }
         });
 });
 
@@ -38,5 +24,25 @@ $("body").on('click', '.date_delete', function(){
     } else {
         ele.attr('selected','selected')
         $(`#date_display_row_${pk} > td`).removeClass('del')
+    }
+});
+
+// Validate the dating form
+$('body').on('keyup paste','#estimate',function(){
+    if(this.value.length > 0){
+        $('#upper').prop('disabled', true);
+        $('#lower').prop('disabled', true);
+    } else {
+        $('#upper').prop('disabled', false);
+        $('#lower').prop('disabled', false);
+    }
+});
+$('body').on('keyup paste','.date_range',function(){
+    if(this.value.length > 0){
+        $('#estimate').prop('disabled', true);
+        $('#plusminus').prop('disabled', true);
+    } else {
+        $('#estimate').prop('disabled', false);
+        $('#plusminus').prop('disabled', false);
     }
 });

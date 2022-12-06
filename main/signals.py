@@ -1,8 +1,7 @@
-from django.db.models.signals import post_save, m2m_changed
+from django.db.models.signals import post_save, m2m_changed, post_delete
 from django.dispatch import receiver
-from main.models import Layer, Culture, Epoch, Checkpoint, Site
+from main.models import Layer, Culture, Epoch, Checkpoint, Site, Date
 import statistics
-
 
 def calculate_layer_dates(layer):
     """Calculate the layer date for DISPLAY in the overviews, use heuristics if no direct date is set"""
@@ -41,8 +40,10 @@ def calculate_layer_dates(layer):
     # unless the dates of the siblings are totally off...
     if upper_sibling:
         if lower_sibling:
-            upper = statistics.mean([upper_sibling.mean_upper, lower_sibling.mean_upper])
-            lower = statistics.mean([upper_sibling.mean_lower, lower_sibling.mean_lower])
+            if upper_sibling.mean_upper and lower_sibling.mean_upper:
+                upper = statistics.mean([upper_sibling.mean_upper, lower_sibling.mean_upper])
+            if upper_sibling.mean_lower and lower_sibling.mean_lower:
+                lower = statistics.mean([upper_sibling.mean_lower,lower_sibling.mean_lower])
         else:
             if (upper_sibling.mean_upper - upper_sibling.mean_lower) < (upper-lower):
                 lower = upper_sibling.mean_upper
@@ -54,9 +55,29 @@ def calculate_layer_dates(layer):
         lower = upper
     # get direct date upper, lower
     if layer.date.first():
-        upper = statistics.mean([x.upper for x in layer.date.all()])
-        lower = statistics.mean([x.lower for x in layer.date.all()])
+        # check for dates that contain only one of upper or lower
+        # ugly intermediate fix: >30k sets upper to 60k and <30k sets lower to 15k
+        all_upper = [x.upper if x.upper else int(x.lower*2) for x in layer.date.all()]
+        all_lower = [x.lower if x.lower else int(x.lower/2) for x in layer.date.all()]
+        if len(all_upper) > 0:
+            upper = statistics.mean(all_upper)
+        if len(all_lower) > 0:
+            lower = statistics.mean(all_lower)
     return upper,lower
+
+#after deleting a date from the layer - save the layer to update the upper and lower
+@receiver(m2m_changed, sender=Layer.date.through)
+def update_dates(sender, instance, **kwargs):
+    if kwargs.pop('action', False) == 'post_remove':
+        instance.save()
+
+# Date validation
+@receiver(post_save, sender=Date)
+def fill_date(sender, instance, **kwargs):
+    if instance.estimate and not instance.upper: #instance.upper is recursion save
+        instance.upper = instance.estimate + instance.plusminus
+        instance.lower = instance.estimate - instance.plusminus
+        instance.save()
 
 @receiver(post_save, sender=Layer)
 def update_layer(sender, instance, **kwargs):
@@ -67,12 +88,8 @@ def update_layer(sender, instance, **kwargs):
         instance.site = instance.profile.first().site
         instance.save()
 
-    if not instance.mean_lower:
-        instance.mean_lower = lower
-        instance.mean_upper = upper
-        instance.save()
-
     upper, lower = calculate_layer_dates(instance)
+
     if (instance.mean_lower != lower) or (instance.mean_upper != upper):
         instance.mean_lower = lower
         instance.mean_upper = upper

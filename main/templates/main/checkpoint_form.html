@@ -1,4 +1,5 @@
 {% extends "main/base.html" %}
+{% load static %}
 {% block headline %} Checkpoint {% endblock %}
 {% block body %}
 {% if object %}
@@ -12,14 +13,25 @@
         <h3>Checkpoint Data</h3>
         <div class="my-2">
             {% include 'main/location/location-display.html' %}
-            {% include 'main/dating/dating-display.html' %}
             <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="form-group">
                     <label class="form-label" for="checkpoint-name">Checkpoint Name</label>
                     <input class="form-input" type="text" id="checkpoint-name" name="name" placeholder="checkpoint Name" required
-                    value={% if object.name %} "{{object.name}}" {% endif %} >
+                    value="{% if object.name %}{{object.name}}{% endif %}">
                 </div>
+                <div class="divider text-center" data-content="Dating"></div>
+                <div class="form-group">
+                    <label class="form-label" for="checkpoint-name">Upper Bound</label>
+                    <input class="form-input" type="number" id="checkpoint-upper" name="upper" placeholder="checkpoint Upper" required
+                    value={% if object.date %} "{{object.date.first.upper}}" {% endif %} >
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="checkpoint-name">Lower Bound</label>
+                    <input class="form-input" type="number" id="checkpoint-lower" name="lower" placeholder="checkpoint Lower" required
+                    value={% if object.date %} "{{object.date.first.lower}}" {% endif %} >
+                </div>
+                <div class="divider text-center" data-content="Rest"></div>
                 <div class="form-group">
                     <label class="form-label" for="checkpoint-description">Description</label>
                     <textarea class="form-input" type="text" id="checkpoint-description" name="description" placeholder="Checkpoint description"
@@ -44,7 +56,6 @@
                     value={% if object.type %} "{{object.type}}" {% endif %} >
                 </div>
                 {% include 'main/references/reference-formfield.html' %}
-                {% include 'main/dating/dating-formfield.html' %}
                 {% include 'main/location/location-formfield.html' %}
                 <!-- Reference Display -->
                 {% include 'main/references/reference-display.html' %}
@@ -53,7 +64,6 @@
             </form>
         </div>
     </div>
-
     <div class="column" style="border-left: solid 2px grey">
         <h3>Edit Associated Information</h3>
         <div class="my-2">
@@ -61,9 +71,6 @@
         </div>
         <div clas="my-2">
             {% include 'main/references/reference-search.html' %}
-        </div>
-        <div clas="my-2">
-            {% include 'main/dating/dating-search.html' %}
         </div>
     </div>
 </div>

@@ -39,9 +39,18 @@ class Reference(models.Model):
         else:
             return f'https://sci-hub.ee/{self.doi}'
 
+
+class DatingMethod(models.Model):
+    option = models.CharField('option', max_length=200)
+
+    def __str__(self):
+        return self.option
+
 class Date(models.Model):
-    upper = models.IntegerField('upper bound')
-    lower = models.IntegerField('lower bound')
+    estimate = models.IntegerField('estimate', blank=True, null=True)
+    plusminus = models.IntegerField('plusminus', blank=True, null=True)
+    upper = models.IntegerField('upper bound', blank=True, null=True)
+    lower = models.IntegerField('lower bound', blank=True, null=True)
     method = models.CharField('dating method', max_length=200)
     description = models.TextField('description', blank=True)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
@@ -50,6 +59,16 @@ class Date(models.Model):
         return reverse('date_update', kwargs={'pk': self.id})
 
     def __str__(self):
+        if not self.upper and not self.estimate and not self.lower:
+            return 'Unset Date'
+        if self.estimate and self.plusminus:
+            return f"{self.estimate:,} ± {self.plusminus:,} ya"
+        if self.estimate:
+            return f"{self.estimate:,} ya"
+        if self.upper and not self.lower:
+            return f"< {self.upper:,} ya"
+        if self.lower and not self.upper:
+            return f"> {self.lower:,} ya"
         if self.upper != self.lower:
             return f"{self.upper:,} - {self.lower:,} ya"
         return f"{self.upper:,} ya"
@@ -268,7 +287,7 @@ class Layer(models.Model):
     epoch = models.ForeignKey(Epoch, verbose_name=u"epoch", related_name='layer', on_delete=models.PROTECT, blank=True, null=True)
     checkpoint = models.ManyToManyField(Checkpoint, verbose_name=u'checkpoint', blank=True, related_name='layer')
     related = models.ManyToManyField('self', verbose_name=u'related layers', blank=True)
-    date = models.ManyToManyField(Date, verbose_name=u"date", blank=True)
+    date = models.ManyToManyField(Date, verbose_name=u"date", blank=True, related_name='model')
     mean_upper = models.IntegerField(blank=True, default=1000000)
     mean_lower = models.IntegerField(blank=True, default=0)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
@@ -287,9 +306,6 @@ class Layer(models.Model):
     @property
     def lowest_date(self):
         """For sorting Layers by date, get all Dates and return the minimum"""
-        # try direct dating:
-        #if self.date.first():
-        #    return max(x.upper for x in self.date.all())
         if self.mean_upper:
             return self.mean_upper
         return -1
@@ -309,6 +325,9 @@ class Layer(models.Model):
 
     @property
     def age_summary(self):
+        if dates := self.date.all():
+            if len(dates)==1:
+                return dates.first()
         return Date(upper=self.mean_upper, lower=self.mean_lower)
 
     def get_absolute_url(self):

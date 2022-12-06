@@ -1,7 +1,3 @@
-<br>
-{% if object.ref.first %}
-<strong>References: </strong>
-{% endif %}
 <table class="table" id="reference-list" style="border-spacing:5px">
     {% for ref in object.ref.all %}
         <tr id="ref_display_row_{{ref.pk}}">

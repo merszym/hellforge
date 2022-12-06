@@ -1,18 +1,37 @@
 from django.views.generic import CreateView, ListView, UpdateView, DetailView, DeleteView
 from django.urls import reverse
 from django.shortcuts import render
-from .models import Location, Reference, Site, Layer, Culture, Date, Epoch, Checkpoint, Profile
+from .models import Location, Reference, Site, Layer, Culture, Date, Epoch, Checkpoint, Profile, DatingMethod
 from .forms import LocationForm, ReferenceForm, SiteForm, ProfileForm, LayerForm, CultureForm, \
-    DateForm, DateUpdateForm, EpochForm, CheckpointForm, ContactForm
+    DateForm, EpochForm, CheckpointForm, ContactForm
 import re
 import statistics
 import seaborn as sns
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 
 
 def landing(request):
     return render(request, 'main/landing.html')
+
+# Date
+class DateDeleteView(DeleteView):
+    model = Date
+    template_name = 'main/confirm_delete.html'
+
+    # I need to remove the dates from m2m to fire m2m-change signal
+    def form_valid(self, form):
+        obj = self.object
+        site = obj.model.first().site
+        if obj.model:
+            for model in obj.model.all():
+                model.date.remove(obj)
+        obj.delete()
+        return HttpResponseRedirect(self.get_success_url(site))
+
+    def get_success_url(self, site):
+        return reverse('site_detail', kwargs={'pk':site.id})
+
 
 ## Locations ##
 class LocationCreateView(CreateView):
@@ -92,7 +111,7 @@ class SiteDescriptionUpdateView(DetailView):
 
 class SiteDetailView(DetailView):
     model = Site
-    extra_context = {'profile_form': ProfileForm}
+    extra_context = {'profile_form': ProfileForm, 'dating_form': DateForm, 'datingoptions': DatingMethod.objects.all() }
 
     def get_context_data(self, **kwargs):
         context = super(SiteDetailView, self).get_context_data(**kwargs)
@@ -148,7 +167,7 @@ class ProfileDeleteView(DeleteView):
 class LayerUpdateView(UpdateView):
     model = Layer
     form_class = LayerForm
-    extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm}
+    extra_context = {'reference_form': ReferenceForm}
 
     def get_context_data(self, **kwargs):
         context = super(LayerUpdateView, self).get_context_data(**kwargs)
@@ -248,7 +267,7 @@ class CultureDetailView(DetailView):
 class CultureUpdateView(UpdateView):
     model = Culture
     form_class = CultureForm
-    extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm, 'type':'Culture'}
+    extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm, 'type':'Culture', 'datingoptions': DatingMethod.objects.all()}
 
     def get_context_data(self, **kwargs):
         context = super(CultureUpdateView, self).get_context_data(**kwargs)
@@ -259,7 +278,7 @@ class CultureUpdateView(UpdateView):
 class CultureCreateView(CreateView):
     model = Culture
     form_class = CultureForm
-    extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm, 'type':'Culture'}
+    extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm, 'type':'Culture', 'datingoptions': DatingMethod.objects.all()}
 
     def get_context_data(self, **kwargs):
         context = super(CultureCreateView, self).get_context_data(**kwargs)
@@ -305,8 +324,8 @@ class CultureListView(ListView):
 ## Dates ##
 class DateUpdateView(UpdateView):
     model = Date
-    form_class = DateUpdateForm
-    extra_context = {'reference_form': ReferenceForm}
+    form_class = DateForm
+    extra_context = {'reference_form': ReferenceForm, 'datingoptions': DatingMethod.objects.all() }
 
     def get_context_data(self, **kwargs):
         context = super(DateUpdateView, self).get_context_data(**kwargs)
@@ -319,24 +338,42 @@ class EpochUpdateView(UpdateView):
     model = Epoch
     template_name = 'main/culture_form.html'
     form_class = EpochForm
-    extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm, 'type':'Epoch'}
+    extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm, 'type':'Epoch', 'datingoptions': DatingMethod.objects.all()}
 
     def get_context_data(self, **kwargs):
         context = super(EpochUpdateView, self).get_context_data(**kwargs)
         context.update(self.extra_context)
         return context
 
+    def form_valid(self, form):
+        """If the form is valid, save the associated model."""
+        self.object = form.save()
+        date = Date(upper=form.cleaned_data.get('upper'), lower=form.cleaned_data.get('lower'), method='hidden')
+        date.save()
+        date.refresh_from_db()
+        self.object.date.add(date)
+        return super().form_valid(form)
+
 
 class EpochCreateView(CreateView):
     model = Epoch
     form_class = EpochForm
     template_name = 'main/culture_form.html'
-    extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm, 'type':'Epoch'}
+    extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm, 'type':'Epoch', 'datingoptions': DatingMethod.objects.all()}
 
     def get_context_data(self, **kwargs):
         context = super(EpochCreateView, self).get_context_data(**kwargs)
         context.update(self.extra_context)
         return context
+
+    def form_valid(self, form):
+        """If the form is valid, save the associated model."""
+        self.object = form.save()
+        date = Date(upper=form.cleaned_data.get('upper'), lower=form.cleaned_data.get('lower'), method='hidden')
+        date.save()
+        date.refresh_from_db()
+        self.object.date.add(date)
+        return super().form_valid(form)
 
 
 class EpochListView(ListView):
@@ -354,18 +391,36 @@ class EpochListView(ListView):
 class CheckpointCreateView(CreateView):
     model = Checkpoint
     form_class = CheckpointForm
-    extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm,}
+    extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm, 'datingoptions': DatingMethod.objects.all()}
 
     def get_context_data(self, **kwargs):
         context = super(CheckpointCreateView, self).get_context_data(**kwargs)
         context.update(self.extra_context)
         return context
 
+    def form_valid(self, form):
+        """If the form is valid, save the associated model."""
+        self.object = form.save()
+        date = Date(upper=form.cleaned_data.get('upper'), lower=form.cleaned_data.get('lower'), method='hidden')
+        date.save()
+        date.refresh_from_db()
+        self.object.date.add(date)
+        return super().form_valid(form)
+
 
 class CheckpointUpdateView(UpdateView):
     model = Checkpoint
     form_class = CheckpointForm
-    extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm,}
+    extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm, 'datingoptions': DatingMethod.objects.all()}
+
+    def form_valid(self, form):
+        """If the form is valid, save the associated model."""
+        self.object = form.save()
+        date = Date(upper=form.cleaned_data.get('upper'), lower=form.cleaned_data.get('lower'), method='hidden')
+        date.save()
+        date.refresh_from_db()
+        self.object.date.add(date)
+        return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
         context = super(CheckpointUpdateView, self).get_context_data(**kwargs)

@@ -11,7 +11,9 @@
               <tr>
                 <th>Date</th>
                 <th>Method</th>
+                <th>Ref</th>
                 <th>Edit</th>
+                <th>Delete</th>
               </tr>
             </thead>
             <tbody>
@@ -19,7 +21,9 @@
               <tr>
                 <td>{{date}}</td>
                 <td>{{date.method}}</td>
+                <td>{{date.ref.first.short}}</td>
                 <td><a href="{% url 'date_update' date.pk %}"><i class="icon icon-edit"></i></a></td>
+                <td><a href="{% url 'date_delete' date.pk %}"><i class="icon icon-delete"></i></a></td>
               </tr>
               {% endfor %}
             </tbody>

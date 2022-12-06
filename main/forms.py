@@ -7,14 +7,10 @@ class ProfileForm(forms.ModelForm):
         fields = ['name', 'type']
 
 class DateForm(forms.ModelForm):
+    info = forms.CharField(required=False)
     class Meta:
         model = Date
-        fields = ['upper','lower','method','description']
-
-class DateUpdateForm(forms.ModelForm):
-    class Meta:
-        model = Date
-        fields = ['upper','lower','method','description', 'ref']
+        fields = ['estimate','plusminus','upper','lower','method','description', 'ref', 'info']
 
 class ReferenceForm(forms.ModelForm):
     class Meta:
@@ -40,13 +36,15 @@ class SiteForm(forms.ModelForm):
 class LayerForm(forms.ModelForm):
     class Meta:
         model = Layer
-        fields = ['name','description','site_use','ref','culture','epoch','checkpoint','date', 'related']
+        fields = ['name','description','site_use','ref','culture','epoch','checkpoint','related']
 
 
 class EpochForm(forms.ModelForm):
+    upper = forms.IntegerField()
+    lower = forms.IntegerField()
     class Meta:
         model = Epoch
-        fields = ['name','description','parent','ref','loc', 'date']
+        fields = ['name','description','parent','ref','loc', 'upper', 'lower']
 
 class CultureForm(forms.ModelForm):
     class Meta:
@@ -55,6 +53,8 @@ class CultureForm(forms.ModelForm):
 
 
 class CheckpointForm(forms.ModelForm):
+    upper = forms.IntegerField()
+    lower = forms.IntegerField()
     class Meta:
         model = Checkpoint
-        fields = ['name','description','category','type','ref','loc', 'date']
+        fields = ['name','description','category','type','ref','loc', 'upper','lower']

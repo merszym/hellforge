@@ -7,41 +7,15 @@
 <h1>Edit Date</h1>
 {% load static %}
     <div class='columns'>
-        <div class="column col-6">
+        <div class="column">
             <div class="my-2">
                 <form id="locationform" method="POST">
                     {% csrf_token %}
-                    <div class="form-group">
-                        <label class="form-label" for="date-upper">Upper Bound</label>
-                        <input class="form-input" type="number" id="date-upper" name="upper" placeholder="Upper bound" required
-                        value={% if object.upper %} {{object.upper}} {% endif %} >
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="date-lower">Lower Bound</label>
-                        <input class="form-input" type="number" id="date-lower" name="lower" placeholder="Lower bound" required
-                        value={% if object.lower %} {{object.lower}} {% endif %} >
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="date-method">Method</label>
-                        <input class="form-input" type="text" id="date-method" name="method" placeholder="Dating Method" required
-                        value={% if object.method %} "{{object.method}}" {% endif %} >
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="location-name">Description</label>
-                        <textarea class="form-input" type="text" id="location-description" name="description" placeholder="Location description"
-                         >{% if object.description %} {{object.description}} {% endif %}</textarea>
-                    </div>
-                    {% include 'main/references/reference-formfield.html' %}
+                    {% include 'main/dating/dating-fields.html' %}
                     <button class='btn btn-primary' onclick="saveLayer()">Save Date</button>
                 </form>
             </div>
         </div>
-        <div class="column">
-            <div class="my-2">
-                <h3 style="margin-bottom:0px"> References </h3>
-                {% include 'main/references/reference-display.html' %}
-                {% include 'main/references/reference-search.html' %}
-            </div>
-        </div>
     </div>
+    <script src="{% static 'js/dating.js' %}"></script>
 {% endblock %}

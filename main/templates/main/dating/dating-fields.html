@@ -1,7 +1,44 @@
-{% for field in dating_form %}
-    <div class="form-group" style="width:50%;">
-        <label class="form-label" for="location-name">{{field.name|title}}*</label>
-        <input class="form-input" type="text" id="location-name" name="{{field.name}}" placeholder="{{field.name}}" required
-        value={% if field.value %} "{{field.value}}" {% endif %}>
-    </div>
+<!--The dating form-->
+<label>Point Estimate</label>
+<div class="input-group">
+    <input type="number" class="form-input" id='estimate' name="estimate" placeholder="50000"
+    {% if form.estimate %} value="{{form.estimate.value}}" {% elif object.estimate %} value="{{object.estimate}}" {% endif %}>
+    <span class="input-group-addon">±</span>
+    <input type="number" class="form-input" id="plusminus" name="plusminus" placeholder="3000"
+    {% if form.plusminus %} value="{{form.plusminus.value}}" {% elif object.plusminus %} value="{{object.plusminus}}" {% else %} value="0" {% endif %}>
+</div>
+{% for error in form.estimate.errors %}
+    <p class="form-input-hint" style="color:red;">{{error}}</p>
 {% endfor %}
+<div class="divider text-center" data-content="OR"></div>
+<label>Range</label>
+<div class="input-group">
+    <input class="form-input date_range" type="number" id="upper" name="upper" placeholder="53000"
+    {% if form.upper %} value="{{form.upper.value}}" {% elif object.upper %} value="{{object.upper}}" {% endif %}>
+    <span class="input-group-addon">-</span>
+    <input class="form-input date_range" type="number" id="lower" name="lower" placeholder="47000"
+    {% if form.lower %} value="{{form.lower.value}}" {% elif object.lower %} value="{{object.lower}}" {% endif %}>
+</div>
+{% for error in form.upper.errors %}
+    <p class="form-input-hint" style="color:red;">{{error}}</p>
+{% endfor %}
+<p class="form-input-hint">Please enter the date range in the format <strong>older - younger</strong>.
+    Entering only <strong>one</strong> value: <strong>x - 47000</strong> is interpreted as >47000</p>
+<div class="divider"></div>
+<div class="form-group">
+    <label class="form-label" for="method">Method</label>
+    <select class="form-select" type="text" id="method" name="method" placeholder="{{field.name}}" required>
+        <option selected>{% if form.method %} {{form.method.value}} {% elif object.method %} {{object.method}} {% else %} --- {% endif %}</option>
+        {% for option in datingoptions %}
+        <option>{{option}}</option>
+        {% endfor %}
+    </select>
+</div>
+<div class="form-group">
+    <label class="form-label" for="description">Notes</label>
+    <textarea class="form-input" name="description" id="description" placeholder="Notes" rows="3">{% if form.description %}{{form.description.value}}{% elif object.description %}{{object.description}}{% endif %}</textarea>
+</div>
+<!-- select a reference -->
+{% include 'main/references/reference-formfield.html'%}
+{% include 'main/references/reference-display.html'%}
+{% include 'main/references/reference-search.html'%}

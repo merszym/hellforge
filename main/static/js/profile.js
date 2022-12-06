@@ -40,3 +40,27 @@ $('.clone_layer').on('click', function(){
             getProfile(profile)
         });
 });
+
+//Fill blank modal with dating html
+//Add info-field for the dating
+function fillModal(ele){
+    $.ajax({
+        type: "GET",
+        url: ele.attr('data-url')
+        }).done(function(html){
+            $('#modal-blank').html(html)
+            $('#dating-form').append(
+                `<input id='info' style="display:none" name='info' type='text' value="${ele.attr('data-info')}">
+                `
+            )
+        });
+    $('#modal-blank').addClass('active')
+}
+
+$('.fill_modal').on('click', function(){
+    fillModal($(this))
+})
+
+$('body').on('click','#modal-close', function(){
+    $('#modal-blank').removeClass('active')
+})

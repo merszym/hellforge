@@ -30,6 +30,7 @@ var searchFunction = function( data ) {
             'keyword': data,
         },
         success: function(respond) {
+            $('.search-appear').show()
             $('.search-appear').html(
                 `
                 <table class="table table-striped table-hover">
@@ -77,6 +78,7 @@ $("body").on("click",'.search-item', function(){
         </tr>`
     )
     $('#id_ref').append(`<option id="ref_option_${pk}" value="${pk}" selected></option>`)
+    $('.search-appear').hide()
 });
 
 $("body").on("click",'.ref_delete', function(){

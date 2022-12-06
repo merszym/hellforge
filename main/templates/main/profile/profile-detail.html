@@ -14,8 +14,6 @@
             <th></th>
             {% include 'main/profile/layer-tablehead.html' %}
             <th></th>
-            <th></th>
-            <th></th>
           </tr>
         </thead>
         <tbody id="layer_tbody" data-url="{% url 'ajax_layer_pos_update' object.site.pk %}">
@@ -23,8 +21,24 @@
             <tr class="table_row" id="layer_{{layer.pk}}">
               <td><i class="icon icon-resize-vert"></i></td>
               {% include 'main/profile/layer-tablecells.html' %}
-              <td><span class="btn clone_layer tooltip tooltip-left" data-tooltip="Clone this layer" id="clone_layer_{{layer.pk}}" data-url="{% url 'ajax_layer_clone' layer.pk %}"><i class="icon icon-plus"></span></td>
-              <td><span class="btn remove_other_layer tooltip tooltip-left" data-tooltip="Remove from Profile" id="remove_layer_{{layer.pk}}" data-url="{% url 'ajax_otherlayer_delete' object.pk %}?layer={{layer.pk}}"><i class="icon icon-downward"></span></td>
+              <td>
+                <div class="popover popover-left">
+                  <button class="btn"><i class="icon icon-menu"></i></button>
+                  <div class="popover-container">
+                    <div class="card">
+                      <div class="card-body">
+                        <a class="btn tooltip tooltip-top" data-tooltip="Edit Layer" href="{% url 'layer_update' layer.pk%}"><i class="icon icon-edit"></i></a>
+                        <button class="btn clone_layer tooltip tooltip-top" data-tooltip="Clone Layer" id="clone_layer_{{layer.pk}}" data-url="{% url 'ajax_layer_clone' layer.pk %}"><i class="icon icon-plus"></i></button>
+                        <button class="btn remove_other_layer tooltip tooltip-top" data-tooltip="Remove Layer from Profile" id="remove_layer_{{layer.pk}}" data-url="{% url 'ajax_otherlayer_delete' object.pk %}?layer={{layer.pk}}"><i class="icon icon-downward"></i></button>
+                        <a class="btn tooltip tooltip-top" data-tooltip="Delete Layer" href="{% url 'layer_delete' layer.pk%}"><i class="icon icon-delete"></i></a>
+                        <div class="divider"></div>
+                        <button class='btn fill_modal tooltip tooltip-top' data-info="layer,{{layer.pk}}" data-tooltip="Add Dating" data-url="{% url 'ajax_fill_modal' %}?type=dating"><i class="icon icon-time"></i></button>
+                        <button class='btn fill_modal tooltip tooltip-top' data-info="layer,{{layer.pk}}" data-tooltip="Add Culture" data-url="{% url 'ajax_fill_modal' %}?type=culture"><i class="icon icon-emoji"></i></button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </td>
             </tr>
             {% endfor %}
         </tbody>
@@ -68,5 +82,19 @@
         </table><br>
     </div>
     {% endif %}
-      <script src="{% static 'js/profile.js' %}"></script>
-    </section>
+    <!-- This is the blank modal to be filled with layer-related forms -->
+    <div class="modal" id="modal-blank">
+        <a href="#close" class="modal-overlay" aria-label="Close"></a>
+        <div class="modal-container">
+          <div class="modal-header">
+            <a id="modal-close" class="btn btn-clear float-right" style="cursor:pointer;" aria-label="Close"></a>
+            <div class="modal-title h5">Edit Layer</div>
+        </div>
+        <div class="modal-body">
+            <div class="content">
+            </div>
+        </div>
+    </div>
+    <script src="{% static 'js/profile.js' %}"></script>
+    <script src="{% static 'js/dating.js' %}"></script>
+  </section>

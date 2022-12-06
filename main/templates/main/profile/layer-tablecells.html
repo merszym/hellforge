@@ -14,7 +14,7 @@
     </div>
 {% endfor %}
 </td>
-{% if layer.related.first %}
+{% if object.site.has_related_site %}
 <td>
 {% for rel in layer.related.all %}
     <div><a href="{% url 'site_detail' rel.site.pk%}" class="btn-link">{{rel.site}}</a><br>
@@ -37,4 +37,3 @@
         {% include 'main/references/reference-popup.html' %}<br>
     {% endfor %}
 </td>
-<td><a class="btn-link" href="{% url 'layer_update' layer.pk%}"><i class="icon icon-edit"></i></a></td>
