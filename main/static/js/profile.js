@@ -49,7 +49,7 @@ function fillModal(ele){
         url: ele.attr('data-url')
         }).done(function(html){
             $('#modal-blank').html(html)
-            $('#dating-form').append(
+            $('#modal-form').append(
                 `<input id='info' style="display:none" name='info' type='text' value="${ele.attr('data-info')}">
                 `
             )

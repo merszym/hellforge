@@ -8,7 +8,7 @@
 </div>
 <div class="modal-body">
     <div class="content">
-        <form id="dating-form" method="POST" enctype="multipart/form-data">
+        <form id="modal-form" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             {% include 'main/dating/dating-fields.html' %}
             <br>

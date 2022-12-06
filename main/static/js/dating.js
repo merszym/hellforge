@@ -2,14 +2,14 @@ $("body").on("click", '.addDate', function(){
     $.ajax({
         type: "POST",
         url: $('#ajax_add_date').attr('data-url'),
-        data: $("#dating-form").serialize(),
+        data: $("#modal-form").serialize(),
         }).done(function(data){
             if(data['status']){
                 location.reload();
             } else {
                 ele = $('#info')
                 $('#modal-blank').html(data)
-                $('#dating-form').append(ele)
+                $('#modal-form').append(ele)
             }
         });
 });

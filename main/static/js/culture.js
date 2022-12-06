@@ -66,3 +66,21 @@ $("body").on("click",'.search-culture-item', function(){
     )
     $('.culture-search-appear').html('')
 });
+
+// Modal culture add
+$("body").on("click", '.addCulture', function(){
+    $.ajax({
+        type: "POST",
+        url: $('#ajax_add_culture').attr('data-url'),
+        data: $("#modal-form").serialize(),
+        }).done(function(data){
+            console.log(data)
+            if(data['status']){
+                location.reload();
+            } else {
+                ele = $('#info')
+                $('#modal-blank').html(data)
+                $('#modal-form').append(ele)
+            }
+        });
+});

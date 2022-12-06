@@ -41,6 +41,7 @@ urlpatterns = [
     path('ajax/cp/search', ajax.search_cp, name='ajax_cp_search'),
     path('ajax/locs/search', ajax.search_loc, name='ajax_loc_search'),
     path('ajax/culture/search', ajax.search_culture, name='ajax_culture_search'),
+    path('ajax/culture/add', ajax.save_culture, name='ajax_culture_add'),
     path('ajax/epoch/search', ajax.search_epoch, name='ajax_epoch_search'),
     path('ajax/profile/add/<int:site_id>', ajax.save_profile, name='ajax_profile_add'),
     path('ajax/profile/<int:pk>', ajax.get_profile, name='ajax_profile_detail'),

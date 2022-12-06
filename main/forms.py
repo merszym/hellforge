@@ -36,7 +36,7 @@ class SiteForm(forms.ModelForm):
 class LayerForm(forms.ModelForm):
     class Meta:
         model = Layer
-        fields = ['name','description','site_use','ref','culture','epoch','checkpoint','related']
+        fields = ['name','description','site_use','ref','epoch','checkpoint','related']
 
 
 class EpochForm(forms.ModelForm):

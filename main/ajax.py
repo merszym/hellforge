@@ -104,6 +104,16 @@ def get_profile(request, pk):
     profile = Profile.objects.get(pk=pk)
     return render(request,'main/profile/profile-detail.html', {'object':profile})
 
+def save_culture(request):
+    if pk := request.POST.get('culture',False):
+        if dat := request.POST.get('info', False):
+            model,mpk = dat.split(',')
+            model = models[model].objects.get(pk=int(mpk))
+            model.culture = Culture.objects.get(pk=int(pk))
+            model.save()
+            return JsonResponse({"status":True})
+    return render(request,'main/culture/culture-modal-content.html')
+
 @csrf_exempt
 def search_ref(request):
     data = {x:v[0] for (x,v) in dict(request.POST).items()}

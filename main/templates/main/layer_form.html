@@ -7,7 +7,6 @@
     <div class="column" style="position:relative;">
         <div class="my-2">
             <h3>Layer Data</h3>
-            {% include 'main/culture/culture-display.html' %}
             {% include 'main/epoch/epoch-display.html' %}
             {% include 'main/checkpoint/checkpoint-display.html' %}
             {% include 'main/related/related-display.html' %}
@@ -30,7 +29,6 @@
                 </div>
                 {% include 'main/references/reference-formfield.html' %}
                 {% include 'main/epoch/epoch-formfield.html' %}
-                {% include 'main/culture/culture-formfield.html' %}
                 {% include 'main/checkpoint/checkpoint-formfield.html' %}
                 {% include 'main/related/related-formfield.html' %}
                 <!-- Display references -->
@@ -44,9 +42,6 @@
         <h3> Edit Associated Information </h3>
         <div clas="my-2">
             {% include 'main/references/reference-search.html' %}
-        </div>
-        <div clas="my-2">
-            {% include 'main/culture/culture-search.html' %}
         </div>
         <div clas="my-2">
             {% include 'main/epoch/epoch-search.html' %}
