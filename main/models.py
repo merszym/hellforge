@@ -46,6 +46,9 @@ class DatingMethod(models.Model):
     def __str__(self):
         return self.option
 
+    class Meta:
+        ordering = ['option']
+
 class Date(models.Model):
     estimate = models.IntegerField('estimate', blank=True, null=True)
     plusminus = models.IntegerField('plusminus', blank=True, null=True)

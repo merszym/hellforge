@@ -16,8 +16,12 @@ def calculate_layer_dates(layer):
             for lay in Layer.objects.filter(culture=cult.pk):
                 dates.extend(list(lay.date.all()))
         if len(dates)>0:
-            upper = statistics.median([x.upper for x in dates])
-            lower = statistics.median([x.lower for x in dates])
+            cupper = statistics.median([x.upper if x.upper else int(x.lower*2) for x in dates])
+            clower = statistics.median([x.lower if x.lower else int(x.lower/2) for x in dates])
+            if cupper:
+                upper = cupper
+            if clower:
+                lower = clower
             if int(upper) < int(lower):
                 upper,lower = lower,upper
     if layer.epoch:
@@ -117,8 +121,12 @@ def calc_culture_range(sender, instance, **kwargs):
                 mean_lower.append(layer.mean_lower)
                 mean_upper.append(layer.mean_upper)
         if len(dates) >= 1:
-            upper = max([x.upper for x in dates])
-            lower = min([x.lower for x in dates])
+            cupper = statistics.median([x.upper if x.upper else int(x.lower*2) for x in dates])
+            clower = statistics.median([x.lower if x.lower else int(x.lower/2) for x in dates])
+            if cupper:
+                upper = cupper
+            if clower:
+                lower = clower
         elif len(mean_lower) >= 1:
             upper = max(mean_upper)
             lower = min(mean_lower)
