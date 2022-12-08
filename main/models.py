@@ -70,7 +70,7 @@ class Date(models.Model):
     def __str__(self):
         if self.method == '14C':
             if self.upper:
-                return f"{self.lower:,} - {self.upper:,} BP"
+                return f"{self.upper:,} - {self.lower:,} BP"
             if self.estimate:
                 return f"{self.estimate:,} ± {self.plusminus:,} uncal 14C"
         else:
