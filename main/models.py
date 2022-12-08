@@ -359,3 +359,8 @@ class MammalianAssemblage(models.Model):
     layer = models.ForeignKey(Layer, verbose_name=u'layer', related_name='mammalian_assemblage', blank=True, on_delete=models.CASCADE)
     mammals = models.TextField('mammals', blank=True)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
+
+models = {
+    'site': Site,
+    'layer': Layer
+}

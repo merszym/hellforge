@@ -6,12 +6,8 @@ from django.db.models import Q
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 import json
-from .tools import dating
+from .models import models
 
-models = {
-    'site': Site,
-    'layer': Layer
-}
 
 def fill_modal(request):
     choice = request.GET.get('type', False)
@@ -55,34 +51,6 @@ def upload_image(request):
         }
     }
     return JsonResponse(res)
-
-def ajax_calibrate_c14(request):
-    date = request.GET.get('estimate', False)
-    pm = request.GET.get('pm', False)
-    if date and pm:
-        upper, lower, curve = dating.calibrate_c14(int(date), int(pm))
-        return JsonResponse({"status":True, "lower":lower, 'upper':upper, 'curve':curve})
-    return JsonResponse({"status":False})
-
-def save_date(request):
-    form = DateForm(request.POST)
-    if form.is_valid():
-        validation = any([form.cleaned_data.get(x,False) for x in ['estimate','upper','lower']])
-        # validate that dates exist
-        if validation:
-            obj = form.save()
-            obj.refresh_from_db()
-            #if we have an associated model (e.g. Layer)
-            if dat := form.cleaned_data.get('info', False):
-                model,pk = dat.split(',')
-                instance = models[model].objects.get(pk=int(pk))
-                instance.date.add(obj)
-                instance.save() #not needed for adding, but for date-calculations
-            return JsonResponse({"status":True})
-        if not validation:
-            form.add_error('estimate', 'Please provide a Date')
-            form.add_error('upper', 'Or provide a Range')
-    return render(request,'main/dating/dating-modal-content.html',{'datingoptions': DatingMethod.objects.all(), 'form':form})
 
 def save_ref(request):
     form = ReferenceForm(request.POST)
@@ -164,72 +132,6 @@ def search_cp(request):
     kw = data['keyword']
     q = Checkpoint.objects.filter(Q(name__contains=kw) | Q(description__contains=kw ) | Q(category__contains=kw ) | Q(type__contains=kw ))
     return JsonResponse({x.pk: f"{x.name};;{x.type}" for x in q})
-
-@csrf_exempt
-def search_layer(request):
-    data = {x:v[0] for (x,v) in dict(request.POST).items()}
-    kw = data['keyword']
-    q = Layer.objects.filter(Q(name__contains=kw) | Q(site__name__contains=kw ) )
-    print(q)
-    return JsonResponse({x.pk: f"{x.name};;{x.site}" for x in q})
-
-def clone_layer(request, pk):
-    new_layer = Layer.objects.get(pk=pk)
-    new_layer.pk = None
-    # find the last postion:
-    layers = [x.pos for x in Layer.objects.filter(site__id=Layer.objects.get(pk=pk).site.pk).all()]
-    last = max(layers)
-    new_layer.pos = last+1
-    new_layer.save()
-    layer = Layer.objects.get(pk=pk)
-    for profile in layer.profile.all():
-        new_layer.profile.add(profile)
-    for ref in layer.ref.all():
-        new_layer.ref.add(ref)
-    for cp in layer.checkpoint.all():
-        new_layer.checkpoint.add(cp)
-    for date in layer.date.all():
-        new_layer.date.add(date)
-    return JsonResponse({'pk':new_layer.pk})
-
-def save_layer(request,profile_id):
-    """
-    add a new layer to an existing profile
-    """
-    profile = Profile.objects.get(pk=profile_id)
-    try:
-        layer = Layer.objects.get(pk=int(request.GET['layer']))
-        layer.profile.add(profile)
-        layer.site = profile.site
-    except KeyError:
-        layers = [x.pos for x in Layer.objects.filter(site__id=profile.site.pk).all()]
-        last = max(layers) if len(layers)>0 else 0
-        layer = Layer(name=f"Layer {last+1}", pos=last+1, site=profile.site)
-        layer.save()
-        layer.profile.add(profile)
-    return JsonResponse({"pk":layer.pk, 'name':layer.name})
-
-def remove_otherlayer(request,profile_id):
-    """
-    remove a layer from an existing profile (dont delete the layer itself)
-    """
-    profile = Profile.objects.get(pk=profile_id)
-    layer = Layer.objects.get(pk=int(request.GET['layer']))
-    layer.profile.remove(profile)
-    return JsonResponse({"pk":layer.pk, 'name':layer.name})
-
-
-def update_layer_positions(request, site_id):
-    site = Site.objects.get(pk=site_id)
-    #find the position that has changed
-    new_positions = [int(x) for x in request.GET['new_positions'].split(',')]
-    layers = [x for x in site.layer.all() if x.pk in new_positions]
-    for old,new in zip(layers,new_positions):
-        pos = old.pos
-        l = Layer.objects.get(pk=new)
-        l.pos = pos
-        l.save()
-    return JsonResponse({'data':True})
 
 def get_description(request):
     data = request.GET.dict()

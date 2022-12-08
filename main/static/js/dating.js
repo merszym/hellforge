@@ -14,35 +14,22 @@ $("body").on("click", '.addDate', function(){
         });
 });
 
-// mark dates as delete
-$("body").on('click', '.date_delete', function(){
-    pk = $(this).attr('id').split('_')[2]
-    ele = $(`#date_option_${pk}`)
-    if(ele.attr('selected')){
-        ele.removeAttr('selected')
-        $(`#date_display_row_${pk} > td`).addClass('del')
-    } else {
-        ele.attr('selected','selected')
-        $(`#date_display_row_${pk} > td`).removeClass('del')
-    }
-});
-
 // Validate the dating form
 // what happens if uncal 14C is selected...
 // show the required fields, hide the rest
 $('body').on('change','#method',function(){
+    //Reset the form
+    $('.date_range').val('')
+    $('.date_range').prop('disabled', false)
+    $('.estimate_range').val('')
+    $('.estimate_range').prop('disabled', false)
     if( this.value === '14C' ){
-        $('#estimate_label').html('Radiocarbon Measurement')
-        $('#range_label').html('Calibrated Date BP')
         $('.14c_group').show()
         $('.14c_hide').hide()
-        $('.date_range').html("")
         $('#upper').prop('readonly', true);
         $('#lower').prop('readonly', true);
         $('#curve').prop('readonly', true);
     } else {
-        $('#estimate_label').html('Point Estimate')
-        $('#range_label').html('Range')
         $('.14c_group').hide()
         $('.14c_hide').show()
         $('#upper').prop('readonly', false);
@@ -78,20 +65,19 @@ $('body').on('click','#calibrate',function(){
     estimate = $('#estimate').val()
     pm = $('#plusminus').val()
     $('#calibrate').addClass('loading')
-    $('#calibrate').removeClass('tooltip tooltip-left')
+    $('#calibrate').removeClass('tooltip tooltip-right')
     $.ajax({
         type: "GET",
         url: `${$('#calibrate').attr('data-url')}?estimate=${estimate}&pm=${pm}`,
         }).done(function(data){
-            console.log(data)
+            $('#calibrate').removeClass('loading')
+            $('#calibrate').addClass('tooltip tooltip-right')
             if(data['status']){
                 $('#curve').val(data['curve'])
                 $('#upper').val(data['upper'])
                 $('#lower').val(data['lower'])
-                $('#calibrate').removeClass('loading')
-                $('#calibrate').addClass('tooltip tooltip-left')
             } else {
-                alert('Calibration went wrong, sorry')
+                alert('Calibration failed. Fill BOTH fields of the 14C Measurement field')
             }
         });
 });

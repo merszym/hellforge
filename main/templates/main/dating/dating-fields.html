@@ -1,17 +1,22 @@
 <!--The dating form-->
+{% if form.non_field_errors %}
+{% for error in form.non_field_errors %}
+<div class="toast toast-error">{{error}}</div>
+{% endfor %}
+{% endif %}
 <!--Method-->
 <div class="form-group">
     <label class="form-label" for="method">Method</label>
     <select class="form-select" type="text" id="method" name="method" placeholder="{{field.name}}" required>
-        <option selected>{% if form.method %} {{form.method.value}} {% else %} --- {% endif %}</option>
+        <option selected>{% if form.method %}{{form.method.value}}{% else %}14C{% endif %}</option>
         {% for option in datingoptions %}
-        <option>{{option}}</option>
+            <option>{{option}}</option>
         {% endfor %}
     </select>
 </div>
 <div class="divider"></div>
 <!--Lab Code only for C14-->
-<div class="14c_group" style="display:none;">
+<div class="14c_group">
     <div class="form-group" id="oxa_group">
         <label class="form-label" id="oxa" for="oxa">Laboratory code</label>
         <input class="form-input" name="oxa" id="oxa" placeholder="OxA" value="{% if form.oxa %}{{form.oxa.value}} {% endif %}">
@@ -23,39 +28,36 @@
     if not 14C: provide either estimate +- value OR range upper-lower
     if 14C: only provide uncalibrated -> get calibrated range via ajax
 -->
-<label id="estimate_label">Point Estimate</label>
+<label class="14c_group">Radiocarbon Measurement</label>
+<label class="14c_hide" style="display:none;">Point Estimate</label>
 <div class="input-group">
-    <input type="number" class="form-input" id='estimate' name="estimate" placeholder="50000"
+    <input type="number" class="form-input estimate_range" id='estimate' name="estimate" placeholder="50000"
     {% if form.estimate %} value="{{form.estimate.value}}" {% endif %}>
     <span class="input-group-addon">±</span>
-    <input type="number" class="form-input" id="plusminus" name="plusminus" placeholder="3000"
+    <input type="number" class="form-input estimate_range" id="plusminus" name="plusminus" placeholder="3000"
     {% if form.plusminus %} value="{{form.plusminus.value}}" {% else %} value="0" {% endif %}>
-    <span id="calibrate" data-url="{% url 'ajax_date_cal' %}" class="btn tooltip tooltip-left 14c_group input-group-btn" data-tooltip='Calibrate' style="display:none;"><i class="icon icon-refresh"></i></span>
 </div>
-<p class="form-input-hint 14c_group" style="display:none;">Please enter the <strong>uncalibrated 14C Date</strong></p>
+<p class="form-input-hint 14c_group">Please enter the <strong>uncalibrated 14C Date</strong></p>
 <div id="range_group">
-    {% for error in form.estimate.errors %}
-    <p class="form-input-hint" style="color:red;">{{error}}</p>
-    {% endfor %}
-    <div class="divider text-center 14c_hide" data-content="OR"></div>
-    <label id="range_label">Range</label>
+    <div class="divider text-center 14c_hide" style="display:none;" data-content="OR"></div>
+    <label class="14c_group">Calibrate!!</label>
+    <label class="14c_hide" style="display:none;">Range</label>
     <div class="input-group">
+        <span class="btn tooltip tooltip-right 14c_group input-group-btn" id="calibrate" data-url="{% url 'ajax_date_cal' %}" data-tooltip='Calibrate'><i class="icon icon-refresh"></i></span>
         <!--calibration curve for c14 -->
-        <input class="form-input 14c_group" type="text" id="curve" name="curve" placeholder="Calibration curve"
+        <input class="form-input 14c_group" type="text" id="curve" name="curve" placeholder="Calibration curve" readonly
         {% if form.curve %} value="{{form.curve.value}}" {% endif %}>
         <span class="input-group-addon 14c_group">95%</span>
         <!--ranges-->
-        <input class="form-input date_range" type="number" id="upper" name="upper" placeholder="53000"
+        <input class="form-input date_range" type="number" id="upper" name="upper" placeholder="53000" readonly
         {% if form.upper %} value="{{form.upper.value}}" {% endif %}>
         <span class="input-group-addon">-</span>
-        <input class="form-input date_range" type="number" id="lower" name="lower" placeholder="47000"
+        <input class="form-input date_range" type="number" id="lower" name="lower" placeholder="47000" readonly
         {% if form.lower %} value="{{form.lower.value}}" {% endif %}>
-        <span class="input-group-addon 14c_group">CalBP</span>
+        <span class="input-group-addon"><span class="14c_group">CalBP</span><span class="14c_hide" style="display:none;">BP</span></span>
     </div>
-    {% for error in form.upper.errors %}
-        <p class="form-input-hint" style="color:red;">{{error}}</p>
-    {% endfor %}
-    <p class="form-input-hint 14c_hide">Please enter the date range in the format <strong>older - younger</strong>.
+    <p class="form-input-hint 14c_group">Calibration is done in the backend, in case you dont do it here!</p>
+    <p class="form-input-hint 14c_hide" style="display:none;">Please enter the date range in the format <strong>older - younger</strong>.
         Entering only <strong>one</strong> value: <strong>x - 47000</strong> is interpreted as >47000</p>
 </div>
 <div class="form-group">
