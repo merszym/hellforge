@@ -1,3 +1,4 @@
+{% load format %}
 <div class="popover popover-right">
     <span style="padding-left:0px;" class="btn btn-link">{{layer.age_summary}}</span>
     <div class="popover-container">
@@ -9,21 +10,29 @@
           <table class="table table-scroll">
             <thead>
               <tr>
-                <th>Date</th>
-                <th>Method</th>
-                <th>Ref</th>
-                <th>Edit</th>
-                <th>Delete</th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {% for date in layer.date.all %}
               <tr>
-                <td>{{date}}</td>
-                <td>{{date.method}}</td>
-                <td>{{date.ref.first.short}}</td>
-                <td><a href="{% url 'date_update' date.pk %}"><i class="icon icon-edit"></i></a></td>
                 <td><a href="{% url 'date_delete' date.pk %}"><i class="icon icon-delete"></i></a></td>
+                <td>{{date.method}}</td>
+                {% if date.method == '14C' %}
+                <td>
+                  <span class="text-gray" style="font-size:11pt;">{{date.curve}} ({{date.estimate|format:"{:,}"}}±{{date.plusminus|format:"{:,}"}})</span><br>
+                  {{date.upper|format:"{:,}"}} - {{date.lower|format:"{:,}"}} BP (95%)<br>
+                  <span class="text-gray" style="font-size:11pt;">{{date.oxa}}</span>
+                </td>
+                {% else %}
+                <td>{{date}}</td>
+                {% endif %}
+                <td>{{date.ref.first.short}}</td>
+                <td>{{date.description}}</td>
               </tr>
               {% endfor %}
             </tbody>

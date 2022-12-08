@@ -6,6 +6,7 @@ from django.db.models import Q
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 import json
+from .tools import dating
 
 models = {
     'site': Site,
@@ -54,6 +55,14 @@ def upload_image(request):
         }
     }
     return JsonResponse(res)
+
+def ajax_calibrate_c14(request):
+    date = request.GET.get('estimate', False)
+    pm = request.GET.get('pm', False)
+    if date and pm:
+        upper, lower, curve = dating.calibrate_c14(int(date), int(pm))
+        return JsonResponse({"status":True, "lower":lower, 'upper':upper, 'curve':curve})
+    return JsonResponse({"status":False})
 
 def save_date(request):
     form = DateForm(request.POST)
@@ -226,8 +235,8 @@ def get_description(request):
     data = request.GET.dict()
     model = models[data['model']]
     object = model.objects.get(pk=data['id'])
-    if object.new_description:
-        data = json.loads(object.new_description)
+    if object.description:
+        data = json.loads(object.description)
     else:
         data = dict({'empty':True, 'model': data['model']})
     return JsonResponse(data)
@@ -241,7 +250,7 @@ def save_description(request):
     data = request.POST.dict()
     data = json.loads(data['data'])
 
-    object.new_description = json.dumps(data)
+    object.description = json.dumps(data)
     object.save()
 
     return JsonResponse({'data':True, 'redirect': reverse('site_detail', kwargs={'pk': object.id})})

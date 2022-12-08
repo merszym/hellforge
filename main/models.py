@@ -50,11 +50,17 @@ class DatingMethod(models.Model):
         ordering = ['option']
 
 class Date(models.Model):
+    method = models.CharField('dating method', max_length=200)
+    #this is uncalibrated if C14, otherwise just easy to enter
     estimate = models.IntegerField('estimate', blank=True, null=True)
     plusminus = models.IntegerField('plusminus', blank=True, null=True)
+    oxa = models.CharField('oxa-code', max_length=300, blank=True, null=True)
+    curve = models.CharField('calibration_curve', max_length=300, blank=True, null=True)
+    #this is the 2 Sigma calibrated date if C14
+    #should be the calender years in 1950BP
     upper = models.IntegerField('upper bound', blank=True, null=True)
     lower = models.IntegerField('lower bound', blank=True, null=True)
-    method = models.CharField('dating method', max_length=200)
+    #additional information
     description = models.TextField('description', blank=True)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
 
@@ -62,19 +68,25 @@ class Date(models.Model):
         return reverse('date_update', kwargs={'pk': self.id})
 
     def __str__(self):
-        if not self.upper and not self.estimate and not self.lower:
-            return 'Unset Date'
-        if self.estimate and self.plusminus:
-            return f"{self.estimate:,} ± {self.plusminus:,} ya"
-        if self.estimate:
-            return f"{self.estimate:,} ya"
-        if self.upper and not self.lower:
-            return f"< {self.upper:,} ya"
-        if self.lower and not self.upper:
-            return f"> {self.lower:,} ya"
-        if self.upper != self.lower:
-            return f"{self.upper:,} - {self.lower:,} ya"
-        return f"{self.upper:,} ya"
+        if self.method == '14C':
+            if self.upper:
+                return f"{self.lower:,} - {self.upper:,} BP"
+            if self.estimate:
+                return f"{self.estimate:,} ± {self.plusminus:,} uncal 14C"
+        else:
+            if not self.upper and not self.estimate and not self.lower:
+                return 'Unset Date'
+            if self.estimate and self.plusminus:
+                return f"{self.estimate:,} ± {self.plusminus:,} ya"
+            if self.estimate:
+                return f"{self.estimate:,} ya"
+            if self.upper and not self.lower:
+                return f"< {self.upper:,} ya"
+            if self.lower and not self.upper:
+                return f"> {self.lower:,} ya"
+            if self.upper != self.lower:
+                return f"{self.upper:,} - {self.lower:,} ya"
+            return f"{self.upper:,} ya"
 
 class Location(models.Model):
     name = models.CharField('name', max_length=200)
@@ -209,7 +221,7 @@ class Site(models.Model):
     contact = models.ManyToManyField(ContactPerson, blank=True, verbose_name=u'contact', related_name='site')
     name = models.CharField('name', max_length=200)
     country = models.CharField('country', max_length=200, blank=True)
-    new_description = models.JSONField('new_description', blank=True, null=True)
+    description = models.JSONField('description', blank=True, null=True)
     gallery = models.OneToOneField(Gallery, blank=True, null=True, verbose_name=u'gallery', related_name='model', on_delete=models.SET_NULL)
     type = models.CharField('type', max_length=200, blank=True)
     loc = models.ManyToManyField(Location, verbose_name=u"location")

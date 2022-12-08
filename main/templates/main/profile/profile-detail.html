@@ -32,7 +32,7 @@
                         <button class="btn remove_other_layer tooltip tooltip-top" data-tooltip="Remove Layer from Profile" id="remove_layer_{{layer.pk}}" data-url="{% url 'ajax_otherlayer_delete' object.pk %}?layer={{layer.pk}}"><i class="icon icon-downward"></i></button>
                         <a class="btn tooltip tooltip-top" data-tooltip="Delete Layer" href="{% url 'layer_delete' layer.pk%}"><i class="icon icon-delete"></i></a>
                         <div class="divider"></div>
-                        <button class='btn fill_modal tooltip tooltip-top' data-info="layer,{{layer.pk}}" data-tooltip="Add Dating" data-url="{% url 'ajax_fill_modal' %}?type=dating"><i class="icon icon-time"></i></button>
+                        <button id='date_modal' class='btn fill_modal tooltip tooltip-top' data-info="layer,{{layer.pk}}" data-tooltip="Add Dating" data-url="{% url 'ajax_fill_modal' %}?type=dating"><i class="icon icon-time"></i></button>
                         <button class='btn fill_modal tooltip tooltip-top' data-info="layer,{{layer.pk}}" data-tooltip="Add Culture" data-url="{% url 'ajax_fill_modal' %}?type=culture"><i class="icon icon-emoji"></i></button>
                       </div>
                     </div>

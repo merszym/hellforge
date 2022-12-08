@@ -321,18 +321,6 @@ class CultureListView(ListView):
         return context
 
 
-## Dates ##
-class DateUpdateView(UpdateView):
-    model = Date
-    form_class = DateForm
-    extra_context = {'reference_form': ReferenceForm, 'datingoptions': DatingMethod.objects.all() }
-
-    def get_context_data(self, **kwargs):
-        context = super(DateUpdateView, self).get_context_data(**kwargs)
-        context.update(self.extra_context)
-        return context
-
-
 ## Epoch ##
 class EpochUpdateView(UpdateView):
     model = Epoch

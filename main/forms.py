@@ -10,7 +10,7 @@ class DateForm(forms.ModelForm):
     info = forms.CharField(required=False)
     class Meta:
         model = Date
-        fields = ['estimate','plusminus','upper','lower','method','description', 'ref', 'info']
+        fields = ['estimate','plusminus', 'oxa', 'curve','upper','lower','method','description', 'ref', 'info']
 
 class ReferenceForm(forms.ModelForm):
     class Meta:
