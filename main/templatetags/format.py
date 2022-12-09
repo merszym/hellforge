@@ -6,4 +6,7 @@ register = template.Library()
 @stringfilter
 @register.filter(name='format')
 def format(value, fmt):
-    return fmt.format(value)
+    if value:
+        return fmt.format(value)
+    else:
+        return value
