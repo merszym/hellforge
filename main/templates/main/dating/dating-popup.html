@@ -29,7 +29,11 @@
                   <span class="text-gray" style="font-size:11pt;">{{date.oxa}}</span>
                 </td>
                 {% else %}
-                <td>{{date}}</td>
+                <td>{{date}}
+                  {% if date.oxa %}
+                    <br><span class="text-gray" style="font-size:11pt;">{{date.oxa}}</span>
+                  {% endif %}
+                </td>
                 {% endif %}
                 <td>{{date.ref.first.short}}</td>
                 <td>{{date.description}}</td>
