@@ -4,6 +4,14 @@
 <div class="toast toast-error">{{error}}</div>
 {% endfor %}
 {% endif %}
+<strong>Batch Upload</strong><br>
+<label>
+    <span id='date-batch-label' class="btn tooltip tooltip-right" data-tooltip="Batch Upload Dates"><i class="icon icon-upload"></i></span>
+    <input id="date-batch-input" data-url="{% url 'ajax_date_batch_upload' %}" type="file" style="display:none;">
+</label>
+<span id='date-batch-header' data-url="{% url 'download_header' %}?model=date" class="btn tooltip tooltip-right" data-tooltip="Batch Download Template"><i class="icon icon-download"></i></span>
+<p class="form-input-hint">Upload multiple Dates via CSV</p>
+<div class="divider text-center" data-content="OR"></div>
 <!--Method-->
 <div class="form-group">
     <label class="form-label" for="method">Method</label>

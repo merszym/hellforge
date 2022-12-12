@@ -20,7 +20,11 @@
             <tbody>
               {% for date in layer.date.all %}
               <tr>
-                <td><a href="{% url 'date_delete' date.pk %}"><i class="icon icon-delete"></i></a></td>
+                <td>
+                  <span class="btn date_delete" id="date_{{date.pk}}_layer_{{layer.pk}}" data-url="{% url 'ajax_date_unlink'%}">
+                    <i class="icon icon-delete"></i>
+                  </span>
+                </td>
                 <td>{{date.method}}</td>
                 {% if date.method == '14C' %}
                 <td>

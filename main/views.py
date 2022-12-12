@@ -14,25 +14,6 @@ from django.views.decorators.csrf import csrf_exempt
 def landing(request):
     return render(request, 'main/landing.html')
 
-# Date
-class DateDeleteView(DeleteView):
-    model = Date
-    template_name = 'main/confirm_delete.html'
-
-    # I need to remove the dates from m2m to fire m2m-change signal
-    def form_valid(self, form):
-        obj = self.object
-        site = obj.model.first().site
-        if obj.model:
-            for model in obj.model.all():
-                model.date.remove(obj)
-        obj.delete()
-        return HttpResponseRedirect(self.get_success_url(site))
-
-    def get_success_url(self, site):
-        return reverse('site_detail', kwargs={'pk':site.id})
-
-
 ## Locations ##
 class LocationCreateView(CreateView):
     model = Location

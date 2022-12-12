@@ -61,11 +61,17 @@ class Date(models.Model):
     upper = models.IntegerField('upper bound', blank=True, null=True)
     lower = models.IntegerField('lower bound', blank=True, null=True)
     #additional information
-    description = models.TextField('description', blank=True)
+    description = models.TextField('description', blank=True, null=True)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
 
     def get_absolute_url(self):
         return reverse('date_update', kwargs={'pk': self.id})
+
+    @classmethod
+    def table_columns(self):
+        #human readable representation of the dates
+        return  ['Layer','Method','Lab Code','Date','Error','Upper Bound','Lower Bound','Notes','Reference']
+
 
     def __str__(self):
         if self.method == '14C':
@@ -362,5 +368,6 @@ class MammalianAssemblage(models.Model):
 
 models = {
     'site': Site,
-    'layer': Layer
+    'layer': Layer,
+    'date': Date
 }

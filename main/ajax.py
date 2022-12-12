@@ -1,5 +1,5 @@
 from .forms import ReferenceForm, ProfileForm, DateForm, ContactForm
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from .models import Reference, Location, Site, Profile, Layer, Culture, Epoch, Checkpoint, ContactPerson, Image, Gallery, DatingMethod
 from django.db.models import Q
@@ -7,6 +7,19 @@ from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from .models import models
+
+def download_header(request):
+    from django.core.files.base import ContentFile
+    import pandas as pd
+
+    model = models[request.GET.get('model')]
+    cols = model.table_columns()
+    df = pd.DataFrame(columns=cols)
+
+    file_to_send = ContentFile(df.to_csv(index=False))
+    response = HttpResponse(file_to_send,'application/octet-stream')
+
+    return response
 
 
 def fill_modal(request):

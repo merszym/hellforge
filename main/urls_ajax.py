@@ -8,6 +8,9 @@ urlpatterns = [
     path('a/refs/add',           ajax.save_ref,                 name='ajax_ref_add'),
     path('a/contact/add',        ajax.save_contact,             name='ajax_contact_add'),
     path('a/date/add',           tools.dating.add,              name='ajax_date_add'),
+    path('a/date/delete',        tools.dating.delete,           name='ajax_date_unlink'),
+    path('a/date/upload',        tools.dating.batch_upload,     name='ajax_date_batch_upload'),
+    path('a/date/save-batch',    tools.dating.save_verified_batchdata,     name='ajax_save_verified_batchdata'),
     path('a/date/calibrate',     tools.dating.calibrate_c14,    name='ajax_date_cal'),
     path('a/refs/search',        ajax.search_ref,               name='ajax_ref_search'),
     path('a/contact/search',     ajax.search_contact,           name='ajax_contact_search'),
@@ -25,4 +28,5 @@ urlpatterns = [
     path('a/layer/search', tools.layers.search,                             name='ajax_layer_search'),
     path('a/layer/update_pos/<int:site_id>', tools.layers.update_positions, name='ajax_layer_pos_update'),
     path('a/upload', ajax.upload_image,                                     name='upload'),
+    path('a/download-header', ajax.download_header,                         name='download_header'),
 ]

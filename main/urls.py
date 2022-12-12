@@ -20,7 +20,6 @@ urlpatterns = [
     path('layers/edit/<int:pk>', views.LayerUpdateView.as_view(), name='layer_update'),
     path('layers/remove/<int:pk>', views.LayerDeleteView.as_view(), name='layer_delete'),
     path('profiles/remove/<int:pk>', views.ProfileDeleteView.as_view(), name='profile_delete'),
-    path('date/remove/<int:pk>', views.DateDeleteView.as_view(), name='date_delete'),
     path('cultures/edit/<int:pk>', views.CultureUpdateView.as_view(), name='culture_update'),
     path('cultures/add', views.CultureCreateView.as_view(), name='culture_add'),
     path('cultures', views.CultureListView.as_view(), name='culture_list'),

@@ -8,11 +8,13 @@
 </div>
 <div class="modal-body">
     <div class="content">
-        <form id="modal-form" method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-            {% include 'main/dating/dating-fields.html' %}
-            <br>
-            <span id='ajax_add_date' class='btn btn-primary addDate' data-url='{% url "ajax_date_add" %}'>Save</span>
-        </form>
+        <div id="dating-content">
+            <form id="modal-form" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% include 'main/dating/dating-fields.html' %}
+                <br>
+                <span id='ajax_add_date' class='btn btn-primary addDate' data-url='{% url "ajax_date_add" %}'>Save</span>
+            </form>
+        </div>
     </div>
 </div>
