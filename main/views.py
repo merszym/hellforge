@@ -99,12 +99,6 @@ class SiteDetailView(DetailView):
         context.update(self.extra_context)
         data = []
         groups = []
-        for culture in sorted(self.object.cultures, key=lambda x: x.upper if x else 0):
-            groups.append({
-                'id': f"{culture.name.lower() if culture else 'None'}",
-                'content': f"{culture if culture else 'None'}",
-                'order': culture.upper if culture else 'None'
-                })
         for checkpoint,color in zip(self.object.checkpoints, sns.color_palette('husl', len(self.object.checkpoints)).as_hex() ):
             data.append({
                 'start': checkpoint.date.first().upper *-31556952-(1970*31556952000),
@@ -116,11 +110,16 @@ class SiteDetailView(DetailView):
         for layer in self.object.layer.all():
             if not layer.date.first() and not self.request.GET.get('include_undated', False):
                 continue
+            groups.append({
+                'id':f'{layer.name.lower()}',
+                'content':f'{layer.name}',
+                'order': int(layer.pos)
+            })
             layerdata = {
                 'start': layer.mean_upper *-31556952-(1970*31556952000),
                 'order':int(layer.pos),
-                'content': f"{layer.name} | {layer.age_summary}",
-                'group':f"{layer.culture.name.lower() if layer.culture else 'None'}",
+                'content': f"{layer.culture.name if layer.culture else 'Sterile'} | {layer.age_summary}",
+                'group':f"{layer.name.lower()}",
                 'style':f'background-color:{"lightgreen" if layer.date.first() else "salmon"}',
                 'type':'point'
                 }
@@ -131,8 +130,8 @@ class SiteDetailView(DetailView):
                     'type': 'range'
                 })
             data.append(layerdata)
-        context['groupdata'] = list({v['id']:v for v in groups}.values())
-        context['itemdata'] = list({v['content']:v for v in data}.values())
+        context['groupdata'] = list(groups)
+        context['itemdata'] = list(data)
         return context
 
 ## Profiles ##
