@@ -100,7 +100,7 @@ def save_verified_batchdata(request):
 
         if 'Reference' in dat:
             tmp.ref.add(Reference.objects.get(pk=dat['Reference']['id']))
-        tmp_layer = Layer.objects.filter(Q(site = site) and Q(name = dat['Layer'])).first()
+        tmp_layer = Layer.objects.filter(Q(site = site) & Q(name = dat['Layer'])).first()
         tmp_layer.date.add(tmp)
         tmp_layer.save()
     return JsonResponse({'status': True})
@@ -110,18 +110,23 @@ def add(request):
     from main.models import DatingMethod, Date
     form = DateForm(request.POST)
     if form.is_valid(): # is always valid because nothing is required
+        #create a tmp-date, dont save
+        obj = Date(method='tmp')
         # check if we have the date already in the database
+        # replace the tmp-date
         if oxa := form.cleaned_data.get('oxa'):
             try:
                 obj = Date.objects.get(oxa=oxa)
             except Date.DoesNotExist:
-                # validate that dates exist
-                if any([form.cleaned_data.get(x,False) for x in ['estimate','upper','lower']]):
-                    obj = form.save() # post_safe signal fires here to calibrate if not done yet
-                    obj.refresh_from_db()
-                else:
-                    form.add_error(None, 'Please provide a Date')
-                    return render(request,'main/dating/dating-modal-content.html',{'datingoptions': DatingMethod.objects.all(), 'form':form})
+                pass
+        # validate that dates exist in the form... is relevant if the date doesnt exist yet
+        if not obj.pk:
+            if any([form.cleaned_data.get(x,False) for x in ['estimate','upper','lower']]):
+                obj = form.save() # post_safe signal fires here to calibrate if not done yet
+                obj.refresh_from_db()
+            else:
+                form.add_error(None, 'Please provide a Date')
+                return render(request,'main/dating/dating-modal-content.html',{'datingoptions': DatingMethod.objects.all(), 'form':form})
         #if we have an associated model (e.g. Layer)
         if dat := form.cleaned_data.get('info', False):
             model,pk = dat.split(',')
