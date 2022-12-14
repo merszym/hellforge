@@ -74,7 +74,6 @@ $("body").on("click", '.addCulture', function(){
         url: $('#ajax_add_culture').attr('data-url'),
         data: $("#modal-form").serialize(),
         }).done(function(data){
-            console.log(data)
             if(data['status']){
                 location.reload();
             } else {

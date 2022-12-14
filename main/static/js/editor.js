@@ -51,6 +51,9 @@ $.getJSON({
                 super: {
                     class: Superscript
                 },
+                reference: {
+                    class: Reference
+                },
                 linkTool: LinkTool,
                 table: {
                     class: Table,
@@ -58,7 +61,11 @@ $.getJSON({
                 },
             },
             tunes: ['footnotes'],
-            data: respond
+            data: respond,
+            onReady: () => {
+                //load popups from references
+                load_popups()
+            }
         });
         // for read-only-mode
         if($('#saveButton').length){

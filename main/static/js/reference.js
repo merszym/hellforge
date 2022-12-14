@@ -23,12 +23,15 @@ $(".addReference").on("click", function(){
 
 //Searching for references
 var searchFunction = function( data ) {
+    var form_data = new FormData();
+    form_data.append('keyword', data);
+    form_data.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
     $.ajax({
-        type: "post",
+        type: "POST",
+        processData: false,
+        contentType: false,
+        data: form_data,
         url: $('#ref-search').attr("data-url"),
-        data: {
-            'keyword': data,
-        },
         success: function(respond) {
             $('.search-appear').show()
             $('.search-appear').html(

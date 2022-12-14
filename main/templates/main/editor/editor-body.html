@@ -1,14 +1,36 @@
 {% load static %}
 
-{% if readonly != False %}
 <style>
+  {% if readonly != False %}
     .ce-block__content, .ce-toolbar__content {
         max-width:calc(100%) !important; }
     .cdx-block { max-width: 100% !important; }
     .cdx-list__item {margin: 0px !important; padding: 0px !important;}
     .codex-editor__redactor {margin-right: 0px !important;}
+  {% else %}
+  .reference {background-color:aqua;}
+  {% endif %}
 </style>
-{% endif %}
+
+<!-- This modal opens in case you do a inline-reference add -->
+<p id="reference-modal-get" data-url="{% url 'ajax_ref_modal_get' %}" style="display:none;"></p>
+<p id="reference-add" data-url="{% url 'ajax_ref_add_to_model' %}" style="display:none;"></p>
+<p id="reference-popup-get" data-url="{% url 'ajax_ref_popup_get' %}" style="display:none;"></p>
+<p id="reference-row-get" data-url="{% url 'ajax_ref_row_get' %}" style="display:none;"></p>
+<div class="modal" id="reference-modal">
+    <a href="#close" class="modal-overlay" aria-label="Close"></a>
+    <div class="modal-container">
+      <div class="modal-header">
+        <a href="#close" id="modal-close" class="btn btn-clear float-right" aria-label="Close"></a>
+        <div class="modal-title h5">Insert Reference</div>
+      </div>
+      <div class="modal-body">
+        <div class="content" id="reference-modal-content">
+
+        </div>
+      </div>
+    </div>
+  </div>
 
 <div id="guide" data-url="{% url 'upload' %}?model={{object.model}}&id={{object.pk}}">
     <div id="editorjs" data-url="{% url 'ajax_description_get' %}?model={{object.model}}&id={{object.pk}}"></div>
@@ -19,7 +41,12 @@
         <span id="description-save" class="btn btn-primary" data-url="{% url 'ajax_description_save' %}?model={{object.model}}&id={{object.pk}}">Save</span>
     </div>
     {% endif %}
-
 </div>
-
+<div id="description-references" style="display:none;">
+  <h5>References</h5>
+  <table class="table table-striped my-2">
+    <tbody id="description-reference-tbody" style="border-top: 1px solid lightgrey;">
+    </tbody>
+  </table>
+</div>
 <script src="{% static 'js/editor.js' %}"></script>

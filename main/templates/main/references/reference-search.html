@@ -1,10 +1,13 @@
 {% load static %}
 <div class="mb-2">
+<form>
+{% csrf_token %}
 <div class="input-group">
     <span class="input-group-addon"><i class="form-icon icon icon-search"></i> Reference</span>
     <input type="text" class="form-input" placeholder="Search" id="ref-search" data-url="{% url 'ajax_ref_search'%}">
     <a href="{% url 'ref_add' %}" target="_blank" class="btn btn-primary input-group-btn tooltip tooltip-left" data-tooltip="Add new Reference"><i class="icon icon-plus"></i></a>
 </div>
+</form>
 <div class="search-appear"></div>
 <script src="{% static 'js/reference.js' %}"></script>
 </div>

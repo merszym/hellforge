@@ -106,8 +106,7 @@ def save_culture(request):
 
 @csrf_exempt
 def search_ref(request):
-    data = {x:v[0] for (x,v) in dict(request.POST).items()}
-    kw = data['keyword']
+    kw = request.POST.get('keyword')
     q = Reference.objects.filter(Q(short__contains=kw) | Q(title__contains=kw ) | Q(tags__contains=kw ))
     return JsonResponse({x.pk:f"{x.short};;{x.title}" for x in q})
 
