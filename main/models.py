@@ -150,7 +150,8 @@ class Culture(models.Model):
     # Additional funcitons
     @property
     def classname(self):
-        return self.name.lower().replace(' ','_').replace('/','')
+        import re
+        return ''.join([x for x in self.name.lower() if bool(re.search('[a-z0-9]',x))])
 
     @property
     def age_summary(self):
