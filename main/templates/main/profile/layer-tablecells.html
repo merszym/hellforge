@@ -1,4 +1,4 @@
-<td><strong>{{layer.name}}</strong></td>
+<td class="{% if layer.culture %}{{layer.culture.classname}}{% else %}sterile{% endif%}"><strong>{{layer.name}}</strong></td>
 <td>
     {% if layer.date.first %}
     {% include 'main/dating/dating-popup.html' %}<br>

@@ -19,7 +19,7 @@
         <tbody id="layer_tbody" data-url="{% url 'ajax_layer_pos_update' object.site.pk %}">
             {% for layer in object.layer.all %}
             <tr class="table_row" id="layer_{{layer.pk}}">
-              <td><i class="icon icon-resize-vert"></i></td>
+              <td class="sort_handle" style="cursor:move;"><i class="icon icon-resize-vert"></i></td>
               {% include 'main/profile/layer-tablecells.html' %}
               <td>
                 <div class="popover popover-left">

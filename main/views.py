@@ -95,10 +95,12 @@ class SiteDetailView(DetailView):
     extra_context = {'profile_form': ProfileForm, 'dating_form': DateForm, 'datingoptions': DatingMethod.objects.all() }
 
     def get_context_data(self, **kwargs):
+        from collections import defaultdict
         context = super(SiteDetailView, self).get_context_data(**kwargs)
         context.update(self.extra_context)
         data = []
         groups = []
+        cultures = defaultdict(int)
         for checkpoint,color in zip(self.object.checkpoints, sns.color_palette('husl', len(self.object.checkpoints)).as_hex() ):
             data.append({
                 'start': checkpoint.date.first().upper *-31556952-(1970*31556952000),
@@ -108,6 +110,9 @@ class SiteDetailView(DetailView):
                 'content': f"<a href={reverse('checkpoint_update', kwargs={'pk':checkpoint.id})} class='btn-link'>{checkpoint.name}</a>",
                 })
         for layer in self.object.layer.all():
+            if layer.culture:
+                if layer.pos > cultures[layer.culture.classname]:
+                    cultures[layer.culture.classname] = layer.pos
             if not layer.date.first() and not self.request.GET.get('include_undated', False):
                 continue
             groups.append({
@@ -120,7 +125,7 @@ class SiteDetailView(DetailView):
                 'order':int(layer.pos),
                 'content': f"{layer.culture.name if layer.culture else 'Sterile'} | {layer.age_summary}",
                 'group':f"{layer.name.lower()}",
-                'style':f'background-color:{"lightgreen" if layer.date.first() else "salmon"}',
+                'className':f'{layer.culture.classname if layer.culture else "sterile"}',
                 'type':'point'
                 }
             # if range instead of point
@@ -132,6 +137,12 @@ class SiteDetailView(DetailView):
             data.append(layerdata)
         context['groupdata'] = list(groups)
         context['itemdata'] = list(data)
+        context['cultures'] = [
+            (k,v) for k,v in zip(
+                [x for x in sorted(cultures, key=lambda x: cultures[x])],
+                sns.color_palette('husl',len(set(cultures))).as_hex()
+            )
+        ]
         return context
 
 ## Profiles ##

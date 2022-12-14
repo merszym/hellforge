@@ -52,7 +52,12 @@ $('.tab-block').on('click','.tab-item', function(){
 function makeSortable(){
     $("#layer_tbody").sortable({
         items:'tr',
+        containment: "parent",
+        axis:'y',
         cursor:'move',
+        delay: 200,
+        handle:'.sort_handle',
+        opacity: 0.7,
         stop: function( event, ui ) {
             //get the new order of layers
             positions = []

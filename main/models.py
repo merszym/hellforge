@@ -149,6 +149,10 @@ class Culture(models.Model):
 
     # Additional funcitons
     @property
+    def classname(self):
+        return self.name.lower().replace(' ','_').replace('/','')
+
+    @property
     def age_summary(self):
         return f"{self.upper:,} - {self.lower:,} ya"
 

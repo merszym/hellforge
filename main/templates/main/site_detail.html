@@ -9,6 +9,16 @@
 {% endblock %}
 {% block headline %} <a style='color:white' href="{% url 'site_list' %}">Site</a>{% endblock %}
 {% block body %}
+<style>
+.sterile{
+    background-color: rgb(117, 117, 117);
+ }
+{% for cult,color in cultures %}
+.{{cult}}{
+    background-color:{{color}}
+}
+{% endfor %}
+</style>
 <div class='columns' style="padding:10px;">
     <div class="column col-4" id='mobile' style="position:relative;">
         <a class="btn btn-primary tooltip tooltip-left" href="{% url 'site_update' object.pk %}" style="position:absolute; right:5%; top:10px" data-tooltip="Edit Site">
@@ -127,8 +137,8 @@
 </div>
 {% if object.layer.first %}
 <h2>Timeline</h2>
-<a href="{% url 'site_detail' object.pk %}?include_undated=1"><span class="btn" style="background-color: salmon;">Include undated</span></a>
-<a href="{% url 'site_detail' object.pk %}"><span class="btn" style="background-color: lightgreen;">Show dated</span></a>
+<a href="{% url 'site_detail' object.pk %}?include_undated=1"><span class="btn">Include undated</span></a>
+<a href="{% url 'site_detail' object.pk %}"><span class="btn">Show dated</span></a>
 {% include 'main/timeline/timeline-body.html' %}
 <script>
     var groups = {{groupdata|safe}}
