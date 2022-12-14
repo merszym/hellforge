@@ -1,16 +1,19 @@
 {% load static %}
 
+{% if readonly != False %}
 <style>
-  {% if readonly != False %}
     .ce-block__content, .ce-toolbar__content {
         max-width:calc(100%) !important; }
     .cdx-block { max-width: 100% !important; }
     .cdx-list__item {margin: 0px !important; padding: 0px !important;}
     .codex-editor__redactor {margin-right: 0px !important;}
-  {% else %}
-  .reference {background-color:aqua;}
-  {% endif %}
 </style>
+  {% else %}
+<style>
+  .reference {background-color:aqua;}
+</style>
+  {% endif %}
+
 
 <!-- This modal opens in case you do a inline-reference add -->
 <p id="reference-modal-get" data-url="{% url 'ajax_ref_modal_get' %}" style="display:none;"></p>
