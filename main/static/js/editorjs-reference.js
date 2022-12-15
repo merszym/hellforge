@@ -37,7 +37,6 @@ class Reference {
         this.wrap(range);
     }
     wrap(range){
-        const selectedText = range.extractContents();
         const ref = document.createElement(this.tag);
         const api = this.api
         $.ajax({
@@ -47,6 +46,7 @@ class Reference {
                 $('#reference-modal').addClass('active')
                 $('#reference-modal-content').html(html)
                 $('body').off().on('click','.search-item' ,function(){
+                    const selectedText = range.extractContents();
                     const id = $(this).attr('id').split('_')[2]
                     $('#search-appear').html("")
                     $('#reference-modal').removeClass('active')
@@ -99,6 +99,7 @@ class Reference {
  // only if readonly
  function load_popups(){
     if ($('#readonly').html() != 'False') {
+        done = []
         $('reference-tag').each(function(){
             $('#description-references').show()
             const tag = $(this)
@@ -110,12 +111,15 @@ class Reference {
                 }).done(function(html){
                     tag.html(html)
                 });
-            $.ajax({
-                type: "GET",
-                url: `${$('#reference-row-get').attr('data-url')}?pk=${pk}`,
-                }).done(function(html){
-                    $('#description-reference-tbody').append(html)
-                });
+            if (done.includes(pk)==false){
+                done.push(pk)
+                $.ajax({
+                    type: "GET",
+                    url: `${$('#reference-row-get').attr('data-url')}?pk=${pk}`,
+                    }).done(function(html){
+                        $('#description-reference-tbody').append(html)
+                    });
+                }
         });
      }
  }
