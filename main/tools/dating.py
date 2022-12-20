@@ -147,3 +147,20 @@ def delete(request):
     if len(date.model.all()) == 0:
         date.delete()
     return JsonResponse({'status':True})
+
+def add_relative(request):
+    from main.forms import RelDateForm
+    form = RelDateForm(request.POST)
+    if form.is_valid(): # is always valid because nothing is required
+        obj = form.save()
+        print(obj)
+        #if we have an associated model (e.g. Layer)
+        if dat := form.cleaned_data.get('info', False):
+            print(dat)
+            model,pk = dat.split(',')
+            layer = models[model].objects.get(pk=int(pk))
+            layer.reldate.add(obj)
+            layer.save() #not needed for adding, but for post-save signal in layer
+        return JsonResponse({"status":True})
+        # error validation
+    return render(request,'main/dating/reldate-modal-content.html',{'form':form})

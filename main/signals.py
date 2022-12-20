@@ -1,6 +1,6 @@
 from django.db.models.signals import post_save, m2m_changed, post_delete
 from django.dispatch import receiver
-from main.models import Layer, Culture, Epoch, Checkpoint, Site, Date
+from main.models import Layer, Culture, Epoch, Checkpoint, Site, Date, CheckpointLayerJunction
 import main.tools as tools
 import statistics
 
@@ -98,10 +98,15 @@ def fill_date(sender, instance, **kwargs):
 def update_layer(sender, instance, **kwargs):
     """
     when layers are updated/saved, set the site for a direct link, update the dates
+    if no junction exists: save an additional junction
     """
     if not instance.site:
         instance.site = instance.profile.first().site
         instance.save()
+
+    if len(instance.junction.all())==0:
+        j = CheckpointLayerJunction(layer=instance)
+        j.save()
 
     upper, lower = calculate_layer_dates(instance)
 
@@ -148,3 +153,12 @@ def calc_culture_range(sender, instance, **kwargs):
             culture.upper = upper
             culture.lower = lower
             culture.save()
+
+@receiver(post_save, sender=Checkpoint)
+def update_checkpoint(sender, instance, **kwargs):
+    """
+    if no junction exists: save an additional junction
+    """
+    if len(instance.junction.all())==0:
+        j = CheckpointLayerJunction(checkpoint=instance)
+        j.save()

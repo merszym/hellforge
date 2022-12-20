@@ -1,10 +1,16 @@
 from django import forms
-from .models import Location, Reference, Site, Profile, Layer, Culture, Date, Epoch, Checkpoint, ContactPerson, Image
+from .models import Location, Reference, Site, Profile, Layer, Culture, Date, Epoch, Checkpoint, ContactPerson, Image, RelativeDate
 
 class ProfileForm(forms.ModelForm):
     class Meta:
         model=Profile
         fields = ['name', 'type']
+
+class RelDateForm(forms.ModelForm):
+    info = forms.CharField(required=False)
+    class Meta:
+        model = RelativeDate
+        fields = ['info','ref','how','offset','relation']
 
 class DateForm(forms.ModelForm):
     info = forms.CharField(required=False)
@@ -36,7 +42,7 @@ class SiteForm(forms.ModelForm):
 class LayerForm(forms.ModelForm):
     class Meta:
         model = Layer
-        fields = ['name','description','site_use','ref','epoch','checkpoint','related']
+        fields = ['name','description','site_use','ref','epoch','checkpoint','related','unit']
 
 
 class EpochForm(forms.ModelForm):

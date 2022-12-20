@@ -15,5 +15,7 @@ admin.site.register(ContactPerson)
 admin.site.register(Image)
 admin.site.register(Gallery)
 admin.site.register(DatingMethod)
+admin.site.register(RelativeDate)
+admin.site.register(CheckpointLayerJunction)
 
 

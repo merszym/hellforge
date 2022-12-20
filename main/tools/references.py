@@ -7,13 +7,12 @@ def find(kw):
     #find the best reference for a given search term
     if kw==kw:
         if ref := Reference.objects.filter(Q(short=kw) | Q(doi=kw)).first():
-                return ref
+            return ref
         return 'Not Found'
     return np.nan
 
 def get_modal(request):
     return render(request, 'main/references/reference-search.html')
-
 
 def add_to_model(request):
     from django.http import JsonResponse

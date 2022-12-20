@@ -4,7 +4,7 @@ from django.shortcuts import render
 from .models import Location, Reference, Site, Layer, Culture, Date, Epoch, Checkpoint, Profile, DatingMethod
 from .forms import LocationForm, ReferenceForm, SiteForm, ProfileForm, LayerForm, CultureForm, \
     DateForm, EpochForm, CheckpointForm, ContactForm
-import re
+import re, json
 import statistics
 import seaborn as sns
 from django.http import JsonResponse, HttpResponseRedirect
@@ -100,47 +100,75 @@ class SiteDetailView(DetailView):
         context.update(self.extra_context)
         data = []
         groups = []
+        unit_groups = {}
+        units = defaultdict(int)
         cultures = defaultdict(int)
         for checkpoint,color in zip(self.object.checkpoints, sns.color_palette('husl', len(self.object.checkpoints)).as_hex() ):
             data.append({
-                'start': checkpoint.date.first().upper *-31556952-(1970*31556952000),
-                'end': checkpoint.date.first().lower *-31556952-(1970*31556952000),
-                'type':'background',
+                "start": checkpoint.date.first().upper *-31556952-(1970*31556952000),
+                "end": checkpoint.date.first().lower *-31556952-(1970*31556952000),
+                "type":"background",
                 #'style': f"border-left: solid 2px {color};border-right: solid 2px {color};",
-                'content': f"<a href={reverse('checkpoint_update', kwargs={'pk':checkpoint.id})} class='btn-link'>{checkpoint.name}</a>",
+                "content": f"<a href={reverse('checkpoint_update', kwargs={'pk':checkpoint.id})} class='btn-link'>{checkpoint.name}</a>",
                 })
         for layer in self.object.layer.all():
             if layer.culture:
                 if layer.pos > cultures[layer.culture.classname]:
                     cultures[layer.culture.classname] = layer.pos
+            if layer.unit:
+                if layer.pos > units[layer.unit_class]:
+                    units[layer.unit_class] = layer.pos
             if not layer.date.first() and not self.request.GET.get('include_undated', False):
                 continue
+
+            if layer.unit:
+                if layer.unit not in unit_groups:
+                    unit_groups[layer.unit] = [layer.name.lower()]
+                else:
+                    unit_groups[layer.unit].append(layer.name.lower())
+
             groups.append({
-                'id':f'{layer.name.lower()}',
-                'content':f'{layer.name}',
-                'order': int(layer.pos)
+                "id":layer.name.lower(),
+                "content":layer.name,
+                'treeLevel':1,
+                "order": int(layer.pos)
             })
             layerdata = {
-                'start': layer.mean_upper *-31556952-(1970*31556952000),
-                'order':int(layer.pos),
-                'content': f"{layer.culture.name if layer.culture else 'Sterile'} | {layer.age_summary}",
-                'group':f"{layer.name.lower()}",
-                'className':f'{layer.culture.classname if layer.culture else "sterile"}',
-                'type':'point'
+                "start": layer.mean_upper *-31556952-(1970*31556952000),
+                "order":int(layer.pos),
+                "content": f"{layer.culture.name if layer.culture else 'Sterile'} | {layer.age_summary}",
+                "group": layer.name.lower(),
+                "className":f"{layer.culture.classname if layer.culture else 'sterile'}",
+                "type":"point"
                 }
             # if range instead of point
             if (layer.mean_lower != layer.mean_upper):
                 layerdata.update({
-                    'end': layer.mean_lower *-31556952-(1970*31556952000),
-                    'type': 'range'
+                    "end": layer.mean_lower *-31556952-(1970*31556952000),
+                    "type": "range"
                 })
             data.append(layerdata)
-        context['groupdata'] = list(groups)
-        context['itemdata'] = list(data)
+
+        for k,v in unit_groups.items():
+            groups.append({
+                "id":k,
+                "content":k,
+                'order':units[k],
+                'treeLevel':2,
+                'nestedGroups': v
+            })
+        context['groupdata'] = json.dumps(groups)
+        context['itemdata'] = json.dumps(data)
         context['cultures'] = [
             (k,v) for k,v in zip(
                 [x for x in sorted(cultures, key=lambda x: cultures[x])],
                 sns.color_palette('husl',len(set(cultures))).as_hex()
+            )
+        ]
+        context['units'] = [
+            (k,v) for k,v in zip(
+                [x for x in sorted(units, key=lambda x: units[x])],
+                sns.color_palette('viridis',len(set(units))).as_hex()
             )
         ]
         return context

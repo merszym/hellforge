@@ -1,4 +1,5 @@
 <td class="{% if layer.culture %}{{layer.culture.classname}}{% else %}sterile{% endif%}"><strong>{{layer.name}}</strong></td>
+<td class="{% if layer.unit %}{{layer.unit_class}}{% endif %}"><span style="width:5px;"></span></td>
 <td>
     {% if layer.date.first %}
     {% include 'main/dating/dating-popup.html' %}<br>
@@ -6,6 +7,9 @@
     {{layer.age_summary}}<br>
     <span class="text-gray" style="font-size:11pt;">Context</span>
     {% endif %}
+    {%if layer.reldate.first %}
+    <br>{{layer.reldate.first}}
+    {%endif%}
 </td>
 <td>
 {% for checkpoint in layer.checkpoint.all %}

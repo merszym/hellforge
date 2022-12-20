@@ -16,6 +16,7 @@ urlpatterns = [
     path('a/date/upload',        tools.dating.batch_upload,     name='ajax_date_batch_upload'),
     path('a/date/save-batch',    tools.dating.save_verified_batchdata,     name='ajax_save_verified_batchdata'),
     path('a/date/calibrate',     tools.dating.calibrate_c14,    name='ajax_date_cal'),
+    path('a/date/add_rel',        tools.dating.add_relative,    name='ajax_add_reldate'),
     path('a/refs/search',        ajax.search_ref,               name='ajax_ref_search'),
     path('a/contact/search',     ajax.search_contact,           name='ajax_contact_search'),
     path('a/cp/search',          ajax.search_cp,                name='ajax_cp_search'),

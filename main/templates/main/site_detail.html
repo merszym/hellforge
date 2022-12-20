@@ -9,14 +9,26 @@
 {% endblock %}
 {% block headline %} <a style='color:white' href="{% url 'site_list' %}">Site</a>{% endblock %}
 {% block body %}
+
+<!-- Add dynamic styling for units and cultures -->
 <style>
 .sterile{
     background-color: rgb(117, 117, 117);
  }
+</style>
 {% for cult,color in cultures %}
+<style>
 .{{cult}}{
     background-color:{{color}}
 }
+</style>
+{% endfor %}
+{% for unit,color in units %}
+<style>
+.{{unit}}{
+    background-color:{{color}}
+}
+</style>
 {% endfor %}
 </style>
 <div class='columns' style="padding:10px;">
@@ -141,8 +153,8 @@
 <a href="{% url 'site_detail' object.pk %}"><span class="btn">Show dated</span></a>
 {% include 'main/timeline/timeline-body.html' %}
 <script>
-    var groups = {{groupdata|safe}}
-    var data= {{itemdata|safe}}
+    var groups = JSON.parse("{{ groupdata|escapejs }}");
+    var data = JSON.parse("{{ itemdata|escapejs }}");
     data.forEach(element => {
         element.start = new Date(element.start);
         if(element.end){
@@ -155,7 +167,7 @@
 {% endif %}
 <script src="{% static 'js/location.js' %}"></script>
     {% if object.loc.first.geo %}
-        <script> drawJson({{object.loc.first.geo | safe }}); fitBounds() </script>
+        <script> drawJson(JSON.parse('{{object.loc.first.geo | safe }}')); fitBounds() </script>
     {% endif %}
     <script src="{% static 'js/site.js' %}"></script>
 {% endblock %}

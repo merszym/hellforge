@@ -3,7 +3,6 @@ from django.urls import reverse
 from django.db.models import Q
 import json
 
-
 class ContactPerson(models.Model):
     name = models.CharField('name', max_length=300)
     email = models.CharField('email',max_length=300)
@@ -18,6 +17,9 @@ class Reference(models.Model):
     short = models.CharField('short', max_length=200, blank=True, null=True)
     tags = models.TextField('tags',blank=True)
     doi = models.CharField('doi', max_length=500)
+
+    class Meta:
+        ordering = ['short']
 
     def __str__(self):
         return self.short if self.short else self.title
@@ -39,6 +41,24 @@ class Reference(models.Model):
         else:
             return f'https://sci-hub.ee/{self.doi}'
 
+
+class CheckpointLayerJunction(models.Model):
+    layer = models.ForeignKey('Layer', verbose_name=u"layer", related_name='junction', null=True, blank=True, on_delete=models.CASCADE)
+    checkpoint = models.ForeignKey('Checkpoint', verbose_name=u'checkpoint', related_name='junction',null=True, blank=True, on_delete=models.CASCADE)
+
+    def __str__(self):
+        if self.layer:
+            return str(self.layer)
+        return str(self.checkpoint)
+
+class RelativeDate(models.Model):
+    relation = models.ForeignKey(CheckpointLayerJunction, verbose_name=u'relation', on_delete=models.CASCADE)
+    how = models.CharField('how', max_length=20, choices=[('same','Same Age'),('younger', 'Younger'),('older', 'Older')])
+    offset = models.IntegerField('offset', default=0)
+    ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
+
+    def __str__(self):
+        return f"{self.how}:{self.relation}"
 
 class DatingMethod(models.Model):
     option = models.CharField('option', max_length=200)
@@ -303,6 +323,7 @@ class Profile(models.Model):
 
 class Layer(models.Model):
     name = models.CharField('name', max_length=200)
+    unit = models.CharField('unit', max_length=300, blank=True, null=True)
     description = models.TextField('description', blank=True)
     site_use = models.TextField('site use', blank=True)
     characteristics = models.TextField('characteristics', blank=True)
@@ -314,6 +335,7 @@ class Layer(models.Model):
     checkpoint = models.ManyToManyField(Checkpoint, verbose_name=u'checkpoint', blank=True, related_name='layer')
     related = models.ManyToManyField('self', verbose_name=u'related layers', blank=True)
     date = models.ManyToManyField(Date, verbose_name=u"date", blank=True, related_name='model')
+    reldate = models.ManyToManyField(RelativeDate, verbose_name='relative date', blank=True)
     mean_upper = models.IntegerField(blank=True, default=1000000)
     mean_lower = models.IntegerField(blank=True, default=0)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
@@ -328,6 +350,11 @@ class Layer(models.Model):
     def get_lower_sibling(self):
         return Layer.objects.filter(Q(pos__gt = self.pos) & Q(site=self.site) &
             (Q(date__isnull=False) | Q(checkpoint__isnull=False)) ).first()
+
+    @property
+    def unit_class(self):
+        import re
+        return ''.join([x for x in self.unit.lower() if bool(re.search('[a-z0-9]',x))])
 
     @property
     def lowest_date(self):

@@ -1,4 +1,4 @@
-from .forms import ReferenceForm, ProfileForm, DateForm, ContactForm
+from .forms import ReferenceForm, ProfileForm, DateForm, ContactForm, RelDateForm
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from .models import Reference, Location, Site, Profile, Layer, Culture, Epoch, Checkpoint, ContactPerson, Image, Gallery, DatingMethod
@@ -26,6 +26,8 @@ def fill_modal(request):
     choice = request.GET.get('type', False)
     if choice=='dating':
         html = render(request,'main/dating/dating-modal-content.html',{'datingoptions': DatingMethod.objects.all()})
+    if choice=='reldate':
+        html = render(request,'main/dating/reldate-modal-content.html', {'form': RelDateForm(request.POST)})
     if choice=='culture':
         html = render(request,'main/culture/culture-modal-content.html')
     return html
