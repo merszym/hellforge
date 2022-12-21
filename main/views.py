@@ -1,7 +1,7 @@
 from django.views.generic import CreateView, ListView, UpdateView, DetailView, DeleteView
 from django.urls import reverse
 from django.shortcuts import render
-from .models import Location, Reference, Site, Layer, Culture, Date, Epoch, Checkpoint, Profile, DatingMethod
+from .models import Location, Reference, Site, Layer, Culture, Date, Epoch, Checkpoint, Profile, DatingMethod, get_classname
 from .forms import LocationForm, ReferenceForm, SiteForm, ProfileForm, LayerForm, CultureForm, \
     DateForm, EpochForm, CheckpointForm, ContactForm
 import re, json
@@ -116,8 +116,8 @@ class SiteDetailView(DetailView):
                 if layer.pos > cultures[layer.culture.classname]:
                     cultures[layer.culture.classname] = layer.pos
             if layer.unit:
-                if layer.pos > units[layer.unit_class]:
-                    units[layer.unit_class] = layer.pos
+                if int(layer.pos) > units[layer.unit]:
+                    units[layer.unit] = layer.pos
             if not layer.date.first() and not self.request.GET.get('include_undated', False):
                 continue
 
@@ -130,7 +130,7 @@ class SiteDetailView(DetailView):
             groups.append({
                 "id":layer.name.lower(),
                 "content":layer.name,
-                'treeLevel':1,
+                'treeLevel':1 if layer.unit else 2,
                 "order": int(layer.pos)
             })
             layerdata = {
@@ -165,9 +165,10 @@ class SiteDetailView(DetailView):
                 sns.color_palette('husl',len(set(cultures))).as_hex()
             )
         ]
+        # colors for the unit classes
         context['units'] = [
             (k,v) for k,v in zip(
-                [x for x in sorted(units, key=lambda x: units[x])],
+                [get_classname(x) for x in sorted(units, key=lambda x: units[x])],
                 sns.color_palette('viridis',len(set(units))).as_hex()
             )
         ]

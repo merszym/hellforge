@@ -3,6 +3,13 @@ from django.urls import reverse
 from django.db.models import Q
 import json
 
+def get_classname(x):
+    """
+    For the templates, create classes from strings
+    """
+    import re
+    return ''.join([y for y in x.lower() if bool(re.search('[a-z0-9]',y))])
+
 class ContactPerson(models.Model):
     name = models.CharField('name', max_length=300)
     email = models.CharField('email',max_length=300)
@@ -170,8 +177,7 @@ class Culture(models.Model):
     # Additional funcitons
     @property
     def classname(self):
-        import re
-        return ''.join([x for x in self.name.lower() if bool(re.search('[a-z0-9]',x))])
+        return get_classname(self.name)
 
     @property
     def age_summary(self):
@@ -353,8 +359,7 @@ class Layer(models.Model):
 
     @property
     def unit_class(self):
-        import re
-        return ''.join([x for x in self.unit.lower() if bool(re.search('[a-z0-9]',x))])
+        return get_classname(self.unit)
 
     @property
     def lowest_date(self):
