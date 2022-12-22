@@ -153,10 +153,8 @@ def add_relative(request):
     form = RelDateForm(request.POST)
     if form.is_valid(): # is always valid because nothing is required
         obj = form.save()
-        print(obj)
         #if we have an associated model (e.g. Layer)
         if dat := form.cleaned_data.get('info', False):
-            print(dat)
             model,pk = dat.split(',')
             layer = models[model].objects.get(pk=int(pk))
             layer.reldate.add(obj)

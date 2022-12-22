@@ -27,10 +27,11 @@
                   <div class="popover-container">
                     <div class="card">
                       <div class="card-body">
-                        <a class="btn tooltip tooltip-top" data-tooltip="Edit Layer" href="{% url 'layer_update' layer.pk%}"><i class="icon icon-edit"></i></a>
                         <button class="btn clone_layer tooltip tooltip-top" data-tooltip="Clone Layer" id="clone_layer_{{layer.pk}}" data-url="{% url 'ajax_layer_clone' layer.pk %}"><i class="icon icon-plus"></i></button>
                         <button class="btn remove_other_layer tooltip tooltip-top" data-tooltip="Remove Layer from Profile" id="remove_layer_{{layer.pk}}" data-url="{% url 'ajax_otherlayer_delete' object.pk %}?layer={{layer.pk}}"><i class="icon icon-downward"></i></button>
                         <a class="btn tooltip tooltip-top" data-tooltip="Delete Layer" href="{% url 'layer_delete' layer.pk%}"><i class="icon icon-delete"></i></a>
+                        <div class="divider"></div>
+                        <button id="layer_edit_modal" class="btn fill_modal tooltip tooltip-top" data-info="layer,{{layer.pk}}" data-tooltip="Edit Layer" data-url="{% url 'ajax_fill_modal' %}?type=layer_edit"><i class="icon icon-edit"></i></button>
                         <div class="divider"></div>
                         <button id='date_modal' class='btn fill_modal tooltip tooltip-top' data-info="layer,{{layer.pk}}" data-tooltip="Add Dating" data-url="{% url 'ajax_fill_modal' %}?type=dating"><i class="icon icon-time"></i></button>
                         <button id='reldate_modal' class='btn fill_modal tooltip tooltip-top' data-info="layer,{{layer.pk}}" data-tooltip="Add Relative Dating" data-url="{% url 'ajax_fill_modal' %}?type=reldate"><i class="icon icon-link"></i></button>
@@ -96,6 +97,4 @@
             </div>
         </div>
     </div>
-    <script src="{% static 'js/profile.js' %}"></script>
-    <script src="{% static 'js/dating.js' %}"></script>
   </section>

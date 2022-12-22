@@ -169,5 +169,13 @@
     {% if object.loc.first.geo %}
         <script> drawJson(JSON.parse('{{object.loc.first.geo | safe }}')); fitBounds() </script>
     {% endif %}
-    <script src="{% static 'js/site.js' %}"></script>
+<script src="{% static 'js/site.js' %}"></script>
+<script src="{% static 'js/synonyms.js'%}"></script>
+<script src="{% static 'js/layer.js'%}"></script>
+<script src="{% static 'js/profile.js'%}"></script>
+<script src="{% static 'js/culture.js' %}"></script>
+<script src="{% static 'js/epoch.js' %}"></script>
+<script src="{% static 'js/checkpoint.js' %}"></script>
+<script src="{% static 'js/contact.js' %}"></script>
+<script src="{% static 'js/dating.js' %}"></script>
 {% endblock %}

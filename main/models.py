@@ -66,6 +66,13 @@ class CheckpointLayerJunction(models.Model):
             return str(self.layer)
         return str(self.checkpoint)
 
+    @property
+    def model(self):
+        if self.layer:
+            return self.layer
+        return self.checkpoint
+
+
 class RelativeDate(models.Model):
     relation = models.ForeignKey(CheckpointLayerJunction, verbose_name=u'relation', on_delete=models.CASCADE)
     how = models.CharField('how', max_length=20, choices=[('same','Same Age'),('younger', 'Younger'),('older', 'Older')])
@@ -74,6 +81,27 @@ class RelativeDate(models.Model):
 
     def __str__(self):
         return f"{self.how}:{self.relation}"
+
+    #the upper and lower values are just set to 10k away from the reference point
+    #this is just for display, so that they can fade out
+    @property
+    def upper(self):
+        if self.how == 'same':
+            return self.relation.model.mean_upper + self.offset
+        elif self.how == 'older':
+            return self.relation.model.mean_upper + 1000 + self.offset
+        else:
+            return self.relation.model.mean_lower - self.offset
+
+    @property
+    def lower(self):
+        if self.how == 'same':
+            return self.relation.model.mean_lower + self.offset
+        elif self.how == 'older':
+            return self.relation.model.mean_upper + self.offset
+        else:
+            return self.relation.model.mean_lower - 1000 - self.offset
+
 
 class DatingMethod(models.Model):
     option = models.CharField('option', max_length=200)
@@ -150,6 +178,14 @@ class Checkpoint(models.Model):
     date = models.ManyToManyField(Date, verbose_name=u'date',blank=True)
     loc = models.ManyToManyField(Location, verbose_name=u"location", blank=True)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
+
+    @property
+    def mean_upper(self):
+        return self.date.first().upper
+
+    @property
+    def mean_lower(self):
+        return self.date.first().lower
 
     @property
     def age_summary(self):
@@ -318,6 +354,9 @@ class Site(models.Model):
                 return True
         return False
 
+    @property
+    def model(self):
+        return 'site'
 
 class Profile(models.Model):
     name = models.CharField('name', max_length=200)
@@ -339,6 +378,7 @@ class Profile(models.Model):
 class Layer(models.Model):
     name = models.CharField('name', max_length=200)
     synonyms = models.ManyToManyField(Synonym, blank=True, verbose_name='synonym', related_name='layer')
+    parent = models.ForeignKey('self', verbose_name='parent layer', related_name='child', blank=True, null=True, on_delete=models.SET_NULL)
     unit = models.CharField('unit', max_length=300, blank=True, null=True)
     description = models.TextField('description', blank=True)
     site_use = models.TextField('site use', blank=True)
@@ -392,6 +432,10 @@ class Layer(models.Model):
         return f"Unset:{self.name}"
 
     @property
+    def model(self):
+        return 'layer'
+
+    @property
     def age_summary(self):
         if dates := self.date.all():
             if len(dates)==1:
@@ -408,6 +452,10 @@ class Sample(models.Model):
     layer = models.ForeignKey(Layer, verbose_name=u"layer", related_name='sample', on_delete=models.PROTECT)
     date = models.ManyToManyField(Date, verbose_name=u"date", blank=True)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
+
+    @property
+    def model(self):
+        return 'sample'
 
 class MammalianAssemblage(models.Model):
     layer = models.ForeignKey(Layer, verbose_name=u'layer', related_name='mammalian_assemblage', blank=True, on_delete=models.CASCADE)

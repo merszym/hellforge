@@ -29,6 +29,7 @@ urlpatterns = [
     path('a/profile/add/<int:site_id>', ajax.save_profile,      name='ajax_profile_add'),
     path('a/profile/<int:pk>',   ajax.get_profile,              name='ajax_profile_detail'),
     path('a/fillmodal',          ajax.fill_modal,               name='ajax_fill_modal'),
+    path('a/layer/setname',      tools.layers.setname,          name='ajax_layer_setname'),
     path('a/layer/add/<int:pid>', tools.layers.add,             name='ajax_layer_add'),
     path('a/layer/remove/<int:profile_id>', tools.layers.remove_other, name='ajax_otherlayer_delete'),
     path('a/layer/clone/<int:pk>', tools.layers.clone,                      name='ajax_layer_clone'),

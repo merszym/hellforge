@@ -1,0 +1,27 @@
+{% load static %}
+<!-- Modal content for Date -->
+<a href="#close" class="modal-overlay" aria-label="Close"></a>
+<div class="modal-container">
+    <div class="modal-header">
+        <a id="modal-close" class="btn btn-clear float-right" style="cursor:pointer;" aria-label="Close"></a>
+    <div class="modal-title h5">Edit Layer</div>
+</div>
+<div class="modal-body">
+    <div class="content">
+        <div id="reldate-content">
+            <div id="modal-form">
+                <h6>Naming</h6>
+                <div class="input-group">
+                    <span class="input-group-addon">Layer Name</span>
+                    <input type="text" class="form-input" name="layer-name" value="{{object.name}}">
+                    <span class="input-group-addon">Unit</span>
+                    <input type="text" class="form-input" name="layer-unit" placeholder="Structural Unit" value="{%if object.unit%}{{object.unit}}{%endif%}">
+                    <button id="layer-setname" class="btn btn-primary input-group-btn" data-url="{% url 'ajax_layer_setname' %}">OK</button>
+                </div>
+                <p class="form-input-hint">Update the Layer name. Provide a "Unit" to group multiple Layers</p>
+                {% include 'main/synonyms/synonyms-list.html' %}
+                {% include 'main/synonyms/synonyms-form.html' %}
+            </div>
+        </div>
+    </div>
+</div>

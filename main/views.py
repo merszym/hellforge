@@ -118,8 +118,11 @@ class SiteDetailView(DetailView):
             if layer.unit:
                 if int(layer.pos) > units[layer.unit]:
                     units[layer.unit] = layer.pos
-            if not layer.date.first() and not self.request.GET.get('include_undated', False):
+            if not layer.date.first() and not self.request.GET.get('include_undated', False) and not layer.reldate.first():
                 continue
+
+            upper = layer.mean_upper if not layer.reldate.first() else layer.reldate.first().upper
+            lower = layer.mean_lower if not layer.reldate.first() else layer.reldate.first().lower
 
             if layer.unit:
                 if layer.unit not in unit_groups:
@@ -134,7 +137,7 @@ class SiteDetailView(DetailView):
                 "order": int(layer.pos)
             })
             layerdata = {
-                "start": layer.mean_upper *-31556952-(1970*31556952000),
+                "start": upper *-31556952-(1970*31556952000),
                 "order":int(layer.pos),
                 "content": f"{layer.culture.name if layer.culture else 'Sterile'} | {layer.age_summary}",
                 "group": layer.name.lower(),
@@ -142,9 +145,9 @@ class SiteDetailView(DetailView):
                 "type":"point"
                 }
             # if range instead of point
-            if (layer.mean_lower != layer.mean_upper):
+            if (upper != lower):
                 layerdata.update({
-                    "end": layer.mean_lower *-31556952-(1970*31556952000),
+                    "end": lower *-31556952-(1970*31556952000),
                     "type": "range"
                 })
             data.append(layerdata)

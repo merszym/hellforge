@@ -11,7 +11,8 @@ def search(request):
     return JsonResponse({'status':False})
 
 def clone(request, pk):
-    new_layer = layer = Layer.objects.get(pk=pk)
+    new_layer = Layer.objects.get(pk=pk)
+    layer = Layer.objects.get(pk=pk)
     new_layer.pk = None
     # find the last postion:
     layers = [x.pos for x in Layer.objects.filter(site__id=Layer.objects.get(pk=pk).site.pk).all()]
@@ -63,3 +64,13 @@ def update_positions(request, site_id):
         l.pos = pos
         l.save()
     return JsonResponse({'data':True})
+
+def setname(request):
+    pk = request.POST.get('pk')
+    object = Layer.objects.get(pk=int(pk))
+    object.name = request.POST.get('name')
+    if unit := request.POST.get('unit', False):
+        object.unit = unit
+    else: object.unit = None
+    object.save()
+    return JsonResponse({'status':True})

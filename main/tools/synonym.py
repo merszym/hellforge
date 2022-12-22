@@ -9,7 +9,6 @@ def add(request):
         obj = form.save()
         model = request.POST.get('model', False)
         model_pk = request.POST.get('modelpk', False)
-        print(model, model_pk)
         if model and model_pk:
             model = models[model].objects.get(pk=int(model_pk))
             model.synonyms.add(obj)

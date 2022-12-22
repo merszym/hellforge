@@ -1,7 +1,4 @@
-{% if object.synonyms.first %}
-<div class="divider"></div>
-<h6> Synonyms </h6>
-
+<div class="divider text-center" data-content="Synonyms"></div>
 {% for syn in object.synonyms.all %}
 <div class="tile tile-centered">
     <div class="tile-icon">
@@ -20,4 +17,3 @@
     </div>
 </div>
 {% endfor %}
-{% endif %}

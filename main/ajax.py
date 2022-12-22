@@ -21,9 +21,14 @@ def download_header(request):
 
     return response
 
-
+# belongs into layer ajax
 def fill_modal(request):
     choice = request.GET.get('type', False)
+    model = request.GET.get('model', False)
+    pk = request.GET.get('pk', False)
+    object = models[model].objects.get(pk=int(pk))
+    if choice=='layer_edit':
+        html = render(request,'main/layer/layer-edit-modal.html', {'object':object})
     if choice=='dating':
         html = render(request,'main/dating/dating-modal-content.html',{'datingoptions': DatingMethod.objects.all()})
     if choice=='reldate':

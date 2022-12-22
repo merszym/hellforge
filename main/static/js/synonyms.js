@@ -1,14 +1,11 @@
 $('body').on('click','#synonym-add', function(){
     //add a synonym to a model on click
     var formdata = new FormData();
+    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
     formdata.append('name', $('[name=synonym]').val());
     formdata.append('type', $('[name=synonym-type]').val());
-    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
-    const url = window.location.pathname.split('/')
-    pk = url.pop()
-    model = url[1]
-    formdata.append('model',model);
-    formdata.append('modelpk', pk);
+    formdata.append('model', $('[name=model]').val());
+    formdata.append('modelpk',$('[name=pk]').val());
     $.ajax({
         type: "POST",
         processData: false,
@@ -17,7 +14,7 @@ $('body').on('click','#synonym-add', function(){
         url: $('#synonym-add').attr("data-url"),
         success: function(data) {
             if(data['status']){
-                location.reload()
+                $('#reload').click()
             }
         }
     });
@@ -36,7 +33,7 @@ $('body').on('click','.synonym_delete', function(){
         url: $(this).attr("data-url"),
         success: function(data) {
             if(data['status']){
-                location.reload()
+                $('#reload').click()
             }
         }
     });
