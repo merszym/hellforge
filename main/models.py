@@ -49,6 +49,14 @@ class Reference(models.Model):
             return f'https://sci-hub.ee/{self.doi}'
 
 
+class Synonym(models.Model):
+    """For Layers that gets renamed - provide synonyms"""
+    name = models.CharField('name', max_length=300)
+    type = models.CharField('type', max_length=300, blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+
 class CheckpointLayerJunction(models.Model):
     layer = models.ForeignKey('Layer', verbose_name=u"layer", related_name='junction', null=True, blank=True, on_delete=models.CASCADE)
     checkpoint = models.ForeignKey('Checkpoint', verbose_name=u'checkpoint', related_name='junction',null=True, blank=True, on_delete=models.CASCADE)
@@ -257,6 +265,7 @@ class Image(models.Model):
 class Site(models.Model):
     contact = models.ManyToManyField(ContactPerson, blank=True, verbose_name=u'contact', related_name='site')
     name = models.CharField('name', max_length=200)
+    synonyms = models.ManyToManyField(Synonym, blank=True, verbose_name='synonym', related_name='site')
     country = models.CharField('country', max_length=200, blank=True)
     description = models.JSONField('description', blank=True, null=True)
     gallery = models.OneToOneField(Gallery, blank=True, null=True, verbose_name=u'gallery', related_name='model', on_delete=models.SET_NULL)
@@ -329,6 +338,7 @@ class Profile(models.Model):
 
 class Layer(models.Model):
     name = models.CharField('name', max_length=200)
+    synonyms = models.ManyToManyField(Synonym, blank=True, verbose_name='synonym', related_name='layer')
     unit = models.CharField('unit', max_length=300, blank=True, null=True)
     description = models.TextField('description', blank=True)
     site_use = models.TextField('site use', blank=True)
@@ -393,6 +403,7 @@ class Layer(models.Model):
 
 class Sample(models.Model):
     name = models.CharField('name', max_length=200)
+    synonyms = models.ManyToManyField(Synonym, blank=True, verbose_name='synonym', related_name='sample')
     description = models.TextField('description', blank=True)
     layer = models.ForeignKey(Layer, verbose_name=u"layer", related_name='sample', on_delete=models.PROTECT)
     date = models.ManyToManyField(Date, verbose_name=u"date", blank=True)

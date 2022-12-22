@@ -1,4 +1,9 @@
-<td class="{% if layer.culture %}{{layer.culture.classname}}{% else %}sterile{% endif%}"><strong>{{layer.name}}</strong></td>
+<td class="{% if layer.culture %}{{layer.culture.classname}}{% else %}sterile{% endif%}">
+    <strong>{{layer.name}}</strong>
+    {% for syn in layer.synonyms.all %}
+    <br><span style="font-size:11pt;">{{syn.name}} ({{syn.type}})</span>
+    {% endfor %}
+</td>
 <td class="{% if layer.unit %}{{layer.unit_class}}{% endif %}"><span style="width:5px;"></span></td>
 <td>
     {% if layer.date.first %}

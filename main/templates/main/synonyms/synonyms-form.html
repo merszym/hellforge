@@ -1,0 +1,11 @@
+{% load static %}
+<h6>Add Synonym</h6>
+{% csrf_token %}
+<div class="input-group">
+    <span class="input-group-addon">Synonym</span>
+    <input type="text" name="synonym" class="form-input" placeholder="Name">
+    <input type="text" name="synonym-type" class="form-input" placeholder="Tag">
+    <span id="synonym-add" data-url="{% url 'ajax_synonym_add' %}" class="btn btn-primary input-group-btn">Add</span>
+</div>
+<script src="{% static 'js/synonyms.js'%}"></script>
+<div class="divider"></div>

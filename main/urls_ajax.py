@@ -5,6 +5,8 @@ from . import ajax
 urlpatterns = [
     path('a/editor/save',        ajax.save_description,         name='ajax_description_save'),
     path('a/editor/get',         ajax.get_description,          name='ajax_description_get'),
+    path('a/syn/add',            tools.synonym.add,             name='ajax_synonym_add'),
+    path('a/syn/remove',         tools.synonym.remove,          name='ajax_synonym_delete'),
     path('a/refs/add',           ajax.save_ref,                 name='ajax_ref_add'),
     path('a/refs/add-to-model',  tools.references.add_to_model, name='ajax_ref_add_to_model'),
     path('a/refs/modal',         tools.references.get_modal,    name='ajax_ref_modal_get'),

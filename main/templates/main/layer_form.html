@@ -10,12 +10,14 @@
             {% include 'main/epoch/epoch-display.html' %}
             {% include 'main/checkpoint/checkpoint-display.html' %}
             {% include 'main/related/related-display.html' %}
+            {% include 'main/synonyms/synonyms-list.html' %}
+            {% include 'main/synonyms/synonyms-form.html' %}
             <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="form-group">
                     <label class="form-label" for="layer-name">Name</label>
                     <input class="form-input" type="text" id="layer-name" name="name" placeholder="Site name" required
-                    value={% if object.name %} "{{object.name}}" {% endif %} >
+                    value="{% if object.name %}{{object.name}}{% endif %}">
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="layer-description">Description</label>

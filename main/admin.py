@@ -17,5 +17,6 @@ admin.site.register(Gallery)
 admin.site.register(DatingMethod)
 admin.site.register(RelativeDate)
 admin.site.register(CheckpointLayerJunction)
+admin.site.register(Synonym)
 
 

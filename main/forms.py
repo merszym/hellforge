@@ -1,5 +1,10 @@
 from django import forms
-from .models import Location, Reference, Site, Profile, Layer, Culture, Date, Epoch, Checkpoint, ContactPerson, Image, RelativeDate
+from .models import Location, Reference, Site, Profile, Layer, Culture, Date, Epoch, Checkpoint, ContactPerson, Image, RelativeDate, Synonym
+
+class SynonymForm(forms.ModelForm):
+    class Meta:
+        model = Synonym
+        fields = '__all__'
 
 class ProfileForm(forms.ModelForm):
     class Meta:
