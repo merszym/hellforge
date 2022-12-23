@@ -71,3 +71,7 @@ $('body').on('click','.fill_modal', function(){
 $('body').on('click','#modal-close', function(){
     $('#modal-blank').removeClass('active')
 })
+
+$('body').on('click', '.refresh_profile', function(){
+    getProfile()
+})

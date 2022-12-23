@@ -3,7 +3,7 @@
 <a href="#close" class="modal-overlay" aria-label="Close"></a>
 <div class="modal-container">
     <div class="modal-header">
-        <a id="modal-close" class="btn btn-clear float-right" style="cursor:pointer;" aria-label="Close"></a>
+        <a id="modal-close" class="btn btn-clear float-right refresh_profile" style="cursor:pointer;" aria-label="Close"></a>
     <div class="modal-title h5">Edit Layer</div>
 </div>
 <div class="modal-body">
@@ -21,6 +21,9 @@
                 <p class="form-input-hint">Update the Layer name. Provide a "Unit" to group multiple Layers</p>
                 {% include 'main/synonyms/synonyms-list.html' %}
                 {% include 'main/synonyms/synonyms-form.html' %}
+                <div class="divider text-center" data-content="Parent"></div>
+                <h6>Add Parent</h6>
+                #pick from the layers in that site
             </div>
         </div>
     </div>

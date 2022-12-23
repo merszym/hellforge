@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 from django.db.models import Q
-from main.models import Layer, Profile, Site
+from main.models import Layer, Profile, Site, Culture, models
 from django.views.decorators.csrf import csrf_exempt
 
 @csrf_exempt
@@ -74,3 +74,13 @@ def setname(request):
     else: object.unit = None
     object.save()
     return JsonResponse({'status':True})
+
+def set_culture(request):
+    if pk := request.POST.get('pk',False):
+        if dat := request.POST.get('info', False):
+            model,mpk = dat.split(',')
+            model = models[model].objects.get(pk=int(mpk))
+            model.culture = Culture.objects.get(pk=int(pk))
+            model.save()
+            return JsonResponse({"status":True})
+    return JsonResponse({"status":False})

@@ -5,8 +5,8 @@ var searchCulture = function( data ) {
         data: {
             'keyword': data,
         },
-        success: function(respond) {
-            if(Object.keys(respond).length === 0){
+        success: function(response) {
+            if(Object.keys(response).length === 0){
                 cultureadd = $('#culture-search-appear').attr('data-url');
                 $('.culture-search-appear').html(
                 `<div style='padding:10px;'>
@@ -32,13 +32,9 @@ var searchCulture = function( data ) {
                     </table>
                     `
                 )
-                for (const [key, value] of Object.entries(respond)) {
+                for (const [key, value] of Object.entries(response)) {
                     $('#culture-search-tbody').append(
-                        `<tr>
-                        <td id=culture_search_val_${key}>${value}</td>
-                        <td><span class='btn search-culture-item' id=culture_search_result_${key}>Take</span></td>
-                        </tr>
-                        `
+                        `<tr><td>${value}</td><td><span class='btn search-culture-item' id=${key}>Pick</span></td></tr>`
                     )
                 }
             }
@@ -46,40 +42,25 @@ var searchCulture = function( data ) {
     });
   }
 
-$('#culture-search').on('keyup paste',function(){
+$('body').on('keyup paste','#culture-search',function(){
     if(this.value.length >= 3){
         searchCulture(this.value);
     }
   });
 
 $("body").on("click",'.search-culture-item', function(){
-    pk = $(this).attr('id').split('_')[3]
-    val = $(`#culture_search_val_${pk}`).html()
-    $('#culture-list').html(
-        `<tr>
-            <td><strong>Culture:</strong></td>
-            <td id="culture_${pk}">${val}</td>
-        </tr>`
-    )
-    $('#culture-input').html(
-        `<option value="${pk}"></option>`
-    )
-    $('.culture-search-appear').html('')
-});
-
-// Modal culture add
-$("body").on("click", '.addCulture', function(){
+    //replace the culture in the backend and reload the modal
+    var formdata = new FormData();
+    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
+    formdata.append('info', $('[name=info]').val());
+    formdata.append('pk', $(this).attr('id')); //culture
     $.ajax({
         type: "POST",
-        url: $('#ajax_add_culture').attr('data-url'),
-        data: $("#modal-form").serialize(),
-        }).done(function(data){
-            if(data['status']){
-                location.reload();
-            } else {
-                ele = $('#info')
-                $('#modal-blank').html(data)
-                $('#modal-form').append(ele)
-            }
+        processData: false,
+        contentType: false,
+        url: $('#ajax_culture_set').attr('data-url'),
+        data: formdata,
+        }).done(function(){
+            $('#reload').click();
         });
 });
