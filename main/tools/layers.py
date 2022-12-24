@@ -84,3 +84,12 @@ def set_culture(request):
             model.save()
             return JsonResponse({"status":True})
     return JsonResponse({"status":False})
+
+def remove_culture(request):
+    if dat := request.POST.get('info', False):
+        model,mpk = dat.split(',')
+        model = models[model].objects.get(pk=int(mpk))
+        model.culture = None
+        model.save()
+        return JsonResponse({"status":True})
+    return JsonResponse({"status":False})

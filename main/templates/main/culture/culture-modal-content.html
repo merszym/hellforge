@@ -9,10 +9,23 @@
 <div class="modal-body">
     <div class="content" id="modal-form">
         {% csrf_token %}
+        {% if object %}
+        <div class="tile tile-centered">
+            <div class="tile-icon">
+              <div class="example-tile-icon">
+                <button class="btn" id="culture_set_null" data-url="{% url 'ajax_layer_remove_culture' %}">
+                    <i class="icon icon-delete"></i>
+                </button>
+              </div>
+            </div>
+            <div class="tile-content">
+              <div class="tile-title">{{object}}</div>
+            </div>
+        </div>
+        {% endif %}
         <div>
             {% include 'main/culture/culture-search.html' %}
         </div>
-        {% include 'main/culture/culture-display.html' %}
         <span id='ajax_culture_set' style="display: none;" data-url='{% url "ajax_culture_set" %}'></span>
     </div>
 </div>

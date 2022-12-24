@@ -34,7 +34,7 @@ def fill_modal(request):
     if choice=='reldate':
         html = render(request,'main/dating/reldate-modal-content.html', {'form': RelDateForm(request.POST)})
     if choice=='culture':
-        html = render(request,'main/culture/culture-modal-content.html')
+        html = render(request,'main/culture/culture-modal-content.html', {'object':object.culture})
     return html
 
 

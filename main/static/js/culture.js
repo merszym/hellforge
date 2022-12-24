@@ -48,19 +48,3 @@ $('body').on('keyup paste','#culture-search',function(){
     }
   });
 
-$("body").on("click",'.search-culture-item', function(){
-    //replace the culture in the backend and reload the modal
-    var formdata = new FormData();
-    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
-    formdata.append('info', $('[name=info]').val());
-    formdata.append('pk', $(this).attr('id')); //culture
-    $.ajax({
-        type: "POST",
-        processData: false,
-        contentType: false,
-        url: $('#ajax_culture_set').attr('data-url'),
-        data: formdata,
-        }).done(function(){
-            $('#reload').click();
-        });
-});
