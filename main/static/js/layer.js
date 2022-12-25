@@ -12,7 +12,6 @@ $('body').on('click', '#layer-setname', function(){
         url: $('#layer-setname').attr("data-url"),
         success: function(data) {
             if(data['status']){
-                console.log($('#reload'))
                 $('#reload').click()
             }
         }
@@ -51,10 +50,45 @@ $('body').on('click', '#culture_set_null', function(){
         url: $('#culture_set_null').attr("data-url"),
         success: function(data) {
             if(data['status']){
-                console.log($('#reload'))
                 $('#reload').click()
             }
         }
     });
+});
 
+$('body').on('click', '#layer-setparent', function(){
+    var formdata = new FormData();
+    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
+    formdata.append('parent', $('[name=parent-select]').val()); //the pk of the chosen parent
+    formdata.append('pk',$('[name=pk]').val()); //the pk of the layer
+    $.ajax({
+        type: "POST",
+        processData: false,
+        contentType: false,
+        data: formdata,
+        url: $('#layer-setparent').attr("data-url"),
+        success: function(data) {
+            if(data['status']){
+                $('#reload').click()
+            }
+        }
+    });
+});
+
+$('body').on('click', '#layer-unsetparent', function(){
+    var formdata = new FormData();
+    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
+    formdata.append('info',$('[name=info]').val()); //the pk of the layer
+    $.ajax({
+        type: "POST",
+        processData: false,
+        contentType: false,
+        data: formdata,
+        url: $('#layer-unsetparent').attr("data-url"),
+        success: function(data) {
+            if(data['status']){
+                $('#reload').click()
+            }
+        }
+    });
 });

@@ -2,18 +2,16 @@
 {% for syn in object.synonyms.all %}
 <div class="tile tile-centered">
     <div class="tile-icon">
-      <button class="btn btn-primary example-tile-icon c-auto">
-        <i class="icon icon-check" centered></i>
+      <button id="synonym_{{syn.pk}}"
+              class="btn synonym_delete tooltip tooltip-right"
+              data-tooltip="Delete Synonym"
+              data-url="{% url 'ajax_synonym_delete' %}">
+        <i class="icon icon-delete" centered></i>
       </button>
     </div>
     <div class="tile-content">
         <div class="tile-title">{{syn.name}}</div>
         <small class="tile-subtitle text-gray">{{syn.type}}</small>
-    </div>
-    <div class="tile-action">
-        <button id="synonym_{{syn.pk}}" class="btn btn-link tooltip tooltip-left synonym_delete" data-tooltip="Delete Synonym" data-url="{% url 'ajax_synonym_delete' %}">
-          <i class="icon icon-delete"></i>
-        </button>
     </div>
 </div>
 {% endfor %}

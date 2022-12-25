@@ -65,7 +65,7 @@ def update_positions(request, site_id):
         l.save()
     return JsonResponse({'data':True})
 
-def setname(request):
+def set_name(request):
     pk = request.POST.get('pk')
     object = Layer.objects.get(pk=int(pk))
     object.name = request.POST.get('name')
@@ -91,5 +91,22 @@ def remove_culture(request):
         model = models[model].objects.get(pk=int(mpk))
         model.culture = None
         model.save()
+        return JsonResponse({"status":True})
+    return JsonResponse({"status":False})
+
+def set_parent(request):
+    if pk := request.POST.get('pk',False):
+        if parent := request.POST.get('parent', False):
+            obj = Layer.objects.get(pk=int(pk))
+            obj.parent = Layer.objects.get(pk=int(parent))
+            obj.save()
+            return JsonResponse({"status":True})
+    return JsonResponse({"status":False})
+
+def unset_parent(request):
+    if info := request.POST.get('info',False):
+        obj = Layer.objects.get(pk=int(info.split(',')[1]))
+        obj.parent = None
+        obj.save()
         return JsonResponse({"status":True})
     return JsonResponse({"status":False})

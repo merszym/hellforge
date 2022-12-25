@@ -28,7 +28,14 @@ def fill_modal(request):
     pk = request.GET.get('pk', False)
     object = models[model].objects.get(pk=int(pk))
     if choice=='layer_edit':
-        html = render(request,'main/layer/layer-edit-modal.html', {'object':object})
+        options = Layer.objects.filter(Q(site=object.site)).exclude(id=object.pk)
+        if object.parent:
+            options = options.exclude(id=object.parent.pk)
+        html = render(request,'main/layer/layer-edit-modal.html', {
+            'object':object,
+            'parent_options': options
+            }
+        )
     if choice=='dating':
         html = render(request,'main/dating/dating-modal-content.html',{'datingoptions': DatingMethod.objects.all()})
     if choice=='reldate':

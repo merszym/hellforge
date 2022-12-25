@@ -7,7 +7,7 @@
     <div class="modal-title h5">Edit Layer</div>
 </div>
 <div class="modal-body">
-    <div class="content">
+    <div class="content  my-2">
         <div id="reldate-content">
             <div id="modal-form">
                 <h6>Naming</h6>
@@ -16,14 +16,39 @@
                     <input type="text" class="form-input" name="layer-name" value="{{object.name}}">
                     <span class="input-group-addon">Unit</span>
                     <input type="text" class="form-input" name="layer-unit" placeholder="Structural Unit" value="{%if object.unit%}{{object.unit}}{%endif%}">
-                    <button id="layer-setname" class="btn btn-primary input-group-btn" data-url="{% url 'ajax_layer_setname' %}">OK</button>
+                    <span id="layer-setname" class="btn btn-primary input-group-btn" data-url="{% url 'ajax_layer_setname' %}">OK</span>
                 </div>
                 <p class="form-input-hint">Update the Layer name. Provide a "Unit" to group multiple Layers</p>
                 {% include 'main/synonyms/synonyms-list.html' %}
                 {% include 'main/synonyms/synonyms-form.html' %}
                 <div class="divider text-center" data-content="Parent"></div>
-                <h6>Add Parent</h6>
-                #pick from the layers in that site
+                <h6>Set Parent</h6>
+                {% if object.parent %}
+                <div class="tile tile-centered">
+                    <div class="tile-icon my-1">
+                        <span class="btn tooltip tooltip-right" data-tooltip="Remove" id="layer-unsetparent" data-url="{% url 'ajax_layer_unsetparent' %}">
+                            <i class="icon icon-delete" centered></i>
+                        </span>
+                    </div>
+                    <div class="tile-content">
+                        <div class="tile-title">{{object.parent.name}}</div>
+                    </div>
+                </div>
+                {% endif %}
+                <div class="input-group">
+                    <span class="input-group-addon">Parent</span>
+                    <select class="form-select" name="parent-select">
+                        {% if object.parent %}
+                        <option value="{{object.parent.pk}}" selected>{{object.parent}}</option>
+                        {% else %}
+                        <option value="">---</option>
+                        {% endif %}
+                        {% for option in parent_options %}
+                        <option value="{{option.pk}}">{{option}}</option>
+                        {% endfor %}
+                    </select>
+                    <span id="layer-setparent" class="btn btn-primary input-group-btn" data-url="{% url 'ajax_layer_setparent' %}">OK</span>
+                </div>
             </div>
         </div>
     </div>

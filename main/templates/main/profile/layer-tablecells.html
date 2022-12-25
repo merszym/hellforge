@@ -1,4 +1,7 @@
 <td class="{% if layer.culture %}{{layer.culture.classname}}{% else %}sterile{% endif%}">
+    {% if layer.parent %}
+    <span style="font-size:10pt;">{{layer.parent.name}}</span><br>
+    {% endif %}
     <strong>{{layer.name}}</strong>
     {% for syn in layer.synonyms.all %}
     <br><span style="font-size:11pt;">{{syn.name}} ({{syn.type}})</span>
