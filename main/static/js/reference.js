@@ -64,7 +64,7 @@ var searchFunction = function( data ) {
     });
   }
 
-$('#ref-search').on('keyup paste',function(){
+$('body').on('keyup paste','#ref-search',function(){
     if(this.value.length >= 3)
         searchFunction(this.value);
   });
