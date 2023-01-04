@@ -4,21 +4,11 @@ from django.shortcuts import render
 from django.db.models import Q
 from django.views.generic import DeleteView
 from main.models import Profile, Site, Layer
-from main.forms import ProfileForm
 from main.tools.generic import add_x_to_y_m2m, get_instance_from_string, remove_x_from_y_m2m, delete_x
 import copy
 
 def get(request, pk):
     return render(request,'main/profile/profile-detail.html', {'object': Profile.objects.get(pk=pk)})
-
-def create(request, site_id):
-    form = ProfileForm(request.POST)
-    if form.is_valid():
-        obj = form.save(commit=False)
-        obj.site = Site.objects.get(pk=site_id)
-        obj.save()
-        return JsonResponse({"pk":obj.id, 'name':obj.name})
-    return JsonResponse({"pk":False})
 
 def add_layer(request):
     """
@@ -56,9 +46,8 @@ def remove_layer(request):
 
 # and add the urls
 urlpatterns = [
-    path('get/<int:pk>',         get,          name='main_profile_get'),
-    path('add-layer',            add_layer,    name='main_profile_layer_add'),
-    path('remove-layer',         remove_layer, name='main_profile_layer_remove'),
-    path('create/<int:site_id>', create,       name='main_profile_create'),
-    path('delete',               delete_x,     name='main_profile_delete'),
+    path('get/<int:pk>',  get,          name='main_profile_get'),
+    path('add-layer',     add_layer,    name='main_profile_layer_add'),
+    path('remove-layer',  remove_layer, name='main_profile_layer_remove'),
+    path('delete',        delete_x,     name='main_profile_delete'),
 ]

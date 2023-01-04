@@ -127,9 +127,6 @@ class Date(models.Model):
     description = models.TextField('description', blank=True, null=True)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
 
-    def get_absolute_url(self):
-        return reverse('date_update', kwargs={'pk': self.id})
-
     @classmethod
     def table_columns(self):
         #human readable representation of the dates

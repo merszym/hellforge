@@ -1,8 +1,10 @@
 from django.http import JsonResponse
-from django.urls import path
+from django.urls import path, reverse
 from django.db.models import Q
-from main.models import Layer, Profile, Site, Culture, models
 from django.views.decorators.csrf import csrf_exempt
+from django.views.generic import DeleteView, UpdateView
+from main.models import Layer, Profile, Site, Culture, models
+from main.forms import LayerForm, ReferenceForm
 from main.tools.generic import add_x_to_y_m2m, get_instance_from_string
 import copy
 
@@ -87,12 +89,37 @@ def unset_parent(request):
         return JsonResponse({"status":True})
     return JsonResponse({"status":False})
 
+class LayerDeleteView(DeleteView):
+    model = Layer
+    template_name = 'main/confirm_delete.html'
+
+    def get_success_url(self):
+        if self.get_object().site:
+            return reverse('site_detail', kwargs={'pk':self.get_object().site.id})
+        else:
+            return reverse('site_detail', kwargs={'pk':self.get_object().profile.first().site.id})
+
+# TODO: this is mostly deprectated, finish the replacement and remove!
+class LayerUpdateView(UpdateView):
+    model = Layer
+    form_class = LayerForm
+    extra_context = {'reference_form': ReferenceForm}
+    template_name = 'main/layer/layer_form.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(LayerUpdateView, self).get_context_data(**kwargs)
+        context.update(self.extra_context)
+        return context
+
+
 # and the respective urlpatterns
 urlpatterns = [
-    path('set-name',                 set_name,               name='main_layer_setname'),
-    path('set-parent',               set_parent,             name='main_layer_setparent'),
-    path('unset-parent',             unset_parent,           name='main_layer_unsetparent'),
-    path('clone/<int:pk>',           clone,                  name='main_layer_clone'),
-    path('search',                   search,                 name='main_layer_search'),
-    path('positions/<int:site_id>',  update_positions,       name='main_layer_positionupdate'),
+    path('set-name',                 set_name,                  name='main_layer_setname'),
+    path('set-parent',               set_parent,                name='main_layer_setparent'),
+    path('unset-parent',             unset_parent,              name='main_layer_unsetparent'),
+    path('clone/<int:pk>',           clone,                     name='main_layer_clone'),
+    path('search',                   search,                    name='main_layer_search'),
+    path('positions/<int:site_id>',  update_positions,          name='main_layer_positionupdate'),
+    path('delete/<int:pk>',          LayerDeleteView.as_view(), name='main_layer_delete'),
+    path('edit/<int:pk>',            LayerUpdateView.as_view(), name='main_layer_update'),
 ]

@@ -15,35 +15,26 @@ function getProfile(pk=null){
         }
 }
 
-$('#profile-add').on('click', function(){
+$('body').on('click','#profile-add', function(){
     $('#modal-profile').addClass('active')
 });
 
-$('#modal-profile-close').on('click', function(){
+$('body').on('click', '#modal-profile-close', function(){
     $('#modal-profile').removeClass('active')
 });
 
-$('#profile-submit').on('click', function(){
+$('body').on('click', '#profile-submit', function(){
     $('#modal-profile').removeClass('active')
     $.ajax({
         type: "POST",
         url: $('#profile-submit').attr('data-url'),
         data: $("#profile-form").serialize()
-        }).done(function(data){
-            url = $('#profile-add').attr('data-url').replace('1',data['pk'])
-            $('.tab-item').removeClass('active')
-            $(
-            `
-            <li class="tab-item active" data-url="${url}">
-                <a class="c-hand">${data['name']}</a>
-            </li>
-            `
-            ).insertBefore($('#before-profile-add'))
-            getProfile(data['pk'])
+        }).done(function(html){
+            $('#profile-list').replaceWith(html);
         });
 });
 
-$('.tab-block').on('click','.tab-item', function(){
+$('body').on('click','.tab-item', function(){
     $('.tab-item').removeClass('active')
     $(this).addClass('active')
     getProfile()

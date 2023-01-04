@@ -33,7 +33,7 @@
 </style>
 <div class='columns' style="padding:10px;">
     <div class="column col-4" id='mobile' style="position:relative;">
-        <a class="btn btn-primary tooltip tooltip-left" href="{% url 'site_update' object.pk %}" style="position:absolute; right:5%; top:10px" data-tooltip="Edit Site">
+        <a class="btn btn-primary tooltip tooltip-left" href="{% url 'main_site_update' object.pk %}" style="position:absolute; right:5%; top:10px" data-tooltip="Edit Site">
             <i class="icon icon-edit"></i>
         </a>
         <div class="my-2">
@@ -83,7 +83,7 @@
             </div>
             <div id="description-description" class="panel" style="display:none;">
                 <div class="panel-header" style="position:relative;">
-                    <a class="btn btn-primary tooltip tooltip-right" href="{% url 'site_description_update' object.pk %}" data-tooltip="Edit Description">
+                    <a class="btn btn-primary tooltip tooltip-right" href="{% url 'main_site_descr_update' object.pk %}" data-tooltip="Edit Description">
                         <i class="icon icon-edit"></i>
                     </a>
                     <span id="resize-editor" class="btn btn-primary tooltip tooltip-left" style="position:absolute; right: 15px" data-tooltip="Toggle Full Width">
@@ -117,7 +117,7 @@
                                     <input class="form-input" type="text" id="{{field.name}}_id" name="{{field.name}}" placeholder="{{field.name}}" required>
                                 </div>
                                 {% endfor %}
-                                <span id='profile-submit' class="btn btn-primary" data-url="{% url 'main_profile_create' object.pk%}">Add</span>
+                                <span id='profile-submit' class="btn btn-primary" data-url="{% url 'main_site_profile_create' object.pk%}">Add</span>
                                 </form>
                                 <br>
                             </div>

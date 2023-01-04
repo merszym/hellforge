@@ -1,9 +1,0 @@
-{% extends 'main/base.html' %}
-{% block headline %}Reference List{% endblock %}
-{% block body %}
-<ul>
-{% for obj in object_list %}
-    <li><a href="{% url 'ref_update' obj.pk %}">{{obj}}</li>
-{% endfor %}
-</ul>
-{% endblock %}

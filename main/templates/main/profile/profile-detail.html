@@ -32,7 +32,7 @@
                       <div class="card-body">
                         <button class="btn clone_layer tooltip tooltip-top" data-tooltip="Clone Layer" id="clone_layer_{{layer.pk}}" data-url="{% url 'main_layer_clone' layer.pk %}"><i class="icon icon-plus"></i></button>
                         <button class="btn layer_profile tooltip tooltip-top" data-tooltip="Remove Layer from Profile" id="remove_layer_{{layer.pk}}" data-url="{% url 'main_profile_layer_remove' %}"><i class="icon icon-downward"></i></button>
-                        <a class="btn tooltip tooltip-top" data-tooltip="Delete Layer" href="{% url 'layer_delete' layer.pk%}"><i class="icon icon-delete"></i></a>
+                        <a class="btn tooltip tooltip-top" data-tooltip="Delete Layer" href="{% url 'main_layer_delete' layer.pk%}"><i class="icon icon-delete"></i></a>
                         <div class="divider"></div>
                         <button id="layer_edit_modal" class="btn fill_modal tooltip tooltip-top" data-info="layer,{{layer.pk}}" data-tooltip="Edit Layer" data-url="{% url 'ajax_fill_modal' %}?type=layer_edit"><i class="icon icon-edit"></i></button>
                         <div class="divider"></div>

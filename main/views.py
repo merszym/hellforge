@@ -1,15 +1,11 @@
 from django.views.generic import CreateView, ListView, UpdateView, DetailView, DeleteView
 from django.urls import reverse
 from django.shortcuts import render
-from .models import Location, Reference, Site, Layer, Culture, Date, Epoch, Checkpoint, Profile, DatingMethod, get_classname
-from .forms import LocationForm, ReferenceForm, SiteForm, ProfileForm, LayerForm, CultureForm, \
+from .models import Location, Reference, Site, Layer, Culture, Date, Epoch, Checkpoint, DatingMethod, get_classname
+from .forms import LocationForm, ReferenceForm, SiteForm, ProfileForm, CultureForm, \
     DateForm, EpochForm, CheckpointForm, ContactForm
-import re, json
-import statistics
+import json
 import seaborn as sns
-from django.http import JsonResponse, HttpResponseRedirect
-from django.views.decorators.csrf import csrf_exempt
-
 
 def landing(request):
     return render(request, 'main/landing.html')
@@ -40,59 +36,11 @@ class LocationUpdateView(UpdateView):
         context.update(self.extra_context)
         return context
 
-
-## References ##
-class ReferenceCreateView(CreateView):
-    model = Reference
-    fields = "__all__"
-
-
-class ReferenceListView(ListView):
-    model = Reference
-
-
-class ReferenceUpdateView(UpdateView):
-    model = Reference
-    fields = "__all__"
-
-
-## Sites ##
-class SiteCreateView(CreateView):
-    model = Site
-    form_class = SiteForm
-    extra_context = {'reference_form': ReferenceForm, 'contact_form': ContactForm}
-
-    def get_context_data(self, **kwargs):
-        context = super(SiteCreateView, self).get_context_data(**kwargs)
-        context.update(self.extra_context)
-        return context
-
-class SiteListView(ListView):
-    model = Site
-
-class SiteUpdateView(UpdateView):
-    model = Site
-    form_class = SiteForm
-    extra_context = {'reference_form': ReferenceForm, 'contact_form': ContactForm}
-
-    def get_context_data(self, **kwargs):
-        context = super(SiteUpdateView, self).get_context_data(**kwargs)
-        context.update(self.extra_context)
-        return context
-
-class SiteDescriptionUpdateView(DetailView):
-    model = Site
-    template_name = 'main/site-description-update.html'
-    extra_context = {'readonly': False}
-
-    def get_context_data(self, **kwargs):
-        context = super(SiteDescriptionUpdateView, self).get_context_data(**kwargs)
-        context.update(self.extra_context)
-        return context
-
+## Sites
 class SiteDetailView(DetailView):
     model = Site
     extra_context = {'profile_form': ProfileForm, 'dating_form': DateForm, 'datingoptions': DatingMethod.objects.all() }
+    template_name = 'main/site/site_detail.html'
 
     def get_context_data(self, **kwargs):
         from collections import defaultdict
@@ -177,30 +125,14 @@ class SiteDetailView(DetailView):
         ]
         return context
 
-## Layers ##
-class LayerUpdateView(UpdateView):
-    model = Layer
-    form_class = LayerForm
-    extra_context = {'reference_form': ReferenceForm}
-
-    def get_context_data(self, **kwargs):
-        context = super(LayerUpdateView, self).get_context_data(**kwargs)
-        context.update(self.extra_context)
-        return context
-
-class LayerDeleteView(DeleteView):
-    model = Layer
-    template_name = 'main/confirm_delete.html'
-
-    def get_success_url(self):
-        if self.get_object().site:
-            return reverse('site_detail', kwargs={'pk':self.get_object().site.id})
-        else:
-            return reverse('site_detail', kwargs={'pk':self.get_object().profile.first().site.id})
+class SiteListView(ListView):
+    model = Site
+    template_name = 'main/site/site_list.html'
 
 ## Cultures ##
 class CultureDetailView(DetailView):
     model = Culture
+    template_name = 'main/culture/culture_detail.html'
 
     # create the nested groups for the timeline template
     def get_context_data(self, **kwargs):
@@ -282,6 +214,7 @@ class CultureUpdateView(UpdateView):
     model = Culture
     form_class = CultureForm
     extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm, 'type':'Culture', 'datingoptions': DatingMethod.objects.all()}
+    template_name = 'main/culture/culture_form.html'
 
     def get_context_data(self, **kwargs):
         context = super(CultureUpdateView, self).get_context_data(**kwargs)
@@ -293,6 +226,7 @@ class CultureCreateView(CreateView):
     model = Culture
     form_class = CultureForm
     extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm, 'type':'Culture', 'datingoptions': DatingMethod.objects.all()}
+    template_name = 'main/culture/culture_form.html'
 
     def get_context_data(self, **kwargs):
         context = super(CultureCreateView, self).get_context_data(**kwargs)
@@ -302,6 +236,7 @@ class CultureCreateView(CreateView):
 
 class CultureListView(ListView):
     model = Culture
+    template_name = 'main/culture/culture_list.html'
 
     def get_context_data(self, **kwargs):
         context = super(CultureListView, self).get_context_data(**kwargs)

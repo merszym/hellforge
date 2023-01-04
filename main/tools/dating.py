@@ -1,8 +1,9 @@
 from iosacal import R
 from django.http import JsonResponse
 from django.shortcuts import render
-from main.models import models
+from django.urls import path
 from django.db.models import Q
+from main.models import models
 
 def calibrate(estimate, plusminus):
     curve = 'intcal20'
@@ -162,3 +163,12 @@ def add_relative(request):
         return JsonResponse({"status":True})
         # error validation
     return render(request,'main/dating/reldate-modal-content.html',{'form':form})
+
+urlpatterns = [
+    path('add',        add,                     name='ajax_date_add'),
+    path('delete',     delete,                  name='ajax_date_unlink'),
+    path('upload',     batch_upload,            name='ajax_date_batch_upload'),
+    path('save-batch', save_verified_batchdata, name='ajax_save_verified_batchdata'),
+    path('calibrate',  calibrate_c14,           name='ajax_date_cal'),
+    path('add_rel',    add_relative,            name='ajax_add_reldate'),
+]

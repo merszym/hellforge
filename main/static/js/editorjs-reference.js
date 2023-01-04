@@ -46,7 +46,7 @@ class Reference {
                 $('#reference-modal').addClass('active')
                 $('#reference-modal-content').html(html)
                 $('#ref-search').focus()
-                $('body').off().on('click','.search-item' ,function(){
+                $('body').on('click','.search-item' ,function(){
                     const selectedText = range.extractContents();
                     const id = $(this).attr('id').split('_')[2]
                     $('#search-appear').html("")
