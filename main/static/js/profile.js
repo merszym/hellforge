@@ -1,43 +1,74 @@
-$('body').on('click', '.add_layer', function(){
-    pk = $(this).attr('id').split('_')[1]
+//delete the profile
+$('body').on('click', '.profile_delete', function(){
+    //delete a synonym on click
+    var formdata = new FormData();
+    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
+    formdata.append('instance_x', `profile_${$('[name=profile_id]').val()}`);
+    $.ajax({
+        type: "POST",
+        processData: false,
+        contentType: false,
+        data: formdata,
+        url: $(this).attr("data-url"),
+        success: function(data) {
+            if(data['status']){
+                location.reload()
+            }
+        }
+    });
+});
+
+
+// Add a new layer to the profile
+$('body').on('click', '.add_new_layer', function(){
+    pk = $('[name=profile_id]').val()
+    var formdata = new FormData()
+    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
+    formdata.append('instance_y', `profile_${pk}`);
+    $.ajax({
+        type: "POST",
+        processData: false,
+        contentType: false,
+        data: formdata,
+        url: $(this).attr('data-url'),
+        success: function(data) {
+            if(data['status']){
+                getProfile(pk)
+            }
+        }
+    });
+});
+
+// add an existing layer to the profile
+// or remove an existing layer from the profile
+$('body').on('click', '.layer_profile', function(){
+    pk = $('[name=profile_id]').val()
+    var formdata = new FormData()
+    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
+    formdata.append('instance_y', `profile_${pk}`);
+    formdata.append('instance_x', `layer_${$(this).attr('id').split('_')[2]}`);
+    $.ajax({
+        type: "POST",
+        processData: false,
+        contentType: false,
+        data: formdata,
+        url: $(this).attr('data-url'),
+        success: function(data) {
+            if(data['status']){
+                getProfile(pk)
+            }
+        }
+    });
+});
+
+
+$('body').on('click', '.clone_layer', function(){
+    pk = $('[name=profile_id]').val()
     $.ajax({
         type: "GET",
         url: $(this).attr('data-url'),
-        }).done(function(data){
+        }).done(function(){
             getProfile(pk)
-        });
-
-});
-
-$('body').on('click', '.add_other_layer', function(){
-    layer = $(this).attr('id').split('_')[2]
-    profile = $('.add_layer').attr('id').split('_')[1]
-    $.ajax({
-        type: "GET",
-        url: `${$('.add_layer').attr('data-url')}?layer=${layer}`,
-        }).done(function(data){
-            getProfile(profile)
-        });
-});
-
-$('body').on('click','.remove_other_layer', function(){
-    layer = $(this).attr('id').split('_')[2]
-    profile = $('.add_layer').attr('id').split('_')[1]
-    $.ajax({
-        type: "GET",
-        url: $(this).attr('data-url')
-        }).done(function(data){
-            getProfile(profile)
-        });
-});
-
-$('body').on('click', '.clone_layer', function(){
-    profile = $('.add_layer').attr('id').split('_')[1]
-    $.ajax({
-        type: "GET",
-        url: $(this).attr('data-url')
-        }).done(function(data){
-            getProfile(profile)
         });
 });
 

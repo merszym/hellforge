@@ -14,20 +14,6 @@ def find(kw):
 def get_modal(request):
     return render(request, 'main/references/reference-search.html')
 
-def add_to_model(request):
-    from django.http import JsonResponse
-
-    pk = request.POST.get('pk', False)
-    model = request.POST.get('model', False)
-    model_pk = request.POST.get('modelpk', False)
-    if pk and model and model_pk:
-        ref = Reference.objects.get(pk=int(pk))
-        model = models[model].objects.get(pk=int(model_pk))
-        model.ref.add(ref)
-        return JsonResponse({'status':True})
-    return JsonResponse({'status':False})
-
-
 def get_popup(request):
     pk = request.GET.get('pk', False)
     obj = Reference.objects.get(pk=int(pk))

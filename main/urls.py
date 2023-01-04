@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include, path
 from django.conf.urls.static import static
 from . import views
 from . import urls_ajax
@@ -19,7 +19,6 @@ urlpatterns = [
     path('site/<int:pk>', views.SiteDetailView.as_view(), name='site_detail'),
     path('layer/edit/<int:pk>', views.LayerUpdateView.as_view(), name='layer_update'),
     path('layer/remove/<int:pk>', views.LayerDeleteView.as_view(), name='layer_delete'),
-    path('profile/remove/<int:pk>', views.ProfileDeleteView.as_view(), name='profile_delete'),
     path('culture/edit/<int:pk>', views.CultureUpdateView.as_view(), name='culture_update'),
     path('culture/add', views.CultureCreateView.as_view(), name='culture_add'),
     path('culture', views.CultureListView.as_view(), name='culture_list'),
@@ -29,9 +28,9 @@ urlpatterns = [
     path('epoch', views.EpochListView.as_view(), name='epoch_list'),
     path('checkpoint/add', views.CheckpointCreateView.as_view(), name='checkpoint_add'),
     path('checkpoint/edit/<int:pk>', views.CheckpointUpdateView.as_view(), name='checkpoint_update'),
+    path('tools/', include('main.urls_ajax'))
 ]
 
-urlpatterns.extend(urls_ajax.urlpatterns)
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:

@@ -1,4 +1,4 @@
-from .forms import ReferenceForm, ProfileForm, DateForm, ContactForm, RelDateForm
+from .forms import ReferenceForm, DateForm, ContactForm, RelDateForm
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from .models import Reference, Location, Site, Profile, Layer, Culture, Epoch, Checkpoint, ContactPerson, Image, Gallery, DatingMethod
@@ -94,19 +94,6 @@ def save_contact(request):
         obj.refresh_from_db()
         return JsonResponse({"pk":obj.id, 'name':obj.name})
     return JsonResponse({"pk":False})
-
-def save_profile(request,site_id):
-    form = ProfileForm(request.POST)
-    if form.is_valid():
-        obj = form.save(commit=False)
-        obj.site = Site.objects.get(pk=site_id)
-        obj.save()
-        return JsonResponse({"pk":obj.id, 'name':obj.name})
-    return JsonResponse({"pk":False})
-
-def get_profile(request, pk):
-    profile = Profile.objects.get(pk=pk)
-    return render(request,'main/profile/profile-detail.html', {'object':profile})
 
 @csrf_exempt
 def search_ref(request):

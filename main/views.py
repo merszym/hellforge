@@ -177,15 +177,6 @@ class SiteDetailView(DetailView):
         ]
         return context
 
-## Profiles ##
-
-class ProfileDeleteView(DeleteView):
-    model = Profile
-    template_name = 'main/confirm_delete.html'
-
-    def get_success_url(self):
-        return reverse('site_detail', kwargs={'pk':self.get_object().site.id})
-
 ## Layers ##
 class LayerUpdateView(UpdateView):
     model = Layer

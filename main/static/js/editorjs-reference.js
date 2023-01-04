@@ -59,22 +59,6 @@ class Reference {
                     range.insertNode(ref);
                     // Insert new element
                     api.selection.expandToTag(ref);
-                    //save the reference to the site? --> Works, but is it necessary?? Better compile a list of references at the end
-                    /*
-                    const formdata = new FormData()
-                    const site = window.location.pathname.split('/').pop()
-                    formdata.append('model','site')
-                    formdata.append('modelpk', site)
-                    formdata.append('pk', id)
-                    formdata.append('csrfmiddlewaretoken', $('[name=csrfmiddlewaretoken]').val())
-                    $.ajax({
-                        type: "POST",
-                        processData: false,
-                        contentType: false,
-                        data: formdata,
-                        url: `${$('#reference-add').attr('data-url')}?pk=${id}`,
-                        })
-                    */
                 })
             });
     }

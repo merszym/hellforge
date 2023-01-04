@@ -1,7 +1,10 @@
 from django.http import JsonResponse
+from django.urls import path
 from django.db.models import Q
 from main.models import Layer, Profile, Site, Culture, models
 from django.views.decorators.csrf import csrf_exempt
+from main.tools.generic import add_x_to_y_m2m, get_instance_from_string
+import copy
 
 @csrf_exempt
 def search(request):
@@ -25,33 +28,6 @@ def clone(request, pk):
     for cp in layer.checkpoint.all():
         new_layer.checkpoint.add(cp)
     return JsonResponse({'pk':new_layer.pk})
-
-def add(request,pid):
-    """
-    add a new layer to an existing profile
-    """
-    profile = Profile.objects.get(pk=pid)
-    try:
-        layer = Layer.objects.get(pk=int(request.GET['layer']))
-        layer.profile.add(profile)
-        layer.site = profile.site
-    except KeyError:
-        layers = [x.pos for x in Layer.objects.filter(site__id=profile.site.pk).all()]
-        last = max(layers) if len(layers)>0 else 0
-        layer = Layer(name=f"Layer {last+1}", pos=last+1, site=profile.site)
-        layer.save()
-        layer.profile.add(profile)
-    return JsonResponse({"pk":layer.pk, 'name':layer.name})
-
-def remove_other(request,profile_id):
-    """
-    remove a layer from an existing profile (dont delete the layer itself)
-    """
-    profile = Profile.objects.get(pk=profile_id)
-    layer = Layer.objects.get(pk=int(request.GET['layer']))
-    layer.profile.remove(profile)
-    return JsonResponse({"pk":layer.pk, 'name':layer.name})
-
 
 def update_positions(request, site_id):
     site = Site.objects.get(pk=site_id)
@@ -110,3 +86,13 @@ def unset_parent(request):
         obj.save()
         return JsonResponse({"status":True})
     return JsonResponse({"status":False})
+
+# and the respective urlpatterns
+urlpatterns = [
+    path('set-name',                 set_name,               name='main_layer_setname'),
+    path('set-parent',               set_parent,             name='main_layer_setparent'),
+    path('unset-parent',             unset_parent,           name='main_layer_unsetparent'),
+    path('clone/<int:pk>',           clone,                  name='main_layer_clone'),
+    path('search',                   search,                 name='main_layer_search'),
+    path('positions/<int:site_id>',  update_positions,       name='main_layer_positionupdate'),
+]
