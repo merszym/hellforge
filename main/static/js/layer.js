@@ -24,8 +24,8 @@ $("body").on("click",'.search-culture-item', function(){
     //replace the culture in the backend and reload the modal
     var formdata = new FormData();
     formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
-    formdata.append('info', $('[name=info]').val());
-    formdata.append('pk', $(this).attr('id')); //culture
+    formdata.append('instance_x', `${$('[name=info]').val().replace(',','_')}`); //layer
+    formdata.append('instance_y', `culture_${$(this).attr('id')}`); //culture
     $.ajax({
         type: "POST",
         processData: false,

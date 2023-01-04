@@ -7,6 +7,23 @@ def get_instance_from_string(string):
     model, pk = string.split('_')
     return models[model].objects.get(pk=int(pk))
 
+def set_x_to_y_fk(request, field):
+    """
+    set the foreign key of x to y
+    x = profile
+    y = site
+    field = profile
+    --
+    profile.site = site
+    """
+    x = get_instance_from_string(request.POST.get('instance_x'))
+    y = get_instance_from_string(request.POST.get('instance_y'))
+    if x and y:
+        setattr(x, field, y)
+        x.save()
+        return JsonResponse({"status":True})
+    return JsonResponse({"status":False})
+
 def add_x_to_y_m2m(request, field):
     m1 = get_instance_from_string(request.POST.get('instance_x'))
     m2 = get_instance_from_string(request.POST.get('instance_y'))

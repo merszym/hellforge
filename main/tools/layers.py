@@ -5,7 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DeleteView, UpdateView
 from main.models import Layer, Profile, Site, Culture, models
 from main.forms import LayerForm, ReferenceForm
-from main.tools.generic import add_x_to_y_m2m, get_instance_from_string
+from main.tools.generic import add_x_to_y_m2m, get_instance_from_string, set_x_to_y_fk
 import copy
 
 @csrf_exempt
@@ -54,14 +54,7 @@ def set_name(request):
     return JsonResponse({'status':True})
 
 def set_culture(request):
-    if pk := request.POST.get('pk',False):
-        if dat := request.POST.get('info', False):
-            model,mpk = dat.split(',')
-            model = models[model].objects.get(pk=int(mpk))
-            model.culture = Culture.objects.get(pk=int(pk))
-            model.save()
-            return JsonResponse({"status":True})
-    return JsonResponse({"status":False})
+    return set_x_to_y_fk(request, 'culture')
 
 def remove_culture(request):
     if dat := request.POST.get('info', False):

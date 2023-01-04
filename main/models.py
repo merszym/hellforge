@@ -461,6 +461,7 @@ class MammalianAssemblage(models.Model):
 
 models = {
     'site': Site,
+    'culture':Culture,
     'layer': Layer,
     'date': Date,
     'synonym': Synonym,
