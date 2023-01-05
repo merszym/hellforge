@@ -26,9 +26,6 @@
     <div class="column">
         <h3>{{type}} Data</h3>
         <div class="my-2">
-            {% if type == 'Epoch' %}
-            {% include 'main/location/location-display.html' %}
-            {% endif %}
             <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="form-group">
@@ -69,9 +66,6 @@
                 </select>
                 {% endif %}
                 {% include 'main/references/reference-formfield.html' %}
-                {% if type == 'Epoch' %}
-                    {% include 'main/location/location-formfield.html' %}
-                {% endif %}
                 <!-- Show the references -->
                 {% include 'main/references/reference-display.html' %}
                 <br>
@@ -82,19 +76,8 @@
 
     <div class="column" style="border-left: solid 2px grey">
         <h3>Edit Associated Information</h3>
-        {% if type == 'Epoch' %}
-        <div class="my-2">
-            {% include 'main/location/location-search.html' %}
-        </div>
-        {% endif %}
         <div clas="my-2">
             <h6> Set Umbrella {{type}} </h6>
-            {% if type == 'Culture' %}
-                {% include 'main/culture/culture-search.html' %}
-            {% endif %}
-        </div>
-        <div clas="my-2">
-            {% include 'main/references/reference-search.html' %}
         </div>
     </div>
 </div>

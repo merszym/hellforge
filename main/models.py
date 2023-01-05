@@ -256,7 +256,6 @@ class Epoch(models.Model):
     description = models.TextField('description', blank=True)
     date = models.ManyToManyField(Date, verbose_name =u"date")
     parent = models.ForeignKey('self', verbose_name=u'parent', related_name='child', null=True, blank=True, on_delete=models.SET_NULL)
-    loc = models.ManyToManyField(Location, verbose_name=u"location")
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
 
     class Meta:

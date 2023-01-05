@@ -55,7 +55,7 @@ class EpochForm(forms.ModelForm):
     lower = forms.IntegerField()
     class Meta:
         model = Epoch
-        fields = ['name','description','parent','ref','loc', 'upper', 'lower']
+        fields = ['name','description','parent','ref', 'upper', 'lower']
 
 class CultureForm(forms.ModelForm):
     class Meta:

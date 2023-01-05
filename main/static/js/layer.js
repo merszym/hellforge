@@ -3,7 +3,7 @@ $('body').on('click', '#layer-setname', function(){
     formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
     formdata.append('name', $('[name=layer-name]').val());
     formdata.append('unit', $('[name=layer-unit]').val());
-    formdata.append('pk',$('[name=pk]').val());
+    formdata.append('info',$('[name=info]').val());
     $.ajax({
         type: "POST",
         processData: false,

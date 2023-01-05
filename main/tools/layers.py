@@ -44,12 +44,9 @@ def update_positions(request, site_id):
     return JsonResponse({'data':True})
 
 def set_name(request):
-    pk = request.POST.get('pk')
-    object = Layer.objects.get(pk=int(pk))
+    object = get_instance_from_string(request.POST.get('info'))
     object.name = request.POST.get('name')
-    if unit := request.POST.get('unit', False):
-        object.unit = unit
-    else: object.unit = None
+    object.unit = request.POST.get('unit', None)
     object.save()
     return JsonResponse({'status':True})
 
@@ -78,8 +75,8 @@ class LayerUpdateView(UpdateView):
 
 # and the respective urlpatterns
 urlpatterns = [
-    path('set/<str:field>',          set_x_fk_to_y,             name='main_layer_setfk'),
-    path('unset/<str:field>',        unset_fk,                  name='main_layer_unsetfk'),
+    path('set/<str:field>',          set_x_fk_to_y,             name='main_layer_setfk'),   #those dont even need to go here...
+    path('unset/<str:field>',        unset_fk,                  name='main_layer_unsetfk'), #those dont even need to go here...
     path('set-name',                 set_name,                  name='main_layer_setname'),
     path('clone/<int:pk>',           clone,                     name='main_layer_clone'),
     path('search',                   search,                    name='main_layer_search'),
