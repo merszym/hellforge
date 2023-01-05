@@ -118,15 +118,14 @@ $('body').on('click','#date-batch-header', function(){
 
 // Handle the upload file
 $('body').on('change','#date-batch-input', function(){
-    ele = $('#info')
     var file_data = $('#date-batch-input').prop('files')[0];
     var form_data = new FormData();
     form_data.append('file', file_data);
     form_data.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
-    form_data.append('layer', ele.val())
+    form_data.append('instance_x', $('[name=info]').val())
     $.ajax({
         type: "POST",
-        url: $('#date-batch-input').attr('data-url'),
+        url: $(this).attr('data-url'),
         processData: false,
         contentType: false,
         data: form_data

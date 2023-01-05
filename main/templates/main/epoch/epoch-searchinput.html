@@ -1,0 +1,10 @@
+{% load static %}
+{% csrf_token %}
+<div class="my-2">
+    <div class="input-group">
+        <span class="input-group-addon"><i class="form-icon icon icon-search"></i> Epoch</span>
+        <input type="text" class="form-input" placeholder="Search Epoch" id="search-input" data-url="{% url 'ajax_epoch_search' %}">
+        <a href="{% url 'epoch_add' %}" target="_blank" class="btn btn-primary input-group-btn tooltip tooltip-left" data-tooltip="Add new Epoch"><i class="icon icon-plus"></i></a>
+    </div>
+    <div class="search-appear"></div>
+</div>

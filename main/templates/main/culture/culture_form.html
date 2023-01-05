@@ -29,7 +29,6 @@
             {% if type == 'Epoch' %}
             {% include 'main/location/location-display.html' %}
             {% endif %}
-            {% include 'main/epoch/epoch-display.html' %}
             <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="form-group">
@@ -92,12 +91,10 @@
             <h6> Set Umbrella {{type}} </h6>
             {% if type == 'Culture' %}
                 {% include 'main/culture/culture-search.html' %}
-            {% else %}
-                {% include 'main/epoch/epoch-search.html' %}
             {% endif %}
         </div>
         <div clas="my-2">
-            {% include 'main/references/reference-searchinput.html' %}
+            {% include 'main/references/reference-search.html' %}
         </div>
     </div>
 </div>

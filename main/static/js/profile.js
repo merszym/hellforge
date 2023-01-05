@@ -75,19 +75,17 @@ $('body').on('click', '.clone_layer', function(){
 //Fill blank modal with dating html
 //Add info-field for the dating
 function fillModal(ele){
-    const info = ele.attr('data-info')
-    const model = info.split(',')[0]
-    const pk = info.split(',')[1]
+    const instance = ele.attr('data-info')
     var clone = ele.clone()
     clone.css('display', 'none')
     clone.attr('id','reload' )
     $.ajax({
         type: "GET",
-        url: `${ele.attr('data-url')}&model=${model}&pk=${pk}`
+        url: `${ele.attr('data-url')}&instance=${instance}`
         }).done(function(html){
             $('#modal-blank').html(html)
             $('#modal-form').append(
-                `<input id='info' style="display:none" name='info' type='text' value="${info}">
+                `<input id='info' style="display:none" name='info' type='text' value="${instance}">
                 `
             )
             $('#modal-form').append(clone)

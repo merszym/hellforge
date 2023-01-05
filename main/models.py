@@ -465,5 +465,6 @@ models = {
     'layer': Layer,
     'date': Date,
     'synonym': Synonym,
-    'profile':Profile
+    'profile':Profile,
+    'epoch':Epoch
 }

@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from .models import models
+from main.tools.generic import get_instance_from_string
 
 def download_header(request):
     from django.core.files.base import ContentFile
@@ -21,12 +22,11 @@ def download_header(request):
 
     return response
 
-# belongs into layer ajax
+# belongs into layer or profile tools
 def fill_modal(request):
     choice = request.GET.get('type', False)
-    model = request.GET.get('model', False)
-    pk = request.GET.get('pk', False)
-    object = models[model].objects.get(pk=int(pk))
+    object = get_instance_from_string(request.GET.get('instance'))
+
     if choice=='layer_edit':
         options = Layer.objects.filter(Q(site=object.site)).exclude(id=object.pk)
         if object.parent:
@@ -42,6 +42,8 @@ def fill_modal(request):
         html = render(request,'main/dating/reldate-modal-content.html', {'form': RelDateForm(request.POST)})
     if choice=='culture':
         html = render(request,'main/culture/culture-modal-content.html', {'object':object.culture})
+    if choice=='epoch':
+        html = render(request,'main/epoch/epoch-modal-content.html', {'object':object.epoch})
     return html
 
 
@@ -99,13 +101,6 @@ def search_loc(request):
     data = {x:v[0] for (x,v) in dict(request.POST).items()}
     kw = data['keyword']
     q = Location.objects.filter(Q(name__contains=kw))
-    return JsonResponse({x.pk:x.name for x in q})
-
-@csrf_exempt
-def search_epoch(request):
-    data = {x:v[0] for (x,v) in dict(request.POST).items()}
-    kw = data['keyword']
-    q = Epoch.objects.filter(Q(name__contains=kw) | Q(description__contains=kw ))
     return JsonResponse({x.pk:x.name for x in q})
 
 @csrf_exempt

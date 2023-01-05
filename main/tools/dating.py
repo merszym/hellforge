@@ -4,7 +4,7 @@ from django.shortcuts import render
 from django.urls import path
 from django.db.models import Q
 from main.models import models
-from main.tools.generic import remove_x_from_y_m2m, delete_x
+from main.tools.generic import remove_x_from_y_m2m, delete_x, get_instance_from_string
 
 def calibrate(estimate, plusminus):
     curve = 'intcal20'
@@ -36,7 +36,7 @@ def batch_upload(request):
     df = pd.read_csv(request.FILES['file'], sep=',')
     df.drop_duplicates(inplace=True)
 
-    site = Layer.objects.get(pk=int(request.POST.get('layer').split(',')[1])).site
+    site = get_instance_from_string(request.POST.get('instance_x')).site
     all_layers = [x.name for x in site.layer.all()]
 
     #filter for expected/unexpected columns
@@ -130,9 +130,8 @@ def add(request):
                 form.add_error(None, 'Please provide a Date')
                 return render(request,'main/dating/dating-modal-content.html',{'datingoptions': DatingMethod.objects.all(), 'form':form})
         #if we have an associated model (e.g. Layer)
-        if dat := form.cleaned_data.get('info', False):
-            model,pk = dat.split(',')
-            layer = models[model].objects.get(pk=int(pk))
+        if info := form.cleaned_data.get('info', False):
+            layer = get_instance_from_string(info)
             layer.date.add(obj)
             layer.save() #not needed for adding, but for post-save signal in layer
         return JsonResponse({"status":True})
@@ -153,9 +152,8 @@ def add_relative(request):
     if form.is_valid(): # is always valid because nothing is required
         obj = form.save()
         #if we have an associated model (e.g. Layer)
-        if dat := form.cleaned_data.get('info', False):
-            model,pk = dat.split(',')
-            layer = models[model].objects.get(pk=int(pk))
+        if info := form.cleaned_data.get('info', False):
+            layer = get_instance_from_string(info)
             layer.reldate.add(obj)
             layer.save() #not needed for adding, but for post-save signal in layer
         return JsonResponse({"status":True})

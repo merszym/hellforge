@@ -273,7 +273,7 @@ class CultureListView(ListView):
 ## Epoch ##
 class EpochUpdateView(UpdateView):
     model = Epoch
-    template_name = 'main/culture_form.html'
+    template_name = 'main/culture/culture_form.html'
     form_class = EpochForm
     extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm, 'type':'Epoch', 'datingoptions': DatingMethod.objects.all()}
 
@@ -295,7 +295,7 @@ class EpochUpdateView(UpdateView):
 class EpochCreateView(CreateView):
     model = Epoch
     form_class = EpochForm
-    template_name = 'main/culture_form.html'
+    template_name = 'main/culture/culture_form.html'
     extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm, 'type':'Epoch', 'datingoptions': DatingMethod.objects.all()}
 
     def get_context_data(self, **kwargs):
@@ -315,7 +315,7 @@ class EpochCreateView(CreateView):
 
 class EpochListView(ListView):
     model = Epoch
-    template_name = 'main/culture_list.html'
+    template_name = 'main/culture/culture_list.html'
     extra_context = {'type': 'Epoch'}
 
     def get_context_data(self, **kwargs):
