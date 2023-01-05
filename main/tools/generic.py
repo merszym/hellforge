@@ -7,7 +7,7 @@ def get_instance_from_string(string):
     model, pk = string.split('_')
     return models[model].objects.get(pk=int(pk))
 
-def set_x_to_y_fk(request, field):
+def set_x_to_y_fk(request, field, response=True):
     """
     set the foreign key of x to y
     x = profile
@@ -21,31 +21,31 @@ def set_x_to_y_fk(request, field):
     if x and y:
         setattr(x, field, y)
         x.save()
-        return JsonResponse({"status":True})
-    return JsonResponse({"status":False})
+        return JsonResponse({"status":True}) if response else (True,x,y)
+    return JsonResponse({"status":False}) if reponse else (False, x,y)
 
-def add_x_to_y_m2m(request, field):
-    m1 = get_instance_from_string(request.POST.get('instance_x'))
-    m2 = get_instance_from_string(request.POST.get('instance_y'))
-    if m1 and m2:
-        getattr(m2, field).add(m1)
-        return JsonResponse({'status': True})
+def add_x_to_y_m2m(request, field, response=True):
+    x = get_instance_from_string(request.POST.get('instance_x'))
+    y = get_instance_from_string(request.POST.get('instance_y'))
+    if x and y:
+        getattr(y, field).add(x)
+        return JsonResponse({'status': True}) if response else (True,x,y)
     else:
-        return JsonResponse({'status': False})
+        return JsonResponse({'status': False}) if response else (False,x,y)
 
-def remove_x_from_y_m2m(request, field):
-    m1 = get_instance_from_string(request.POST.get('instance_x'))
-    m2 = get_instance_from_string(request.POST.get('instance_y'))
-    if m1 and m2:
-        getattr(m2, field).remove(m1)
-        return JsonResponse({'status': True})
+def remove_x_from_y_m2m(request, field, response=True):
+    x = get_instance_from_string(request.POST.get('instance_x'))
+    y = get_instance_from_string(request.POST.get('instance_y'))
+    if x and y:
+        getattr(y, field).remove(x)
+        return JsonResponse({'status': True}) if response else (True,x,y)
     else:
-        return JsonResponse({'status': False})
+        return JsonResponse({'status': False}) if response else (False,x,y)
 
-def delete_x(request):
+def delete_x(request, response=True):
     """
     A generic function to delete an object
     """
-    m1 = get_instance_from_string(request.POST.get('instance_x'))
-    m1.delete()
-    return JsonResponse({'status':True})
+    x = get_instance_from_string(request.POST.get('instance_x'))
+    x.delete()
+    return JsonResponse({'status':True}) if response else True

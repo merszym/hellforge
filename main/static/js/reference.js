@@ -21,54 +21,6 @@ $(".addReference").on("click", function(){
         });
 });
 
-//Searching for references
-var searchFunction = function( data ) {
-    var form_data = new FormData();
-    form_data.append('keyword', data);
-    form_data.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
-    $.ajax({
-        type: "POST",
-        processData: false,
-        contentType: false,
-        data: form_data,
-        url: $('#ref-search').attr("data-url"),
-        success: function(respond) {
-            $('.search-appear').show()
-            $('.search-appear').html(
-                `
-                <table class="table table-striped table-hover">
-                <thead>
-                    <tr>
-                    <th>Reference</th>
-                    <th></th>
-                    <th></th>
-                    </tr>
-                </thead>
-                <tbody id='search-tbody'>
-                </tbody>
-                </table>
-                `
-
-            )
-            for (const [key, value] of Object.entries(respond)) {
-                $('#search-tbody').append(
-                    `<tr>
-                    <td id=search_short_${key}>${value.split(';;')[0]}</td>
-                    <td id=search_title_${key}>${value.split(';;')[1]}</td>
-                    <td><span class='btn search-item' id=search_result_${key}>Add</span></td>
-                    </tr>
-                    `
-                )
-            }
-        }
-    });
-  }
-
-$('body').on('keyup paste','#ref-search',function(){
-    if(this.value.length >= 3)
-        searchFunction(this.value);
-  });
-
 $("body").on("click",'.search-item', function(){
     pk = this.id.split('_')[2]
     short = $(`#search_short_${pk}`).html()

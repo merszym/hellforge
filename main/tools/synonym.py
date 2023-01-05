@@ -4,6 +4,9 @@ from django.urls import path
 import copy
 
 def create_and_add(request):
+    """
+    create a synonym and add it to a instance_y in the request
+    """
     form = SynonymForm(request.POST)
     if form.is_valid():
         obj = form.save()

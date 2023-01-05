@@ -1,0 +1,18 @@
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>Culture</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id='culture-search-tbody'>
+        {% for culture in object_list %}
+        <tr>
+            <td>{{culture.name}}</td>
+            <td>
+                <span class='btn search-culture-item' id={{culture.pk}}>Pick</span>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

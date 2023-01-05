@@ -1,9 +1,13 @@
+{# the table rows are displayed in the reference table for the editorjs descriptions (site detail view) #}
 <tr>
     <td>{{ref.short}}</td>
     <td>
         {{ref.title}}<br>
         <p class="form-input-hint" style="margin-bottom:0px;">{{ref.tags}}</p>
-
     </td>
+    {% if search_result %}
+    <td><span class='btn search-item' id=search_result_{{ref.pk}}>Add</span></td>
+    {% else %}
     <td><a class="btn" href="{{ref.link}}" target="_blank">Open</a></td>
+    {% endif %}
 </tr>

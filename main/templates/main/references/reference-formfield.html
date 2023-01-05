@@ -1,3 +1,4 @@
+{# reference form-field. Hidden select field, used in the model-forms to show all the references in the model #}
 <select name="ref" id="id_ref" multiple="" style="display:none;">
     {% for ref in object.ref.all %}
     <option id="ref_option_{{ref.pk}}" value="{{ref.pk}}" selected></option>

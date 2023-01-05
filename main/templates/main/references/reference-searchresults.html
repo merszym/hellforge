@@ -1,0 +1,15 @@
+{# this is the rendered table displayed as the search result beneath reference search fields #}
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+        <th>Short</th>
+        <th>Title</th>
+        <th></th>
+        </tr>
+    </thead>
+    <tbody id='search-tbody'>
+        {% for ref in object_list.all %}
+        {% include 'main/references/reference-tablerow.html' %}
+        {% endfor %}
+    </tbody>
+</table>

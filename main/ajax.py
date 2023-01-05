@@ -102,13 +102,6 @@ def search_loc(request):
     return JsonResponse({x.pk:x.name for x in q})
 
 @csrf_exempt
-def search_culture(request):
-    data = {x:v[0] for (x,v) in dict(request.POST).items()}
-    kw = data['keyword']
-    q = Culture.objects.filter(Q(name__contains=kw) | Q(description__contains=kw ))
-    return JsonResponse({x.pk:x.name for x in q})
-
-@csrf_exempt
 def search_epoch(request):
     data = {x:v[0] for (x,v) in dict(request.POST).items()}
     kw = data['keyword']

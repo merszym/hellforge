@@ -23,9 +23,7 @@
             </div>
         </div>
         {% endif %}
-        <div>
-            {% include 'main/culture/culture-search.html' %}
-        </div>
+        {% include 'main/culture/culture-searchinput.html' %}
         <span id='ajax_culture_set' style="display: none;" data-url='{% url "ajax_culture_set" %}'></span>
     </div>
 </div>

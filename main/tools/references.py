@@ -8,12 +8,11 @@ from django.urls import path
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import CreateView, ListView, UpdateView
 
-@csrf_exempt
 def search(request):
-    #TODO: make a rendered list instead of the template version, return render
+    #get the keyword, return a list of references that match the kw
     kw = request.POST.get('keyword')
     q = Reference.objects.filter(Q(short__contains=kw) | Q(title__contains=kw ) | Q(tags__contains=kw ))
-    return JsonResponse({x.pk:f"{x.short};;{x.title}" for x in q})
+    return render(request, 'main/references/reference-searchresults.html', context={'object_list':q, 'search_result':True})
 
 def find(kw):
     #find the best reference for a given search term
@@ -24,7 +23,7 @@ def find(kw):
     return np.nan
 
 def get_modal(request):
-    return render(request, 'main/references/reference-search.html')
+    return render(request, 'main/references/reference-searchinput.html')
 
 def get_popup(request):
     pk = request.GET.get('pk', False)
