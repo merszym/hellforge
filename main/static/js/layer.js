@@ -41,13 +41,13 @@ $("body").on("click",'.search-culture-item', function(){
 $('body').on('click', '#culture_set_null', function(){
     var formdata = new FormData();
     formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
-    formdata.append('info', $('[name=info]').val());
+    formdata.append('instance_x', $('[name=info]').val().replace(',','_'));
     $.ajax({
         type: "POST",
         processData: false,
         contentType: false,
         data: formdata,
-        url: $('#culture_set_null').attr("data-url"),
+        url: $(this).attr("data-url"),
         success: function(data) {
             if(data['status']){
                 $('#reload').click()
@@ -59,14 +59,14 @@ $('body').on('click', '#culture_set_null', function(){
 $('body').on('click', '#layer-setparent', function(){
     var formdata = new FormData();
     formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
-    formdata.append('parent', $('[name=parent-select]').val()); //the pk of the chosen parent
-    formdata.append('pk',$('[name=pk]').val()); //the pk of the layer
+    formdata.append('instance_y',$('[name=parent]').val()); //the layer_pk of the chosen parent
+    formdata.append('instance_x',`layer_${$('[name=pk]').val()}`); //the pk of the layer, from the synonym-form
     $.ajax({
         type: "POST",
         processData: false,
         contentType: false,
         data: formdata,
-        url: $('#layer-setparent').attr("data-url"),
+        url: $(this).attr("data-url"),
         success: function(data) {
             if(data['status']){
                 $('#reload').click()
@@ -75,16 +75,16 @@ $('body').on('click', '#layer-setparent', function(){
     });
 });
 
-$('body').on('click', '#layer-unsetparent', function(){
+$('body').on('click', '.layer_unset_parent', function(){
     var formdata = new FormData();
     formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
-    formdata.append('info',$('[name=info]').val()); //the pk of the layer
+    formdata.append('instance_x', `layer_${$('[name=pk]').val()}`); //layer,pk --> layer_pk
     $.ajax({
         type: "POST",
         processData: false,
         contentType: false,
         data: formdata,
-        url: $('#layer-unsetparent').attr("data-url"),
+        url: $(this).attr("data-url"),
         success: function(data) {
             if(data['status']){
                 $('#reload').click()

@@ -4,11 +4,11 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from main.models import Culture
 
-def search_culture(request):
+def render_search_results(request):
     kw = request.POST.get('keyword')
     q = Culture.objects.filter(Q(name__contains=kw) | Q(description__contains=kw ))
     return render(request, 'main/culture/culture-searchresults.html', context={'object_list':q})
 
 urlpatterns = [
-    path('search', search_culture, name='ajax_culture_search'),
+    path('search', render_search_results,  name='ajax_culture_search'),
 ]

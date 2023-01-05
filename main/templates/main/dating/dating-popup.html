@@ -21,7 +21,7 @@
               {% for date in layer.date.all %}
               <tr>
                 <td>
-                  <span class="btn date_delete" id="date_{{date.pk}}_layer_{{layer.pk}}" data-url="{% url 'ajax_date_unlink'%}">
+                  <span class="btn date_delete" id="date_{{date.pk}}__layer_{{layer.pk}}" data-url="{% url 'ajax_date_unlink'%}">
                     <i class="icon icon-delete"></i>
                   </span>
                 </td>

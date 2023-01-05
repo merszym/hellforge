@@ -26,7 +26,7 @@
                 {% if object.parent %}
                 <div class="tile tile-centered">
                     <div class="tile-icon my-1">
-                        <span class="btn tooltip tooltip-right" data-tooltip="Remove" id="layer-unsetparent" data-url="{% url 'main_layer_unsetparent' %}">
+                        <span class="btn tooltip tooltip-right layer_unset_parent" data-tooltip="Remove" id="layer_{{object.parent.pk}}" data-url="{% url 'main_layer_unsetparent' %}">
                             <i class="icon icon-delete" centered></i>
                         </span>
                     </div>
@@ -37,14 +37,14 @@
                 {% endif %}
                 <div class="input-group">
                     <span class="input-group-addon">Parent</span>
-                    <select class="form-select" name="parent-select">
+                    <select class="form-select" name="parent">
                         {% if object.parent %}
-                        <option value="{{object.parent.pk}}" selected>{{object.parent}}</option>
+                        <option value="layer_{{object.parent.pk}}" selected>{{object.parent}}</option>
                         {% else %}
                         <option value="">---</option>
                         {% endif %}
                         {% for option in parent_options %}
-                        <option value="{{option.pk}}">{{option}}</option>
+                        <option value="layer_{{option.pk}}">{{option}}</option>
                         {% endfor %}
                     </select>
                     <span id="layer-setparent" class="btn btn-primary input-group-btn" data-url="{% url 'main_layer_setparent' %}">OK</span>

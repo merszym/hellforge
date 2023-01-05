@@ -5,7 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DeleteView, UpdateView
 from main.models import Layer, Profile, Site, Culture, models
 from main.forms import LayerForm, ReferenceForm
-from main.tools.generic import add_x_to_y_m2m, get_instance_from_string, set_x_to_y_fk
+from main.tools.generic import add_x_to_y_m2m, get_instance_from_string, set_x_fk_to_y, unset_fk
 import copy
 
 @csrf_exempt
@@ -54,33 +54,16 @@ def set_name(request):
     return JsonResponse({'status':True})
 
 def set_culture(request):
-    return set_x_to_y_fk(request, 'culture')
+    return set_x_fk_to_y(request, 'culture')
 
-def remove_culture(request):
-    if dat := request.POST.get('info', False):
-        model,mpk = dat.split(',')
-        model = models[model].objects.get(pk=int(mpk))
-        model.culture = None
-        model.save()
-        return JsonResponse({"status":True})
-    return JsonResponse({"status":False})
+def unset_culture(request):
+    return unset_fk(request, 'culture')
 
 def set_parent(request):
-    if pk := request.POST.get('pk',False):
-        if parent := request.POST.get('parent', False):
-            obj = Layer.objects.get(pk=int(pk))
-            obj.parent = Layer.objects.get(pk=int(parent))
-            obj.save()
-            return JsonResponse({"status":True})
-    return JsonResponse({"status":False})
+    return set_x_fk_to_y(request, 'parent')
 
 def unset_parent(request):
-    if info := request.POST.get('info',False):
-        obj = Layer.objects.get(pk=int(info.split(',')[1]))
-        obj.parent = None
-        obj.save()
-        return JsonResponse({"status":True})
-    return JsonResponse({"status":False})
+    return unset_fk(request, 'parent')
 
 class LayerDeleteView(DeleteView):
     model = Layer
@@ -109,7 +92,9 @@ class LayerUpdateView(UpdateView):
 urlpatterns = [
     path('set-name',                 set_name,                  name='main_layer_setname'),
     path('set-parent',               set_parent,                name='main_layer_setparent'),
+    path('set-culture',              set_culture,               name='ajax_culture_set'),
     path('unset-parent',             unset_parent,              name='main_layer_unsetparent'),
+    path('unset-culture',            unset_culture,             name='ajax_layer_remove_culture'),
     path('clone/<int:pk>',           clone,                     name='main_layer_clone'),
     path('search',                   search,                    name='main_layer_search'),
     path('positions/<int:site_id>',  update_positions,          name='main_layer_positionupdate'),

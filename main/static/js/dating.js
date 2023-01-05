@@ -151,8 +151,8 @@ $('body').on('click', '#dating-table-confirm', function(){
 
 $('body').on('click', '.date_delete', function(){
     var form_data = new FormData();
-    form_data.append('layer', $(this).attr('id').split('_')[3]);
-    form_data.append('date', $(this).attr('id').split('_')[1]);
+    form_data.append('instance_x',`${$(this).attr('id').split('__')[0]}`);
+    form_data.append('instance_y',`${$(this).attr('id').split('__')[1]}`);
     form_data.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
     $.ajax({
         type: "POST",
@@ -160,7 +160,7 @@ $('body').on('click', '.date_delete', function(){
         processData: false,
         contentType: false,
         data: form_data
-        }).done(function(data){
+        }).done(function(){
             location.reload()
         });
 });

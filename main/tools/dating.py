@@ -4,6 +4,7 @@ from django.shortcuts import render
 from django.urls import path
 from django.db.models import Q
 from main.models import models
+from main.tools.generic import remove_x_from_y_m2m, delete_x
 
 def calibrate(estimate, plusminus):
     curve = 'intcal20'
@@ -139,16 +140,13 @@ def add(request):
     return render(request,'main/dating/dating-modal-content.html',{'datingoptions': DatingMethod.objects.all(), 'form':form})
 
 def delete(request):
-    from main.models import Layer, Date
-    layer = Layer.objects.get(pk=int(request.POST.get('layer')))
-    date = Date.objects.get(pk=int(request.POST.get('date')))
-    #remove the date
-    layer.date.remove(date)
-    #not sure if I really want to delte dates?
+    status, date, layer = remove_x_from_y_m2m(request, 'date' ,response=False)
+    #If dates are not linked to any model, remove
     if len(date.model.all()) == 0:
-        date.delete()
+        return delete_x(request)
     return JsonResponse({'status':True})
 
+#TODO: move to relative?
 def add_relative(request):
     from main.forms import RelDateForm
     form = RelDateForm(request.POST)

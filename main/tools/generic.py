@@ -7,7 +7,18 @@ def get_instance_from_string(string):
     model, pk = string.split('_')
     return models[model].objects.get(pk=int(pk))
 
-def set_x_to_y_fk(request, field, response=True):
+def unset_fk(request, field, response=True):
+    """
+    set the foreign key relationship to None
+    """
+    x = get_instance_from_string(request.POST.get('instance_x'))
+    if x:
+        setattr(x, field, None)
+        x.save()
+        return JsonResponse({"status":True}) if response else (True,x)
+    return JsonResponse({"status":False}) if reponse else False
+
+def set_x_fk_to_y(request, field, response=True):
     """
     set the foreign key of x to y
     x = profile
@@ -22,7 +33,7 @@ def set_x_to_y_fk(request, field, response=True):
         setattr(x, field, y)
         x.save()
         return JsonResponse({"status":True}) if response else (True,x,y)
-    return JsonResponse({"status":False}) if reponse else (False, x,y)
+    return JsonResponse({"status":False}) if reponse else False
 
 def add_x_to_y_m2m(request, field, response=True):
     x = get_instance_from_string(request.POST.get('instance_x'))
@@ -30,8 +41,7 @@ def add_x_to_y_m2m(request, field, response=True):
     if x and y:
         getattr(y, field).add(x)
         return JsonResponse({'status': True}) if response else (True,x,y)
-    else:
-        return JsonResponse({'status': False}) if response else (False,x,y)
+    return JsonResponse({'status': False}) if response else (False,x,y)
 
 def remove_x_from_y_m2m(request, field, response=True):
     x = get_instance_from_string(request.POST.get('instance_x'))
@@ -39,8 +49,7 @@ def remove_x_from_y_m2m(request, field, response=True):
     if x and y:
         getattr(y, field).remove(x)
         return JsonResponse({'status': True}) if response else (True,x,y)
-    else:
-        return JsonResponse({'status': False}) if response else (False,x,y)
+    return JsonResponse({'status': False}) if response else False
 
 def delete_x(request, response=True):
     """
