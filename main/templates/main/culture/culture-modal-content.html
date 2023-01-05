@@ -13,7 +13,7 @@
         <div class="tile tile-centered">
             <div class="tile-icon">
               <div class="example-tile-icon">
-                <button class="btn" id="culture_set_null" data-url="{% url 'ajax_layer_remove_culture' %}">
+                <button class="btn unset-fk-item" data-url="{% url 'main_layer_unsetfk' 'culture' %}">
                     <i class="icon icon-delete"></i>
                 </button>
               </div>
@@ -24,6 +24,6 @@
         </div>
         {% endif %}
         {% include 'main/culture/culture-searchinput.html' %}
-        <span id='ajax_culture_set' style="display: none;" data-url='{% url "ajax_culture_set" %}'></span>
+        <span id='layer_culture_set' style="display: none;" data-url='{% url "main_layer_setfk" "culture" %}'></span>
     </div>
 </div>

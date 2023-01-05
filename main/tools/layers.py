@@ -53,24 +53,6 @@ def set_name(request):
     object.save()
     return JsonResponse({'status':True})
 
-def set_epoch(request):
-    return set_x_fk_to_y(request, 'epoch')
-
-def unset_epoch(request):
-    return unset_fk(request, 'epoch')
-
-def set_culture(request):
-    return set_x_fk_to_y(request, 'culture')
-
-def unset_culture(request):
-    return unset_fk(request, 'culture')
-
-def set_parent(request):
-    return set_x_fk_to_y(request, 'parent')
-
-def unset_parent(request):
-    return unset_fk(request, 'parent')
-
 class LayerDeleteView(DeleteView):
     model = Layer
     template_name = 'main/confirm_delete.html'
@@ -96,13 +78,9 @@ class LayerUpdateView(UpdateView):
 
 # and the respective urlpatterns
 urlpatterns = [
+    path('set/<str:field>',          set_x_fk_to_y,             name='main_layer_setfk'),
+    path('unset/<str:field>',        unset_fk,                  name='main_layer_unsetfk'),
     path('set-name',                 set_name,                  name='main_layer_setname'),
-    path('set-parent',               set_parent,                name='main_layer_setparent'),
-    path('set-culture',              set_culture,               name='ajax_culture_set'),
-    path('set-epoch',                set_epoch,                 name='main_layer_setepoch'),
-    path('unset-parent',             unset_parent,              name='main_layer_unsetparent'),
-    path('unset-culture',            unset_culture,             name='ajax_layer_remove_culture'),
-    path('unset-epoch',              unset_epoch,               name='main_layer_unsetepoch'),
     path('clone/<int:pk>',           clone,                     name='main_layer_clone'),
     path('search',                   search,                    name='main_layer_search'),
     path('positions/<int:site_id>',  update_positions,          name='main_layer_positionupdate'),

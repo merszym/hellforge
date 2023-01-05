@@ -26,7 +26,7 @@
                 {% if object.parent %}
                 <div class="tile tile-centered">
                     <div class="tile-icon my-1">
-                        <span class="btn tooltip tooltip-right layer_unset_parent" data-tooltip="Remove" id="layer_{{object.parent.pk}}" data-url="{% url 'main_layer_unsetparent' %}">
+                        <span class="btn tooltip tooltip-right unset-fk-item" data-tooltip="Remove" id="layer_{{object.parent.pk}}" data-url="{% url 'main_layer_unsetfk' 'parent' %}">
                             <i class="icon icon-delete" centered></i>
                         </span>
                     </div>
@@ -47,7 +47,7 @@
                         <option value="layer_{{option.pk}}">{{option}}</option>
                         {% endfor %}
                     </select>
-                    <span id="layer-setparent" class="btn btn-primary input-group-btn" data-url="{% url 'main_layer_setparent' %}">OK</span>
+                    <span id="layer-setparent" class="btn btn-primary input-group-btn" data-url="{% url 'main_layer_setfk' 'parent' %}">OK</span>
                 </div>
             </div>
         </div>

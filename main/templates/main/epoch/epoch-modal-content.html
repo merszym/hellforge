@@ -13,7 +13,7 @@
         <div class="tile tile-centered">
             <div class="tile-icon">
               <div class="example-tile-icon">
-                <button class="btn" id="layer_unset_epoch" data-url="{% url 'main_layer_unsetepoch' %}">
+                <button class="btn unset-fk-item" id="layer_unset_epoch" data-url="{% url 'main_layer_unsetfk' 'epoch' %}">
                     <i class="icon icon-delete"></i>
                 </button>
               </div>
@@ -24,6 +24,6 @@
         </div>
         {% endif %}
         {% include 'main/epoch/epoch-searchinput.html' %}
-        <span id='layer_epoch_set' style="display: none;" data-url='{% url "main_layer_setepoch" %}'></span>
+        <span id='layer_epoch_set' style="display: none;" data-url='{% url "main_layer_setfk" "epoch" %}'></span>
     </div>
 </div>
