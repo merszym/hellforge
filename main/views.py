@@ -243,7 +243,7 @@ class CultureListView(ListView):
         items = []
         groupdata = []
 
-        query = Culture.objects.filter(parent__isnull=True)
+        query = Culture.objects.filter(culture__isnull=True)
 
         for n,cult in enumerate(query):
             groupdata.append({

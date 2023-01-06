@@ -57,27 +57,14 @@
                     <input class="form-input" type="text" id="culture-hominin_group" name="hominin_group" placeholder="Associated Hominin Group" required
                     value={% if object.hominin_group %} "{{object.hominin_group}}" {% endif %} >
                 </div>
-                <select id="culture-input" name="parent" style="display:none;">
-                    <option value={% if object.parent %} {{object.parent.pk}} {% endif %}></option>
-                </select>
                 {% else %}
                 <select id="epoch-input" name="parent" style="display:none;">
                     <option value={% if object.parent %} {{object.parent.pk}} {% endif %}></option>
                 </select>
                 {% endif %}
-                {% include 'main/reference/reference-formfield.html' %}
-                <!-- Show the references -->
-                {% include 'main/reference/reference-display.html' %}
                 <br>
                 <button class='btn btn-primary' type="submit">Save {{type}}</button>
             </form>
-        </div>
-    </div>
-
-    <div class="column" style="border-left: solid 2px grey">
-        <h3>Edit Associated Information</h3>
-        <div clas="my-2">
-            <h6> Set Umbrella {{type}} </h6>
         </div>
     </div>
 </div>

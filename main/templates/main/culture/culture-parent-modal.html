@@ -1,0 +1,21 @@
+{# context for search-input: origin: layer #}
+{% load static %}
+<!-- Modal content for Date -->
+<a href="#close" class="modal-overlay" aria-label="Close"></a>
+<div class="modal-container">
+    <div class="modal-header">
+        <a id="modal-close" class="btn btn-clear float-right refresh_profile" style="cursor:pointer;" aria-label="Close"></a>
+    <div class="modal-title h5">Culture Properties</div>
+</div>
+<div class="modal-body">
+    <div class="content  my-2">
+        <div id="modal-form">
+            <h6>Parent</h6>
+            {% include 'main/culture/culture-chip-display.html' %}
+            {% include 'main/culture/culture-searchinput.html' %}
+            <h6>References</h6>
+            {% include 'main/reference/reference-chip-display.html' %}
+            {% include 'main/reference/reference-searchinput.html' %}
+        </div>
+    </div>
+</div>

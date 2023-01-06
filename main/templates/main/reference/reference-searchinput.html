@@ -5,6 +5,7 @@
 {% load static %}
 {% csrf_token %}
 <span id='layer_reference_set' style="display: none;" data-url="{% url 'main_generic_addm2m' 'layer' %}"></span>
+<span id='culture_reference_set' style="display: none;" data-url="{% url 'main_generic_addm2m' 'culture' %}"></span>
 <div class="input-group">
     <span class="input-group-addon"><i class="form-icon icon icon-search"></i> Reference</span>
     <input type="text" data-origin="{{origin}}" data-model='reference' class="form-input" placeholder="Search" id="search-input" data-url="{% url 'main_generic_search' %}">

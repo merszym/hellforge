@@ -209,10 +209,10 @@ class Culture(models.Model):
     name = models.CharField('name', max_length=200)
     description = models.TextField('description', blank=True)
     hominin_group = models.CharField('hominin_group', max_length=500, blank=True)
-    parent = models.ForeignKey('self', verbose_name=u'parent', related_name='child', blank=True, null=True, on_delete=models.SET_NULL)
+    culture = models.ForeignKey('self', verbose_name=u'parent', related_name='child', blank=True, null=True, on_delete=models.SET_NULL)
     upper = models.IntegerField(blank=True, default=100000, null=True)
     lower = models.IntegerField(blank=True, default=0, null=True)
-    ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
+    ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True, related_name='culture')
 
     class Meta:
         ordering = ['-upper']
@@ -224,6 +224,10 @@ class Culture(models.Model):
         return reverse('culture_detail', kwargs={'pk':self.id})
 
     # Additional funcitons
+    @property
+    def model(self):
+        return 'culture'
+
     @classmethod
     def filter(self, kw):
         return Culture.objects.filter(Q(name__contains=kw) | Q(description__contains=kw ))
@@ -238,14 +242,14 @@ class Culture(models.Model):
 
     @property
     def children(self):
-        return Culture.objects.filter(parent__id = self.id).all()
+        return Culture.objects.filter(culture__id = self.id).all()
 
     def all_cultures(self, nochildren=False, noself=False):
         if not noself:
             cultures = list(Culture.objects.filter(pk=self.id).all())
         else:
             cultures = []
-        children = list(Culture.objects.filter(parent__id = self.id).all())
+        children = list(Culture.objects.filter(culture__id = self.id).all())
         if len(children) == 0 or nochildren: #lowest branch
             return cultures
         # else: walk down the branches

@@ -25,14 +25,15 @@
                     {% if object.ref.first %}
                     <th>References</th>
                     {% endif %}
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
                     <td>{{object.hominin_group}}</td>
                     <td>
-                    {% if object.parent %}
-                    <a class='btn-link' href="{% url 'culture_detail' object.parent.pk %}">{{object.parent.name}}</a>
+                    {% if object.culture %}
+                    <a class='btn-link' href="{% url 'culture_detail' object.culture.pk %}">{{object.culture.name}}</a>
                     {% endif %}
                     </td>
                     <td>
@@ -47,6 +48,19 @@
                         {% endfor %}
                     </td>
                     {% endif %}
+                    <td>
+                      <div class="popover popover-right">
+                        <button class="btn"><i class="icon icon-menu"></i></button>
+                        <div class="popover-container">
+                          <div class="card">
+                            <div class="card-body">
+                              <button class="btn tooltip tooltip-top fill_modal" data-tooltip="Properties" data-info="culture_{{object.pk}}" data-url="{% url 'ajax_fill_modal' %}?type=culture">Prop</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -76,6 +90,9 @@
         <script src="{% static 'js/location.js' %}"></script>
         <script> drawJson({{geo | safe }}); fitBounds();</script>
         <script src="{% static 'js/site.js' %}"></script>
+        <script src="{% static 'js/layer.js' %}"></script>
+        <script src="{% static 'js/profile.js' %}"></script>
+        <script src="{% static 'js/culture.js' %}"></script>
     </div>
 </div>
 {% endblock %}
