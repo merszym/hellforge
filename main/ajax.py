@@ -39,11 +39,9 @@ def fill_modal(request):
     if choice == 'layer_properties':
         html = render(request,'main/layer/layer-properties-modal.html', {'object':object, 'origin': 'layer'})
     if choice=='dating':
-        html = render(request,'main/dating/dating-modal-content.html',{'datingoptions': DatingMethod.objects.all()})
+        html = render(request,'main/dating/dating-modal-content.html',{'datingoptions': DatingMethod.objects.all(), 'origin': 'date'})
     if choice=='reldate':
         html = render(request,'main/dating/reldate-modal-content.html', {'form': RelDateForm(request.POST)})
-    if choice=='epoch':
-        html = render(request,'main/epoch/epoch-modal-content.html', {'object':object.epoch})
     return html
 
 

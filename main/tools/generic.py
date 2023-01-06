@@ -70,5 +70,9 @@ def delete_x(request, response=True):
 
 
 urlpatterns = [
-    path('search',  search,  name='main_generic_search'),
+    path('search',              search,               name='main_generic_search'),
+    path('rmm2m/<str:field>',   remove_x_from_y_m2m,  name='main_generic_rmm2m'),
+    path('unsetfk/<str:field>', unset_fk,             name='main_generic_unsetfk'),
+    path('setfk/<str:field>',   set_x_fk_to_y,        name='main_generic_setfk'),
+    path('addm2m/<str:field>',  add_x_to_y_m2m,       name='main_generic_addm2m')
 ]

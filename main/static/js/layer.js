@@ -41,7 +41,7 @@ $("body").on('click', '.layer-search-item', function(){
 // remove forein key model from layer
 // if id exists, its a m2m model --> remove that as well
 // = epoch, culture, parent
-$('body').on('click', '.unset-fk-item', function(){
+$('body').on('click', '.unset-item', function(){
     var formdata = new FormData();
     formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
     formdata.append('instance_x', $('[name=info]').val()); //the layer

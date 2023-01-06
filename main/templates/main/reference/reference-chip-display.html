@@ -1,15 +1,16 @@
-{% if object.checkpoint %}
-{% for checkpoint in object.checkpoint.all %}
+{% if object.ref %}
+{% for ref in object.ref.all %}
     <div class="tile tile-centered">
         <div class="tile-icon">
             <div class="example-tile-icon">
-            <button class="btn unset-item" id="checkpoint_{{checkpoint.pk}}" data-url="{% url 'main_generic_rmm2m' object.model %}">
+            <button class="btn unset-item" id="reference_{{ref.pk}}" data-url="{% url 'main_generic_rmm2m' object.model %}">
                 <i class="icon icon-delete"></i>
             </button>
             </div>
         </div>
         <div class="tile-content">
-            <div class="tile-title">{{checkpoint.name}}</div>
+            <div class="tile-title">{{ref.short}}</div>
+            <span>{{ref.title}}</span>
         </div>
     </div>
 {% endfor %}
