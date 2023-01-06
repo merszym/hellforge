@@ -1,12 +1,7 @@
-{# the table rows are displayed in the reference table for the editorjs descriptions (site detail view) #}
-{# but also as the result of the search-input -> #}
-{#     search-input in the editorjs plugin --> adds tags #}
-{#      search-input for m2m fields --> need to add to respective model #}
-{#  thus many things have to be considered when one clicks 'add' #}
 <tr>
-    <td>{{ref.short}}</td>
+    <td id='reference_{{ref.pk}}_short'>{{ref.short}}</td>
     <td>
-        {{ref.title}}<br>
+        <span id="reference_{{ref.pk}}_title">{{ref.title}}</span><br>
         <p class="form-input-hint" style="margin-bottom:0px;">{{ref.tags}}</p>
     </td>
     {% if display %}

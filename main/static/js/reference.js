@@ -21,10 +21,10 @@ $(".addReference").on("click", function(){
         });
 });
 
-$("body").on("click",'.search-item', function(){
-    pk = this.id.split('_')[2]
-    short = $(`#search_short_${pk}`).html()
-    title = $(`#search_title_${pk}`).html()
+$("body").on("click",'.form-search-item', function(){
+    pk = this.id.split('_')[1]
+    short = $(`#reference_${pk}_short`).html()
+    title = $(`#reference_${pk}_title`).html()
     $('#reference-list').append(
         `<tr id="ref_display_row_${pk}">
             <td id="ref_${pk}">${short}</td>
@@ -33,7 +33,7 @@ $("body").on("click",'.search-item', function(){
         </tr>`
     )
     $('#id_ref').append(`<option id="ref_option_${pk}" value="${pk}" selected></option>`)
-    $('.search-appear').hide()
+    $('.reference-search-appear').hide()
 });
 
 $("body").on("click",'.ref_delete', function(){

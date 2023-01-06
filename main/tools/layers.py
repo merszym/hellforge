@@ -8,13 +8,6 @@ from main.forms import LayerForm, ReferenceForm
 from main.tools.generic import add_x_to_y_m2m, get_instance_from_string, set_x_fk_to_y
 import copy
 
-@csrf_exempt
-def search(request):
-    if kw := request.POST.get('keyword', False):
-        q = Layer.objects.filter(Q(name__contains=kw) | Q(site__name__contains=kw ) )
-        return JsonResponse({x.pk: f"{x.name};;{x.site}" for x in q})
-    return JsonResponse({'status':False})
-
 def clone(request, pk):
     new_layer = Layer.objects.get(pk=pk)
     layer = Layer.objects.get(pk=pk)
@@ -77,7 +70,6 @@ class LayerUpdateView(UpdateView):
 urlpatterns = [
     path('set-name',                 set_name,                  name='main_layer_setname'),
     path('clone/<int:pk>',           clone,                     name='main_layer_clone'),
-    path('search',                   search,                    name='main_layer_search'),
     path('positions/<int:site_id>',  update_positions,          name='main_layer_positionupdate'),
     path('delete/<int:pk>',          LayerDeleteView.as_view(), name='main_layer_delete'),
     path('edit/<int:pk>',            LayerUpdateView.as_view(), name='main_layer_update'),
