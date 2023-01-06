@@ -19,9 +19,9 @@ $('body').on('click', '#layer-setname', function(){
 
 });
 
-// Set foreign key model to the layer
-// = epoch, culture
-$("body").on('click', '.set-search-item', function(){
+// Attach search results to layers
+// = epoch, culture, checkpoint
+$("body").on('click', '.layer-search-item', function(){
     var formdata = new FormData();
     formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
     formdata.append('instance_x', $('[name=info]').val()); //layer
@@ -39,11 +39,15 @@ $("body").on('click', '.set-search-item', function(){
 })
 
 // remove forein key model from layer
+// if id exists, its a m2m model --> remove that as well
 // = epoch, culture, parent
 $('body').on('click', '.unset-fk-item', function(){
     var formdata = new FormData();
     formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
     formdata.append('instance_x', $('[name=info]').val()); //the layer
+    if($(this).attr('id')){
+        formdata.append('instance_y', $(this).attr('id'))
+    }
     $.ajax({
         type: "POST",
         processData: false,

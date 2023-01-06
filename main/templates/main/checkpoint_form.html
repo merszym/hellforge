@@ -55,10 +55,10 @@
                     <input class="form-input" type="text" id="checkpoint-type" name="type" placeholder="type" required
                     value={% if object.type %} "{{object.type}}" {% endif %} >
                 </div>
-                {% include 'main/references/reference-formfield.html' %}
+                {% include 'main/reference/reference-formfield.html' %}
                 {% include 'main/location/location-formfield.html' %}
                 <!-- Reference Display -->
-                {% include 'main/references/reference-display.html' %}
+                {% include 'main/reference/reference-display.html' %}
                 <br>
                 <button class='btn btn-primary' type="submit">Save Checkpoint</button>
             </form>
@@ -70,7 +70,7 @@
             {% include 'main/location/location-search.html' %}
         </div>
         <div clas="my-2">
-            {% include 'main/references/reference-searchinput.html' %}
+            {% include 'main/reference/reference-searchinput.html' %}
         </div>
     </div>
 </div>

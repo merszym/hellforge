@@ -34,6 +34,10 @@ class Reference(models.Model):
     def get_absolute_url(self):
         return reverse('ref_add')
 
+    @classmethod
+    def filter(self, kw):
+        return Reference.objects.filter(Q(short__contains=kw) | Q(title__contains=kw ) | Q(tags__contains=kw ))
+
     @property
     def link(self):
         if self.doi.startswith('http'):
@@ -176,6 +180,10 @@ class Checkpoint(models.Model):
     loc = models.ManyToManyField(Location, verbose_name=u"location", blank=True)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
 
+    @classmethod
+    def filter(self, kw):
+        return Checkpoint.objects.filter(Q(name__contains=kw) | Q(type__contains=kw) | Q(description__contains=kw ))
+
     @property
     def mean_upper(self):
         return self.date.first().upper
@@ -216,6 +224,10 @@ class Culture(models.Model):
         return reverse('culture_detail', kwargs={'pk':self.id})
 
     # Additional funcitons
+    @classmethod
+    def filter(self, kw):
+        return Culture.objects.filter(Q(name__contains=kw) | Q(description__contains=kw ))
+
     @property
     def classname(self):
         return get_classname(self.name)
@@ -260,6 +272,10 @@ class Epoch(models.Model):
 
     class Meta:
         ordering = ['date__upper']
+
+    @classmethod
+    def filter(self, kw):
+        return Epoch.objects.filter(Q(name__contains=kw) | Q(description__contains=kw ))
 
     @property
     def age_summary(self):
@@ -344,13 +360,6 @@ class Site(models.Model):
         return set([x.culture for x in self.layer.all()])
 
     @property
-    def has_related_site(self):
-        for layer in self.layer.all():
-            if len(layer.related.all()) > 0:
-                return True
-        return False
-
-    @property
     def model(self):
         return 'site'
 
@@ -385,12 +394,11 @@ class Layer(models.Model):
     culture = models.ForeignKey(Culture, verbose_name=u"culture", related_name='layer', on_delete=models.PROTECT, blank=True, null=True)
     epoch = models.ForeignKey(Epoch, verbose_name=u"epoch", related_name='layer', on_delete=models.PROTECT, blank=True, null=True)
     checkpoint = models.ManyToManyField(Checkpoint, verbose_name=u'checkpoint', blank=True, related_name='layer')
-    related = models.ManyToManyField('self', verbose_name=u'related layers', blank=True)
     date = models.ManyToManyField(Date, verbose_name=u"date", blank=True, related_name='model')
     reldate = models.ManyToManyField(RelativeDate, verbose_name='relative date', blank=True)
     mean_upper = models.IntegerField(blank=True, default=1000000)
     mean_lower = models.IntegerField(blank=True, default=0)
-    ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
+    ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True, related_name='layer')
 
     class Meta:
         ordering = ['pos']
@@ -465,5 +473,7 @@ models = {
     'date': Date,
     'synonym': Synonym,
     'profile':Profile,
-    'epoch':Epoch
+    'epoch':Epoch,
+    'checkpoint':Checkpoint,
+    'reference':Reference
 }

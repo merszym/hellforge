@@ -1,0 +1,14 @@
+{% if object.epoch %}
+<div class="tile tile-centered">
+    <div class="tile-icon">
+        <div class="example-tile-icon">
+        <button class="btn unset-fk-item" id="layer_unset_epoch" data-url="{% url 'main_layer_unsetfk' 'epoch' %}">
+            <i class="icon icon-delete"></i>
+        </button>
+        </div>
+    </div>
+    <div class="tile-content">
+        <div class="tile-title">{{object.epoch}}</div>
+    </div>
+</div>
+{% endif %}

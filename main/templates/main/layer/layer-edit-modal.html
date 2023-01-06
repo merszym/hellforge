@@ -10,7 +10,7 @@
     <div class="content  my-2">
         <div id="reldate-content">
             <div id="modal-form">
-                <h6>Naming</h6>
+                <h6>Edit Layer information</h6>
                 <div class="input-group">
                     <span class="input-group-addon">Layer Name</span>
                     <input type="text" class="form-input" name="layer-name" value="{{object.name}}">
@@ -19,10 +19,10 @@
                     <span id="layer-setname" class="btn btn-primary input-group-btn" data-url="{% url 'main_layer_setname' %}">OK</span>
                 </div>
                 <p class="form-input-hint">Update the Layer name. Provide a "Unit" to group multiple Layers</p>
-                {% include 'main/synonyms/synonyms-list.html' %}
+                <h6>Add Additional Information</h6>
+                {% include 'main/synonyms/synonyms-chip-display.html' %}
                 {% include 'main/synonyms/synonyms-form.html' %}
                 <div class="divider text-center" data-content="Parent"></div>
-                <h6>Set Parent</h6>
                 {% if object.parent %}
                 <div class="tile tile-centered">
                     <div class="tile-icon my-1">

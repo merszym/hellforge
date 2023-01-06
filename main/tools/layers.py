@@ -5,7 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DeleteView, UpdateView
 from main.models import Layer, Profile, Site, Culture, models
 from main.forms import LayerForm, ReferenceForm
-from main.tools.generic import add_x_to_y_m2m, get_instance_from_string, set_x_fk_to_y, unset_fk
+from main.tools.generic import add_x_to_y_m2m, get_instance_from_string, set_x_fk_to_y, unset_fk, remove_x_from_y_m2m
 import copy
 
 @csrf_exempt
@@ -77,6 +77,8 @@ class LayerUpdateView(UpdateView):
 urlpatterns = [
     path('set/<str:field>',          set_x_fk_to_y,             name='main_layer_setfk'),   #those dont even need to go here...
     path('unset/<str:field>',        unset_fk,                  name='main_layer_unsetfk'), #those dont even need to go here...
+    path('add/<str:field>',          add_x_to_y_m2m,            name='main_layer_addm2m'),  #those dont even need to go here...
+    path('remove/<str:field>',       remove_x_from_y_m2m,       name='main_layer_rmm2m'),   #those dont even need to go here...
     path('set-name',                 set_name,                  name='main_layer_setname'),
     path('clone/<int:pk>',           clone,                     name='main_layer_clone'),
     path('search',                   search,                    name='main_layer_search'),

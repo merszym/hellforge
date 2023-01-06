@@ -36,12 +36,12 @@ def fill_modal(request):
             'parent_options': options
             }
         )
+    if choice == 'layer_properties':
+        html = render(request,'main/layer/layer-properties-modal.html', {'object':object, 'origin': 'layer'})
     if choice=='dating':
         html = render(request,'main/dating/dating-modal-content.html',{'datingoptions': DatingMethod.objects.all()})
     if choice=='reldate':
         html = render(request,'main/dating/reldate-modal-content.html', {'form': RelDateForm(request.POST)})
-    if choice=='culture':
-        html = render(request,'main/culture/culture-modal-content.html', {'object':object.culture})
     if choice=='epoch':
         html = render(request,'main/epoch/epoch-modal-content.html', {'object':object.epoch})
     return html
@@ -102,13 +102,6 @@ def search_loc(request):
     kw = data['keyword']
     q = Location.objects.filter(Q(name__contains=kw))
     return JsonResponse({x.pk:x.name for x in q})
-
-@csrf_exempt
-def search_cp(request):
-    data = {x:v[0] for (x,v) in dict(request.POST).items()}
-    kw = data['keyword']
-    q = Checkpoint.objects.filter(Q(name__contains=kw) | Q(description__contains=kw ) | Q(category__contains=kw ) | Q(type__contains=kw ))
-    return JsonResponse({x.pk: f"{x.name};;{x.type}" for x in q})
 
 def get_description(request):
     data = request.GET.dict()

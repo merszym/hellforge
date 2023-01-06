@@ -1,0 +1,12 @@
+{% load static %}
+{% csrf_token %}
+{# this adds the layer to the checkpoint model, hence the 'layer' field in the data-url even though this one is called from the layer.js #}
+<span id='layer_checkpoint_set' style="display: none;" data-url="{% url 'main_layer_addm2m' 'layer' %}"></span>
+<div class="my-2">
+    <div class="input-group">
+        <span class="input-group-addon"><i class="form-icon icon icon-search"></i> Checkpoint</span>
+        <input type="text" class="form-input" data-origin="{{origin}}" data-model="checkpoint" placeholder="Search Checkpoint" id="search-input" data-url="{% url 'main_generic_search' %}">
+        <a href="{% url 'checkpoint_add' %}" target="_blank" class="btn btn-primary input-group-btn tooltip tooltip-left" data-tooltip="Add new Checkpoint"><i class="icon icon-plus"></i></a>
+    </div>
+    <div class="checkpoint-search-appear"></div>
+</div>

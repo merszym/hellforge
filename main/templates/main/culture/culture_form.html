@@ -65,9 +65,9 @@
                     <option value={% if object.parent %} {{object.parent.pk}} {% endif %}></option>
                 </select>
                 {% endif %}
-                {% include 'main/references/reference-formfield.html' %}
+                {% include 'main/reference/reference-formfield.html' %}
                 <!-- Show the references -->
-                {% include 'main/references/reference-display.html' %}
+                {% include 'main/reference/reference-display.html' %}
                 <br>
                 <button class='btn btn-primary' type="submit">Save {{type}}</button>
             </form>

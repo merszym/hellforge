@@ -48,11 +48,11 @@
                         Site Done:{{field}}<br>
                     {% endif %}
                 {% endfor %}
-                {% include 'main/references/reference-formfield.html' %}
+                {% include 'main/reference/reference-formfield.html' %}
                 {% include 'main/location/location-formfield.html' %}
                 {% include 'main/contact/contact-formfield.html' %}
                 <!-- list references -->
-                {% include 'main/references/reference-display.html' %}
+                {% include 'main/reference/reference-display.html' %}
                 <br>
                 <button class='btn btn-primary' type="submit">Save Site</button>
             </form>
@@ -64,7 +64,7 @@
             {% include 'main/location/location-search.html' %}
         </div>
         <div clas="my-2">
-            {% include 'main/references/reference-searchinput.html' %}
+            {% include 'main/reference/reference-searchinput.html' %}
         </div>
         <div clas="my-2">
             {% include 'main/contact/contact-search.html' %}

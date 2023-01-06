@@ -39,14 +39,14 @@
                     <textarea id='geojson' type="text" name="geo" style="display:none;" required>
                         {% if object.geo %} {{object.geo|safe}} {% endif %}
                     </textarea>
-                     {% include 'main/references/reference-formfield.html' %}
+                     {% include 'main/reference/reference-formfield.html' %}
                     <button class='btn btn-primary' onclick="saveLayer()">Save Location</button>
                 </form>
             </div>
             <br>
             <h3 style="margin-bottom:0px"> References </h3>
-            {% include 'main/references/reference-display.html' %}
-            {% include 'main/references/reference-searchinput.html' %}
+            {% include 'main/reference/reference-display.html' %}
+            {% include 'main/reference/reference-searchinput.html' %}
         </div>
     </div>
     <script src="{% static 'js/location.js' %}"></script>

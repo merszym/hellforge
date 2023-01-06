@@ -1,0 +1,16 @@
+{% if object.checkpoint %}
+{% for checkpoint in object.checkpoint.all %}
+    <div class="tile tile-centered">
+        <div class="tile-icon">
+            <div class="example-tile-icon">
+            <button class="btn unset-fk-item" id="checkpoint_{{checkpoint.pk}}" data-url="{% url 'main_layer_rmm2m' 'layer' %}">
+                <i class="icon icon-delete"></i>
+            </button>
+            </div>
+        </div>
+        <div class="tile-content">
+            <div class="tile-title">{{checkpoint.name}}</div>
+        </div>
+    </div>
+{% endfor %}
+{% endif %}

@@ -1,5 +1,14 @@
 from main.models import models
 from django.http import JsonResponse
+from django.urls import path
+from django.shortcuts import render
+
+def search(request):
+    kw = request.POST.get('keyword')
+    origin = request.POST.get('origin')
+    model = request.POST.get('model')
+    q = models[model].filter(kw)
+    return render(request, f'main/{model}/{model}-searchresults.html', context={'object_list':q, 'origin':origin})
 
 def get_instance_from_string(string):
     # Get the primary key of the model from the data
@@ -58,3 +67,8 @@ def delete_x(request, response=True):
     x = get_instance_from_string(request.POST.get('instance_x'))
     x.delete()
     return JsonResponse({'status':True}) if response else True
+
+
+urlpatterns = [
+    path('search',  search,  name='main_generic_search'),
+]

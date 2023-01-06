@@ -7,8 +7,6 @@
     <div class="column" style="position:relative;">
         <div class="my-2">
             <h3>Layer Data</h3>
-            {% include 'main/checkpoint/checkpoint-display.html' %}
-            {% include 'main/related/related-display.html' %}
             {% include 'main/synonyms/synonyms-list.html' %}
             {% include 'main/synonyms/synonyms-form.html' %}
             <form method="POST" enctype="multipart/form-data">
@@ -33,11 +31,9 @@
                     <input class="form-input" type="text" id="layer-unit" name="unit" placeholder="Group layer into Unit"
                      value="{% if object.unit %} {{object.unit}} {% endif %}">
                 </div>
-                {% include 'main/references/reference-formfield.html' %}
-                {% include 'main/checkpoint/checkpoint-formfield.html' %}
-                {% include 'main/related/related-formfield.html' %}
+                {% include 'main/reference/reference-formfield.html' %}
                 <!-- Display references -->
-                {% include 'main/references/reference-display.html' %}
+                {% include 'main/reference/reference-display.html' %}
                 <br>
                 <button class='btn btn-primary' type="submit">Save Layer</button>
             </form>
@@ -46,13 +42,7 @@
     <div class="column" style="border-left: solid 2px grey">
         <h3> Edit Associated Information </h3>
         <div clas="my-2">
-            {% include 'main/references/reference-searchinput.html' %}
-        </div>
-        <div clas="my-2">
-            {% include 'main/checkpoint/checkpoint-search.html' %}
-        </div>
-        <div clas="my-2">
-            {% include 'main/related/related-search.html' %}
+            {% include 'main/reference/reference-searchinput.html' %}
         </div>
     </div>
 </div>

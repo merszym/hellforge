@@ -45,11 +45,11 @@ class Reference {
             }).done(function(html){
                 $('#reference-modal').addClass('active')
                 $('#reference-modal-content').html(html)
-                $('#ref-search').focus()
-                $('body').on('click','.search-item' ,function(){
+                $('#search-input').focus()
+                $('body').on('click','.editorjs-search-item' ,function(){
                     const selectedText = range.extractContents();
-                    const id = $(this).attr('id').split('_')[2]
-                    $('#search-appear').html("")
+                    const id = $(this).attr('id').split('_')[1]
+                    $('#reference-search-appear').html("")
                     $('#reference-modal').removeClass('active')
                     // Render the modal, wait until click of
                     ref.id = id

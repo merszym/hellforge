@@ -1,0 +1,13 @@
+{# this template is used by the editorjs reference plugin to open a reference-search modal #}
+{# it is also used by different models to search for references (and add them) #}
+{# so we need to hand over the origin model to the search function #}
+
+{% load static %}
+{% csrf_token %}
+<span id='layer_reference_set' style="display: none;" data-url="{% url 'main_layer_addm2m' 'layer' %}"></span>
+<div class="input-group">
+    <span class="input-group-addon"><i class="form-icon icon icon-search"></i> Reference</span>
+    <input type="text" data-origin="{{origin}}" data-model='reference' class="form-input" placeholder="Search" id="search-input" data-url="{% url 'main_generic_search' %}">
+    <a href="{% url 'ref_add' %}" target="_blank" class="btn btn-primary input-group-btn tooltip tooltip-left" data-tooltip="Add new Reference"><i class="icon icon-plus"></i></a>
+</div>
+<div class="reference-search-appear"></div>
