@@ -11,26 +11,28 @@
 {% block body %}
 
 <!-- Add dynamic styling for units and cultures -->
-<style>
-.sterile{
-    background-color: rgb(117, 117, 117);
- }
-</style>
-{% for cult,color in cultures %}
-<style>
-.{{cult}}{
-    background-color:{{color}}
-}
+<div id="site_style">
+    <style>
+    .sterile{
+        background-color: rgb(117, 117, 117);
+    }
+    </style>
+    {% for cult,color in cultures %}
+    <style>
+    .{{cult}}{
+        background-color:{{color}}
+    }
+    </style>
+    {% endfor %}
+    {% for unit,color in units %}
+    <style>
+    .{{unit}}{
+        background-color:{{color}}
+    }
 </style>
 {% endfor %}
-{% for unit,color in units %}
-<style>
-.{{unit}}{
-    background-color:{{color}}
-}
 </style>
-{% endfor %}
-</style>
+</div>
 <div class='columns' style="padding:10px;">
     <div class="column col-4" id='mobile' style="position:relative;">
         <a class="btn btn-primary tooltip tooltip-left" href="{% url 'main_site_update' object.pk %}" style="position:absolute; right:5%; top:10px" data-tooltip="Edit Site">

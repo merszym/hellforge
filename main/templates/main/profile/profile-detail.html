@@ -1,5 +1,5 @@
+{% load static %}
 <section class="m-2">
-  {% load static %}
     <div style="position: relative;">
       <h3>{{object.name}}</h3>
       <span class="btn btn-primary tooltip tooltip-left profile_delete" data-url="{% url 'main_profile_delete' %}"
@@ -10,6 +10,7 @@
     <input name="profile_id" value="{{object.pk}}" style="display:none;">
     <!--the layers-->
     <h5>Layers</h5>
+    <div id="profiledetail_{{object.pk}}">
     {% if object.layer.first %}
     <table class="table table-striped table-hover">
         <thead>
@@ -62,6 +63,7 @@
         </div>
       </div>
     {% endif %}
+    </div>
     <!-- Add layers from other profiles -->
     {% if object.other_layers %}
     <br><br>

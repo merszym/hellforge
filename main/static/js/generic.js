@@ -26,3 +26,18 @@ $('body').on('keyup paste','#search-input',function(){
         });
     }
 });
+
+// generic reload of element, instead of rendering with html-snippets!
+// get the webpage again by loading the same url, only bind the required element to the dom
+$('body').on('click', '.generic_reload', function(){
+    var element = $(this).attr('data-reload')
+    $.ajax({
+        url: document.URL,
+        success: function(response) {
+            // Find the element you want to load
+            var update = $(response).find(`#${element}`);
+            // Insert the element into the DOM
+            $(`#${element}`).replaceWith(update)
+        }
+    });
+})
