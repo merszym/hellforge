@@ -230,7 +230,7 @@ class Culture(models.Model):
 
     @classmethod
     def filter(self, kw):
-        return Culture.objects.filter(Q(name__contains=kw) | Q(description__contains=kw ))
+        return Culture.objects.filter(Q(name__contains=kw))
 
     @property
     def classname(self):
