@@ -1,4 +1,6 @@
 from django.urls import include, path
+from django.contrib.staticfiles.storage import staticfiles_storage
+from django.views.generic.base import RedirectView
 from django.conf.urls.static import static
 from . import views
 from . import urls_ajax
@@ -20,7 +22,8 @@ urlpatterns = [
     path('epoch', views.EpochListView.as_view(), name='epoch_list'),
     path('checkpoint/add', views.CheckpointCreateView.as_view(), name='checkpoint_add'),
     path('checkpoint/edit/<int:pk>', views.CheckpointUpdateView.as_view(), name='checkpoint_update'),
-    path('tools/', include('main.urls_ajax'))
+    path('tools/', include('main.urls_ajax')),
+    path('favicon.ico', RedirectView.as_view(url=staticfiles_storage.url('img/favicon.ico')))
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
