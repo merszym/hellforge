@@ -8,8 +8,6 @@ from hellforge import settings
 
 urlpatterns = [
     path('',views.landing, name='landing'),
-    path('loc/edit/<int:pk>', views.LocationUpdateView.as_view(), name='location_update'),
-    path('loc/add', views.LocationCreateView.as_view(), name='location_add'),
     path('locs', views.LocationListView.as_view(), name='location_list'),
     path('sites', views.SiteListView.as_view(), name='site_list'),
     path('site/<int:pk>', views.SiteDetailView.as_view(), name='site_detail'),

@@ -1,74 +1,62 @@
 {% extends "main/base.html" %}
-{% block headline %} Site creation {% endblock %}
+{% load static %}
+{% block head %}
+<title>Hellforge: Site</title>
+{% include 'main/location/location-head.html' %}
+{% endblock %}
+{% block headline %} Site {% endblock %}
 {% block body %}
 {% if object %}
 <h1>Edit Site: {{object.name}}</h1>
 {% else %}
 <h1>Add a Site</h1>
 {% endif %}
-<div class='columns'>
-    <div class="column">
-        <div class="my-2">
-            <h2>Site Data</h2>
-            {% include 'main/location/location-display.html' %}
-            {% include 'main/contact/contact-display.html' %}
-            <form method="POST" enctype="multipart/form-data">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label class="form-label" for="site-name">Name</label>
-                    <input class="form-input" type="text" id="site-name" name="name" placeholder="Site name" required
-                    value={% if object.name %} "{{object.name}}" {% endif %} >
+<form method="POST" enctype="multipart/form-data">
+{% csrf_token %}
+    <div class="container">
+        <div class='columns'>
+            {% include 'main/location/location_form.html' with object=object.loc.first %}
+            <div class="column">
+                <div class="my-2">
+                    <h5>Site Data</h5>
+                        <div class="form-group">
+                            <label class="form-label" for="site-name">Name</label>
+                            <input class="form-input" type="text" id="site-name" name="name" placeholder="Site name" required
+                            value="{% if object.name %}{{object.name}}{% endif %}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="site-country">Country</label>
+                            <input class="form-input" type="text" id="site-country" name="country" placeholder="Site country" required
+                            value="{% if object.country %}{{object.country}}{% endif %}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="site-type">Type</label>
+                            <select class="form-select" id="site-type" name="type" required>
+                                {% if object.type %}
+                                <option selected>{{object.type}}</option>
+                                {% else %}
+                                <option selected>---</option>
+                                {% endif %}
+                                <option>Cave</option>
+                                <option>Open Air Site</option>
+                                <option>Rockshelter</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="site-elevation">Elevation</label>
+                            <input class="form-input" type="number" id="site-elevation" name="elevation" placeholder="Site elevation" required
+                            value="{% if object.name %}{{object.elevation}}{% endif %}">
+                        </div>
+                        <br>
+                        <button class='btn btn-primary' onclick="saveLayer()" type="submit">Save Site</button>
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="site-country">Country</label>
-                    <input class="form-input" type="text" id="site-country" name="country" placeholder="Site country" required
-                    value={% if object.country %} "{{object.country}}" {% endif %} >
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="site-type">Type</label>
-                    <select class="form-select" id="site-type" name="type" required>
-                        {% if object.type %}
-                        <option selected>{{object.type}}</option>
-                        {% else %}
-                        <option selected>---</option>
-                        {% endif %}
-                        <option>Cave</option>
-                        <option>Open Air Site</option>
-                        <option>Rockshelter</option>
-                        <option>Other</option>
-                      </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="site-elevation">Elevation</label>
-                    <input class="form-input" type="number" id="site-elevation" name="elevation" placeholder="Site elevation"
-                    value={% if object.name %} "{{object.elevation}}" {% endif %} >
-                </div>
-                {% for field in form %}
-                    {% if field.name == 'site_done' %}
-                        Site Done:{{field}}<br>
-                    {% endif %}
-                {% endfor %}
-                {% include 'main/reference/reference-formfield.html' %}
-                {% include 'main/location/location-formfield.html' %}
-                {% include 'main/contact/contact-formfield.html' %}
-                <!-- list references -->
-                {% include 'main/reference/reference-display.html' %}
-                <br>
-                <button class='btn btn-primary' type="submit">Save Site</button>
-            </form>
+            </div>
         </div>
     </div>
-    <div class="column" style="border-left: solid 2px grey">
-        <h3> Edit Associated Information </h3>
-        <div class="my-2">
-            {% include 'main/location/location-search.html' %}
-        </div>
-        <div clas="my-2">
-            {% include 'main/reference/reference-searchinput.html' %}
-        </div>
-        <div clas="my-2">
-            {% include 'main/contact/contact-search.html' %}
-        </div>
-    </div>
-</div>
+</form>
+<script src="{% static 'js/location.js' %}"></script>
+{% if object.loc.first.geo %}
+<script> drawJson({{object.loc.first.geo | safe }}); fitBounds() </script>
+{% endif %}
 {% endblock %}

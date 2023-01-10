@@ -6,15 +6,7 @@
 {% block headline %}Site List{% endblock %}
 {% block body %}
 {% load static %}
-<style>
-.site_done_False {
-    background-color: red;
-}
-.site_done_True {
-    background-color: inherit;
-}
 
-</style>
 <div class='columns'>
     <div class="column col-7">
         <div class="my-2">
@@ -23,6 +15,7 @@
     </div>
     <div class="column">
         <div class="my-2">
+            <a href="{% url 'main_site_add' %}">New Site</a>
             <div class="has-icon-left">
                 <input class="form-input" id="site-list-search" type="text" placeholder="Find Site" style="width:50%;">
                 <i class="form-icon icon icon-search"></i>

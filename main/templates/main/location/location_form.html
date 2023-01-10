@@ -1,0 +1,12 @@
+{# the column with the relevant location information to be loaded into other form-views #}
+<div class="column">
+    <h5>Location</h5>
+    <div class="input-group">
+        <span class="input-group-addon">Set Marker by Coordinates</span>
+        <input class="form-input" type="text" id="coordinates" placeholder="Latitude,Longitude">
+        <span class="btn btn-primary input-group-btn" id="coordinates-span">Set</span>
+    </div>
+    <div style="height: 480px;" id="map"></div>
+    <textarea id='geojson' type="text" name="geo" style="display:none;" required>{% if object.geo %}{{object.geo|safe}}{% endif %}</textarea>
+</div>
+{# fill the leaflet map in the view that includes this form! otherwise the centering is off #}

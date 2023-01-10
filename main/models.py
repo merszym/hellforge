@@ -159,7 +159,7 @@ class Date(models.Model):
             return f"{self.upper:,} ya"
 
 class Location(models.Model):
-    name = models.CharField('name', max_length=200)
+    name = models.CharField('name', max_length=200, blank=True, null=True) # gets assigned by the model using the loc
     description = models.TextField('description', blank=True)
     geo = models.JSONField('geojson', blank=True, null=True)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)

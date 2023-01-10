@@ -33,16 +33,11 @@ class ContactForm(forms.ModelForm):
         model = ContactPerson
         fields = '__all__'
 
-class LocationForm(forms.ModelForm):
-    class Meta:
-        model=Location
-        fields = ["name","description","geo","ref"]
-
 class SiteForm(forms.ModelForm):
+    geo = forms.JSONField()
     class Meta:
         model = Site
-        fields = ['name','country', 'type', 'elevation','ref','loc','contact']
-
+        fields = ['name','country', 'type', 'elevation', 'geo']
 
 class LayerForm(forms.ModelForm):
     class Meta:

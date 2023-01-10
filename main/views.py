@@ -2,7 +2,7 @@ from django.views.generic import CreateView, ListView, UpdateView, DetailView, D
 from django.urls import reverse
 from django.shortcuts import render
 from .models import Location, Reference, Site, Layer, Culture, Date, Epoch, Checkpoint, DatingMethod, get_classname
-from .forms import LocationForm, ReferenceForm, SiteForm, ProfileForm, CultureForm, \
+from .forms import ReferenceForm, SiteForm, ProfileForm, CultureForm, \
     DateForm, EpochForm, CheckpointForm, ContactForm
 import json
 import seaborn as sns
@@ -10,31 +10,8 @@ import seaborn as sns
 def landing(request):
     return render(request, 'main/landing.html')
 
-## Locations ##
-class LocationCreateView(CreateView):
-    model = Location
-    form_class = LocationForm
-    extra_context = {'reference_form': ReferenceForm}
-
-    def get_context_data(self, **kwargs):
-        context = super(LocationCreateView, self).get_context_data(**kwargs)
-        context.update(self.extra_context)
-        return context
-
-
 class LocationListView(ListView):
     model = Location
-
-
-class LocationUpdateView(UpdateView):
-    model = Location
-    form_class = LocationForm
-    extra_context = {'reference_form': ReferenceForm}
-
-    def get_context_data(self, **kwargs):
-        context = super(LocationUpdateView, self).get_context_data(**kwargs)
-        context.update(self.extra_context)
-        return context
 
 ## Sites
 class SiteDetailView(DetailView):
