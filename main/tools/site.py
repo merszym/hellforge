@@ -21,21 +21,23 @@ def add_profile(request, site_id):
 # Sites ##
 def site_create_update(request, pk=None):
     object = Site.objects.get(pk=pk) if pk else None
-    form = SiteForm(request.POST, instance=copy(object))
-    if form.is_valid():
-        obj = form.save()
-        if not obj.loc.first():
-           loc = Location(geo=form.cleaned_data.get('geo'), name=f"{obj.name} Location")
-           loc.save()
-           loc.refresh_from_db()
-           obj.loc.add(loc)
-           return redirect(obj)
-        else:
-           loc = obj.loc.first()
-           loc.geo = form.cleaned_data.get('geo')
-           loc.save()
-           return redirect(obj)
-    return render(request, 'main/site/site_form.html', {'object': object, 'form':form})
+    if request.method == 'POST':
+        form = SiteForm(request.POST, instance=copy(object))
+        if form.is_valid():
+            obj = form.save()
+            if not obj.loc.first():
+                loc = Location(geo=form.cleaned_data.get('geo'), name=f"{obj.name} Location")
+                loc.save()
+                loc.refresh_from_db()
+                obj.loc.add(loc)
+                return redirect(obj)
+            else:
+                loc = obj.loc.first()
+                loc.geo = form.cleaned_data.get('geo')
+                loc.save()
+                return redirect(obj)
+        return render(request, 'main/site/site_form.html', {'object': object, 'form':form})
+    return render(request, 'main/site/site_form.html', {'form':SiteForm(instance=copy(object)), 'object':object})
 
 class SiteDescriptionUpdateView(DetailView):
     model = Site

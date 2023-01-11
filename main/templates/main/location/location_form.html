@@ -7,6 +7,7 @@
         <span class="btn btn-primary input-group-btn" id="coordinates-span">Set</span>
     </div>
     <div style="height: 480px;" id="map"></div>
-    <textarea id='geojson' type="text" name="geo" style="display:none;" required>{% if object.geo %}{{object.geo|safe}}{% endif %}</textarea>
+    <label for="geojson">
+    <textarea id='geojson' type="text" name="geo" style="display:none;"></textarea>
 </div>
 {# fill the leaflet map in the view that includes this form! otherwise the centering is off #}

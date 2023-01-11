@@ -29,8 +29,10 @@ try{
     });
 
     function saveLayer(){
-        var json = drawnItems.toGeoJSON();
-        document.getElementById('geojson').innerHTML = JSON.stringify(json);
+        if(drawnItems.getLayers().length > 0){
+            var json = drawnItems.toGeoJSON();
+            $('#geojson').html(JSON.stringify(json));
+        }
     }
 
     function onEachFeature(feature, layer){
