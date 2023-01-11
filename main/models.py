@@ -14,10 +14,13 @@ class ContactPerson(models.Model):
     name = models.CharField('name', max_length=300)
     email = models.CharField('email',max_length=300)
     affiliation = models.CharField('affiliation', max_length=300, blank=True)
-    tags = models.CharField('tag', max_length=300, blank=True, null=True)
+    tags = models.CharField('tags', max_length=300, blank=True, null=True)
 
     def __str__(self):
         return self.name
+
+    def get_absolute_url(self):
+        return reverse('main_contact_update', kwargs={'pk':self.pk})
 
     @classmethod
     def filter(self, kw):
@@ -134,6 +137,7 @@ class Date(models.Model):
     #additional information
     description = models.TextField('description', blank=True, null=True)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
+    hidden = models.BooleanField('hidden', default=False)
 
     @classmethod
     def table_columns(self):

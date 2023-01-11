@@ -31,12 +31,12 @@ def get_popup(request):
 ## References ##
 class ReferenceCreateView(CreateView):
     model = Reference
-    fields = "__all__"
+    form_class = ReferenceForm
     template_name = 'main/reference/reference_form.html'
 
 class ReferenceUpdateView(UpdateView):
     model = Reference
-    fields = "__all__"
+    form_class = ReferenceForm
     template_name = 'main/reference/reference_form.html'
 
 urlpatterns = [

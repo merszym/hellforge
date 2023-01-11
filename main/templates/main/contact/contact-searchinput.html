@@ -4,6 +4,6 @@
 <div class="input-group">
     <span class="input-group-addon"><i class="form-icon icon icon-search"></i> Contact</span>
     <input type="text" data-origin="{{origin}}" data-model='contact' class="form-input" placeholder="Search" id="search-input" data-url="{% url 'main_generic_search' %}">
-    <a href="#" target="_blank" class="btn btn-primary input-group-btn tooltip tooltip-left" data-tooltip="Add new Contact"><i class="icon icon-plus"></i></a>
+    <a href="{% url 'main_contact_create' %}" target="_blank" class="btn btn-primary input-group-btn tooltip tooltip-left" data-tooltip="Add new Contact"><i class="icon icon-plus"></i></a>
 </div>
 <div class="contact-search-appear"></div>

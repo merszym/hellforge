@@ -8,7 +8,7 @@ import json
 import seaborn as sns
 
 def landing(request):
-    return render(request, 'main/landing.html')
+    return render(request, 'main/common/landing.html')
 
 class LocationListView(ListView):
     model = Location

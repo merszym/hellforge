@@ -8,6 +8,7 @@ urlpatterns = [
     path('synonym/',     include('main.tools.synonym')),
     path('site/',        include('main.tools.site')),
     path('date/',        include('main.tools.dating')),
+    path('contact/',     include('main.tools.contact')),
     path('reference/',   include('main.tools.references')),
     path('generic/',     include('main.tools.generic')),
     path('editor/save',        ajax.save_description,         name='ajax_description_save'),

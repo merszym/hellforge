@@ -15,7 +15,7 @@ def add_profile(request, site_id):
         obj = form.save(commit=False)
         obj.site = Site.objects.get(pk=site_id)
         obj.save()
-        return render(object)
+        return render(request, 'main/site/profile_list.html', {'object':obj.site})
     return JsonResponse({"status":False})
 
 # Sites ##

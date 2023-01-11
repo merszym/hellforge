@@ -28,10 +28,21 @@ class ReferenceForm(forms.ModelForm):
         model=Reference
         fields = "__all__"
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields:
+            self.fields[field].widget.attrs.update({'class': 'form-input'})
+
 class ContactForm(forms.ModelForm):
     class Meta:
         model = ContactPerson
-        fields = '__all__'
+        exclude = []
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields:
+            self.fields[field].initial = ''
+            self.fields[field].widget.attrs.update({'class': 'form-input'})
 
 class SiteForm(forms.ModelForm):
     geo = forms.JSONField()
