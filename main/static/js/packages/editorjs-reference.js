@@ -96,15 +96,6 @@ class Reference {
                 }).done(function(html){
                     tag.html(html)
                 });
-            if (done.includes(pk)==false){
-                done.push(pk)
-                $.ajax({
-                    type: "GET",
-                    url: `${$('#reference-row-get').attr('data-url')}?pk=${pk}`,
-                    }).done(function(html){
-                        $('#description-reference-tbody').append(html)
-                    });
-                }
         });
      }
  }

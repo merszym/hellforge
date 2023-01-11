@@ -28,11 +28,6 @@ def get_popup(request):
         context.update({'title':title})
     return render(request, 'main/reference/reference-popup.html', context)
 
-def get_tablerow(request):
-    pk = request.GET.get('pk', False)
-    obj = Reference.objects.get(pk=int(pk))
-    return render(request, 'main/reference/reference-tablerow.html', context = {'ref': obj, 'display':True})
-
 ## References ##
 class ReferenceCreateView(CreateView):
     model = Reference
@@ -47,7 +42,6 @@ class ReferenceUpdateView(UpdateView):
 urlpatterns = [
     path('modal',               get_modal,                     name='ajax_ref_modal_get'),
     path('popup',               get_popup,                     name='ajax_ref_popup_get'),
-    path('tablerow',            get_tablerow,                  name='ajax_ref_row_get'),
     path('create',              ReferenceCreateView.as_view(), name='ref_add'),
     path('edit/<int:pk>',       ReferenceUpdateView.as_view(), name='ref_update'),
 ]

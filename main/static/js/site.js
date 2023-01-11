@@ -95,4 +95,25 @@ $(window).resize(function resize(){
     }
 }).trigger('resize');
 
+
+// Attach search results to site
+// = contactperson
+$("body").on('click', '.site-search-item', function(){
+    var formdata = new FormData();
+    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
+    formdata.append('instance_x', $('[name=info]').val()); //site
+    formdata.append('instance_y', $(this).attr('id')); //model
+    var model = $(this).attr('id').split('_')[0]
+    $.ajax({
+        type: "POST",
+        processData: false,
+        contentType: false,
+        url: $(`#site_${model}_set`).attr('data-url'),
+        data: formdata,
+        }).done(function(){
+            $('#reload').click();
+        });
+})
+
+
 getProfile()

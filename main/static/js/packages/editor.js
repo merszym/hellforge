@@ -73,10 +73,24 @@ $.getJSON({
             saveButton.addEventListener('click', function () {
             editor.save()
                 .then((savedData) => {
+                    // collect all the saved references and send them too
+                    references = []
+                    $('reference-tag').each(function(){
+                        references.push($(this).attr('id'))
+                    })
+                    var reference_string = references.join(',')
+                    formdata = new FormData()
+                    formdata.append('references', reference_string)
+                    console.log(formdata)
+                    formdata.append('data', JSON.stringify(savedData))
+                    console.log(formdata)
+                    // and save the description
                     $.post({
-                        dataType:"json",
+                        processData: false,
+                        contentType: false,
+                        data: formdata,
                         url: $('#description-save').attr("data-url"),
-                        data: {'data': JSON.stringify(savedData)},
+                        data: formdata,
                         success: function(respond){
                             window.location.replace(respond['redirect']);
                         }

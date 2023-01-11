@@ -1,0 +1,17 @@
+{% if object.contact %}
+{% for contact in object.contact.all %}
+    <div class="tile tile-centered">
+        <div class="tile-icon">
+            <div class="example-tile-icon">
+            <button class="btn unset-item" id="contact_{{contact.pk}}" data-url="{% url 'main_generic_rmm2m' object.model %}">
+                <i class="icon icon-delete"></i>
+            </button>
+            </div>
+        </div>
+        <div class="tile-content">
+            <div class="tile-title">{{contact.name}}</div>
+            <span>{{contact.affiliation}}</span>
+        </div>
+    </div>
+{% endfor %}
+{% endif %}

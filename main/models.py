@@ -19,6 +19,10 @@ class ContactPerson(models.Model):
     def __str__(self):
         return self.name
 
+    @classmethod
+    def filter(self, kw):
+        return ContactPerson.objects.filter(Q(name__contains=kw) | Q(email__contains=kw ) | Q(tags__contains=kw ) | Q(affiliation__contains=kw ))
+
 class Reference(models.Model):
     title = models.CharField('title', max_length=500)
     short = models.CharField('short', max_length=200, blank=True, null=True)
@@ -323,7 +327,7 @@ class Site(models.Model):
     gallery = models.OneToOneField(Gallery, blank=True, null=True, verbose_name=u'gallery', related_name='model', on_delete=models.SET_NULL)
     type = models.CharField('type', max_length=200, blank=True)
     loc = models.ManyToManyField(Location, verbose_name=u"location")
-    elevation = models.IntegerField('elevation', blank=True)
+    elevation = models.IntegerField('elevation', blank=True, null=True)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
 
     class Meta:
@@ -479,5 +483,6 @@ models = {
     'profile':Profile,
     'epoch':Epoch,
     'checkpoint':Checkpoint,
-    'reference':Reference
+    'reference':Reference,
+    'contact':ContactPerson
 }

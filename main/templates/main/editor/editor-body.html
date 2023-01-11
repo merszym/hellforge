@@ -18,7 +18,6 @@
 <!-- This modal opens in case you do a inline-reference add -->
 <p id="reference-modal-get" data-url="{% url 'ajax_ref_modal_get' %}" style="display:none;"></p>
 <p id="reference-popup-get" data-url="{% url 'ajax_ref_popup_get' %}" style="display:none;"></p>
-<p id="reference-row-get" data-url="{% url 'ajax_ref_row_get' %}" style="display:none;"></p>
 <div class="modal" id="reference-modal">
     <a href="#close" class="modal-overlay" aria-label="Close"></a>
     <div class="modal-container">
@@ -48,6 +47,9 @@
   <h5>References</h5>
   <table class="table table-striped my-2">
     <tbody id="description-reference-tbody" style="border-top: 1px solid lightgrey;">
+      {% for ref in object.ref.all %}
+        {% include 'main/reference/reference-tablerow.html' %}
+      {% endfor %}
     </tbody>
   </table>
 </div>

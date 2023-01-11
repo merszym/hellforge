@@ -22,7 +22,7 @@ def download_header(request):
 
     return response
 
-# belongs into layer or profile tools
+# belongs into site, layer or profile tools
 def fill_modal(request):
     choice = request.GET.get('type', False)
     object = get_instance_from_string(request.GET.get('instance'))
@@ -44,6 +44,8 @@ def fill_modal(request):
         html = render(request,'main/dating/reldate-modal-content.html', {'form': RelDateForm(request.POST)})
     if choice=='culture':
         html = render(request, 'main/culture/culture-parent-modal.html', {'object':object, 'origin':'culture'})
+    if choice=='site_contact':
+        html = render(request, 'main/site/site-contact-modal.html',{'object':object, 'origin':'site'})
     return html
 
 
@@ -115,14 +117,23 @@ def get_description(request):
 
 @csrf_exempt
 def save_description(request):
-    data = request.GET.dict()
-    model = models[data['model']]
-    object = model.objects.get(pk=data['id'])
+    model = models[request.GET.get('model')]
+    object = model.objects.get(pk=int(request.GET.get('id')))
 
-    data = request.POST.dict()
-    data = json.loads(data['data'])
-
+    data = json.loads(request.POST.get('data'))
     object.description = json.dumps(data)
+
+    # now save the site references
+    ## clear the reference field
+    object.ref.clear()
+    for refpk in set(request.POST.get('references').split(',')):
+        try:
+            pk = int(refpk)
+            ref = Reference.objects.get(pk=pk)
+            object.ref.add(ref)
+        except:
+            continue
+
     object.save()
 
     return JsonResponse({'data':True, 'redirect': reverse('site_detail', kwargs={'pk': object.id})})
