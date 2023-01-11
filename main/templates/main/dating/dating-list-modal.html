@@ -1,0 +1,25 @@
+{% load static %}
+{% load format %}
+<!-- Modal content for Date -->
+<a href="#close" class="modal-overlay" aria-label="Close"></a>
+<div class="modal-container">
+    <div class="modal-header">
+        <a id="modal-close" class="btn btn-clear float-right refresh_profile" style="cursor:pointer;" aria-label="Close"></a>
+    <div class="modal-title h5">Manage Dates</div>
+</div>
+<div class="modal-body">
+    <div class="content my-2">
+        <div id="modal-form">
+            {% include 'main/dating/dating-table.html' with date_list=object.visible_dates mode='visible' title='Used Dates' %}
+            <br><br>
+            {% include 'main/dating/dating-table.html' with date_list=object.hidden_dates mode='hidden' title='Hidden Dates' %}
+            <br>
+            <h6>References</h6>
+            <table class="table">
+            {% for ref in object.date_references %}
+                {% include 'main/reference/reference-tablerow.html' with display=True %}
+            {% endfor %}
+            </table>
+        </div>
+    </div>
+</div>

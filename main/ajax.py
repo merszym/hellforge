@@ -46,6 +46,8 @@ def fill_modal(request):
         html = render(request, 'main/culture/culture-parent-modal.html', {'object':object, 'origin':'culture'})
     if choice=='site_contact':
         html = render(request, 'main/site/site-contact-modal.html',{'object':object, 'origin':'site'})
+    if choice=='date-list':
+        html = render(request, 'main/dating/dating-list-modal.html', {'object': object, 'origin': 'layer'})
     return html
 
 

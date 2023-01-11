@@ -160,6 +160,12 @@ def add_relative(request):
         # error validation
     return render(request,'main/dating/reldate-modal-content.html',{'form':form})
 
+def toggle_use(request):
+    date = get_instance_from_string(request.POST.get('instance_x'))
+    date.hidden = date.hidden == False
+    date.save()
+    return JsonResponse({"status":True})
+
 urlpatterns = [
     path('add',        add,                     name='ajax_date_add'),
     path('delete',     delete,                  name='ajax_date_unlink'),
@@ -167,4 +173,5 @@ urlpatterns = [
     path('save-batch', save_verified_batchdata, name='ajax_save_verified_batchdata'),
     path('calibrate',  calibrate_c14,           name='ajax_date_cal'),
     path('add_rel',    add_relative,            name='ajax_add_reldate'),
+    path('toggle_use', toggle_use,              name='ajax_date_toggle'),
 ]

@@ -424,6 +424,18 @@ class Layer(models.Model):
             (Q(date__isnull=False) | Q(checkpoint__isnull=False)) ).first()
 
     @property
+    def visible_dates(self):
+        return self.date.filter(hidden=False)
+
+    @property
+    def hidden_dates(self):
+        return self.date.filter(hidden=True)
+
+    @property
+    def date_references(self):
+        return Reference.objects.filter(date__in=self.date.all()).distinct()
+
+    @property
     def unit_class(self):
         return get_classname(self.unit)
 
