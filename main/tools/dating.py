@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.urls import path
 from django.db.models import Q
-from main.models import models
+from main.models import models, Date
 from main.tools.generic import remove_x_from_y_m2m, delete_x, get_instance_from_string
 
 def calibrate(estimate, plusminus):
@@ -163,7 +163,7 @@ def add_relative(request):
 def toggle_use(request):
     date = get_instance_from_string(request.POST.get('instance_x'))
     date.hidden = date.hidden == False
-    date.save()
+    date.save(update_fields=['hidden'])
     return JsonResponse({"status":True})
 
 urlpatterns = [

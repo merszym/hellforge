@@ -3,6 +3,11 @@ from django.urls import reverse
 from django.db.models import Q
 import json
 
+# In case models implement the 'hidden' attribute
+class VisibleObjectManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(hidden=False)
+
 def get_classname(x):
     """
     For the templates, create classes from strings
@@ -123,6 +128,8 @@ class DatingMethod(models.Model):
     class Meta:
         ordering = ['option']
 
+
+
 class Date(models.Model):
     method = models.CharField('dating method', max_length=200)
     #this is uncalibrated if C14, otherwise just easy to enter
@@ -138,6 +145,11 @@ class Date(models.Model):
     description = models.TextField('description', blank=True, null=True)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
     hidden = models.BooleanField('hidden', default=False)
+    objects = models.Manager()
+    visible_objects = VisibleObjectManager()
+
+    class Meta:
+        default_manager_name = 'visible_objects'
 
     @classmethod
     def table_columns(self):
@@ -424,12 +436,8 @@ class Layer(models.Model):
             (Q(date__isnull=False) | Q(checkpoint__isnull=False)) ).first()
 
     @property
-    def visible_dates(self):
-        return self.date.filter(hidden=False)
-
-    @property
     def hidden_dates(self):
-        return self.date.filter(hidden=True)
+        return Date.objects.filter(Q(hidden=True) & Q(model=self))
 
     @property
     def date_references(self):

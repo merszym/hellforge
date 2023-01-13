@@ -76,6 +76,7 @@ $('body').on('click', '.clone_layer', function(){
 //Add info-field for the dating
 function fillModal(ele){
     const instance = ele.attr('data-info')
+    $('#modal-blank').removeClass('modal-lg')
     var size = ele.attr('data-size')
     var clone = ele.clone()
     clone.css('display', 'none')

@@ -9,7 +9,7 @@
 </td>
 <td class="{% if layer.unit %}{{layer.unit_class}}{% endif %}"><span style="width:5px;"></span></td>
 <td>
-    {% if layer.date.first %}
+    {% if layer.date.first or layer.hidden_dates %}
     <span class='text-primary c-hand fill_modal tooltip tooltip-right' data-size="modal-lg" data-info="layer_{{layer.pk}}" data-tooltip="Manage Dates" data-url="{% url 'ajax_fill_modal' %}?type=date-list">{{layer.age_summary}}</span>
     {% else %}
     {{layer.age_summary}}<br>
