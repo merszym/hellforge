@@ -10,23 +10,14 @@ import seaborn as sns
 def landing(request):
     return render(request, 'main/common/landing.html')
 
-class LocationListView(ListView):
-    model = Location
-
 ## Sites
 class SiteDetailView(DetailView):
     model = Site
-    extra_context = {'profile_form': ProfileForm}
     template_name = 'main/site/site_detail.html'
 
     def get_context_data(self, **kwargs):
-        from collections import defaultdict
-        from main.tools.site import get_timeline_data
-
         context = super(SiteDetailView, self).get_context_data(**kwargs)
-        context.update(self.extra_context)
-        context.update(get_timeline_data(self.get_object().pk))
-
+        context.update({'profile_form': ProfileForm})
         return context
 
 class SiteListView(ListView):
@@ -124,7 +115,6 @@ class CultureUpdateView(UpdateView):
         context = super(CultureUpdateView, self).get_context_data(**kwargs)
         context.update(self.extra_context)
         return context
-
 
 class CultureCreateView(CreateView):
     model = Culture
