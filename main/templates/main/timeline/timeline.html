@@ -1,0 +1,71 @@
+{% load static %}
+<!DOCTYPE html>
+<head>
+<script  type="text/javascript" src="{% static 'js/packages/vis-timeline-graph2d.min.js' %}"></script>
+<link href="{% static 'css/vis-timeline-graph2d.min.css' %}" rel="stylesheet" type="text/css" />
+</head>
+<body>
+
+<style>
+.sterile{
+    background-color: rgb(117, 117, 117);
+}
+.vis-item .vis-item-overflow {
+  overflow: visible;
+}
+</style>
+{% for cult,color in cultures %}
+<style>
+.{{cult}}{
+    background-color:{{color}}
+}
+</style>
+{% endfor %}
+
+<div id="timeline-content">
+    <h2>Timeline</h2>
+    <div id="visualization"></div>
+
+    <script type="text/javascript">
+        // DOM element where the Timeline will be attached
+        var container = document.getElementById('visualization');
+        var options = {
+            'margin':2,
+            'width': '100%',
+            'zoomMax': 9.4670778000002E+15,
+            'zoomMin': 31556926001,
+            'zoomKey':'shiftKey',
+            'showCurrentTime': false,
+            'max': new Date(-1920*31556952000),
+            'timeAxis': {scale: 'year', step: 20},
+            //'start': new Date(-1970*31556952000),
+            'orientation':'both',
+            'order': function(a,b){
+            if (a.order > b.order) {
+                return -1;
+            }
+            if (a.order < b.order) {
+                return 1;
+            }
+                return 0;
+            },
+            'format': {
+            minorLabels: function(date, scale, step) {
+                return `${parseInt(date.format("YYYY"))*-1} kya`;
+            }
+            }
+        };
+        var groups = JSON.parse("{{ groups|escapejs }}");
+        var data = JSON.parse("{{ itemdata|escapejs }}");
+        data.forEach(element => {
+            element.start = new Date(element.start);
+            if(element.end){
+                element.end = new Date(element.end);
+            }
+        });
+        var items = new vis.DataSet(data);
+        var timeline = new vis.Timeline(container, items, groups, options);
+    </script>
+</div>
+</body>
+</html>

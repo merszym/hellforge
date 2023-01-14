@@ -1,6 +1,6 @@
 {% load format %}
 {% if date_list %}
-<div class="panel" style="max-height:400px;">
+<div class="panel" style="max-height:400px;{% if mode == 'hidden' %}color:grey; border: solid 1px salmon {%endif%}">
     <div class="panel-header">
         <div class="panel-title"><h6>{{title}}</h6></div>
     </div>

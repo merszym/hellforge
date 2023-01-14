@@ -63,6 +63,8 @@ function makeSortable(){
                 type: "GET",
                 url: $('#layer_tbody').attr('data-url'),
                 data: {'new_positions':positions.join(',')},
+                }).done(function(){
+                    reloadTimeline()
                 });
         },
     });
@@ -115,5 +117,20 @@ $("body").on('click', '.site-search-item', function(){
         });
 })
 
+// load the timeline-data
+function reloadTimeline(){
+    ele = $('#timeline-content')
+    if(ele.length){
+        ele.load(`${ele.attr('data-url')}`)
+    }
+}
 
-getProfile()
+$( document ).ready(function(){
+    getProfile()
+    reloadTimeline()
+});
+
+$('body').on('click', '.refresh_profile', function(){
+    getProfile()
+    reloadTimeline()
+})

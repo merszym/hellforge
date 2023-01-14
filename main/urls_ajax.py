@@ -11,6 +11,7 @@ urlpatterns = [
     path('contact/',     include('main.tools.contact')),
     path('reference/',   include('main.tools.references')),
     path('generic/',     include('main.tools.generic')),
+    path('timeline/',    include('main.tools.timeline')),
     path('editor/save',        ajax.save_description,         name='ajax_description_save'),
     path('editor/get',         ajax.get_description,          name='ajax_description_get'),
     path('contact/add',        ajax.save_contact,             name='ajax_contact_add'),

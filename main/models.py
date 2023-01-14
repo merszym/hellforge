@@ -156,6 +156,12 @@ class Date(models.Model):
         #human readable representation of the dates
         return  ['Layer','Method','Lab Code','Date','Error','Upper Bound','Lower Bound','Notes','Reference']
 
+    def to_ms(self):
+        if self.upper and self.lower:
+            upper = self.upper *-31556952 - (1970*31556952000)
+            lower = self.lower *-31556952 - (1970*31556952000)
+            return upper, lower
+        return False
 
     def __str__(self):
         if self.method == '14C':
@@ -446,17 +452,6 @@ class Layer(models.Model):
     @property
     def unit_class(self):
         return get_classname(self.unit)
-
-    @property
-    def lowest_date(self):
-        """For sorting Layers by date, get all Dates and return the minimum"""
-        if self.mean_upper:
-            return self.mean_upper
-        return -1
-
-    @property
-    def checkpoints(self):
-        return [x for x in self.checkpoint.all()]
 
     @property
     def in_profile(self):

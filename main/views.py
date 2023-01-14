@@ -16,90 +16,17 @@ class LocationListView(ListView):
 ## Sites
 class SiteDetailView(DetailView):
     model = Site
-    extra_context = {'profile_form': ProfileForm, 'dating_form': DateForm, 'datingoptions': DatingMethod.objects.all() }
+    extra_context = {'profile_form': ProfileForm}
     template_name = 'main/site/site_detail.html'
 
     def get_context_data(self, **kwargs):
         from collections import defaultdict
+        from main.tools.site import get_timeline_data
+
         context = super(SiteDetailView, self).get_context_data(**kwargs)
         context.update(self.extra_context)
-        data = []
-        groups = []
-        unit_groups = {}
-        units = defaultdict(int)
-        cultures = defaultdict(int)
-        for checkpoint,color in zip(self.object.checkpoints, sns.color_palette('husl', len(self.object.checkpoints)).as_hex() ):
-            data.append({
-                "start": checkpoint.date.first().upper *-31556952-(1970*31556952000),
-                "end": checkpoint.date.first().lower *-31556952-(1970*31556952000),
-                "type":"background",
-                #'style': f"border-left: solid 2px {color};border-right: solid 2px {color};",
-                "content": f"<a href={reverse('checkpoint_update', kwargs={'pk':checkpoint.id})} class='btn-link'>{checkpoint.name}</a>",
-                })
-        for layer in self.object.layer.all():
-            if layer.culture:
-                if layer.pos > cultures[layer.culture.classname]:
-                    cultures[layer.culture.classname] = layer.pos
-            if layer.unit:
-                if int(layer.pos) > units[layer.unit]:
-                    units[layer.unit] = layer.pos
-            if not layer.date.first() and not self.request.GET.get('include_undated', False) and not layer.reldate.first():
-                continue
+        context.update(get_timeline_data(self.get_object().pk))
 
-            upper = layer.mean_upper if not layer.reldate.first() else layer.reldate.first().upper
-            lower = layer.mean_lower if not layer.reldate.first() else layer.reldate.first().lower
-
-            if layer.unit:
-                if layer.unit not in unit_groups:
-                    unit_groups[layer.unit] = [layer.name.lower()]
-                else:
-                    unit_groups[layer.unit].append(layer.name.lower())
-
-            groups.append({
-                "id":layer.name.lower(),
-                "content":layer.name,
-                'treeLevel':1 if layer.unit else 2,
-                "order": int(layer.pos)
-            })
-            layerdata = {
-                "start": upper *-31556952-(1970*31556952000),
-                "order":int(layer.pos),
-                "content": f"{layer.culture.name if layer.culture else 'Sterile'} | {layer.age_summary}",
-                "group": layer.name.lower(),
-                "className":f"{layer.culture.classname if layer.culture else 'sterile'}",
-                "type":"point"
-                }
-            # if range instead of point
-            if (upper != lower):
-                layerdata.update({
-                    "end": lower *-31556952-(1970*31556952000),
-                    "type": "range"
-                })
-            data.append(layerdata)
-
-        for k,v in unit_groups.items():
-            groups.append({
-                "id":k,
-                "content":k,
-                'order':units[k],
-                'treeLevel':2,
-                'nestedGroups': v
-            })
-        context['groupdata'] = json.dumps(groups)
-        context['itemdata'] = json.dumps(data)
-        context['cultures'] = [
-            (k,v) for k,v in zip(
-                [x for x in sorted(cultures, key=lambda x: cultures[x])],
-                sns.color_palette('husl',len(set(cultures))).as_hex()
-            )
-        ]
-        # colors for the unit classes
-        context['units'] = [
-            (k,v) for k,v in zip(
-                [get_classname(x) for x in sorted(units, key=lambda x: units[x])],
-                sns.color_palette('viridis',len(set(units))).as_hex()
-            )
-        ]
         return context
 
 class SiteListView(ListView):
