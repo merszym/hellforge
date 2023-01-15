@@ -7,44 +7,52 @@
 {% block body %}
 {% load static %}
 
-<div class='columns'>
-    <div class="column col-7">
-        <div class="my-2">
-            <div style="height: 480px;" id="map"></div>
-        </div>
-    </div>
-    <div class="column">
-        <div class="my-2">
-            <a href="{% url 'main_site_add' %}">New Site</a>
-            <div class="has-icon-left">
-                <input class="form-input" id="site-list-search" type="text" placeholder="Find Site" style="width:50%;">
-                <i class="form-icon icon icon-search"></i>
+<div class="container">
+    <div class='columns'>
+        <div class="column col-6">
+            <div class="my-2">
+                <div style="height: 480px;" id="map"></div>
             </div>
-            <table class="table table-hover">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Country</th>
-                    <th>Type</th>
-                    <th>Elevation</th>
-                    <th>Description?</th>
-                    <th>Layers?</th>
-                  </tr>
-                </thead>
-                <tbody>
-                    {% for object in object_list %}
-                        <tr id="site_{{object.pk}}" class="site_done_{{object.site_done}}">
-                            <td>{{object.name}}</td>
-                            <td>{{object.country}}</td>
-                            <td>{{object.type}}</td>
-                            <td>{{object.elevation}} m</td>
-                            <td>{% if object.description %}Yes{%else%}Missing{%endif%}</td>
-                            <td>{% if object.profile.first %}Yes{%else%}Missing{%endif%}</td>
-                        </tr>
-
-                    {% endfor %}
-                </tbody>
-              </table>
+        </div>
+        <div class="column col-5">
+            <div class="my-2">
+                <div class="panel" style="max-height:480px;">
+                    <div class="panel-header">
+                        <div class="panel-title"><h3>Site List</h3></div>
+                        <a href="{% url 'main_site_add' %}">New Site</a>
+                            <div class="has-icon-left">
+                                <input class="form-input" id="site-list-search" type="text" placeholder="Find Site" style="width:50%;">
+                                <i class="form-icon icon icon-search"></i>
+                            </div>
+                      </div>
+                      <div class="panel-body">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Country</th>
+                                <th>Type</th>
+                                <th>Elevation</th>
+                                <th>Description?</th>
+                                <th>Layers?</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                                {% for object in object_list %}
+                                    <tr id="site_{{object.pk}}" class="site_done_{{object.site_done}}">
+                                        <td>{{object.name}}</td>
+                                        <td>{{object.country}}</td>
+                                        <td>{{object.type}}</td>
+                                        <td>{{object.elevation}} m</td>
+                                        <td>{% if object.description %}Yes{%else%}Missing{%endif%}</td>
+                                        <td>{% if object.profile.first %}Yes{%else%}Missing{%endif%}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                      </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
