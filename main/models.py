@@ -447,7 +447,7 @@ class Layer(models.Model):
 
     @property
     def date_references(self):
-        return Reference.objects.filter(date__in=self.date.all()).distinct()
+        return Reference.objects.filter(date__in=Date.objects.filter(model=self)).distinct()
 
     @property
     def unit_class(self):

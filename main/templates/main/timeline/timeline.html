@@ -9,6 +9,11 @@
 .sterile{
     background-color: rgb(117, 117, 117);
 }
+.hidden{
+    background-color: lightgrey !IMPORTANT;
+    color: grey
+
+}
 .vis-item .vis-item-overflow {
   overflow: visible;
 }
@@ -20,10 +25,8 @@
 }
 </style>
 {% endfor %}
-
 <div id="timeline-content">
-    <h2>Timeline</h2>
-    <div id="visualization"></div>
+    <div style="height:400px;" id="visualization"></div>
 
     <script type="text/javascript">
         // DOM element where the Timeline will be attached

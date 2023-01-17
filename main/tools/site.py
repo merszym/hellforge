@@ -8,7 +8,7 @@ from copy import copy
 import json
 import seaborn as sns
 
-def get_timeline_data(site_id):
+def get_timeline_data(site_id, hidden=False):
     data = {}
     site = Site.objects.get(pk=site_id)
     layers = Layer.objects.filter(site=site).prefetch_related('date')
@@ -26,14 +26,17 @@ def get_timeline_data(site_id):
     ]
     dates = []
     for layer in layers:
-        for date in layer.date.all():
+        tmp_dates = list(layer.date.all())
+        if hidden:
+            tmp_dates.extend(layer.hidden_dates)
+        for date in tmp_dates:
             upper, lower = date.to_ms()
             layerdata = {
                 "start": upper,
-                "order": upper*-1,
+                "order": upper*-1 if not date.hidden else upper*-4,
                 "content": f"{date}",
                 "group": layer.name.lower(),
-                "className":f"{layer.culture.classname if layer.culture else 'sterile'}",
+                "className":f"{'hidden' if date.hidden else ''} {layer.culture.classname if layer.culture else 'sterile'}",
                 "type":"point"
             }
             # if range instead of point

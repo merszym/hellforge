@@ -5,7 +5,7 @@ from main.tools.site import get_timeline_data
 def render_timeline(request, model, pk):
     context = {}
     if model == 'site':
-        context = get_timeline_data(pk)
+        context = get_timeline_data(pk, hidden=request.GET.get('hidden', False))
     return render(request, 'main/timeline/timeline.html', context)
 
 urlpatterns = [

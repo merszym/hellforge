@@ -164,6 +164,9 @@
     </div>
 </div>
 {% if object.layer.first %}
+<div class="btn-group mx-2">
+    <button class="btn timeline-filter" id="timeline-show-hidden">Toggle Hidden</button>
+</div>
 <div class="m-2 self_reload" id="timeline-content" data-url="{% url 'main_timeline_render' 'site' object.pk %}"></div>
 {% endif %}
 <script src="{% static 'js/location.js' %}"></script>

@@ -118,10 +118,20 @@ $("body").on('click', '.site-search-item', function(){
 })
 
 // load the timeline-data
+$('body').on('click', '.timeline-filter', function(){
+    $(this).toggleClass('btn-primary')
+    reloadTimeline()
+});
+
 function reloadTimeline(){
+    var gets = ""
+    // check if filters are toggled:
+    if($('#timeline-show-hidden').hasClass('btn-primary')){
+        gets = `hidden=1`
+    }
     ele = $('#timeline-content')
     if(ele.length){
-        ele.load(`${ele.attr('data-url')}`)
+        ele.load(`${ele.attr('data-url')}?${gets}`)
     }
 }
 
