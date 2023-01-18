@@ -45,7 +45,7 @@ class ContactForm(forms.ModelForm):
             self.fields[field].widget.attrs.update({'class': 'form-input'})
 
 class SiteForm(forms.ModelForm):
-    geo = forms.JSONField()
+    geo = forms.JSONField(required=False)
     class Meta:
         model = Site
         fields = ['name','country', 'type', 'elevation', 'geo']

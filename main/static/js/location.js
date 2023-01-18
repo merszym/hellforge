@@ -1,9 +1,9 @@
 try{
     var map = L.map('map',{
-        scrollWheelZoom: false
+        scrollWheelZoom: true
     }).setView([51.3, 12], 5);
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
+        maxZoom: 17,
         attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(map);
 

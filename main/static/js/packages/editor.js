@@ -81,9 +81,7 @@ $.getJSON({
                     var reference_string = references.join(',')
                     formdata = new FormData()
                     formdata.append('references', reference_string)
-                    console.log(formdata)
                     formdata.append('data', JSON.stringify(savedData))
-                    console.log(formdata)
                     // and save the description
                     $.post({
                         processData: false,

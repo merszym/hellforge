@@ -9,6 +9,20 @@
 <div class="modal-body">
     <div class="content">
         <div id="reldate-content">
+            {% for reldate in object.reldate.all %}
+            <div class="tile tile-centered">
+                <div class="tile-icon">
+                    <div class="example-tile-icon">
+                        <button class="btn unset-item" id="reldate_{{reldate.pk}}" data-url="{% url 'main_generic_rmm2m' object.model %}">
+                            <i class="icon icon-delete"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="tile-content">
+                    <div class="tile-title">{{reldate.relation}}({{reldate.how}})</div>
+                </div>
+            </div>
+            {% endfor %}
             <form id="modal-form" method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                  <!-- select the how and the offset -->

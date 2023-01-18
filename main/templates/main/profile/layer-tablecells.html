@@ -15,8 +15,10 @@
     {{layer.age_summary}}<br>
     <span class="text-gray" style="font-size:11pt;">Context</span>
     {% endif %}
-    {%if layer.reldate.first %}
-    <br>{{layer.reldate.first}}
+    {%if layer.reldates %}
+    {% for reldate in layer.reldates %}
+    <br>{{reldate}}
+    {% endfor %}
     {%endif%}
 </td>
 <td>

@@ -1,0 +1,14 @@
+{% if object.parent %}
+    <div class="tile tile-centered">
+        <div class="tile-icon">
+            <div class="example-tile-icon">
+            <button class="btn unset-item" data-url="{% url 'main_generic_unsetfk' 'parent' %}">
+                <i class="icon icon-delete"></i>
+            </button>
+            </div>
+        </div>
+        <div class="tile-content">
+            <div class="tile-title">{{object.parent}}</div>
+        </div>
+    </div>
+{% endif %}

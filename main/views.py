@@ -24,6 +24,9 @@ class SiteListView(ListView):
     model = Site
     template_name = 'main/site/site_list.html'
 
+    def get_queryset(self):
+        return Site.objects.filter(child=None)
+
 ## Cultures ##
 class CultureDetailView(DetailView):
     model = Culture

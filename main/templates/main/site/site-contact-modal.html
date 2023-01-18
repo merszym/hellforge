@@ -5,13 +5,16 @@
 <div class="modal-container">
     <div class="modal-header">
         <a id="modal-close" class="btn btn-clear float-right refresh_profile generic_reload" data-reload="reload_site_overview" style="cursor:pointer;" aria-label="Close"></a>
-    <div class="modal-title h5">Add Contact Person</div>
+    <div class="modal-title h5">Props</div>
 </div>
 <div class="modal-body">
     <div class="content  my-2">
         <div id="modal-form">
-            <h6>Contact</h6>
+            <h6 class="m-2">Contacts</h6>
             {% include 'main/contact/contact-chip-display.html' %}
             {% include 'main/contact/contact-searchinput.html' %}
+            <h6 class="m-2">Parent Site</h6>
+            {% include 'main/site/site-chip-display.html' %}
+            {% include 'main/site/site-searchinput.html' %}
     </div>
 </div>

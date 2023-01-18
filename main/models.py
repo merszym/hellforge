@@ -90,13 +90,18 @@ class CheckpointLayerJunction(models.Model):
 
 
 class RelativeDate(models.Model):
-    relation = models.ForeignKey(CheckpointLayerJunction, verbose_name=u'relation', on_delete=models.CASCADE)
+    relation = models.ForeignKey(CheckpointLayerJunction, verbose_name=u'relation', on_delete=models.CASCADE, related_name='reldate')
     how = models.CharField('how', max_length=20, choices=[('same','Same Age'),('younger', 'Younger'),('older', 'Older')])
     offset = models.IntegerField('offset', default=0)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
 
     def __str__(self):
-        return f"{self.how}:{self.relation}"
+        if self.how=='same':
+            return f"{self.layer.first()}={self.relation.model}"
+        elif self.how=='younger':
+            return f"{self.layer.first()}<{self.relation.model}"
+        else:
+            return f"{self.layer.first()}>{self.relation.model}"
 
     #the upper and lower values are just set to 10k away from the reference point
     #this is just for display, so that they can fade out
@@ -330,7 +335,7 @@ def get_image_path(instance, filename):
     return f'descr/{instance.gallery.model.model}/{instance.gallery.model.name.replace(" ","_")}/{filename.replace(" ","_")}'
 
 class Image(models.Model):
-    gallery = models.ForeignKey(Gallery, on_delete=models.CASCADE)
+    gallery = models.ForeignKey(Gallery, on_delete=models.CASCADE, related_name='image')
     image = models.ImageField('image', upload_to=get_image_path)
     title = models.CharField("title", max_length=200, blank=True)
     alt = models.TextField("alt", null=True, blank=True)
@@ -341,6 +346,7 @@ class Image(models.Model):
         return f"{self.gallery.title}.{self.image.name }"
 
 class Site(models.Model):
+    parent = models.ForeignKey('self', verbose_name='parent', related_name='child', blank=True, null=True, on_delete=models.SET_NULL)
     contact = models.ManyToManyField(ContactPerson, blank=True, verbose_name=u'contact', related_name='site')
     name = models.CharField('name', max_length=200)
     synonyms = models.ManyToManyField(Synonym, blank=True, verbose_name='synonym', related_name='site')
@@ -393,6 +399,10 @@ class Site(models.Model):
     def model(self):
         return 'site'
 
+    @classmethod
+    def filter(self, kw):
+        return Site.objects.filter(Q(name__contains=kw) | Q(country__contains=kw))
+
 class Profile(models.Model):
     name = models.CharField('name', max_length=200)
     site = models.ForeignKey(Site, verbose_name=u'site', on_delete=models.PROTECT, related_name='profile')
@@ -425,13 +435,20 @@ class Layer(models.Model):
     epoch = models.ForeignKey(Epoch, verbose_name=u"epoch", related_name='layer', on_delete=models.PROTECT, blank=True, null=True)
     checkpoint = models.ManyToManyField(Checkpoint, verbose_name=u'checkpoint', blank=True, related_name='layer')
     date = models.ManyToManyField(Date, verbose_name=u"date", blank=True, related_name='model')
-    reldate = models.ManyToManyField(RelativeDate, verbose_name='relative date', blank=True)
+    reldate = models.ManyToManyField(RelativeDate, verbose_name='relative date', blank=True, related_name='layer')
     mean_upper = models.IntegerField(blank=True, default=1000000)
     mean_lower = models.IntegerField(blank=True, default=0)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True, related_name='layer')
 
     class Meta:
         ordering = ['pos']
+
+    @property
+    def reldates(self):
+        dates = list(self.reldate.all())
+        dates.extend(list(self.junction.first().reldate.all()))
+        return dates
+
 
     def get_upper_sibling(self):
         return Layer.objects.filter(Q(pos__lt = self.pos) & Q(site=self.site) &
@@ -503,5 +520,6 @@ models = {
     'epoch':Epoch,
     'checkpoint':Checkpoint,
     'reference':Reference,
-    'contact':ContactPerson
+    'contact':ContactPerson,
+    'reldate':RelativeDate
 }

@@ -160,7 +160,7 @@ $('body').on('click', '.date_delete', function(){
         contentType: false,
         data: form_data
         }).done(function(){
-            location.reload()
+            $('#reload').click()
         });
 });
 
