@@ -90,6 +90,7 @@ class CheckpointLayerJunction(models.Model):
 
 
 class RelativeDate(models.Model):
+    layer = models.ForeignKey('Layer', on_delete=models.CASCADE, related_name='reldate', verbose_name='layer', null=True, blank=True)
     relation = models.ForeignKey(CheckpointLayerJunction, verbose_name=u'relation', on_delete=models.CASCADE, related_name='reldate')
     how = models.CharField('how', max_length=20, choices=[('same','Same Age'),('younger', 'Younger'),('older', 'Older')])
     offset = models.IntegerField('offset', default=0)
@@ -97,11 +98,19 @@ class RelativeDate(models.Model):
 
     def __str__(self):
         if self.how=='same':
-            return f"{self.layer.first()}={self.relation.model}"
+            return f"{self.layer}={self.relation.model}"
         elif self.how=='younger':
-            return f"{self.layer.first()}<{self.relation.model}"
+            return f"{self.layer}<{self.relation.model}"
         else:
-            return f"{self.layer.first()}>{self.relation.model}"
+            return f"{self.layer}>{self.relation.model}"
+
+    # get the content to display
+    # from the perspective of a layer return the other layer,
+    def get_content(self, layer):
+        if self.layer == layer: #origin
+            return self.relation.model
+        else:
+            return self.layer
 
     #the upper and lower values are just set to 10k away from the reference point
     #this is just for display, so that they can fade out
@@ -435,7 +444,6 @@ class Layer(models.Model):
     epoch = models.ForeignKey(Epoch, verbose_name=u"epoch", related_name='layer', on_delete=models.PROTECT, blank=True, null=True)
     checkpoint = models.ManyToManyField(Checkpoint, verbose_name=u'checkpoint', blank=True, related_name='layer')
     date = models.ManyToManyField(Date, verbose_name=u"date", blank=True, related_name='model')
-    reldate = models.ManyToManyField(RelativeDate, verbose_name='relative date', blank=True, related_name='layer')
     mean_upper = models.IntegerField(blank=True, default=1000000)
     mean_lower = models.IntegerField(blank=True, default=0)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True, related_name='layer')

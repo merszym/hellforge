@@ -74,5 +74,6 @@ urlpatterns = [
     path('rmm2m/<str:field>',   remove_x_from_y_m2m,  name='main_generic_rmm2m'),
     path('unsetfk/<str:field>', unset_fk,             name='main_generic_unsetfk'),
     path('setfk/<str:field>',   set_x_fk_to_y,        name='main_generic_setfk'),
-    path('addm2m/<str:field>',  add_x_to_y_m2m,       name='main_generic_addm2m')
+    path('addm2m/<str:field>',  add_x_to_y_m2m,       name='main_generic_addm2m'),
+    path('deletex',             delete_x,             name='main_generic_delete')
 ]

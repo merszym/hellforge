@@ -3,12 +3,12 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.views.generic import CreateView, ListView, UpdateView, DetailView
 from main.forms import ProfileForm, SiteForm, ReferenceForm, ContactForm, DateForm
-from main.models import Site, DatingMethod, Location, Culture, Checkpoint, Layer
+from main.models import Site, DatingMethod, Location, Culture, Checkpoint, Layer, Date
 from copy import copy
 import json
 import seaborn as sns
 
-def get_timeline_data(site_id, hidden=False):
+def get_timeline_data(site_id, hidden=False, related=False):
     data = {}
     site = Site.objects.get(pk=site_id)
     layers = Layer.objects.filter(site=site).prefetch_related('date')
@@ -29,6 +29,19 @@ def get_timeline_data(site_id, hidden=False):
         tmp_dates = list(layer.date.all())
         if hidden:
             tmp_dates.extend(layer.hidden_dates)
+        if related:
+            for reldate in layer.reldates:
+                upper, lower = Date(upper=reldate.upper, lower=reldate.lower).to_ms()
+                layerdata = {
+                "start": upper,
+                "end": lower,
+                "order": upper*-5,
+                "content": f"{reldate.get_content(layer)}",
+                "group": layer.name.lower(),
+                "className":f"hidden",
+                "type":"range"
+                }
+                dates.append(layerdata)
         for date in tmp_dates:
             upper, lower = date.to_ms()
             layerdata = {

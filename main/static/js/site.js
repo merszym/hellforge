@@ -97,7 +97,6 @@ $(window).resize(function resize(){
     }
 }).trigger('resize');
 
-
 // Attach search results to site
 // = contactperson
 $("body").on('click', '.site-search-item', function(){
@@ -128,6 +127,9 @@ function reloadTimeline(){
     // check if filters are toggled:
     if($('#timeline-show-hidden').hasClass('btn-primary')){
         gets = `hidden=1`
+    }
+    if($('#timeline-show-related').hasClass('btn-primary')){
+        gets = `${gets}&related=1`
     }
     ele = $('#timeline-content')
     if(ele.length){

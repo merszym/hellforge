@@ -19,6 +19,28 @@ $('body').on('click', '#layer-setname', function(){
 
 });
 
+//remove relative date
+//delete the profile
+$('body').on('click', '.reldate_delete', function(){
+    //delete a synonym on click
+    var formdata = new FormData();
+    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
+    formdata.append('instance_x', $(this).attr('id'));
+    $.ajax({
+        type: "POST",
+        processData: false,
+        contentType: false,
+        data: formdata,
+        url: $(this).attr("data-url"),
+        success: function(data) {
+            if(data['status']){
+                $('#reload').click();
+            }
+        }
+    });
+});
+
+
 // Attach search results to layers
 // = epoch, culture, checkpoint
 $("body").on('click', '.layer-search-item', function(){
