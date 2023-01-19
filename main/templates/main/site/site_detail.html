@@ -135,6 +135,7 @@
     <div class="column">
         <div class="my-2">
             {% if object.child.first %}
+            <!-- This Site is only an Umbrella -->
             <div>
                 <h3 class="text-grey" id="children">Sites</h3>
                 <div class="container">
@@ -143,7 +144,15 @@
                         <div class="column col-4 col-xs-12">
                             <div class="card">
                                 <div class="card-image" style="height:200px; overflow:hidden;">
+                                    {% if child.gallery.image.first %}
                                     <img src="{{child.gallery.image.first.image.url}}" style="width:100%; height:100%; object-fit: cover;" class="img-responsive">
+                                    {% else %}
+                                    <div class="empty" style="width:100%; height:100%;">
+                                        <div class="empty-icon">
+                                        <i class="icon icon-photo"></i>
+                                        </div>
+                                    </div>
+                                    {% endif %}
                                 </div>
                                 <div class="card-header">
                                 <div class="card-title h5">{{child.name}}</div>

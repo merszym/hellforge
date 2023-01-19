@@ -31,14 +31,15 @@ def get_timeline_data(site_id, hidden=False, related=False):
             tmp_dates.extend(layer.hidden_dates)
         if related:
             for reldate in layer.reldates:
+                prefix = {'older':'>', 'younger':'<', 'same':''}[reldate.how]
                 upper, lower = Date(upper=reldate.upper, lower=reldate.lower).to_ms()
                 layerdata = {
                 "start": upper,
                 "end": lower,
                 "order": upper*-5,
-                "content": f"{reldate.get_content(layer)}",
+                "content": f"{prefix} {reldate.get_content(layer)}",
                 "group": layer.name.lower(),
-                "className":f"hidden",
+                "className":f"{reldate.how}",
                 "type":"range"
                 }
                 dates.append(layerdata)

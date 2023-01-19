@@ -119,7 +119,7 @@ class RelativeDate(models.Model):
         if self.how == 'same':
             return self.relation.model.mean_upper + self.offset
         elif self.how == 'older':
-            return self.relation.model.mean_upper + 1000 + self.offset
+            return self.relation.model.mean_upper + 5000 + self.offset
         else:
             return self.relation.model.mean_lower - self.offset
 
@@ -130,7 +130,7 @@ class RelativeDate(models.Model):
         elif self.how == 'older':
             return self.relation.model.mean_upper + self.offset
         else:
-            return self.relation.model.mean_lower - 1000 - self.offset
+            return self.relation.model.mean_lower - 5000 - self.offset
 
 
 class DatingMethod(models.Model):
@@ -338,10 +338,15 @@ class Epoch(models.Model):
 class Gallery(models.Model):
     title = models.CharField("title",max_length=200, blank=True, null=True)
 
+    def __str__(self):
+        return self.title
+
 def get_image_path(instance, filename):
     # instance = Image instance
     # filename = original filename
     return f'descr/{instance.gallery.model.model}/{instance.gallery.model.name.replace(" ","_")}/{filename.replace(" ","_")}'
+
+
 
 class Image(models.Model):
     gallery = models.ForeignKey(Gallery, on_delete=models.CASCADE, related_name='image')
@@ -484,8 +489,8 @@ class Layer(models.Model):
 
     def __str__(self):
         if self.site:
-            return f"{self.site.name}:{self.name}"
-        return f"Unset:{self.name}"
+            return f"{self.site.name} ({self.name})"
+        return f"{self.name}"
 
     @property
     def model(self):
