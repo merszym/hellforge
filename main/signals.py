@@ -1,8 +1,9 @@
 from django.db.models.signals import post_save, m2m_changed, post_delete
 from django.dispatch import receiver
 from main.models import Layer, Culture, Epoch, Checkpoint, Site, Date, CheckpointLayerJunction
-import main.tools as tools
+from main.tools import dating
 import statistics
+import json
 
 def calculate_layer_dates(layer):
     """Calculate the layer date for DISPLAY in the overviews, use heuristics if no direct date is set"""
@@ -80,19 +81,22 @@ def update_dates(sender, instance, **kwargs):
 @receiver(post_save, sender=Date)
 def fill_date(sender, instance, **kwargs):
     if instance.method == '14C':
-        if not instance.upper: #uncalibrated date
-            est = int(instance.estimate)
-            pm = int(instance.plusminus)
-            upper, lower, curve = tools.dating.calibrate(est, pm)
-            instance.upper = upper
-            instance.lower = lower
-            instance.curve = curve
-            instance.save()
+        if not instance.upper or not instance.raw: #uncalibrated date
+            if instance.estimate and instance.plusminus: # some legacy dates dont have that?
+                est = int(instance.estimate)
+                pm = int(instance.plusminus)
+                raw, upper, lower, curve = dating.calibrate(est, pm)
+                instance.upper = upper
+                instance.lower = lower
+                instance.curve = curve
+                instance.raw = json.dumps(raw)
+                instance.save()
     else:
         if instance.estimate and not instance.upper: #instance.upper is recursion save
-            instance.upper = instance.estimate + instance.plusminus
-            instance.lower = instance.estimate - instance.plusminus
-            instance.save()
+            if instance.plusminus:
+                instance.upper = instance.estimate + instance.plusminus
+                instance.lower = instance.estimate - instance.plusminus
+                instance.save()
 
 @receiver(post_save, sender=Layer)
 def update_layer(sender, instance, **kwargs):

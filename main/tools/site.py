@@ -51,7 +51,8 @@ def get_timeline_data(site_id, hidden=False, related=False):
                 "content": f"{date}",
                 "group": layer.name.lower(),
                 "className":f"{'hidden' if date.hidden else ''} {layer.culture.classname if layer.culture else 'sterile'}",
-                "type":"point"
+                "type":"point",
+                "style":f"{date.get_polygon_css() if date.raw else ''}"
             }
             # if range instead of point
             if (upper != lower):

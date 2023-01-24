@@ -151,6 +151,7 @@ class Date(models.Model):
     plusminus = models.IntegerField('plusminus', blank=True, null=True)
     oxa = models.CharField('oxa-code', max_length=300, blank=True, null=True)
     curve = models.CharField('calibration_curve', max_length=300, blank=True, null=True)
+    raw = models.JSONField('calibrationcurve_datapoints', null=True, blank=True)
     #this is the 2 Sigma calibrated date if C14
     #should be the calender years in 1950BP
     upper = models.IntegerField('upper bound', blank=True, null=True)
@@ -176,6 +177,21 @@ class Date(models.Model):
             lower = self.lower *-31556952 - (1970*31556952000)
             return upper, lower
         return False
+
+    def get_polygon_css(self):
+        # calculate the relative values for a css-polygon property
+        # first Value is (0,100%) (100% bc. the points starts in the left upper corner), last one (100%, 100%)
+        # The highest! value should thus have a y-property of 0%
+        raw = json.loads(self.raw)
+        # start with the x-values
+        base = (self.lower-self.upper) # the date range
+        raw = [(x,y) for (x,y) in raw if (x<self.upper and x>self.lower)]
+        raw = [(((x-self.upper)/base)*100, y) for (x,y) in raw]
+        # continue with the y values
+        base = max(list([y for (x,y) in raw]))
+        raw = [(x, 100-round(y/base*100,3)) for (x,y) in raw] # 0% is highest, 100% is lowest
+        polygon = ','.join([ f"{x:.2f}% {y:.2f}%" for x,y in raw])
+        return f"clip-path: polygon({polygon})"
 
     def __str__(self):
         if self.method == '14C':

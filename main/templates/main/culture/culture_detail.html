@@ -77,18 +77,8 @@
             </div>
             {% include 'main/timeline/timeline-body.html' %}
     </div>
-        <script>
-            var groups = {{timelinedata|safe}}
-            var data= {{itemdata|safe}}
-            data.forEach(element => {
-                element.start = new Date(element.start);
-                element.end = new Date(element.end);
-            });
-            var items = new vis.DataSet(data);
-            var timeline = new vis.Timeline(container, items, groups, options);
-        </script>
         <script src="{% static 'js/location.js' %}"></script>
-        <script> drawJson({{geo | safe }}); fitBounds();</script>
+        <script> drawJson({{ geo | safe }}); fitBounds();</script>
         <script src="{% static 'js/site.js' %}"></script>
         <script src="{% static 'js/layer.js' %}"></script>
         <script src="{% static 'js/profile.js' %}"></script>

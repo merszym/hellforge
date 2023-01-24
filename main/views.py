@@ -82,7 +82,8 @@ class CultureDetailView(DetailView):
                 groupdata.append({
                     'id':f"{cult.name.lower()}-{site.name.lower()}",
                     'content':f'{site.name}: <a href="{reverse("site_detail", kwargs={"pk":site.pk})}" class="btn-link">view</a>',
-                    'treeLevel':3
+                    'treeLevel':3,
+                    # include the order within across sites within culture!
                 })
             for layer in cult.layer.all():
                 site_date_dict[layer.site.name].extend([int(layer.mean_lower), int(layer.mean_upper)])
@@ -92,7 +93,7 @@ class CultureDetailView(DetailView):
                     'start': max(v)*-31556952-(1970*31556952000), #1/1000 year in ms, start with year 0
                     'content': f"{k} | {max(v):,} ya",
                     'group': f"{cult.name.lower()}-{k.lower()}",
-                    'type':'point'
+                    'type':'point',
                 }
                 if max(v) != min(v):
                     culturedata.update({
@@ -102,8 +103,8 @@ class CultureDetailView(DetailView):
                         'type':'range'
                     })
                 items.append(culturedata)
-        context['itemdata'] = items
-        context['timelinedata'] = groupdata
+        context['itemdata'] = json.dumps(items)
+        context['groups'] = json.dumps(groupdata)
         context['geo'] = geo
         return context
 
