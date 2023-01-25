@@ -15,6 +15,7 @@ def get_timeline_data(site_id, hidden=False, related=False, curves=False):
     cultures = {}
     for n,cult in enumerate(Culture.objects.filter(layer__in=layers).order_by('layer__pos')):
         cultures[cult.classname] = n
+
     groups = [
         {
         "id":layer.name.lower(),
@@ -50,10 +51,17 @@ def get_timeline_data(site_id, hidden=False, related=False, curves=False):
                 "order": upper*-1 if not date.hidden else upper*-4,
                 "content": f"{date}",
                 "group": layer.name.lower(),
-                "className":f"{'hidden' if date.hidden else ''} {layer.culture.classname if layer.culture else 'sterile'}",
+                "className": layer.culture.classname if layer.culture else 'sterile',
                 "type":"point",
-                "style":f"{date.get_polygon_css() if date.raw and curves else ''}"
+                "style": f"{'background-color: rgba(0,0,0,0); border: none;' if date.raw and curves else ''}",
+                "usesvg": True if curves and date.raw else False,
+                "polygon":f"{date.get_polygon_css() if date.raw else ''}"
             }
+            if date.hidden:
+                layerdata.update({
+                    'className': 'hidden' if not (date.raw and curves) else 'hiddenfill'
+                })
+
             # if range instead of point
             if (upper != lower):
                 layerdata.update({

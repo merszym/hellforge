@@ -15,6 +15,11 @@
     background-color: lightgrey !IMPORTANT;
     color: grey
 }
+.hiddenfill{
+    fill: lightgray !IMPORTANT;
+    stroke: black;
+    color: grey
+}
 .younger{
   background-image: linear-gradient(to right, rgba(211, 211, 211, 1), rgba(211, 211, 211, 0));
   background-color: rgba(0,0,0,0);
@@ -37,10 +42,13 @@
   overflow: visible;
 }
 </style>
+
 {% for cult,color in cultures %}
 <style>
 .{{cult}}{
-    background-color:{{color}}
+    background-color:{{color}};
+    fill:{{color}};
+    stroke:black;
 }
 </style>
 {% endfor %}
@@ -73,8 +81,21 @@
             'format': {
                 minorLabels: function(date, scale, step) {
                     return `${parseInt(date.format("YYYY"))*-1} kya`;
+                },
+            },
+            'template': function(item, element, data){
+                if (data.usesvg == false){
+                    return data.content
                 }
-            }
+                var html = `
+                <div style="width:100%; height:32px;">
+                    <svg viewBox="0 0 100 110" preserveAspectRatio="none" style="width:100%; height:100%" vector-effect="non-scaling-stroke">
+                        <polygon class="${data.className}" points="${data.polygon}" />
+                    </svg>
+                </div>
+                `
+                $(element).parent().parent().html(html);
+                },
         };
         var groups = JSON.parse("{{ groups|escapejs }}");
         var data = JSON.parse("{{ itemdata|escapejs }}");

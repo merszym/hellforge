@@ -25,17 +25,11 @@
     {% for cult,color in cultures %}
     <style>
     .{{cult}}{
-        background-color:{{color}}
+        background-color:{{color}};
+        fill: {{color}};
     }
     </style>
     {% endfor %}
-    {% for unit,color in units %}
-    <style>
-    .{{unit}}{
-        background-color:{{color}}
-    }
-</style>
-{% endfor %}
 </style>
 </div>
 <div class='columns' style="padding:10px;">
