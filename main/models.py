@@ -188,8 +188,10 @@ class Date(models.Model):
         raw = [(x,y) for (x,y) in raw if (x<self.upper and x>self.lower)]
         raw = [(((x-self.upper)/base)*100, y) for (x,y) in raw]
         # continue with the y values
-        base = max(list([y for (x,y) in raw]))
-        raw = [(x, 100-round(y/base*100,3)) for (x,y) in raw] # 0% is highest, 100% is lowest
+        lower = min(list([y for (x,y) in raw]))
+        upper = max(list([y for (x,y) in raw]))
+        base =  lower - upper
+        raw = [(x, round((y-lower)/base*100, 3)+100) for (x,y) in raw] # 0% is highest, 100% is lowest
         polygon = ','.join([ f"{x:.2f}% {y:.2f}%" for x,y in raw])
         return f"clip-path: polygon({polygon})"
 

@@ -131,6 +131,9 @@ function reloadTimeline(){
     if($('#timeline-show-related').hasClass('btn-primary')){
         gets = `${gets}&related=1`
     }
+    if($('#timeline-show-curves').hasClass('btn-primary')){
+        gets = `${gets}&curves=1`
+    }
     ele = $('#timeline-content')
     if(ele.length){
         ele.load(`${ele.attr('data-url')}?${gets}`)

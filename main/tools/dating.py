@@ -9,10 +9,13 @@ from main.tools.generic import remove_x_from_y_m2m, delete_x, get_instance_from_
 def calibrate(estimate, plusminus):
     curve = 'intcal20'
     r = R(int(estimate), int(plusminus), 'tmp')
-    calibrated = r.calibrate(curve)
-    raw = list([(x[0],round(x[1],4)) for x in calibrated]) # list of datapoints [date, proportion]
-    lower, upper = calibrated.quantiles()[95]
-    return raw, upper, lower, curve
+    try:
+        calibrated = r.calibrate(curve)
+        raw = list([(x[0],round(x[1],4)) for x in calibrated]) # list of datapoints [date, proportion]
+        lower, upper = calibrated.quantiles()[95]
+        return raw, upper, lower, curve
+    except ValueError:
+        return None,None,None, curve
 
 def calibrate_c14(request):
     date = request.GET.get('estimate', False)

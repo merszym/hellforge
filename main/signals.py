@@ -86,11 +86,12 @@ def fill_date(sender, instance, **kwargs):
                 est = int(instance.estimate)
                 pm = int(instance.plusminus)
                 raw, upper, lower, curve = dating.calibrate(est, pm)
-                instance.upper = upper
-                instance.lower = lower
-                instance.curve = curve
-                instance.raw = json.dumps(raw)
-                instance.save()
+                if raw:
+                    instance.upper = upper
+                    instance.lower = lower
+                    instance.curve = curve
+                    instance.raw = json.dumps(raw)
+                    instance.save()
     else:
         if instance.estimate and not instance.upper: #instance.upper is recursion save
             if instance.plusminus:
