@@ -55,7 +55,9 @@ def get_timeline_data(site_id, hidden=False, related=False, curves=False):
                 "type":"point",
                 "style": f"{'background-color: rgba(0,0,0,0); border: none;' if date.raw and curves else ''}",
                 "usesvg": True if curves and date.raw else False,
-                "polygon":f"{date.get_polygon_css() if date.raw else ''}"
+                "polygon":f"{date.get_polygon_css() if date.raw else ''}",
+                "oxa":f"{date.oxa if date.oxa else ''}",
+                "method":date.method
             }
             if date.hidden:
                 layerdata.update({

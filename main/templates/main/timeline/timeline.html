@@ -39,21 +39,25 @@
   color: grey;
 }
 
+.nopadding{
+    padding: 0px !important;
+}
+
 .vis-item .vis-item-overflow {
   overflow: visible;
 }
-</style>
-
+.vis-item-content{
+    width: 100% !important ;
+}
 {% for cult,color in cultures %}
-<style>
 .{{cult}}{
     background-color:{{color}};
     vector-effect: non-scaling-stroke;
-    fill:{{color}};
-    stroke:black;
+    fill: {{color}};
+    stroke: black;
 }
-</style>
 {% endfor %}
+</style>
 <div id="timeline-content">
     <div style="height:400px;" id="visualization"></div>
 
@@ -62,6 +66,7 @@
         var container = document.getElementById('visualization');
         var options = {
             'margin':2,
+            'stack':false,
             'width': '100%',
             'zoomMax': 9.4670778000002E+15,
             'zoomMin': 31556926001,
@@ -87,16 +92,24 @@
             },
             'template': function(item, element, data){
                 if (data.usesvg == false){
-                    return data.content
+                    return `${data.method}: ${data.content}`
                 }
-                var html = `
-                <div style="width:100%; height:32px;">
-                    <svg viewBox="0 0 100 110" preserveAspectRatio="none" style="width:100%; height:100%" vector-effect="non-scaling-stroke">
+                $(element).addClass('nopadding')
+                var div = document.createElement('div');
+                $(div).css({'width':'100%','height':'35px'})
+                $(div).html(`
+                <div style="width:200%; height:100%; overflow:visible; display:block; white-space: nowrap">
+                    <svg viewBox="0 0 100 100" preserveAspectRatio="none" style="width:50%; height:100%; display: inline-block">
                         <polygon class="${data.className}" points="${data.polygon}" />
                     </svg>
+                    <div style="display: inline-block; line-height:1;">
+                        <span class="text-small text-gray">14C: ${data.oxa}</span><br>
+                        <span>${data.content}</span>
+                    </div>
                 </div>
-                `
-                $(element).parent().parent().html(html);
+                `)
+                return div
+                //$(element).parent().parent().html($(div).html());
                 },
         };
         var groups = JSON.parse("{{ groups|escapejs }}");
