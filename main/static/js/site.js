@@ -1,3 +1,33 @@
+function makeSortable(){
+    $("#layer_tbody").sortable({
+        items:'tr',
+        containment: "parent",
+        axis:'y',
+        cursor:'move',
+        delay: 200,
+        handle:'.sort_handle',
+        opacity: 0.7,
+        stop: function( event, ui ) {
+            //get the new order of layers
+            positions = []
+            $(".table_row").each(function(ind){
+                pos = $(this).attr('id')
+                if(pos){
+                    positions.push(pos.split('_')[1])
+                }
+            });
+            //make ajax call to save udpdates pos
+            $.ajax({
+                type: "GET",
+                url: $('#layer_tbody').attr('data-url'),
+                data: {'new_positions':positions.join(',')},
+                }).done(function(){
+                    reloadTimeline()
+                });
+        },
+    });
+};
+
 function getProfile(pk=null){
     if(pk != null){
         url = $('#profile-add').attr('data-url').replace('1',pk)
@@ -39,36 +69,6 @@ $('body').on('click','.tab-item', function(){
     $(this).addClass('active')
     getProfile()
 });
-
-function makeSortable(){
-    $("#layer_tbody").sortable({
-        items:'tr',
-        containment: "parent",
-        axis:'y',
-        cursor:'move',
-        delay: 200,
-        handle:'.sort_handle',
-        opacity: 0.7,
-        stop: function( event, ui ) {
-            //get the new order of layers
-            positions = []
-            $(".table_row").each(function(ind){
-                pos = $(this).attr('id')
-                if(pos){
-                    positions.push(pos.split('_')[1])
-                }
-            });
-            //make ajax call to save udpdates pos
-            $.ajax({
-                type: "GET",
-                url: $('#layer_tbody').attr('data-url'),
-                data: {'new_positions':positions.join(',')},
-                }).done(function(){
-                    reloadTimeline()
-                });
-        },
-    });
-};
 
 $('.overview-toggle').on('click', function(){
     $('.overview-toggle').removeClass('btn-primary')
