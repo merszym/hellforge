@@ -176,7 +176,7 @@ class Date(models.Model):
             upper = self.upper *-31556952 - (1970*31556952000)
             lower = self.lower *-31556952 - (1970*31556952000)
             return upper, lower
-        return False
+        return False, False
 
     def get_polygon_css(self):
         # calculate the relative values for a css-polygon property

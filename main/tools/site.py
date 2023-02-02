@@ -34,6 +34,8 @@ def get_timeline_data(site_id, hidden=False, related=False, curves=False):
             for reldate in layer.reldates:
                 prefix = {'older':'>', 'younger':'<', 'same':''}[reldate.how]
                 upper, lower = Date(upper=reldate.upper, lower=reldate.lower).to_ms()
+                if not upper:
+                    continue
                 layerdata = {
                 "start": upper,
                 "end": lower,
