@@ -191,7 +191,10 @@ class Date(models.Model):
         lower = min(list([y for (x,y) in raw]))
         upper = max(list([y for (x,y) in raw]))
         base =  lower - upper
-        raw = [(x, round((y-lower)/base*100, 3)+100) for (x,y) in raw] # 0% is highest, 100% is lowest
+        if base == 0:   # same probabilities for all datapoints (near end of calibration curve)
+            raw = [(x,0) for (x,y) in raw]
+        else:
+            raw = [(x, round((y-lower)/base*100, 3)+100) for (x,y) in raw] # 0% is highest, 100% is lowest
         #append a 0 point at start and end to have an even bottomline
         raw.insert(0, (0,100))
         raw.append((100,100))

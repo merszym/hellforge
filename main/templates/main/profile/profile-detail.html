@@ -10,13 +10,18 @@
     <!--show the global profile id for ajax calls-->
     <input name="profile_id" value="{{object.pk}}" style="display:none;">
     <!--the layers-->
-    <h5>Layers</h5>
     <div id="profiledetail_{{object.pk}}">
     {% if object.layer.first %}
     <!-- <div class="panel" style="max-height:720px; overflow: scroll;"> -->
+      <style>
+        td{
+          padding-top: 2px !important;
+          padding-bottom: 2px !important;
+        }
+      </style>
       <table class="table table-striped table-hover">
         <thead>
-          <tr >
+          <tr>
             <th></th>
             {% include 'main/profile/layer-tablehead.html' %}
             <th></th>
@@ -24,7 +29,7 @@
         </thead>
         <tbody id="layer_tbody" data-url="{% url 'main_layer_positionupdate' object.site.pk %}">
           {% for layer in object.layer.all %}
-          <tr class="table_row" id="layer_{{layer.pk}}">
+          <tr class="table_row" id="layer_{{layer.pk}}" style="padding:2px;">
             <td class="sort_handle" style="cursor:move;"><i class="icon icon-resize-vert"></i></td>
             {% include 'main/profile/layer-tablecells.html' %}
             <td>
