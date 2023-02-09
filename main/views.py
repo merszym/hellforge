@@ -94,13 +94,15 @@ class CultureDetailView(DetailView):
                     'content': f"{k} | {max(v):,} ya",
                     'group': f"{cult.name.lower()}-{k.lower()}",
                     'type':'point',
+                    'usesvg':False,
+                    'method':'Site'
                 }
                 if max(v) != min(v):
                     culturedata.update({
                         'end': min(v)*-31556952-(1970*31556952000),
                         'content': f"{k} | {max(v):,} - {min(v):,} ya",
                         'style': f"background-color: {site_color_dict[k.lower()]};",
-                        'type':'range'
+                        'type':'range',
                     })
                 items.append(culturedata)
         context['itemdata'] = json.dumps(items)

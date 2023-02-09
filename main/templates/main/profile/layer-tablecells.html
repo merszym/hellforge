@@ -7,7 +7,6 @@
     <br><span style="font-size:11pt;">{{syn.name}} ({{syn.type}})</span>
     {% endfor %}
 </td>
-<td class="{% if layer.unit %}{{layer.unit_class}}{% endif %}"><span style="width:5px;"></span></td>
 <td>
     {% if layer.date.first or layer.hidden_dates %}
     <span class='text-primary c-hand fill_modal tooltip tooltip-right' data-size="modal-lg" data-info="layer_{{layer.pk}}" data-tooltip="Manage Dates" data-url="{% url 'ajax_fill_modal' %}?type=date-list">{{layer.age_summary}}</span>
@@ -21,6 +20,7 @@
     {% endfor %}
     {%endif%}
 </td>
+<!--
 <td>
 {% for checkpoint in layer.checkpoint.all %}
     <div><a href="{% url 'checkpoint_update' checkpoint.pk%}" class="btn-link">{{checkpoint.name}}</a><br>
@@ -28,6 +28,7 @@
     </div>
 {% endfor %}
 </td>
+-->
 <td>{% if layer.culture %}
     <a class="btn-link" href="{% url 'culture_detail' layer.culture.pk %}">{{layer.culture}}</a><br>
     <span class="text-gray" style="font-size:11pt;">{{layer.culture.age_summary}}</span>

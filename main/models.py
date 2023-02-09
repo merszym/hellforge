@@ -165,6 +165,7 @@ class Date(models.Model):
 
     class Meta:
         default_manager_name = 'visible_objects'
+        ordering = ['upper']
 
     @classmethod
     def table_columns(self):
@@ -227,6 +228,18 @@ class Location(models.Model):
     description = models.TextField('description', blank=True)
     geo = models.JSONField('geojson', blank=True, null=True)
     ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
+
+    def get_coordinates(self):
+        if self.geo:
+            try:
+                geo = json.loads(self.geo)
+            except:
+                geo = self.geo
+            finally:
+                for feat in geo['features']:
+                    if feat['geometry']['type'] == 'Point':
+                        return feat['geometry']['coordinates']
+        return None,None
 
     def get_absolute_url(self):
         return reverse('location_update', kwargs={'pk': self.pk})
@@ -330,6 +343,11 @@ class Culture(models.Model):
             )
         return sites
 
+    def get_highest(self):
+        if not self.culture:
+            return self
+        return self.culture.get_highest()
+
 
 class Epoch(models.Model):
     name = models.CharField('name', max_length=200)
@@ -403,9 +421,8 @@ class Site(models.Model):
         return self.name
 
     @property
-    def model(self):
-        # this is for the description only, to send uploaded images to the correct model
-        return 'site'
+    def coordinates(self):
+        return self.loc.first().get_coordinates()
 
     @property
     def geometry(self):
@@ -479,6 +496,11 @@ class Layer(models.Model):
 
     class Meta:
         ordering = ['pos']
+
+    def get_age(self):
+        dates = self.date.all()
+        if len(dates) > 0:
+            return self.mean_upper, self.mean_lower
 
     @property
     def reldates(self):

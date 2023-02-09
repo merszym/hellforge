@@ -1,5 +1,4 @@
 # Hellforge #
-Heuristic layout of archaeological layers (for geneticists)
+Hesitantly labeled layers (for geneticists)
 
-my personal tool to bring together the archaeological information from
-different sites
+A Database/Webapp to provide archaeological context for samples
