@@ -1,5 +1,6 @@
 from django import template
 from django.template.defaultfilters import stringfilter
+from titlecase import titlecase
 
 register = template.Library()
 
@@ -10,3 +11,8 @@ def format(value, fmt):
         return fmt.format(value)
     else:
         return value
+
+@stringfilter
+@register.filter(name='title')
+def title(value):
+    return titlecase(value)

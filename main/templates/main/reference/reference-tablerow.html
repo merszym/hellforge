@@ -1,7 +1,8 @@
+{% load format %}
 <tr>
     <td id='reference_{{ref.pk}}_short'>{{ref.short}}</td>
     <td>
-        <span id="reference_{{ref.pk}}_title">{{ref.title}}</span><br>
+        <span id="reference_{{ref.pk}}_title">{{ref.title | title}}</span><br>
         <p class="form-input-hint" style="margin-bottom:0px;">{{ref.tags}}</p>
     </td>
     {% if display %}
