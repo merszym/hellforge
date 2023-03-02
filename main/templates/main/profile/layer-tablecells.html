@@ -7,6 +7,13 @@
     <br><span style="font-size:11pt;">{{syn.name}} ({{syn.type}})</span>
     {% endfor %}
 </td>
+{% for structure in site.layer_hierarchies %}
+<td>
+    {% if structure == layer.parent.hierarchie %}
+    <strong>{{layer.parent.name}}</strong>
+    {% endif %}
+</td>
+{% endfor %}
 <td>
     {% if layer.date.first or layer.hidden_dates %}
     <span class='text-primary c-hand fill_modal tooltip tooltip-right' data-size="modal-lg" data-info="layer_{{layer.pk}}" data-tooltip="Manage Dates" data-url="{% url 'ajax_fill_modal' %}?type=date-list">{{layer.age_summary}}</span>
@@ -20,15 +27,6 @@
     {% endfor %}
     {%endif%}
 </td>
-<!--
-<td>
-{% for checkpoint in layer.checkpoint.all %}
-    <div><a href="{% url 'checkpoint_update' checkpoint.pk%}" class="btn-link">{{checkpoint.name}}</a><br>
-    <span class="text-gray" style="font-size:11pt;">{{checkpoint.age_summary}}</span>
-    </div>
-{% endfor %}
-</td>
--->
 <td>{% if layer.culture %}
     <a class="btn-link" href="{% url 'culture_detail' layer.culture.pk %}">{{layer.culture}}</a><br>
     <span class="text-gray" style="font-size:11pt;">{{layer.culture.age_summary}}</span>
@@ -37,9 +35,4 @@
 <td>
     {{layer.epoch}}<br>
     <span class="text-gray" style="font-size:11pt;">{{layer.epoch.age_summary}}</span>
-</td>
-<td>
-    {% for ref in layer.ref.all %}
-        {% include 'main/reference/reference-popup.html' %}<br>
-    {% endfor %}
 </td>

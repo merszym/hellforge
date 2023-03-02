@@ -23,7 +23,7 @@
         <thead>
           <tr>
             <th></th>
-            {% include 'main/profile/layer-tablehead.html' %}
+            {% include 'main/profile/layer-tablehead.html' with site=object.site %}
             <th></th>
           </tr>
         </thead>
@@ -31,7 +31,7 @@
           {% for layer in object.layer.all %}
           <tr class="table_row" id="layer_{{layer.pk}}" style="padding:2px;">
             <td class="sort_handle" style="cursor:move;"><i class="icon icon-resize-vert"></i></td>
-            {% include 'main/profile/layer-tablecells.html' %}
+            {% include 'main/profile/layer-tablecells.html' with site=object.site %}
             <td>
               <div class="popover popover-left">
                 <button class="btn"><i class="icon icon-menu"></i></button>

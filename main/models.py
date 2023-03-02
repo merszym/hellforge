@@ -443,9 +443,12 @@ class Site(models.Model):
         return reverse('site_detail', kwargs={'pk': self.pk})
 
     @property
+    def layer_hierarchies(self):
+        return sorted(list(set([x.hierarchie for x in self.layer.all() if x.hierarchie > 1 ])))
+
+    @property
     def checkpoints(self):
         return Checkpoint.objects.filter(layer__in=self.layer.all()).all()
-
     @property
     def cultures(self):
         return set([x.culture for x in self.layer.all()])
@@ -457,6 +460,7 @@ class Site(models.Model):
     @classmethod
     def filter(self, kw):
         return Site.objects.filter(Q(name__contains=kw) | Q(country__contains=kw))
+
 
 class Profile(models.Model):
     name = models.CharField('name', max_length=200)
@@ -503,9 +507,16 @@ class Layer(models.Model):
             return self.mean_upper, self.mean_lower
 
     @property
+    def hierarchie(self):
+        try:
+            return 1 + max( [y.hierarchie for y in self.child.all()] )
+        except ValueError:
+            return 1
+
+    @property
     def reldates(self):
         dates = list(self.reldate.all())
-        dates.extend(list(self.junction.first().reldate.all()))
+        dates.extend(list(self.junction.first().reldate.all()) if self.junction.first() else [])
         return dates
 
 
