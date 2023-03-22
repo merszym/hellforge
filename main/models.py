@@ -412,7 +412,7 @@ class Site(models.Model):
     type = models.CharField('type', max_length=200, blank=True)
     loc = models.ManyToManyField(Location, verbose_name=u"location")
     elevation = models.IntegerField('elevation', blank=True, null=True)
-    ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True)
+    ref = models.ManyToManyField(Reference, verbose_name=u"reference", blank=True, related_name='site')
 
     class Meta:
         ordering = ['name']

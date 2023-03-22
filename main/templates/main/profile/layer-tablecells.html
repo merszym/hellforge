@@ -7,13 +7,15 @@
     <br><span style="font-size:11pt;">{{syn.name}} ({{syn.type}})</span>
     {% endfor %}
 </td>
-{% for structure in site.layer_hierarchies %}
+<!--
+{# for structure in site.layer_hierarchies #}
 <td>
     {% if structure == layer.parent.hierarchie %}
     <strong>{{layer.parent.name}}</strong>
     {% endif %}
 </td>
-{% endfor %}
+{# endfor #}
+-->
 <td>
     {% if layer.date.first or layer.hidden_dates %}
     <span class='text-primary c-hand fill_modal tooltip tooltip-right' data-size="modal-lg" data-info="layer_{{layer.pk}}" data-tooltip="Manage Dates" data-url="{% url 'ajax_fill_modal' %}?type=date-list">{{layer.age_summary}}</span>
