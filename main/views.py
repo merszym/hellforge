@@ -2,131 +2,163 @@ from django.views.generic import CreateView, ListView, UpdateView, DetailView, D
 from django.urls import reverse
 from django.shortcuts import render
 from .models import Location, Reference, Site, Layer, Culture, Date, Epoch, Checkpoint, DatingMethod, get_classname
-from .forms import ReferenceForm, SiteForm, ProfileForm, CultureForm, \
-    DateForm, EpochForm, CheckpointForm, ContactForm
+from .forms import ReferenceForm, SiteForm, ProfileForm, CultureForm, DateForm, EpochForm, CheckpointForm, ContactForm
 import json
 import seaborn as sns
+from django.db.models import Q
+from collections import defaultdict
+
 
 def landing(request):
-    return render(request, 'main/common/landing.html')
+    return render(request, "main/common/landing.html")
+
 
 ## Sites
 class SiteDetailView(DetailView):
     model = Site
-    template_name = 'main/site/site_detail.html'
+    template_name = "main/site/site_detail.html"
 
     def get_context_data(self, **kwargs):
         context = super(SiteDetailView, self).get_context_data(**kwargs)
-        context.update({'profile_form': ProfileForm})
+        tab = self.request.GET.get("tab", "layers")
+
+        # create jsons for expected taxa:
+        nested_dict = lambda: defaultdict(nested_dict)
+        # Create an instance of the nested defaultdict
+        taxa = nested_dict()
+
+        for layer in Layer.objects.filter(Q(site=self.object) & Q(assemblage__isnull=False)):
+            for assemblage in layer.assemblage.all():
+                for taxon in assemblage.taxa.all():
+                    taxa[taxon.family][taxon][layer] = True
+
+        context.update({"profile_form": ProfileForm, "tab": tab, "taxa": taxa})
         return context
+
 
 class SiteListView(ListView):
     model = Site
-    template_name = 'main/site/site_list.html'
+    template_name = "main/site/site_list.html"
 
     def get_queryset(self):
         return Site.objects.filter(child=None)
 
+
 ## Cultures ##
 class CultureDetailView(DetailView):
     model = Culture
-    template_name = 'main/culture/culture_detail.html'
+    template_name = "main/culture/culture_detail.html"
 
     # create the nested groups for the timeline template
     def get_context_data(self, **kwargs):
         context = super(CultureDetailView, self).get_context_data(**kwargs)
         items = []
         groupdata = []
-        geo = {
-            "type": "FeatureCollection",
-            "features": []
-        }
-        nochildren = self.request.GET.get('nochildren',False)
-        query = sorted(self.object.all_cultures(nochildren=nochildren), key=lambda x: x.upper*-1)
+        geo = {"type": "FeatureCollection", "features": []}
+        nochildren = self.request.GET.get("nochildren", False)
+        query = sorted(self.object.all_cultures(nochildren=nochildren), key=lambda x: x.upper * -1)
         # get the colors right
         ordered_sites = sorted(
-                        self.object.all_sites(nochildren=nochildren),
-                        key=lambda x: (x[0].upper, x[1].lowest_date(cult=self.object, nochildren=nochildren))
-                    )
+            self.object.all_sites(nochildren=nochildren),
+            key=lambda x: (x[0].upper, x[1].lowest_date(cult=self.object, nochildren=nochildren)),
+        )
         all_sites = []
-        [all_sites.append(site.name) for (cult,site) in ordered_sites if site.name not in all_sites]
+        [all_sites.append(site.name) for (cult, site) in ordered_sites if site.name not in all_sites]
 
-        site_color_dict = {site.lower():f"{col}" for site,col in zip(all_sites, sns.color_palette('husl', len(all_sites)).as_hex()) }
+        site_color_dict = {
+            site.lower(): f"{col}" for site, col in zip(all_sites, sns.color_palette("husl", len(all_sites)).as_hex())
+        }
         for cult in query:
-            ordered_sites = sorted(
-                        cult.all_sites(nochildren=True),
-                        key=lambda x: x[1].lowest_date(cult=cult)*-1
-                    )
+            ordered_sites = sorted(cult.all_sites(nochildren=True), key=lambda x: x[1].lowest_date(cult=cult) * -1)
             sites = []
-            [sites.append(site) for (cult,site) in ordered_sites if site not in sites]
-            if len(sites)==0:
+            [sites.append(site) for (cult, site) in ordered_sites if site not in sites]
+            if len(sites) == 0:
                 continue
-            groupdata.append({
-                'id':cult.name.lower(),
-                'treeLevel':2,
-                'content':f"{cult.name} | {cult.upper} - {cult.lower} ya",
-                'order':int(cult.upper),
-                'nestedGroups': [f"{cult.name.lower()}-{site.name.lower()}" for site in sites ],
-            })
+            groupdata.append(
+                {
+                    "id": cult.name.lower(),
+                    "treeLevel": 2,
+                    "content": f"{cult.name} | {cult.upper} - {cult.lower} ya",
+                    "order": int(cult.upper),
+                    "nestedGroups": [f"{cult.name.lower()}-{site.name.lower()}" for site in sites],
+                }
+            )
             site_date_dict = {}
             for site in sites:
                 site_date_dict[site.name] = []
-                geo['features'].append({
-                    "type": "Feature",
-                    "properties": {
-                        'color':f'{site_color_dict[site.name.lower()]}',
-                        'popupContent':f"<strong>{site.name}</strong><br><a href={reverse('site_detail', kwargs={'pk': site.id})} class=btn-link>Details</a>"
+                geo["features"].append(
+                    {
+                        "type": "Feature",
+                        "properties": {
+                            "color": f"{site_color_dict[site.name.lower()]}",
+                            "popupContent": f"<strong>{site.name}</strong><br><a href={reverse('site_detail', kwargs={'pk': site.id})} class=btn-link>Details</a>",
                         },
-                    "geometry": site.geometry
-                })
-                groupdata.append({
-                    'id':f"{cult.name.lower()}-{site.name.lower()}",
-                    'content':f'{site.name}: <a href="{reverse("site_detail", kwargs={"pk":site.pk})}" class="btn-link">view</a>',
-                    'treeLevel':3,
-                    # include the order within across sites within culture!
-                })
+                        "geometry": site.geometry,
+                    }
+                )
+                groupdata.append(
+                    {
+                        "id": f"{cult.name.lower()}-{site.name.lower()}",
+                        "content": f'{site.name}: <a href="{reverse("site_detail", kwargs={"pk":site.pk})}" class="btn-link">view</a>',
+                        "treeLevel": 3,
+                        # include the order within across sites within culture!
+                    }
+                )
             for layer in cult.layer.all():
                 site_date_dict[layer.site.name].extend([int(layer.mean_lower), int(layer.mean_upper)])
 
-            for k,v in site_date_dict.items():
+            for k, v in site_date_dict.items():
                 culturedata = {
-                    'start': max(v)*-31556952-(1970*31556952000), #1/1000 year in ms, start with year 0
-                    'content': f"{k} | {max(v):,} ya",
-                    'group': f"{cult.name.lower()}-{k.lower()}",
-                    'type':'point',
-                    'usesvg':False,
-                    'method':'Site'
+                    "start": max(v) * -31556952 - (1970 * 31556952000),  # 1/1000 year in ms, start with year 0
+                    "content": f"{k} | {max(v):,} ya",
+                    "group": f"{cult.name.lower()}-{k.lower()}",
+                    "type": "point",
+                    "usesvg": False,
+                    "method": "Site",
                 }
                 if max(v) != min(v):
-                    culturedata.update({
-                        'end': min(v)*-31556952-(1970*31556952000),
-                        'content': f"{k} | {max(v):,} - {min(v):,} ya",
-                        'style': f"background-color: {site_color_dict[k.lower()]};",
-                        'type':'range',
-                    })
+                    culturedata.update(
+                        {
+                            "end": min(v) * -31556952 - (1970 * 31556952000),
+                            "content": f"{k} | {max(v):,} - {min(v):,} ya",
+                            "style": f"background-color: {site_color_dict[k.lower()]};",
+                            "type": "range",
+                        }
+                    )
                 items.append(culturedata)
-        context['itemdata'] = json.dumps(items)
-        context['groups'] = json.dumps(groupdata)
-        context['geo'] = geo
+        context["itemdata"] = json.dumps(items)
+        context["groups"] = json.dumps(groupdata)
+        context["geo"] = geo
         return context
 
 
 class CultureUpdateView(UpdateView):
     model = Culture
     form_class = CultureForm
-    extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm, 'type':'Culture', 'datingoptions': DatingMethod.objects.all()}
-    template_name = 'main/culture/culture_form.html'
+    extra_context = {
+        "reference_form": ReferenceForm,
+        "dating_form": DateForm,
+        "type": "Culture",
+        "datingoptions": DatingMethod.objects.all(),
+    }
+    template_name = "main/culture/culture_form.html"
 
     def get_context_data(self, **kwargs):
         context = super(CultureUpdateView, self).get_context_data(**kwargs)
         context.update(self.extra_context)
         return context
 
+
 class CultureCreateView(CreateView):
     model = Culture
     form_class = CultureForm
-    extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm, 'type':'Culture', 'datingoptions': DatingMethod.objects.all()}
-    template_name = 'main/culture/culture_form.html'
+    extra_context = {
+        "reference_form": ReferenceForm,
+        "dating_form": DateForm,
+        "type": "Culture",
+        "datingoptions": DatingMethod.objects.all(),
+    }
+    template_name = "main/culture/culture_form.html"
 
     def get_context_data(self, **kwargs):
         context = super(CultureCreateView, self).get_context_data(**kwargs)
@@ -136,7 +168,7 @@ class CultureCreateView(CreateView):
 
 class CultureListView(ListView):
     model = Culture
-    template_name = 'main/culture/culture_list.html'
+    template_name = "main/culture/culture_list.html"
 
     def get_context_data(self, **kwargs):
         context = super(CultureListView, self).get_context_data(**kwargs)
@@ -145,37 +177,49 @@ class CultureListView(ListView):
 
         query = Culture.objects.filter(culture__isnull=True)
 
-        for n,cult in enumerate(query):
-            groupdata.append({
-                'id':cult.name.lower(),
-                'content':f"<a class='btn-link' href={reverse('culture_detail', kwargs={'pk':cult.pk})}>{cult.name}</a> | {cult.upper} - {cult.lower} ya",
-                'treeLevel':2,
-                'nestedGroups': [int(f'{n}{m}') for m,subcult in enumerate(cult.all_cultures(noself=True)) ],
-            })
-            for m,subcult in enumerate(cult.all_cultures(noself=True)):
-                groupdata.append({
-                    'id':int(f'{n}{m}'),
-                    'content':f"{subcult} <a class='btn-link' href={reverse('culture_detail', kwargs={'pk':subcult.pk})}>view</a>",
-                    'order':int(f'{n}{m}'),
-                    'treeLevel':3,
-                })
-                items.append({
-                    'start': int(subcult.upper)*-31556952-(1970*31556952000), #1/1000 year in ms, start with year 0
-                    'end': int(subcult.lower)*-31556952-(1970*31556952000),
-                    'content': f"{subcult} | {subcult.upper} - {subcult.lower}",
-                    'group': int(f'{n}{m}'),
-                })
-        context['itemdata'] = items
-        context['timelinedata'] = groupdata
+        for n, cult in enumerate(query):
+            groupdata.append(
+                {
+                    "id": cult.name.lower(),
+                    "content": f"<a class='btn-link' href={reverse('culture_detail', kwargs={'pk':cult.pk})}>{cult.name}</a> | {cult.upper} - {cult.lower} ya",
+                    "treeLevel": 2,
+                    "nestedGroups": [int(f"{n}{m}") for m, subcult in enumerate(cult.all_cultures(noself=True))],
+                }
+            )
+            for m, subcult in enumerate(cult.all_cultures(noself=True)):
+                groupdata.append(
+                    {
+                        "id": int(f"{n}{m}"),
+                        "content": f"{subcult} <a class='btn-link' href={reverse('culture_detail', kwargs={'pk':subcult.pk})}>view</a>",
+                        "order": int(f"{n}{m}"),
+                        "treeLevel": 3,
+                    }
+                )
+                items.append(
+                    {
+                        "start": int(subcult.upper) * -31556952
+                        - (1970 * 31556952000),  # 1/1000 year in ms, start with year 0
+                        "end": int(subcult.lower) * -31556952 - (1970 * 31556952000),
+                        "content": f"{subcult} | {subcult.upper} - {subcult.lower}",
+                        "group": int(f"{n}{m}"),
+                    }
+                )
+        context["itemdata"] = items
+        context["timelinedata"] = groupdata
         return context
 
 
 ## Epoch ##
 class EpochUpdateView(UpdateView):
     model = Epoch
-    template_name = 'main/culture/culture_form.html'
+    template_name = "main/culture/culture_form.html"
     form_class = EpochForm
-    extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm, 'type':'Epoch', 'datingoptions': DatingMethod.objects.all()}
+    extra_context = {
+        "reference_form": ReferenceForm,
+        "dating_form": DateForm,
+        "type": "Epoch",
+        "datingoptions": DatingMethod.objects.all(),
+    }
 
     def get_context_data(self, **kwargs):
         context = super(EpochUpdateView, self).get_context_data(**kwargs)
@@ -185,7 +229,7 @@ class EpochUpdateView(UpdateView):
     def form_valid(self, form):
         """If the form is valid, save the associated model."""
         self.object = form.save()
-        date = Date(upper=form.cleaned_data.get('upper'), lower=form.cleaned_data.get('lower'), method='hidden')
+        date = Date(upper=form.cleaned_data.get("upper"), lower=form.cleaned_data.get("lower"), method="hidden")
         date.save()
         date.refresh_from_db()
         self.object.date.add(date)
@@ -195,8 +239,13 @@ class EpochUpdateView(UpdateView):
 class EpochCreateView(CreateView):
     model = Epoch
     form_class = EpochForm
-    template_name = 'main/culture/culture_form.html'
-    extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm, 'type':'Epoch', 'datingoptions': DatingMethod.objects.all()}
+    template_name = "main/culture/culture_form.html"
+    extra_context = {
+        "reference_form": ReferenceForm,
+        "dating_form": DateForm,
+        "type": "Epoch",
+        "datingoptions": DatingMethod.objects.all(),
+    }
 
     def get_context_data(self, **kwargs):
         context = super(EpochCreateView, self).get_context_data(**kwargs)
@@ -206,7 +255,7 @@ class EpochCreateView(CreateView):
     def form_valid(self, form):
         """If the form is valid, save the associated model."""
         self.object = form.save()
-        date = Date(upper=form.cleaned_data.get('upper'), lower=form.cleaned_data.get('lower'), method='hidden')
+        date = Date(upper=form.cleaned_data.get("upper"), lower=form.cleaned_data.get("lower"), method="hidden")
         date.save()
         date.refresh_from_db()
         self.object.date.add(date)
@@ -215,8 +264,8 @@ class EpochCreateView(CreateView):
 
 class EpochListView(ListView):
     model = Epoch
-    template_name = 'main/culture/culture_list.html'
-    extra_context = {'type': 'Epoch'}
+    template_name = "main/culture/culture_list.html"
+    extra_context = {"type": "Epoch"}
 
     def get_context_data(self, **kwargs):
         context = super(EpochListView, self).get_context_data(**kwargs)
@@ -228,7 +277,11 @@ class EpochListView(ListView):
 class CheckpointCreateView(CreateView):
     model = Checkpoint
     form_class = CheckpointForm
-    extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm, 'datingoptions': DatingMethod.objects.all()}
+    extra_context = {
+        "reference_form": ReferenceForm,
+        "dating_form": DateForm,
+        "datingoptions": DatingMethod.objects.all(),
+    }
 
     def get_context_data(self, **kwargs):
         context = super(CheckpointCreateView, self).get_context_data(**kwargs)
@@ -238,7 +291,7 @@ class CheckpointCreateView(CreateView):
     def form_valid(self, form):
         """If the form is valid, save the associated model."""
         self.object = form.save()
-        date = Date(upper=form.cleaned_data.get('upper'), lower=form.cleaned_data.get('lower'), method='hidden')
+        date = Date(upper=form.cleaned_data.get("upper"), lower=form.cleaned_data.get("lower"), method="hidden")
         date.save()
         date.refresh_from_db()
         self.object.date.add(date)
@@ -248,12 +301,16 @@ class CheckpointCreateView(CreateView):
 class CheckpointUpdateView(UpdateView):
     model = Checkpoint
     form_class = CheckpointForm
-    extra_context = {'reference_form': ReferenceForm, 'dating_form': DateForm, 'datingoptions': DatingMethod.objects.all()}
+    extra_context = {
+        "reference_form": ReferenceForm,
+        "dating_form": DateForm,
+        "datingoptions": DatingMethod.objects.all(),
+    }
 
     def form_valid(self, form):
         """If the form is valid, save the associated model."""
         self.object = form.save()
-        date = Date(upper=form.cleaned_data.get('upper'), lower=form.cleaned_data.get('lower'), method='hidden')
+        date = Date(upper=form.cleaned_data.get("upper"), lower=form.cleaned_data.get("lower"), method="hidden")
         date.save()
         date.refresh_from_db()
         self.object.date.add(date)

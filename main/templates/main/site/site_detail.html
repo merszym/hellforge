@@ -166,53 +166,19 @@
 
             </div>
             {% else %}
-            <div id="site_profile_content">
-                <h3 class="text-grey" id="profile">Profiles and Layers</h3>
-                <div class="modal" id="modal-profile">
-                    <a href="#close" class="modal-overlay" aria-label="Close"></a>
-                    <div class="modal-container">
-                        <div class="modal-header">
-                        <span id="modal-profile-close" class="btn btn-clear float-right" aria-label="Close"></span>
-                        <div class="modal-title h5">New Profile</div>
-                        </div>
-                        <div class="modal-body">
-                            <div class="content">
-                                <form id='profile-form' method="POST">
-                                {% csrf_token %}
-                                {% for field in profile_form %}
-                                <div class="form-group">
-                                    <label class="form-label" for="{{field.name}}_id">{{field.name|title}}</label>
-                                    <input class="form-input" type="text" id="{{field.name}}_id" name="{{field.name}}" placeholder="{{field.name}}" required>
-                                </div>
-                                {% endfor %}
-                                <span id='profile-submit' class="btn btn-primary" data-url="{% url 'main_site_profile_create' object.pk%}">Add</span>
-                                </form>
-                                <br>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <ul class="tab tab-block" id="profile-list">
-                    {% for profile in object.profile.all %}
-                    <li class="tab-item {% if forloop.counter == 1 %}active{% endif %}" data-url="{% url 'main_profile_get' profile.pk %}">
-                        <a style="cursor:pointer;">{{profile.name}}</a>
-                    </li>
-                    {% endfor %}
-                    <li id="before-profile-add">
-                        <span style="margin:5px;" data-tooltip="Add a Profile" class="btn btn-primary tooltip tooltip-left" id="profile-add" data-url="{% url 'main_profile_get' 1 %}"> Add Profile </span>
-                    </li>
-                </ul>
-                <div style="padding-top: 20px;" id='profile-detail'>
-                    <div class="empty">
-                        <div class="empty-icon">
-                        <i class="icon icon-flag"></i>
-                        </div>
-                        <p class="empty-title h5">No Profiles yet</p>
-                        <p class="empty-subtitle">Click the button above to add a profile.</p>
-                    </div>
-                </div>
-
-            </div>
+            <ul class="tab tab-block">
+                <li class="tab-item">
+                    <a href="?tab=layers"><h4 class="text-grey" id="profile">Profiles and Layers</h4></a>
+                </li>
+                <li class="tab-item">
+                    <a href="?tab=taxa"><h4 class="text-grey" id="profile">Expected Taxa</h4></a>
+                </li>
+            </ul>
+            {% if tab == 'layers' %}
+            {% include 'main/site/site_profile_and_layers.html' %}
+            {% elif tab == 'taxa' %}
+            {% include 'main/site/site_taxa.html' %}
+            {% endif %}
             {% endif %}
         </div>
     </div>
@@ -247,4 +213,5 @@
 <script src="{% static 'js/profile.js'%}"></script>
 <script src="{% static 'js/checkpoint.js' %}"></script>
 <script src="{% static 'js/dating.js' %}"></script>
+<script src="{% static 'js/fauna.js' %}"></script>
 {% endblock %}

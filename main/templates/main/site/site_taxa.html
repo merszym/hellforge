@@ -1,0 +1,66 @@
+{% load format %}
+
+<div id="site_taxa_content">
+    {% csrf_token %}
+    <input type="file" id="fauna-batch-input" data-url="{% url 'fauna_upload' %}">
+
+    <div style="padding-top: 20px;" id='profile-taxa'>
+        <div class="container">
+            <div class="columns">
+              <div class="column">
+                    <h4>Layers</h4>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th><div style="height: 50px;"></div></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for layer in object.layer.all %}
+                            <tr>
+                                <td><div style="height:15px;">{{layer.name}}</div></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+              </div>
+              {% for fam in taxa %}
+              <div class="column">
+                <h4>{{fam}}</h4>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            {% for sp in taxa|lookup:fam %}
+                            <th><div style="height: 50px;">{{sp.scientific_name}}</div></th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for layer in object.layer.all %}
+                        <tr>
+                            {% for sp in taxa|lookup:fam %}
+                            <td><div style="height:15px;">
+                                {% if taxa|lookup:fam|lookup:sp|lookup:layer %}
+                                    x
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </div></td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+              </div>
+              {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+

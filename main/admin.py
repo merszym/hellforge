@@ -18,5 +18,5 @@ admin.site.register(DatingMethod)
 admin.site.register(RelativeDate)
 admin.site.register(CheckpointLayerJunction)
 admin.site.register(Synonym)
-
-
+admin.site.register(Taxon)
+admin.site.register(FaunalAssemblage)
