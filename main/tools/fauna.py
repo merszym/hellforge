@@ -1,26 +1,24 @@
 from main.models import models
+from main.models import FaunalAssemblage, FoundTaxon, Taxon, Reference
 from django.http import JsonResponse
 from django.urls import path
 from django.shortcuts import render
+from main.tools.generic import get_instance_from_string
+import main.tools as tools
+from django.db.models import Q
 
 
 def fauna_upload(request):
-    # handle the csv upload --> #TODO: make a verification!
-    # render into new modal, so that people can verify
-    # dont save anything yet, but process how it will be saved! show the table
-    # TODO: maybe make a general upload-helper function, independant of the model!
-    # TODO: verify required columns
-
     import pandas as pd
 
     df = pd.read_csv(request.FILES["file"], sep=",")
     df.drop_duplicates(inplace=True)
 
-    site = get_instance_from_string(request.POST.get("instance_x")).site
+    site = get_instance_from_string(request.POST.get("instance_x"))
     all_layers = [x.name for x in site.layer.all()]
 
     # filter for expected/unexpected columns
-    expected = ["Layer", "Species", "Reference"]
+    expected = ["Layer", "Species", "Abundance", "Reference"]
     issues = []
     if dropped := [x for x in df.columns if x not in expected]:
         issues.append(f"Dropped Table Columns: {','.join(dropped)}")
@@ -38,7 +36,7 @@ def fauna_upload(request):
         df.drop(layer_wrong.index, inplace=True)
     return render(
         request,
-        "main/dating/dating-batch-confirm.html",
+        "main/fauna/fauna-batch-confirm.html",
         {
             "dataframe": df.fillna("").to_html(index=False, classes="table table-striped col-12"),
             "issues": issues,
@@ -48,6 +46,38 @@ def fauna_upload(request):
     )
 
 
+def save_verified(request):
+    import pandas as pd
+    from main.models import Date, Site, Layer, Reference
+
+    df = pd.read_json(request.POST.get("batch-data"))
+    site = Site.objects.get(pk=int(request.POST.get("site")))
+    df.convert_dtypes()
+
+    # create an assemblage for each layer!
+    for layer, dat in df.groupby(["Layer"]):
+        tmp_layer = Layer.objects.filter(Q(site=site) & Q(name=layer)).first()
+        dat = dat.dropna()
+
+        assemblage = FaunalAssemblage(layer=tmp_layer)
+        assemblage.save()
+        assemblage.refresh_from_db()
+
+        for sp, abundance in zip(dat["Species"], dat["Abundance"]):
+            taxon = Taxon.objects.get(scientific_name=sp)
+            found_taxon = FoundTaxon(taxon=taxon, abundance=abundance)
+            found_taxon.save()
+            found_taxon.refresh_from_db()
+            assemblage.taxa.add(found_taxon)
+
+        for ref_id in set([x["id"] for x in dat["Reference"]]):
+            reference = Reference.objects.get(id=ref_id)
+            assemblage.ref.add(reference)
+
+    return JsonResponse({"status": True})
+
+
 urlpatterns = [
     path("upload", fauna_upload, name="fauna_upload"),
+    path("save", save_verified, name="ajax_save_verified_fauna"),
 ]

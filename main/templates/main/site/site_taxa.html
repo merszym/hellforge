@@ -1,8 +1,25 @@
 {% load format %}
 
+<style>
+
+.High{
+    color:green;
+    font-weight: 800;
+}
+.Medium{
+    color:orange;
+    font-weight: 500;
+}
+.Low{
+    color: grey;
+}
+
+</style>
+
 <div id="site_taxa_content">
     {% csrf_token %}
-    <input type="file" id="fauna-batch-input" data-url="{% url 'fauna_upload' %}">
+    <input style="display: none;" name="info" value="site_{{object.pk}}">
+    <input class="fill_modal" type="file" id="fauna-batch-input" data-url="{% url 'fauna_upload' %}">
 
     <div style="padding-top: 20px;" id='profile-taxa'>
         <div class="container">
@@ -41,7 +58,9 @@
                             {% for sp in taxa|lookup:fam %}
                             <td><div style="height:15px;">
                                 {% if taxa|lookup:fam|lookup:sp|lookup:layer %}
-                                    x
+                                    <span class="{{taxa|lookup:fam|lookup:sp|lookup:layer}}">
+                                        {{ taxa|lookup:fam|lookup:sp|lookup:layer }}
+                                    </span>
                                 {% else %}
                                     -
                                 {% endif %}

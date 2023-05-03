@@ -635,11 +635,19 @@ class Taxon(models.Model):
         ordering = ["family"]
 
 
+class FoundTaxon(models.Model):
+    taxon = models.ForeignKey(Taxon, on_delete=models.CASCADE, related_name="found_taxa")
+    abundance = models.CharField("abundance", max_length=300)
+
+    class Meta:
+        ordering = ["taxon__family"]
+
+
 class FaunalAssemblage(models.Model):
     layer = models.ForeignKey(
-        Layer, verbose_name="layer", related_name="assemblage", blank=True, on_delete=models.CASCADE
+        Layer, verbose_name="layer", related_name="assemblage", blank=True, null=True, on_delete=models.CASCADE
     )
-    taxa = models.ManyToManyField(Taxon)
+    taxa = models.ManyToManyField(FoundTaxon)
     ref = models.ManyToManyField(Reference, verbose_name="reference", blank=True)
 
 
@@ -655,4 +663,6 @@ models = {
     "reference": Reference,
     "contact": ContactPerson,
     "reldate": RelativeDate,
+    "assemblage": FaunalAssemblage,
+    "taxon": Taxon,
 }

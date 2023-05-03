@@ -29,8 +29,9 @@ class SiteDetailView(DetailView):
 
         for layer in Layer.objects.filter(Q(site=self.object) & Q(assemblage__isnull=False)):
             for assemblage in layer.assemblage.all():
-                for taxon in assemblage.taxa.all():
-                    taxa[taxon.family][taxon][layer] = True
+                for found_taxon in assemblage.taxa.all():
+                    taxon = found_taxon.taxon
+                    taxa[taxon.family][taxon][layer] = found_taxon.abundance
 
         context.update({"profile_form": ProfileForm, "tab": tab, "taxa": taxa})
         return context
