@@ -185,7 +185,6 @@ $('body').on('change','.14c-curve-select', function(){
     form_data.append('instance_x',`${$(this).attr('id')}`);
     form_data.append('curve', `${$(this).val()}`)
     form_data.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
-    console.log(form_data)
     $.ajax({
         type: "POST",
         url: $(this).attr('data-url'),

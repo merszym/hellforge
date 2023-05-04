@@ -1,4 +1,5 @@
 from iosacal import R
+import json
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.urls import path
@@ -26,6 +27,7 @@ def recalibrate_c14(request):
     date.upper = upper
     date.lower = lower
     date.curve = curve
+    date.raw = json.dumps(raw)
     date.save()
     return JsonResponse({"status": True})
 
