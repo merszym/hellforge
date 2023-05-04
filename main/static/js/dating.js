@@ -178,3 +178,21 @@ $('body').on('click', '.date_toggle', function(){
             $('#reload').click()
         });
 })
+
+//recalibrate
+$('body').on('change','.14c-curve-select', function(){
+    var form_data = new FormData();
+    form_data.append('instance_x',`${$(this).attr('id')}`);
+    form_data.append('curve', `${$(this).val()}`)
+    form_data.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
+    console.log(form_data)
+    $.ajax({
+        type: "POST",
+        url: $(this).attr('data-url'),
+        processData: false,
+        contentType: false,
+        data: form_data
+        }).done(function(){
+            $('#reload').click()
+        });
+})

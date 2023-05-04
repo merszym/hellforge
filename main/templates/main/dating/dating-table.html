@@ -11,6 +11,7 @@
             <th></th>
             <th></th>
             <th>Age</th>
+            <th>Calibration</th>
             <th>Notes</th>
             <th>Reference</th>
             <th></th>
@@ -42,6 +43,20 @@
                 {% endif %}
                 </td>
                 {% endif %}
+                <td>
+                {% if date.method == '14C' %}
+                <div class="form-group">
+                    <select class="form-select 14c-curve-select" id="date_{{date.pk}}" data-url="{% url 'ajax_date_recalibrate' %}">
+                        <option value="{{date.curve|lower}}"selected>{{date.curve}}</option>
+                        <option value="intcal20">intcal20</option>
+                        <option value="marine20">marine20</option>
+                        <option value="shcal20">shcal20</option>
+                    </select>
+                </div>
+                {% else %}
+                <span>-</span>
+                {% endif %}
+                </td>
                 <td>{{date.description}}</td>
                 <td>{{date.ref.first.short}}</td>
                 <td>
