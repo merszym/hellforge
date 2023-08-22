@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+from decouple import config
 from django.forms.renderers import TemplatesSetting
 
 
@@ -12,14 +13,10 @@ FORM_RENDERER = "hellforge.settings.CustomFormRenderer"
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-(p1cboy04=xbo$s_(2fl3_ma570flm!qa!201k8ab9kl__v#nr"
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+SECRET_KEY = config("SECRET_KEY")
+DEBUG = config("DEBUG", default=False, cast=bool)
+ALLOWED_HOSTS = config("HOST").split()
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -31,6 +28,7 @@ INSTALLED_APPS = [
     "django.forms",
     "main",
     "iosacal",
+    "decouple",
 ]
 
 MIDDLEWARE = [
