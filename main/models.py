@@ -37,6 +37,9 @@ class ContactPerson(models.Model):
             Q(name__contains=kw) | Q(email__contains=kw) | Q(tags__contains=kw) | Q(affiliation__contains=kw)
         )
 
+    class Meta:
+        ordering = ["name"]
+
 
 class Reference(models.Model):
     title = models.CharField("title", max_length=500)
