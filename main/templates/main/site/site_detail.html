@@ -120,7 +120,7 @@
                     </span>
                 </div>
                 <div class="panel-body" style="max-height:720px;">
-                    {% include 'main/editor/editor-body.html' %}
+                        {% include 'main/editor/editor-body.html' with description=object.description.first model="site" %}
                 </div>
             </div>
         </div>

@@ -33,13 +33,14 @@
     </div>
   </div>
 
-<div id="guide" data-url="{% url 'upload' %}?model={{object.model}}&id={{object.pk}}">
-    <div id="editorjs" data-url="{% url 'ajax_description_get' %}?model={{object.model}}&id={{object.pk}}"></div>
+<div id="guide" data-url="{% url 'upload' %}?id={{description.pk}}">
+  <!--guide is for file upload to the right place... remodel with the description-->
+    <div id="editorjs" data-url="{% url 'ajax_description_get' %}?id={{description.pk}}&model={{model}}"></div>
     <p id="readonly" style="display:none;">{{readonly}}</p>
 
     {% if readonly == False %}
     <div style="display:flex; justify-content: center;" id="saveButton">
-        <span id="description-save" class="btn btn-primary" data-url="{% url 'ajax_description_save' %}?model={{object.model}}&id={{object.pk}}">Save</span>
+        <span id="description-save" class="btn btn-primary" data-url="{% url 'ajax_description_save' %}?id={{description.pk}}">Save</span>
     </div>
     {% endif %}
 </div>
@@ -47,7 +48,7 @@
   <h5>References</h5>
   <table class="table table-striped my-2">
     <tbody id="description-reference-tbody" style="border-top: 1px solid lightgrey;">
-      {% for ref in object.ref.all %}
+      {% for ref in object.description.first.ref.all %}
         {% include 'main/reference/reference-tablerow.html' with display=True %}
       {% endfor %}
     </tbody>

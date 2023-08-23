@@ -2,6 +2,9 @@ from django.db import models
 from django.urls import reverse
 from django.db.models import Q
 import json
+from django.contrib.contenttypes.fields import GenericForeignKey  # for the description
+from django.contrib.contenttypes.models import ContentType  # for the description
+from django.contrib.contenttypes.fields import GenericRelation
 
 
 # In case models implement the 'hidden' attribute
@@ -17,6 +20,67 @@ def get_classname(x):
     import re
 
     return "".join([y for y in x.lower() if bool(re.search("[a-z0-9]", y))])
+
+
+#
+# Description model
+#
+
+
+def get_image_path(instance, filename):
+    # instance = the new Image instance
+    # filename = the original filename
+    object = instance.gallery.description.content_object
+    return f'descriptions/{object.model}/{object.name.replace(" ","_")}/{filename.replace(" ","_")}'
+
+
+class Image(models.Model):
+    gallery = models.ForeignKey("Gallery", on_delete=models.CASCADE, related_name="image")
+    image = models.ImageField("image", upload_to=get_image_path)
+    title = models.CharField("title", max_length=200, blank=True)
+    alt = models.TextField("alt", null=True, blank=True)
+
+    def __str__(self):
+        if self.title:
+            return self.title
+        return f"{self.gallery.title}.{self.image.name }"
+
+
+class Gallery(models.Model):
+    title = models.CharField("title", max_length=200, blank=True, null=True)
+    description = models.OneToOneField(
+        "Description",
+        verbose_name="description",
+        related_name="gallery",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
+
+
+class Author(models.Model):
+    person = models.ForeignKey(
+        "ContactPerson", blank=True, null=True, verbose_name="person", related_name="author", on_delete=models.PROTECT
+    )
+    order = models.IntegerField("order", default=1)
+    description = models.ForeignKey(
+        "Description", verbose_name="description", related_name="author", on_delete=models.CASCADE
+    )
+
+
+class Description(models.Model):
+    content = models.JSONField("content", blank=True, null=True)
+    ref = models.ManyToManyField("Reference", verbose_name="reference", blank=True, related_name="description")
+
+    # to link the description to other models
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, blank=True, null=True)
+    object_id = models.PositiveIntegerField(null=True)
+    content_object = GenericForeignKey("content_type", "object_id")
+
+
+#
+# / Description
+#
 
 
 class ContactPerson(models.Model):
@@ -407,31 +471,6 @@ class Epoch(models.Model):
         return reverse("epoch_list")
 
 
-class Gallery(models.Model):
-    title = models.CharField("title", max_length=200, blank=True, null=True)
-
-    def __str__(self):
-        return self.title
-
-
-def get_image_path(instance, filename):
-    # instance = Image instance
-    # filename = original filename
-    return f'descr/{instance.gallery.model.model}/{instance.gallery.model.name.replace(" ","_")}/{filename.replace(" ","_")}'
-
-
-class Image(models.Model):
-    gallery = models.ForeignKey(Gallery, on_delete=models.CASCADE, related_name="image")
-    image = models.ImageField("image", upload_to=get_image_path)
-    title = models.CharField("title", max_length=200, blank=True)
-    alt = models.TextField("alt", null=True, blank=True)
-
-    def __str__(self):
-        if self.title:
-            return self.title
-        return f"{self.gallery.title}.{self.image.name }"
-
-
 class Site(models.Model):
     parent = models.ForeignKey(
         "self", verbose_name="parent", related_name="child", blank=True, null=True, on_delete=models.SET_NULL
@@ -440,14 +479,10 @@ class Site(models.Model):
     name = models.CharField("name", max_length=200)
     synonyms = models.ManyToManyField(Synonym, blank=True, verbose_name="synonym", related_name="site")
     country = models.CharField("country", max_length=200, blank=True)
-    description = models.JSONField("description", blank=True, null=True)
-    gallery = models.OneToOneField(
-        Gallery, blank=True, null=True, verbose_name="gallery", related_name="model", on_delete=models.SET_NULL
-    )
     type = models.CharField("type", max_length=200, blank=True)
     loc = models.ManyToManyField(Location, verbose_name="location")
     elevation = models.IntegerField("elevation", blank=True, null=True)
-    ref = models.ManyToManyField(Reference, verbose_name="reference", blank=True, related_name="site")
+    description = GenericRelation(Description, related_query_name="bookmark")
 
     class Meta:
         ordering = ["name"]

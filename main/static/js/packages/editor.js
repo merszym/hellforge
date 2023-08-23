@@ -1,21 +1,21 @@
-site_default = {
-    "blocks":
-    [
-        {"id":1, "type": "header", "data": {"text": "Authors", "level": 5}},
-        {"id":2, "type": "header", "data": {"text": "Description of the Site", "level": 2}},
-        {"id":3, "type": "header", "data": {"text": "References", "level": 5}},
-        {"id":4, "type": "list", "data": {"style": "unordered", "items": []}},
-        {"id":5, "type": "header", "data": {"text": "Acknowledgements", "level": 5}},
-    ], "version": "2.25.0"
+defaults = {
+    'site': {
+        "blocks":
+        [
+            {"id":1, "type": "header", "data": {"text": "Authors", "level": 5}},
+            {"id":2, "type": "header", "data": {"text": "Description of the Site", "level": 2}},
+            {"id":3, "type": "header", "data": {"text": "References", "level": 5}},
+            {"id":4, "type": "list", "data": {"style": "unordered", "items": []}},
+            {"id":5, "type": "header", "data": {"text": "Acknowledgements", "level": 5}},
+        ], "version": "2.25.0"
+    }
 }
 
 $.getJSON({
     url: $('#editorjs').attr("data-url"),
-    success: function(respond) {
-        if (respond.empty) {
-            if (respond.model === 'site'){
-                respond = site_default
-            }
+    success: function(response) {
+        if (response.empty) {
+            response = defaults[response.model]
         }
         const editor = new EditorJS({
             readOnly: $('#readonly').html() != 'False',
@@ -61,7 +61,7 @@ $.getJSON({
                 },
             },
             tunes: ['footnotes'],
-            data: respond,
+            data: response,
             onReady: () => {
                 //load popups from references
                 load_popups()
@@ -86,7 +86,6 @@ $.getJSON({
                     $.post({
                         processData: false,
                         contentType: false,
-                        data: formdata,
                         url: $('#description-save').attr("data-url"),
                         data: formdata,
                         success: function(respond){
