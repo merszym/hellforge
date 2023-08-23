@@ -79,8 +79,7 @@ def upload_image(request):
         gallery = Gallery(description=description)
         gallery.save()
 
-    img = dict(request.FILES)["image"][0]
-    image = Image(image=img, gallery=gallery)
+    image = Image(image=request.FILES.get("image"), gallery=gallery)
     image.save()
     image.refresh_from_db()
 

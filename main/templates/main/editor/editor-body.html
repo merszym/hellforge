@@ -33,8 +33,8 @@
     </div>
   </div>
 
-<div id="guide" data-url="{% url 'upload' %}?id={{description.pk}}">
-  <!--guide is for file upload to the right place... remodel with the description-->
+<div id="guide" data-url="{% url 'upload' %}?id={{description.pk}}"> <!--guide is used for image upload, to save the file to the right place-->
+
     <div id="editorjs" data-url="{% url 'ajax_description_get' %}?id={{description.pk}}&model={{model}}"></div>
     <p id="readonly" style="display:none;">{{readonly}}</p>
 
