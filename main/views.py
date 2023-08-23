@@ -7,14 +7,17 @@ import json
 import seaborn as sns
 from django.db.models import Q
 from collections import defaultdict
+from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
+from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, make smarter later
 
 
+@login_required
 def landing(request):
     return render(request, "main/common/landing.html")
 
 
 ## Sites
-class SiteDetailView(DetailView):
+class SiteDetailView(LoginRequiredMixin, DetailView):
     model = Site
     template_name = "main/site/site_detail.html"
 
@@ -37,7 +40,7 @@ class SiteDetailView(DetailView):
         return context
 
 
-class SiteListView(ListView):
+class SiteListView(LoginRequiredMixin, ListView):
     model = Site
     template_name = "main/site/site_list.html"
 
@@ -46,7 +49,7 @@ class SiteListView(ListView):
 
 
 ## Cultures ##
-class CultureDetailView(DetailView):
+class CultureDetailView(LoginRequiredMixin, DetailView):
     model = Culture
     template_name = "main/culture/culture_detail.html"
 
@@ -133,7 +136,7 @@ class CultureDetailView(DetailView):
         return context
 
 
-class CultureUpdateView(UpdateView):
+class CultureUpdateView(LoginRequiredMixin, UpdateView):
     model = Culture
     form_class = CultureForm
     extra_context = {
@@ -150,7 +153,7 @@ class CultureUpdateView(UpdateView):
         return context
 
 
-class CultureCreateView(CreateView):
+class CultureCreateView(LoginRequiredMixin, CreateView):
     model = Culture
     form_class = CultureForm
     extra_context = {
@@ -167,7 +170,7 @@ class CultureCreateView(CreateView):
         return context
 
 
-class CultureListView(ListView):
+class CultureListView(LoginRequiredMixin, ListView):
     model = Culture
     template_name = "main/culture/culture_list.html"
 
@@ -211,7 +214,7 @@ class CultureListView(ListView):
 
 
 ## Epoch ##
-class EpochUpdateView(UpdateView):
+class EpochUpdateView(LoginRequiredMixin, UpdateView):
     model = Epoch
     template_name = "main/culture/culture_form.html"
     form_class = EpochForm
@@ -237,7 +240,7 @@ class EpochUpdateView(UpdateView):
         return super().form_valid(form)
 
 
-class EpochCreateView(CreateView):
+class EpochCreateView(LoginRequiredMixin, CreateView):
     model = Epoch
     form_class = EpochForm
     template_name = "main/culture/culture_form.html"
@@ -263,7 +266,7 @@ class EpochCreateView(CreateView):
         return super().form_valid(form)
 
 
-class EpochListView(ListView):
+class EpochListView(LoginRequiredMixin, ListView):
     model = Epoch
     template_name = "main/culture/culture_list.html"
     extra_context = {"type": "Epoch"}
