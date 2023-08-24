@@ -10,7 +10,7 @@ from .models import (
     Culture,
     Epoch,
     Checkpoint,
-    ContactPerson,
+    Person,
     Image,
     Gallery,
     DatingMethod,
@@ -112,7 +112,7 @@ def save_contact(request):
 def search_contact(request):
     data = {x: v[0] for (x, v) in dict(request.POST).items()}
     kw = data["keyword"]
-    q = ContactPerson.objects.filter(Q(name__contains=kw) | Q(email__contains=kw) | Q(affiliation__contains=kw))
+    q = Person.objects.filter(Q(name__contains=kw) | Q(email__contains=kw))
     return JsonResponse({x.pk: f"{x.name}" for x in q})
 
 

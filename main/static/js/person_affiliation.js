@@ -1,0 +1,57 @@
+$("body").on('click', '.tr_click', function(){
+    var id = $(this).attr('id').split('_')[1]
+    $(".person_form").hide()
+    $(`#person_form_${id}`).show()
+});
+
+$('#contact-list-search').on("keyup", function() {
+    var value = $("#contact-list-search").val().toLowerCase();
+    $("tr").filter(function() {
+        if($(this).text().toLowerCase().indexOf(value) > -1){
+            $(this).show()
+        } else {
+            $(this).hide()
+        }
+    });
+});
+
+// Add Affiliation to Person
+$("body").on('click', '.add_affiliation', function(){
+    var person = $(this).attr('id')
+    var affiliation = $(`#${person}_val`).val()
+    var id = person.split('_')[1]
+    var formdata = new FormData();
+    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
+    formdata.append('instance_y', person); //Person
+    formdata.append('affiliation', affiliation ); //Affiliation String
+
+    $.ajax({
+        type: "POST",
+        processData: false,
+        contentType: false,
+        url: $(this).attr('data-url'),
+        data: formdata,
+        }).done(function(){
+            $(`#affiliations_${id}`).click()
+        });
+})
+
+// Remove affiliation from person
+$('body').on('click','.affiliation_delete', function(){
+    //delete a synonym on click
+    var formdata = new FormData();
+    var id = $(this).attr('data-y').split('_')[1]
+    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
+    formdata.append('instance_x', $(this).attr('data-x'));
+    formdata.append('instance_y', $(this).attr('data-y'));
+    $.ajax({
+        type: "POST",
+        processData: false,
+        contentType: false,
+        data: formdata,
+        url: $(this).attr("data-url"),
+        success: function() {
+            $(`#affiliations_${id}`).click()
+        }
+    });
+});

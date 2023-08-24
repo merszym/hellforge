@@ -10,7 +10,9 @@
         </div>
         <div class="tile-content">
             <div class="tile-title">{{contact.name}}</div>
-            <small class="tile-subtitle text-gray">{{contact.affiliation}}</small>
+            {% for affiliation in contact.affiliation.all %}
+            <small class="tile-subtitle text-gray">{{affiliation}}</small>
+            {% endfor %}
         </div>
     </div>
 {% endfor %}

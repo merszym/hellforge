@@ -12,7 +12,10 @@
             {% for contact in object_list %}
             <tr>
                 <td>{{contact.name}}</td>
-                <td>{{contact.affiliation}}</td>
+                <td>{% for aff in contact.affiliation.all %}
+                    {{aff}}<br>
+                    {% endfor %}
+                </td>
                 <td>
                     <span class='btn {{origin}}-search-item' id="contact_{{contact.pk}}">Pick</span>
                 </td>

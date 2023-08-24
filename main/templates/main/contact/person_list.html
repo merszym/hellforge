@@ -1,0 +1,107 @@
+{% extends 'main/base.html' %}
+{% block head %}
+{% load static %}
+<title>Contact Database</title>
+{% endblock %}
+{% block body %}
+
+
+<div class='columns'>
+    <div class="column col-8">
+        <div class="my-2">
+            <div class="panel"  style="max-height:80vh;">
+                <div class="panel-header">
+                  <div class="panel-title"><h2>Contacts</h2></div>
+                  <div class="has-icon-left">
+                      <input class="form-input" id="contact-list-search" type="text" placeholder="Find Contact" style="width:50%;">
+                      <i class="form-icon icon icon-search"></i>
+                  </div>
+                </div>
+                <div class="panel-body">
+                  <table class="table table-striped table-hover">
+                      <thead>
+                        <tr>
+                          <th>Name</th>
+                          <th>Email</th>
+                          <th>Affiliations</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for person in object_list %}
+                        <tr class="tr_click" id="person_{{person.pk}}">
+                          <td>{{ person.name }}</td>
+                          <td>{{ person.email }}</td>
+                          <td>{% for aff in person.affiliation.all %}
+                              {{aff}}<br>
+                              {% endfor %}
+                          </td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                  </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="column col-4">
+        <div class="my-2">
+            <h2>Details</h2>
+            <datalist id="affiliation-choices">
+              {% for option in available_affiliations %}
+                <option value="{{option}}"></option>
+              {% endfor %}
+            </datalist>
+            <div class="panel p-2">
+              <!--Render all panels, but hide-->
+              {% for person in object_list %}
+              <div id="person_form_{{person.pk}}" class="person_form" style="display: none;">
+                <form method="POST" enctype="multipart/form-data">
+                  {% csrf_token %}
+                  <div class="form-group">
+                    <label class="form-label" for="name_{{person.pk}}">Name</label>
+                    <input class="form-input" type="text" id="name_{{person.pk}}" placeholder="Name" value="{{person.name}}">
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label" for="email_{{person.pk}}">Email</label>
+                    <input class="form-input" type="text" id="email_{{person.pk}}" placeholder="Email" value="{{person.email}}">
+                  </div>
+                  <button class="btn">Save</button>
+                </form>
+                <br>
+
+                <label class="form-label" for="person_{{person.pk}}">Add Affiliation</label>
+                <div class="input-group">
+                  <input list="affiliation-choices" type="text" class="form-input" id="person_{{person.pk}}_val" placeholder="Search...">
+                  <button id="person_{{person.pk}}" data-url="{% url 'main_contact_affiliation_add' %}" class="btn btn-primary input-group-btn add_affiliation">Add</button>
+                </div>
+
+                <div id="affiliations_{{person.pk}}" class="p-2 my-2 generic_reload" data-reload="affiliations_{{person.pk}}">
+                <strong>Affiliations</strong>
+                {% for aff in person.affiliation.all %}
+                <div class="tile tile-centered my-1">
+                  <div class="tile-icon">
+                    <button class="btn btn-primary">
+                        <i class="icon icon-location" centered></i>
+                    </button>
+                  </div>
+                  <div class="tile-content">
+                    <div class="tile-title">{{aff}}</div>
+                  </div>
+                  <div class="tile-action">
+                      <button class="btn affiliation_delete" data-x="affiliation_{{aff.pk}}" data-y="person_{{person.pk}}" data-url="{% url 'main_contact_affiliation_remove' %}">
+                      <i class="icon icon-delete"></i>
+                    </button>
+                  </div>
+                </div>
+
+                {% endfor %}
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+<script src="{% static 'js/person_affiliation.js' %}"></script>
+{% endblock %}

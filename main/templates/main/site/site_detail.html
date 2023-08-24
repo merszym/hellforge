@@ -115,7 +115,10 @@
                     <a class="btn btn-primary tooltip tooltip-right" href="{% url 'main_site_descr_update' object.pk %}" data-tooltip="Edit Description">
                         <i class="icon icon-edit"></i>
                     </a>
-                    <span id="resize-editor" class="btn btn-primary tooltip tooltip-left" style="position:absolute; right: 15px" data-tooltip="Toggle Full Width">
+                    <a class="btn tooltip tooltip-right" href="{% url 'main_site_descr_update' object.pk %}" data-tooltip="Edit Authors">
+                        <i class="icon icon-people"></i>
+                    </a>
+                    <span id="resize-editor" class="btn tooltip tooltip-left" style="position:absolute; right: 15px" data-tooltip="Toggle Full Width">
                         <i class="icon icon-resize-horiz"></i>
                     </span>
                 </div>

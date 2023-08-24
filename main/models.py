@@ -40,11 +40,6 @@ class Image(models.Model):
     title = models.CharField("title", max_length=200, blank=True)
     alt = models.TextField("alt", null=True, blank=True)
 
-    def __str__(self):
-        if self.title:
-            return self.title
-        return f"{self.gallery.title}.{self.image.name }"
-
 
 class Gallery(models.Model):
     title = models.CharField("title", max_length=200, blank=True, null=True)
@@ -58,9 +53,32 @@ class Gallery(models.Model):
     )
 
 
+class Description(models.Model):
+    content = models.JSONField("content", blank=True, null=True)
+    ref = models.ManyToManyField("Reference", verbose_name="reference", blank=True, related_name="description")
+
+    # to link the description to other models
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, blank=True, null=True)
+    object_id = models.PositiveIntegerField(null=True)  # null=True only for backwarts compability
+    content_object = GenericForeignKey("content_type", "object_id")
+
+
+#
+# / Description
+#
+class Affiliation(models.Model):
+    name = models.CharField("name", max_length=1200)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
 class Author(models.Model):
     person = models.ForeignKey(
-        "ContactPerson", blank=True, null=True, verbose_name="person", related_name="author", on_delete=models.PROTECT
+        "Person", blank=True, null=True, verbose_name="person", related_name="author", on_delete=models.PROTECT
     )
     order = models.IntegerField("order", default=1)
     description = models.ForeignKey(
@@ -68,25 +86,10 @@ class Author(models.Model):
     )
 
 
-class Description(models.Model):
-    content = models.JSONField("content", blank=True, null=True)
-    ref = models.ManyToManyField("Reference", verbose_name="reference", blank=True, related_name="description")
-
-    # to link the description to other models
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, blank=True, null=True)
-    object_id = models.PositiveIntegerField(null=True)
-    content_object = GenericForeignKey("content_type", "object_id")
-
-
-#
-# / Description
-#
-
-
-class ContactPerson(models.Model):
+class Person(models.Model):
     name = models.CharField("name", max_length=300)
     email = models.CharField("email", max_length=300)
-    affiliation = models.CharField("affiliation", max_length=300, blank=True)
+    affiliation = models.ManyToManyField("Affiliation", blank=True, related_name="person", verbose_name="affiliation")
     tags = models.CharField("tags", max_length=300, blank=True, null=True)
 
     def __str__(self):
@@ -97,7 +100,7 @@ class ContactPerson(models.Model):
 
     @classmethod
     def filter(self, kw):
-        return ContactPerson.objects.filter(
+        return Person.objects.filter(
             Q(name__contains=kw) | Q(email__contains=kw) | Q(tags__contains=kw) | Q(affiliation__contains=kw)
         )
 
@@ -475,14 +478,14 @@ class Site(models.Model):
     parent = models.ForeignKey(
         "self", verbose_name="parent", related_name="child", blank=True, null=True, on_delete=models.SET_NULL
     )
-    contact = models.ManyToManyField(ContactPerson, blank=True, verbose_name="contact", related_name="site")
+    contact = models.ManyToManyField(Person, blank=True, verbose_name="contact", related_name="site")
     name = models.CharField("name", max_length=200)
     synonyms = models.ManyToManyField(Synonym, blank=True, verbose_name="synonym", related_name="site")
     country = models.CharField("country", max_length=200, blank=True)
     type = models.CharField("type", max_length=200, blank=True)
     loc = models.ManyToManyField(Location, verbose_name="location")
     elevation = models.IntegerField("elevation", blank=True, null=True)
-    description = GenericRelation(Description, related_query_name="bookmark")
+    description = GenericRelation(Description, related_query_name="description")
 
     class Meta:
         ordering = ["name"]
@@ -699,8 +702,10 @@ models = {
     "epoch": Epoch,
     "checkpoint": Checkpoint,
     "reference": Reference,
-    "contact": ContactPerson,
+    "contact": Person,
+    "person": Person,
     "reldate": RelativeDate,
     "assemblage": FaunalAssemblage,
     "taxon": Taxon,
+    "affiliation": Affiliation,
 }
