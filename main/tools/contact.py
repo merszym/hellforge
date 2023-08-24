@@ -2,8 +2,9 @@ from django.views.generic import CreateView, UpdateView, ListView
 from django.urls import path
 from main.models import Person, Affiliation
 from main.forms import ContactForm
+from django.http import JsonResponse
 import copy
-from main.tools.generic import add_x_to_y_m2m, remove_x_from_y_m2m
+from main.tools.generic import add_x_to_y_m2m, remove_x_from_y_m2m, get_instance_from_string
 
 
 class ContactCreateView(CreateView):
@@ -54,10 +55,19 @@ def remove_affiliation(request):
     return remove_x_from_y_m2m(request, "affiliation")
 
 
+def update_person(request):
+    person = get_instance_from_string(request.POST.get("instance_x"))
+    person.name = request.POST.get("name")
+    person.email = request.POST.get("email")
+    person.save()
+    return JsonResponse({"status": True})
+
+
 urlpatterns = [
     path("list", PersonListView.as_view(), name="main_person_list"),
     path("create", ContactCreateView.as_view(), name="main_contact_create"),
     path("edit/<int:pk>", ContactUpdateView.as_view(), name="main_contact_update"),
     path("affiliation_add", create_and_add_affiliation, name="main_contact_affiliation_add"),
     path("affiliation_remove", remove_affiliation, name="main_contact_affiliation_remove"),
+    path("update", update_person, name="main_person_update"),
 ]

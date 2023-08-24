@@ -18,7 +18,7 @@
                   </div>
                 </div>
                 <div class="panel-body">
-                  <table class="table table-striped table-hover">
+                  <table id="person-table" class="table table-striped table-hover">
                       <thead>
                         <tr>
                           <th>Name</th>
@@ -28,7 +28,7 @@
                       </thead>
                       <tbody>
                         {% for person in object_list %}
-                        <tr class="tr_click" id="person_{{person.pk}}">
+                        <tr class="tr_click" id="trperson_{{person.pk}}">
                           <td>{{ person.name }}</td>
                           <td>{{ person.email }}</td>
                           <td>{% for aff in person.affiliation.all %}
@@ -54,19 +54,20 @@
             <div class="panel p-2">
               <!--Render all panels, but hide-->
               {% for person in object_list %}
+              <span id="tableupdate_{{person.pk}}" class="generic_reload" data-reload="trperson_{{person.pk}}" style="display: none;">click</span>
               <div id="person_form_{{person.pk}}" class="person_form" style="display: none;">
-                <form method="POST" enctype="multipart/form-data">
+                <form method="POST" enctype="multipart/form-data" id="formdata_{{person.pk}}">
                   {% csrf_token %}
                   <div class="form-group">
                     <label class="form-label" for="name_{{person.pk}}">Name</label>
-                    <input class="form-input" type="text" id="name_{{person.pk}}" placeholder="Name" value="{{person.name}}">
+                    <input class="form-input" name="name" type="text" id="name_{{person.pk}}" placeholder="Name" value="{{person.name}}">
                   </div>
 
                   <div class="form-group">
                     <label class="form-label" for="email_{{person.pk}}">Email</label>
-                    <input class="form-input" type="text" id="email_{{person.pk}}" placeholder="Email" value="{{person.email}}">
+                    <input class="form-input" name="email" type="text" id="email_{{person.pk}}" placeholder="Email" value="{{person.email}}">
                   </div>
-                  <button class="btn">Save</button>
+                  <span class="btn update_person" data-x="person_{{person.pk}}" data-url="{% url 'main_person_update' %}">Save</span>
                 </form>
                 <br>
 
