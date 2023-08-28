@@ -62,6 +62,27 @@ class Description(models.Model):
     object_id = models.PositiveIntegerField(null=True)  # null=True only for backwarts compability
     content_object = GenericForeignKey("content_type", "object_id")
 
+    @property
+    def affiliations(self):
+        affs = []
+        for author in self.author.all():
+            for affiliation in author.person.affiliation.all():
+                if affiliation not in affs:
+                    affs.append(affiliation)
+        affs = [(x, n) for n, x in enumerate(affs, 1)]
+        return affs
+
+    @property
+    def authors(self):
+        authors = []
+        affs = {x: n for (x, n) in self.affiliations}
+        for author in self.author.all():
+            aff_string = []
+            for affiliation in author.person.affiliation.all():
+                aff_string.append(str(affs[affiliation]))
+            authors.append((author, ",".join(aff_string)))
+        return authors
+
 
 #
 # / Description
@@ -80,15 +101,21 @@ class Author(models.Model):
     person = models.ForeignKey(
         "Person", blank=True, null=True, verbose_name="person", related_name="author", on_delete=models.PROTECT
     )
-    order = models.IntegerField("order", default=1)
+    position = models.IntegerField("position", default=1)
     description = models.ForeignKey(
         "Description", verbose_name="description", related_name="author", on_delete=models.CASCADE
     )
 
+    class Meta:
+        ordering = ["position"]
+
+    def __str__(self):
+        return f"{self.person.name}"
+
 
 class Person(models.Model):
     name = models.CharField("name", max_length=300)
-    email = models.CharField("email", max_length=300)
+    email = models.CharField("email", max_length=300, default="placeholder@fill.me")
     affiliation = models.ManyToManyField("Affiliation", blank=True, related_name="person", verbose_name="affiliation")
     tags = models.CharField("tags", max_length=300, blank=True, null=True)
 
@@ -708,4 +735,6 @@ models = {
     "assemblage": FaunalAssemblage,
     "taxon": Taxon,
     "affiliation": Affiliation,
+    "description": Description,
+    "author": Author,
 }

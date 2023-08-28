@@ -1,0 +1,7 @@
+{% for author,aff in object.authors %}
+{{author}}<sup>{{aff}}</sup>,
+{% endfor %}
+<br><br>
+{% for aff,n in object.affiliations %}
+{{n}}: {{aff.name}},
+{% endfor %}

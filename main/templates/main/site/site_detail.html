@@ -112,18 +112,17 @@
             </div>
             <div id="description-description" class="panel" style="display:none;">
                 <div class="panel-header" style="position:relative;">
-                    <a class="btn btn-primary tooltip tooltip-right" href="{% url 'main_site_descr_update' object.pk %}" data-tooltip="Edit Description">
+                    <a class="btn btn-primary tooltip tooltip-right" href="{% url 'main_descr_update' object.description.first.pk %}" data-tooltip="Edit Description">
                         <i class="icon icon-edit"></i>
-                    </a>
-                    <a class="btn tooltip tooltip-right" href="{% url 'main_site_descr_update' object.pk %}" data-tooltip="Edit Authors">
-                        <i class="icon icon-people"></i>
                     </a>
                     <span id="resize-editor" class="btn tooltip tooltip-left" style="position:absolute; right: 15px" data-tooltip="Toggle Full Width">
                         <i class="icon icon-resize-horiz"></i>
                     </span>
                 </div>
                 <div class="panel-body" style="max-height:720px;">
-                        {% include 'main/editor/editor-body.html' with description=object.description.first model="site" %}
+                    <h5>Authors</h5>
+                    {% include 'main/description/author_tile.html' with object=object.description.first %}
+                    {% include 'main/editor/editor-body.html' with description=object.description.first model="site" %}
                 </div>
             </div>
         </div>

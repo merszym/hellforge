@@ -111,20 +111,8 @@ def site_create_update(request, pk=None):
     return render(request, "main/site/site_form.html", {"form": SiteForm(instance=copy(object)), "object": object})
 
 
-class SiteDescriptionUpdateView(DetailView):
-    model = Site
-    template_name = "main/site/site_description_update.html"
-    extra_context = {"readonly": False}
-
-    def get_context_data(self, **kwargs):
-        context = super(SiteDescriptionUpdateView, self).get_context_data(**kwargs)
-        context.update(self.extra_context)
-        return context
-
-
 urlpatterns = [
     path("add-profile/<int:site_id>", add_profile, name="main_site_profile_create"),
     path("create", site_create_update, name="main_site_add"),
     path("edit/<int:pk>", site_create_update, name="main_site_update"),
-    path("edit/desc/<int:pk>", SiteDescriptionUpdateView.as_view(), name="main_site_descr_update"),
 ]

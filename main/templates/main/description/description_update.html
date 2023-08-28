@@ -1,0 +1,56 @@
+{% extends 'main/base.html' %}
+{% load static %}
+{% block head %}
+<title>Hellforge: Description Update</title>
+{% include 'main/editor/editor-head.html' %}
+
+{% endblock %}
+{% block headline %}
+Edit Description
+{% endblock %}
+
+{% block body %}
+<span style="display: none;" class="generic_reload" id="author-block-reload-trigger" data-reload="authorblock"></span>
+
+<div id="authorblock" class="ce-block__content">
+<h1>Authors</h1>
+<datalist id="person-choices">
+    {% for option in available_persons %}
+      <option value="{{option.name}}"></option>
+    {% endfor %}
+</datalist>
+
+{% for author in object.author.all %}
+
+<span class="chip">
+  {{author.position}}. {{author.person}}
+  <span class="btn btn-clear delete_author" data-url="{% url 'main_description_author_delete'%}" data-x="author_{{author.pk}}" aria-label="Close" role="button"></span>
+</span>
+
+{% empty %}
+<div class="empty my-2">
+    <div class="empty-icon">
+      <i class="icon icon-people"></i>
+    </div>
+    <p class="empty-title h5">No Authors assigned</p>
+  </div>
+
+{% endfor %}
+<form id="formdata" class="my-2 py-2" method="POST">
+    <h5>Add Author</h5>
+    {% csrf_token %}
+    <div class="input-group">
+        <span class="input-group-addon">Position</span>
+        <input name="position" type="number" class="form-input" placeholder="Position">
+        <span class="input-group-addon">Name</span>
+        <input name="person" id="person_search" list="person-choices"  type="text" class="form-input" placeholder="Person">
+        <span data-url="{% url 'main_description_author_add' %}" id="description_{{object.pk}}" class="btn btn-primary input-group-btn add_author_button">Add</span>
+    </div>
+</form>
+</div>
+
+{% include 'main/editor/editor-body.html' with description=object model="site" %}
+
+<script src="{% static 'js/description.js' %}"></script>
+
+{% endblock %}

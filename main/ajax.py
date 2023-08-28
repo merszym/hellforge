@@ -122,35 +122,3 @@ def search_loc(request):
     kw = data["keyword"]
     q = Location.objects.filter(Q(name__contains=kw))
     return JsonResponse({x.pk: x.name for x in q})
-
-
-def get_description(request):
-    description = Description.objects.get(pk=int(request.GET.get("id")))
-    return JsonResponse(
-        json.loads(description.content) if description.content else {"empty": True, "model": request.GET.get("model")}
-    )
-
-
-@csrf_exempt
-def save_description(request):
-    description = Description.objects.get(pk=int(request.GET.get("id")))
-
-    data = json.loads(request.POST.get("data"))
-    description.content = json.dumps(data)
-
-    # now save the site references
-    ## clear the reference field
-    description.ref.clear()
-    for refpk in set(request.POST.get("references").split(",")):
-        try:
-            pk = int(refpk)
-            ref = Reference.objects.get(pk=pk)
-            description.ref.add(ref)
-        except:
-            continue
-
-    description.save()
-
-    return JsonResponse(
-        {"data": True, "redirect": reverse("site_detail", kwargs={"pk": description.content_object.id})}
-    )
