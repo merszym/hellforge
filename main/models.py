@@ -96,7 +96,7 @@ class Person(models.Model):
         return self.name
 
     def get_absolute_url(self):
-        return reverse("main_contact_update", kwargs={"pk": self.pk})
+        return reverse("main_person_list")
 
     @classmethod
     def filter(self, kw):

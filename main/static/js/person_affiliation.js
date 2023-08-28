@@ -6,7 +6,7 @@ $("body").on('click', '.tr_click', function(){
     $(`#person_form_${id}`).show()
 });
 
-$('#contact-list-search').on("keyup", function() {
+$('#contact-list-search').on("keyup paste", function() {
     var value = $("#contact-list-search").val().toLowerCase();
     $("tr").filter(function() {
         if($(this).text().toLowerCase().indexOf(value) > -1){
@@ -60,7 +60,6 @@ $("body").on('click', '.add_affiliation', function(){
 
 // Remove affiliation from person
 $('body').on('click','.affiliation_delete', function(){
-    //delete a synonym on click
     var formdata = new FormData();
     var id = $(this).attr('data-y').split('_')[1]
     formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
@@ -75,6 +74,46 @@ $('body').on('click','.affiliation_delete', function(){
         success: function() {
             $(`#affiliations_${id}`).click()
             $(`#tableupdate_${id}`).click()
+        }
+    });
+});
+
+//Add a person from the search String
+$('body').on('click','#create_person_from_string', function(){
+    var formdata = new FormData();
+    var search_string = $("#contact-list-search").val()
+    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
+    formdata.append('person_search', search_string)
+
+    $.ajax({
+        type: "POST",
+        processData: false,
+        contentType: false,
+        data: formdata,
+        url: $(this).attr("data-url"),
+        success: function(data) {
+            // do right later
+            location.reload()
+        }
+    });
+});
+
+//Delete a person with the delete-button
+$('body').on('click','.delete_person_button', function(){
+
+    var formdata = new FormData();
+    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
+    formdata.append('instance_x',$(this).attr("data-x"))
+
+    $.ajax({
+        type: "POST",
+        processData: false,
+        contentType: false,
+        data: formdata,
+        url: $(this).attr("data-url"),
+        success: function(data) {
+            // do right later
+            location.reload();
         }
     });
 });

@@ -18,6 +18,7 @@
                   </div>
                 </div>
                 <div class="panel-body">
+                  <span id='table_reload_trigger' style="display: none;" class="generic_reload" data-reload="person-table"></span>
                   <table id="person-table" class="table table-striped table-hover">
                       <thead>
                         <tr>
@@ -39,6 +40,9 @@
                         {% endfor %}
                       </tbody>
                   </table>
+                  <div class="py-2">
+                    <button data-url="{% url 'main_person_create' %}" id="create_person_from_string" class="btn btn-primary">Add Person from Search</button>
+                  </div>
                 </div>
             </div>
         </div>
@@ -51,11 +55,17 @@
                 <option value="{{option}}"></option>
               {% endfor %}
             </datalist>
-            <div class="panel p-2">
+            <span id='panel_reload_trigger' style="display: none;" class="generic_reload" data-reload="person_detail_container"></span>
+            <div class="panel p-2" id="person_detail_container">
               <!--Render all panels, but hide-->
               {% for person in object_list %}
               <span id="tableupdate_{{person.pk}}" class="generic_reload" data-reload="trperson_{{person.pk}}" style="display: none;">click</span>
               <div id="person_form_{{person.pk}}" class="person_form" style="display: none;">
+
+                <button class="btn btn-error btn-sm float-right tooltip tooltip-left delete_person_button" data-url="{% url 'main_person_delete' %}" data-x="person_{{person.pk}}" data-tooltip="Cancel this Person">
+                  <i class="icon icon-delete"></i>
+                </button>
+
                 <form method="POST" enctype="multipart/form-data" id="formdata_{{person.pk}}">
                   {% csrf_token %}
                   <div class="form-group">
