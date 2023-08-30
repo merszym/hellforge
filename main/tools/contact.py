@@ -5,15 +5,17 @@ from main.forms import ContactForm
 from django.http import JsonResponse
 import copy
 from main.tools.generic import add_x_to_y_m2m, remove_x_from_y_m2m, get_instance_from_string, delete_x
+from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
+from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, make smarter later
 
 
-class ContactCreateView(CreateView):
+class ContactCreateView(LoginRequiredMixin, CreateView):
     model = Person
     form_class = ContactForm
     template_name = "main/contact/contact-form.html"
 
 
-class PersonListView(ListView):
+class PersonListView(LoginRequiredMixin, ListView):
     model = Person
     template_name = "main/contact/person_list.html"
 
@@ -24,6 +26,7 @@ class PersonListView(ListView):
         return context
 
 
+@login_required
 def create_from_string(request):
     """Create a new Person from String. Add additional information later"""
     person = Person(name=request.POST.get("person_search"), email="placeholder@fill.me")
@@ -32,6 +35,7 @@ def create_from_string(request):
     return JsonResponse({"status": True, "pk": person.pk})
 
 
+@login_required
 def create_and_add_affiliation(request):
     """
     get or create an affiliation and add it to an instance_y in the request
@@ -50,6 +54,7 @@ def create_and_add_affiliation(request):
     return add_x_to_y_m2m(new_request, "affiliation")
 
 
+@login_required
 def remove_affiliation(request):
     """
     remove an affiliation from the person
@@ -57,6 +62,7 @@ def remove_affiliation(request):
     return remove_x_from_y_m2m(request, "affiliation")
 
 
+@login_required
 def update_person(request):
     person = get_instance_from_string(request.POST.get("instance_x"))
     person.name = request.POST.get("name")
@@ -65,6 +71,7 @@ def update_person(request):
     return JsonResponse({"status": True})
 
 
+@login_required
 def delete_person(request):
     """Delete a person"""
     return delete_x(request)

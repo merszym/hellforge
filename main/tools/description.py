@@ -6,6 +6,8 @@ from django.views.generic import UpdateView
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.urls import reverse
+from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
+from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, make smarter later
 
 
 # Get description json for detail views in editor.js
@@ -41,7 +43,7 @@ def save_description(request):
     )
 
 
-class DescriptionUpdateView(UpdateView):
+class DescriptionUpdateView(LoginRequiredMixin, UpdateView):
     model = Description
     template_name = "main/description/description_update.html"
     extra_context = {"readonly": False, "available_persons": Person.objects.all()}
@@ -53,6 +55,7 @@ class DescriptionUpdateView(UpdateView):
         return context
 
 
+@login_required
 def create_and_add_author(request):
     """
     create an author and add it to an instance_y in the request
@@ -67,6 +70,7 @@ def create_and_add_author(request):
     return JsonResponse({"status": True})
 
 
+@login_required
 def delete_author(request):
     """
     Delete an author from the description
