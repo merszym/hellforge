@@ -23,6 +23,20 @@ def get_classname(x):
 
 
 #
+# Project Model
+#
+
+
+class Project(models.Model):
+    name = models.CharField("name", max_length=200, unique=True)
+    password = models.TextField("password", blank=True, null=True)
+    description = GenericRelation("Description", related_query_name="description")
+
+    def __str__(self):
+        return self.name
+
+
+#
 # Description model
 #
 
@@ -56,6 +70,7 @@ class Gallery(models.Model):
 class Description(models.Model):
     content = models.JSONField("content", blank=True, null=True)
     ref = models.ManyToManyField("Reference", verbose_name="reference", blank=True, related_name="description")
+    project = models.ManyToManyField("Project", verbose_name="project", related_name="description")
 
     # to link the description to other models
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, blank=True, null=True)

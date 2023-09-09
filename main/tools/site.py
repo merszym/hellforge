@@ -2,11 +2,47 @@ from django.urls import path
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.views.generic import CreateView, ListView, UpdateView, DetailView
+from django.db.models import Q
 from main.forms import ProfileForm, SiteForm, ReferenceForm, ContactForm, DateForm
 from main.models import Site, DatingMethod, Location, Culture, Checkpoint, Layer, Date, Description
 from copy import copy
 import json
 import seaborn as sns
+from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
+from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, make smarter later
+from collections import defaultdict
+
+
+## Sites
+class SiteDetailView(LoginRequiredMixin, DetailView):
+    model = Site
+    template_name = "main/site/site_detail.html"
+
+    def get_context_data(self, **kwargs):
+        context = super(SiteDetailView, self).get_context_data(**kwargs)
+        tab = self.request.GET.get("tab", "layers")
+
+        # create jsons for expected taxa:
+        nested_dict = lambda: defaultdict(nested_dict)
+        # Create an instance of the nested defaultdict
+        taxa = nested_dict()
+
+        for layer in Layer.objects.filter(Q(site=self.object) & Q(assemblage__isnull=False)):
+            for assemblage in layer.assemblage.all():
+                for found_taxon in assemblage.taxa.all():
+                    taxon = found_taxon.taxon
+                    taxa[taxon.family][taxon][layer] = found_taxon.abundance
+
+        context.update({"profile_form": ProfileForm, "tab": tab, "taxa": taxa})
+        return context
+
+
+class SiteListView(LoginRequiredMixin, ListView):
+    model = Site
+    template_name = "main/site/site_list.html"
+
+    def get_queryset(self):
+        return Site.objects.filter(child=None)
 
 
 def get_timeline_data(site_id, hidden=False, related=False, curves=False):
@@ -115,4 +151,6 @@ urlpatterns = [
     path("add-profile/<int:site_id>", add_profile, name="main_site_profile_create"),
     path("create", site_create_update, name="main_site_add"),
     path("edit/<int:pk>", site_create_update, name="main_site_update"),
+    path("list", SiteListView.as_view(), name="site_list"),
+    path("<int:pk>", SiteDetailView.as_view(), name="site_detail"),
 ]

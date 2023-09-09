@@ -2,6 +2,7 @@ from django.contrib import admin
 from .models import *
 
 admin.site.register(Reference)
+admin.site.register(Project)
 admin.site.register(Date)
 admin.site.register(Culture)
 admin.site.register(Epoch)
