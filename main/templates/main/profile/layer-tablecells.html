@@ -30,7 +30,7 @@
     {%endif%}
 </td>
 <td>{% if layer.culture %}
-    <a class="btn-link" href="{% url 'culture_detail' layer.culture.pk %}">{{layer.culture}}</a><br>
+    <a class="btn-link" href="{% url 'culture_detail' pk=layer.culture.pk %}">{{layer.culture}}</a><br>
     <span class="text-gray" style="font-size:11pt;">{{layer.culture.age_summary}}</span>
     {% endif %}
 </td>

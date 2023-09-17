@@ -38,6 +38,7 @@ class CultureDetailView(LoginRequiredMixin, DetailView):
         groupdata = []
         geo = {"type": "FeatureCollection", "features": []}
         nochildren = self.request.GET.get("nochildren", False)
+        project = self.kwargs.get("project", None)
         query = sorted(self.object.all_cultures(nochildren=nochildren), key=lambda x: x.upper * -1)
         # get the colors right
         ordered_sites = sorted(
@@ -111,6 +112,7 @@ class CultureDetailView(LoginRequiredMixin, DetailView):
         context["itemdata"] = json.dumps(items)
         context["groups"] = json.dumps(groupdata)
         context["geo"] = geo
+        context["project"] = project
         return context
 
 

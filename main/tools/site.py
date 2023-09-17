@@ -4,13 +4,14 @@ from django.shortcuts import render, redirect
 from django.views.generic import CreateView, ListView, UpdateView, DetailView
 from django.db.models import Q
 from main.forms import ProfileForm, SiteForm, ReferenceForm, ContactForm, DateForm
-from main.models import Site, DatingMethod, Location, Culture, Checkpoint, Layer, Date, Description
+from main.models import Site, DatingMethod, Location, Culture, Checkpoint, Layer, Date, Description, Project
 from copy import copy
 import json
 import seaborn as sns
 from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
 from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, make smarter later
 from collections import defaultdict
+from django.shortcuts import get_object_or_404
 
 
 ## Sites
@@ -21,6 +22,8 @@ class SiteDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super(SiteDetailView, self).get_context_data(**kwargs)
         tab = self.request.GET.get("tab", "layers")
+        if project := self.kwargs.get("project", None):
+            project = get_object_or_404(Project, namespace=project)
 
         # create jsons for expected taxa:
         nested_dict = lambda: defaultdict(nested_dict)
@@ -33,7 +36,7 @@ class SiteDetailView(LoginRequiredMixin, DetailView):
                     taxon = found_taxon.taxon
                     taxa[taxon.family][taxon][layer] = found_taxon.abundance
 
-        context.update({"profile_form": ProfileForm, "tab": tab, "taxa": taxa})
+        context.update({"profile_form": ProfileForm, "tab": tab, "taxa": taxa, "project": project})
         return context
 
 
@@ -43,6 +46,14 @@ class SiteListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return Site.objects.filter(child=None)
+
+    def get_context_data(self, **kwargs):
+        context = super(SiteListView, self).get_context_data(**kwargs)
+        if project := self.kwargs.get("project", None):
+            project = get_object_or_404(Project, namespace=project)
+
+        context.update({"project": project})
+        return context
 
 
 def get_timeline_data(site_id, hidden=False, related=False, curves=False):

@@ -17,7 +17,22 @@
     </style>
     <section>
         <div class='panel-header bg-primary' style='margin-top:-4px; padding: 20px;'>
-            <h1>{% block headline %}{% endblock %}</h1>
+            <div style="display: flex; justify-content: space-between;">
+                <h1>{% block headline %}{% endblock %}</h1>
+                <div class="dropdown">
+                    {% if project %}{{project}}{% else %}No project selected{% endif %}
+                    <a href="#" class="btn btn-link dropdown-toggle dropdown-right" tabindex="0">
+                    <i class="icon icon-caret"></i>
+                    </a>
+                    <!-- menu component -->
+                    <ul class="menu">
+                        {% for project in projects %}
+                            <li>{{project}}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
             {% block breadcrumps %}{% endblock %}
         </div>
         {% block paddingless %}{% endblock %}
