@@ -5,7 +5,7 @@
 {% include 'main/location/location-head.html' %}
 {% include 'main/editor/editor-head.html' %}
 {% endblock %}
-{% block headline %} <a style='color:white' href="{% url 'site_list' project=project.namespace%}">Site</a>{% endblock %}
+{% block headline %} <a style='color:white' href="{% url 'site_list' %}">Site</a>{% endblock %}
 {% block body %}
 
 <!-- Add dynamic styling for units and cultures -->
@@ -69,12 +69,12 @@
                         <tr>
                             <td>{{object.name}}</td>
                             {% if object.parent %}
-                            <td><a href="{% url 'site_detail' pk=object.parent.pk project=project.namespace %}">{{object.parent}}</a></td>
+                            <td><a href="{% url 'site_detail' pk=object.parent.pk %}">{{object.parent}}</a></td>
                             {% endif %}
                             {% if object.child.first %}
                             <td>
                                 {% for child in object.child.all %}
-                                <a href="{% url 'site_detail' pk=child.pk project=project.namespace %}">{{child.name}}</a><br>
+                                <a href="{% url 'site_detail' pk=child.pk %}">{{child.name}}</a><br>
                                 {% endfor %}
                             </td>
                             {% endif %}
@@ -158,7 +158,7 @@
                                 <div class="card-body">
                                 </div>
                                 <div class="card-footer">
-                                <a href="{% url 'site_detail' pk=child.pk project=project.namespace %}" class="btn btn-primary">Go</a>
+                                <a href="{% url 'site_detail' pk=child.pk %}" class="btn btn-primary">Go</a>
                                 </div>
                             </div>
                         </div>
@@ -205,7 +205,7 @@
         var json = {{child.loc.first.geo | safe }}
         json.features[0].properties['popupContent'] = `
             <strong>{{child.name}}</strong><br>
-            <a href={% url 'site_detail' pk=child.pk project=project.namespace %} class=btn-link>Details</a>
+            <a href={% url 'site_detail' pk=child.pk %} class=btn-link>Details</a>
             `
         json.features[0].properties['id'] = "{{child.pk}}"
         drawJson(json);

@@ -24,10 +24,11 @@ from collections import defaultdict
 from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
 from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, make smarter later
 from django.urls import path
+from main.views import ProjectAwareDetailView, ProjectAwareListView
 
 
 ## Cultures ##
-class CultureDetailView(LoginRequiredMixin, DetailView):
+class CultureDetailView(LoginRequiredMixin, ProjectAwareDetailView):
     model = Culture
     template_name = "main/culture/culture_detail.html"
 
@@ -38,7 +39,6 @@ class CultureDetailView(LoginRequiredMixin, DetailView):
         groupdata = []
         geo = {"type": "FeatureCollection", "features": []}
         nochildren = self.request.GET.get("nochildren", False)
-        project = self.kwargs.get("project", None)
         query = sorted(self.object.all_cultures(nochildren=nochildren), key=lambda x: x.upper * -1)
         # get the colors right
         ordered_sites = sorted(
@@ -112,7 +112,6 @@ class CultureDetailView(LoginRequiredMixin, DetailView):
         context["itemdata"] = json.dumps(items)
         context["groups"] = json.dumps(groupdata)
         context["geo"] = geo
-        context["project"] = project
         return context
 
 
@@ -150,7 +149,7 @@ class CultureCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class CultureListView(LoginRequiredMixin, ListView):
+class CultureListView(LoginRequiredMixin, ProjectAwareListView):
     model = Culture
     template_name = "main/culture/culture_list.html"
 

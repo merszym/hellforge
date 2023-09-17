@@ -12,18 +12,17 @@ from django.contrib.auth.decorators import login_required  # this is for now, ma
 from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, make smarter later
 from collections import defaultdict
 from django.shortcuts import get_object_or_404
+from main.views import ProjectAwareListView, ProjectAwareDetailView
 
 
 ## Sites
-class SiteDetailView(LoginRequiredMixin, DetailView):
+class SiteDetailView(LoginRequiredMixin, ProjectAwareDetailView):
     model = Site
     template_name = "main/site/site_detail.html"
 
     def get_context_data(self, **kwargs):
         context = super(SiteDetailView, self).get_context_data(**kwargs)
         tab = self.request.GET.get("tab", "layers")
-        if project := self.kwargs.get("project", None):
-            project = get_object_or_404(Project, namespace=project)
 
         # create jsons for expected taxa:
         nested_dict = lambda: defaultdict(nested_dict)
@@ -36,24 +35,22 @@ class SiteDetailView(LoginRequiredMixin, DetailView):
                     taxon = found_taxon.taxon
                     taxa[taxon.family][taxon][layer] = found_taxon.abundance
 
-        context.update({"profile_form": ProfileForm, "tab": tab, "taxa": taxa, "project": project})
+        context.update(
+            {
+                "profile_form": ProfileForm,
+                "tab": tab,
+                "taxa": taxa,
+            }
+        )
         return context
 
 
-class SiteListView(LoginRequiredMixin, ListView):
+class SiteListView(LoginRequiredMixin, ProjectAwareListView):
     model = Site
     template_name = "main/site/site_list.html"
 
     def get_queryset(self):
         return Site.objects.filter(child=None)
-
-    def get_context_data(self, **kwargs):
-        context = super(SiteListView, self).get_context_data(**kwargs)
-        if project := self.kwargs.get("project", None):
-            project = get_object_or_404(Project, namespace=project)
-
-        context.update({"project": project})
-        return context
 
 
 def get_timeline_data(site_id, hidden=False, related=False, curves=False):

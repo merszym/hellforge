@@ -21,8 +21,25 @@ from django.db.models import Q
 from collections import defaultdict
 from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
 from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, make smarter later
+from main.tools.projects import get_project
 
 
+# overwrite generic views to put project into context
+class ProjectAwareListView(ListView):
+    def get_context_data(self, **kwargs):
+        context = super(ProjectAwareListView, self).get_context_data(**kwargs)
+        context["project"] = get_project(self.request)
+        return context
+
+
+class ProjectAwareDetailView(DetailView):
+    def get_context_data(self, **kwargs):
+        context = super(ProjectAwareDetailView, self).get_context_data(**kwargs)
+        context["project"] = get_project(self.request)
+        return context
+
+
+# now the other views..
 @login_required
 def landing(request):
     return render(request, "main/common/landing.html")

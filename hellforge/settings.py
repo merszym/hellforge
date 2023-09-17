@@ -41,6 +41,9 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+SESSION_ENGINE = "django.contrib.sessions.backends.db"  # You can choose a different session engine if needed.
+SESSION_COOKIE_NAME = "project_session"  # Customize the session cookie name.
+
 ROOT_URLCONF = "hellforge.urls"
 
 TEMPLATES = [

@@ -62,7 +62,7 @@
         var json = {{object.loc.first.geo | safe }}
         json.features[0].properties['popupContent'] = `
             <strong>{{object.name}}</strong><br>
-            <a href={% url 'site_detail' pk=object.pk project=project.namespace %} class=btn-link>Details</a>
+            <a href={% url 'site_detail' pk=object.pk %} class=btn-link>Details</a>
             `
         json.features[0].properties['id'] = "{{object.pk}}"
         drawJson(json);
