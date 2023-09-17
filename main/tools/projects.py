@@ -25,6 +25,11 @@ def checkout_project(request, namespace):
     return redirect("landing")
 
 
+def close_project(request):
+    del request.session["session_project"]
+    return redirect("landing")
+
+
 class ProjectListView(ListView):
     model = Project
     template_name = "main/project/project_list.html"
@@ -32,5 +37,6 @@ class ProjectListView(ListView):
 
 urlpatterns = [
     path("list", ProjectListView.as_view(), name="main_project_list"),
-    path("login/<str:namespace>", checkout_project, name="main_project_checkout"),
+    path("checkout/<str:namespace>", checkout_project, name="main_project_checkout"),
+    path("close", close_project, name="main_project_close"),
 ]

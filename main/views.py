@@ -31,6 +31,15 @@ class ProjectAwareListView(ListView):
         context["project"] = get_project(self.request)
         return context
 
+    def get_queryset(self, **kwargs):
+        queryset = super(ProjectAwareListView, self).get_queryset(**kwargs)
+        if project := get_project(self.request):
+            try:
+                return queryset.filter(project=project)  # catch lists that dont have a project
+            except:
+                pass
+        return queryset
+
 
 class ProjectAwareDetailView(DetailView):
     def get_context_data(self, **kwargs):

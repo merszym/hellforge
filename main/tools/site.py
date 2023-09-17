@@ -49,8 +49,8 @@ class SiteListView(LoginRequiredMixin, ProjectAwareListView):
     model = Site
     template_name = "main/site/site_list.html"
 
-    def get_queryset(self):
-        return Site.objects.filter(child=None)
+    # def get_queryset(self):
+    #    return Site.objects.filter(child=None)
 
 
 def get_timeline_data(site_id, hidden=False, related=False, curves=False):

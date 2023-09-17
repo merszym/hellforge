@@ -529,6 +529,7 @@ class Site(models.Model):
     loc = models.ManyToManyField(Location, verbose_name="location")
     elevation = models.IntegerField("elevation", blank=True, null=True)
     description = GenericRelation(Description, related_query_name="description")
+    project = models.ManyToManyField("Project", related_name="site", blank=True)
 
     class Meta:
         ordering = ["name"]
