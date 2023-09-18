@@ -41,3 +41,15 @@ $('body').on('click', '.generic_reload', function(){
         }
     });
 })
+
+
+//load the project status button in each page
+$(document).ready(function(){
+    var element = $('#project_status_tile')
+    $.ajax({
+        url: element.attr('data-url'),
+        success: function(html) {
+            element.html(html)
+        }
+    });
+});

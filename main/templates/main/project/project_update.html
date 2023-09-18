@@ -1,0 +1,43 @@
+{% extends "main/base.html" %}
+{% load static %}
+{% block head %}
+<title>Hellforge: Project</title>
+{% endblock %}
+{% block body %}
+{% if object %}
+<h1>Edit Project: {{object.name}}</h1>
+{% else %}
+<h1>Add a Project</h1>
+{% endif %}
+
+<form method="POST" enctype="multipart/form-data">
+{% csrf_token %}
+    <div class="container">
+        <div class='columns'>
+            <div class="column">
+                <div class="my-2">
+                    <h5>Project Data</h5>
+                        <div class="form-group">
+                            <label class="form-label" for="project-name">Name</label>
+                            <input class="form-input" type="text" id="project-name" name="name" placeholder="Project name" required
+                            value="{{form.name.value}}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="project-namespace">Namespace</label>
+                            <input class="form-input" type="text" id="project-namespace" name="namespace" placeholder="Project namespace" required
+                            value="{{form.namespace.value}}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="project-password">Password</label>
+                            <input class="form-input" type="text" id="project-password" name="password" placeholder="Project password"
+                            value="{{form.password.value}}">
+                        </div>
+
+                        <br>
+                        <button class='btn btn-primary' type="submit">Save Project</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}

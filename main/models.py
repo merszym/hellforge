@@ -31,10 +31,12 @@ class Project(models.Model):
     name = models.CharField("name", max_length=500, unique=True)
     password = models.TextField("password", blank=True, null=True)
     namespace = models.CharField("slug", max_length=300, unique=True, blank=True, null=True)
-    description = GenericRelation("Description", related_query_name="description")
 
     def __str__(self):
         return self.name
+
+    def get_absolute_url(self):
+        return reverse("main_project_detail", kwargs={"namespace": self.namespace})
 
 
 #

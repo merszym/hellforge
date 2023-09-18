@@ -19,15 +19,7 @@
         <div class='panel-header bg-primary' style='margin-top:-4px; padding: 20px;'>
             <div style="display: flex; justify-content: space-between;">
                 <h1>{% block headline %}{% endblock %}</h1>
-                <span>
-                    <a href="{% url 'main_project_list' %}">
-                    {% if project %}
-                    <button class="btn btn-success">{{project}}</button>
-                    {% else %}
-                    <button class="btn btn-error">No project selected</button>
-                    {% endif %}
-                    </a>
-                </span>
+                <span id="project_status_tile" data-url="{% url 'main_project_status' %}"></span>
             </div>
 
             {% block breadcrumps %}{% endblock %}

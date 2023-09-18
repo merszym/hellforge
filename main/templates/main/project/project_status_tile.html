@@ -1,0 +1,11 @@
+<span>
+    {% if project %}
+    <a href="{% url 'main_project_detail' project.namespace %}">
+        <button class="btn btn-success">{{project}}</button>
+    </a>
+    {% else %}
+    <a href="{% url 'main_project_list' %}">
+        <button class="btn btn-error">No project selected</button>
+    </a>
+    {% endif %}
+</span>
