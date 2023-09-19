@@ -530,7 +530,7 @@ class Site(models.Model):
     type = models.CharField("type", max_length=200, blank=True)
     loc = models.ManyToManyField(Location, verbose_name="location")
     elevation = models.IntegerField("elevation", blank=True, null=True)
-    description = GenericRelation(Description, related_query_name="description")
+    description = GenericRelation(Description, related_query_name="site")
     project = models.ManyToManyField("Project", related_name="site", blank=True)
 
     class Meta:

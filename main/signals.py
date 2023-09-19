@@ -180,3 +180,22 @@ def create_description(sender, instance, **kwargs):
     if not instance.description:
         tmp = Description(project=instance)
         tmp.save()
+
+
+# after adding a site to a project - add a description if it doesnt yet exist
+@receiver(m2m_changed, sender=Project.site.through)
+def create_description(sender, instance, **kwargs):
+    pk = set(kwargs.get("pk_set")).pop()
+    site = kwargs.get("model").objects.get(pk=pk)
+    # site = site
+    # instance = the project
+    if kwargs.pop("action", False) == "post_add":
+        # filter all descriptions for site and project
+        queryset = Description.objects.filter(site=site, project=instance)
+        # if it doesnt exist: create one!
+        if len(queryset) == 0:
+            tmp = Description()
+            tmp.save()
+            tmp.refresh_from_db()
+            tmp.project.add(instance)
+            site.description.add(tmp)
