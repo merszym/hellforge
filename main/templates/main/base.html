@@ -29,6 +29,7 @@
                 {% block body %}{% endblock %}
         </div>
     </section>
+    {% csrf_token %}
     <!-- This is the blank modal to be filled with all the modals -->
     <div class="modal" id="modal-blank">
         <a href="#close" class="modal-overlay" aria-label="Close"></a>

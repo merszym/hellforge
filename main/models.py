@@ -756,4 +756,5 @@ models = {
     "affiliation": Affiliation,
     "description": Description,
     "author": Author,
+    "project": Project,
 }

@@ -149,3 +149,41 @@ $('body').on('click', '.refresh_profile', function(){
     getProfile()
     reloadTimeline()
 })
+
+// add site to project on clicking the button
+$('body').on("click", '#site_project_add', function(){
+    var formdata = new FormData();
+    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
+    formdata.append('instance_x', $(this).attr('data-x')); //site
+    formdata.append('instance_y', $(this).attr('data-y')); //project
+    console.log(formdata)
+    $.ajax({
+        type: "POST",
+        processData: false,
+        contentType: false,
+        url: $(this).attr('data-url'),
+        data: formdata,
+        }).done(function(){
+            location.reload()
+        });
+
+});
+
+// remove site from project by clicking the button
+$('body').on("click", '#site_project_remove', function(){
+    var formdata = new FormData();
+    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
+    formdata.append('instance_x', $(this).attr('data-x')); //site
+    formdata.append('instance_y', $(this).attr('data-y')); //project
+    console.log(formdata)
+    $.ajax({
+        type: "POST",
+        processData: false,
+        contentType: false,
+        url: $(this).attr('data-url'),
+        data: formdata,
+        }).done(function(){
+            location.reload()
+        });
+
+});

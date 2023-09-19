@@ -13,6 +13,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, ma
 from collections import defaultdict
 from django.shortcuts import get_object_or_404
 from main.views import ProjectAwareListView, ProjectAwareDetailView
+from main.tools.generic import add_x_to_y_m2m, remove_x_from_y_m2m
 
 
 ## Sites
@@ -49,8 +50,9 @@ class SiteListView(LoginRequiredMixin, ProjectAwareListView):
     model = Site
     template_name = "main/site/site_list.html"
 
-    # def get_queryset(self):
-    #    return Site.objects.filter(child=None)
+    def get_queryset(self, **kwargs):
+        queryset = super(SiteListView, self).get_queryset(**kwargs)
+        return queryset.filter(child=None)
 
 
 def get_timeline_data(site_id, hidden=False, related=False, curves=False):
@@ -155,10 +157,20 @@ def site_create_update(request, pk=None):
     return render(request, "main/site/site_form.html", {"form": SiteForm(instance=copy(object)), "object": object})
 
 
+def add_site_to_project(request):
+    return add_x_to_y_m2m(request, "site")
+
+
+def remove_site_from_project(request):
+    return remove_x_from_y_m2m(request, "site")
+
+
 urlpatterns = [
     path("add-profile/<int:site_id>", add_profile, name="main_site_profile_create"),
     path("create", site_create_update, name="main_site_add"),
     path("edit/<int:pk>", site_create_update, name="main_site_update"),
     path("list", SiteListView.as_view(), name="site_list"),
     path("<int:pk>", SiteDetailView.as_view(), name="site_detail"),
+    path("add_to_project", add_site_to_project, name="main_add_site_to_project"),
+    path("remove_from_project", remove_site_from_project, name="main_remove_site_from_project"),
 ]

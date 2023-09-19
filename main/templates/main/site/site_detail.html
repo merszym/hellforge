@@ -5,7 +5,7 @@
 {% include 'main/location/location-head.html' %}
 {% include 'main/editor/editor-head.html' %}
 {% endblock %}
-{% block headline %} <a style='color:white' href="{% url 'site_list' %}">Site</a>{% endblock %}
+{% block headline %} <a style='color:white' href="{% url 'site_list' %}">{{object}}</a>{% endblock %}
 {% block body %}
 
 <!-- Add dynamic styling for units and cultures -->
@@ -32,12 +32,32 @@
 </style>
 </div>
 <div class='columns' style="padding:10px;">
+    <!--This span used by ajax to reload the site information panel-->
+    <span id="site_info_update_click" style="display: none;" class="generic_reload" data-reload="mobile"></span>
     <div class="column col-4" id='mobile' style="position:relative;">
-        <a class="btn btn-primary tooltip tooltip-left" href="{% url 'main_site_update' object.pk %}" style="position:absolute; right:5%; top:10px" data-tooltip="Edit Site">
+        <div style="position:absolute; right:5%; top:10px">
+        <a class="btn btn-primary tooltip tooltip-left" href="{% url 'main_site_update' object.pk %}" data-tooltip="Edit Site">
             <i class="icon icon-edit"></i>
         </a>
+        {% if project and not object in project.site.all %}
+        <span class="btn bg-success tooltip tooltip-top" id="site_project_add" data-tooltip="Add Site to Project"
+            data-x="site_{{object.pk}}" data-y="project_{{project.pk}}" data-url="{% url 'main_add_site_to_project' %}">
+            <i class="icon icon-plus"></i>
+        </span>
+        {% elif project and object in project.site.all %}
+        <span class="btn bg-warning tooltip tooltip-top" id="site_project_remove" data-tooltip="Remove Site from Project"
+            data-x="site_{{object.pk}}" data-y="project_{{project.pk}}" data-url="{% url 'main_remove_site_from_project' %}">
+            <i class="icon icon-minus"></i>
+        </span>
+        {% endif %}
+        </div>
         <div class="my-2">
-            <h2>{{object.name}}</h2>
+            <h2 style="margin-bottom: 2px;">Site Information</h2>
+            {% if project and not object in project.site.all %}
+            <small class="label label-warning my-2">Site not in Project</small><br>
+            {% elif project and object in project.site.all %}
+            <small class="label label-success my-2">Site in Project</small><br>
+            {% endif %}
             <div class="btn-group">
                 <button id='btn-overview' class="btn btn-primary overview-toggle">Overview</button>
                 <button id='btn-descr' class="btn overview-toggle">Description</button>
