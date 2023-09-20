@@ -7,7 +7,9 @@
     </span>
 </div>
 <div class="panel-body" style="max-height:720px;">
+    {% if description.author.first %}
     <h5>Authors</h5>
     {% include 'main/description/author_tile.html' with object=description %}
+    {% endif %}
     {% include 'main/editor/editor-body.html' with description=description model=model %}
 </div>

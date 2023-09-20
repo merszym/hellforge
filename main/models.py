@@ -47,8 +47,13 @@ class Project(models.Model):
 def get_image_path(instance, filename):
     # instance = the new Image instance
     # filename = the original filename
-    object = instance.gallery.description.content_object
-    return f'descriptions/{object.model}/{object.name.replace(" ","_")}/{filename.replace(" ","_")}'
+    description = instance.gallery.description
+    object = description.content_object
+    try:
+        project = description.project.first().namespace
+        return f'descriptions/{object.model}/{object.name.replace(" ","_")}/{project}/{filename.replace(" ","_")}'
+    except:
+        return f'descriptions/{object.model}/{object.name.replace(" ","_")}/{filename.replace(" ","_")}'
 
 
 class Image(models.Model):

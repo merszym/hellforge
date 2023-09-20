@@ -3,9 +3,7 @@ defaults = {
         "blocks":
         [
             {"id":1, "type": "header", "data": {"text": "Description", "level": 2}},
-            {"id":2, "type": "header", "data": {"text": "References", "level": 5}},
-            {"id":3, "type": "list", "data": {"style": "unordered", "items": []}},
-            {"id":4, "type": "header", "data": {"text": "Acknowledgements", "level": 5}},
+            {"id":2, "type": "header", "data": {"text": "Acknowledgements", "level": 5}},
         ], "version": "2.25.0"
     }
 }
