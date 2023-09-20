@@ -8,8 +8,8 @@ from main.models import Site, DatingMethod, Location, Culture, Checkpoint, Layer
 from copy import copy
 import json
 import seaborn as sns
-from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
 from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, make smarter later
+from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
 from collections import defaultdict
 from django.shortcuts import get_object_or_404
 from main.views import ProjectAwareListView, ProjectAwareDetailView
@@ -17,7 +17,7 @@ from main.tools.generic import add_x_to_y_m2m, remove_x_from_y_m2m
 
 
 ## Sites
-class SiteDetailView(LoginRequiredMixin, ProjectAwareDetailView):
+class SiteDetailView(ProjectAwareDetailView):
     model = Site
     template_name = "main/site/site_detail.html"
 
@@ -48,7 +48,7 @@ class SiteDetailView(LoginRequiredMixin, ProjectAwareDetailView):
         return context
 
 
-class SiteListView(LoginRequiredMixin, ProjectAwareListView):
+class SiteListView(ProjectAwareListView):
     model = Site
     template_name = "main/site/site_list.html"
 
@@ -122,6 +122,7 @@ def get_timeline_data(site_id, hidden=False, related=False, curves=False):
     return data
 
 
+@login_required
 def add_profile(request, site_id):
     """
     create and add a new profile within a Site
@@ -136,6 +137,7 @@ def add_profile(request, site_id):
 
 
 # Sites ##
+@login_required
 def site_create_update(request, pk=None):
     object = Site.objects.get(pk=pk) if pk else None
     if request.method == "POST":
@@ -159,10 +161,12 @@ def site_create_update(request, pk=None):
     return render(request, "main/site/site_form.html", {"form": SiteForm(instance=copy(object)), "object": object})
 
 
+@login_required
 def add_site_to_project(request):
     return add_x_to_y_m2m(request, "site")
 
 
+@login_required
 def remove_site_from_project(request):
     return remove_x_from_y_m2m(request, "site")
 

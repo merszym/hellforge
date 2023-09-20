@@ -82,7 +82,7 @@ $('.overview-toggle').on('click', function(){
     }
 })
 
-$("#resize-editor").on('click', function(){
+$("body").on('click',"#resize-editor", function(){
     $('#mobile').toggleClass('col-4')
     $('#mobile').toggleClass('col-12')
 });

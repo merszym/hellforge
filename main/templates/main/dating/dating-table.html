@@ -21,6 +21,7 @@
         {% for date in date_list %}
             <tr>
                 <td>
+                {% if request.user.is_authenticated %}
                 <span class="btn tooltip tooltip-right date_toggle" data-tooltip="Toggle Usage of Date" id="date_{{date.pk}}" data-url="{% url 'ajax_date_toggle'%}">
                     {% if mode == 'visible' %}
                     <i class="icon icon-downward"></i>
@@ -28,6 +29,7 @@
                     <i class="icon icon-upward"></i>
                     {% endif %}
                 </span>
+                {% endif %}
                 </td>
                 <td>{{date.method}}</td>
                 {% if date.method == '14C' %}
@@ -45,14 +47,18 @@
                 {% endif %}
                 <td>
                 {% if date.method == '14C' %}
-                <div class="form-group">
-                    <select class="form-select 14c-curve-select" id="date_{{date.pk}}" data-url="{% url 'ajax_date_recalibrate' %}">
-                        <option value="{{date.curve|lower}}"selected>{{date.curve}}</option>
-                        <option value="intcal20">intcal20</option>
-                        <option value="marine20">marine20</option>
-                        <option value="shcal20">shcal20</option>
-                    </select>
-                </div>
+                    {% if request.user.is_authenticated %}
+                    <div class="form-group">
+                        <select class="form-select 14c-curve-select" id="date_{{date.pk}}" data-url="{% url 'ajax_date_recalibrate' %}">
+                            <option value="{{date.curve|lower}}"selected>{{date.curve}}</option>
+                            <option value="intcal20">intcal20</option>
+                            <option value="marine20">marine20</option>
+                            <option value="shcal20">shcal20</option>
+                        </select>
+                    </div>
+                    {% else %}
+                    {{date.curve}}
+                    {% endif %}
                 {% else %}
                 <span>-</span>
                 {% endif %}
@@ -60,9 +66,11 @@
                 <td>{{date.description}}</td>
                 <td>{{date.ref.first.short}}</td>
                 <td>
+                    {% if request.user.is_authenticated %}
                     <span class="btn date_delete tooltip tooltip-left" data-tooltip="Delete Date!" id="date_{{date.pk}}__layer_{{object.pk}}" data-url="{% url 'ajax_date_unlink'%}">
                         <i class="icon icon-delete"></i>
                     </span>
+                    {% endif %}
                 </td>
                 </tr>
             {% endfor %}

@@ -6,8 +6,10 @@ from django.urls import path
 from django.db.models import Q
 from main.models import models, Date
 from main.tools.generic import remove_x_from_y_m2m, delete_x, get_instance_from_string
+from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
 
 
+@login_required
 def calibrate(estimate, plusminus, curve="intcal20"):
     curve = curve
     r = R(int(estimate), int(plusminus), "tmp")
@@ -20,6 +22,7 @@ def calibrate(estimate, plusminus, curve="intcal20"):
         return None, None, None, curve
 
 
+@login_required
 def recalibrate_c14(request):
     date = get_instance_from_string(request.POST.get("instance_x"))
     curve = request.POST.get("curve")
@@ -32,6 +35,7 @@ def recalibrate_c14(request):
     return JsonResponse({"status": True})
 
 
+@login_required
 def calibrate_c14(request):
     date = request.GET.get("estimate", False)
     pm = request.GET.get("pm", False)
@@ -41,6 +45,7 @@ def calibrate_c14(request):
     return JsonResponse({"status": False})
 
 
+@login_required
 def batch_upload(request):
     # handle the csv upload --> #TODO: make a verification!
     # render into new modal, so that people can verify
@@ -89,6 +94,7 @@ def batch_upload(request):
     )
 
 
+@login_required
 def save_verified_batchdata(request):
     import pandas as pd
     from main.models import Date, Site, Layer, Reference
@@ -130,6 +136,7 @@ def save_verified_batchdata(request):
     return JsonResponse({"status": True})
 
 
+@login_required
 def add(request):
     from main.forms import DateForm
     from main.models import DatingMethod, Date
@@ -169,6 +176,7 @@ def add(request):
     )
 
 
+@login_required
 def delete(request):
     status, date, layer = remove_x_from_y_m2m(request, "date", response=False)
     # If dates are not linked to any model, remove
@@ -178,6 +186,7 @@ def delete(request):
 
 
 # TODO: move to relative?
+@login_required
 def add_relative(request):
     from main.forms import RelDateForm
 
@@ -194,6 +203,7 @@ def add_relative(request):
     return render(request, "main/dating/reldate-modal-content.html", {"form": form})
 
 
+@login_required
 def toggle_use(request):
     date = get_instance_from_string(request.POST.get("instance_x"))
     date.hidden = date.hidden == False

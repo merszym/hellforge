@@ -11,7 +11,9 @@
 
 <div class='columns'>
     <div class="column col-4" style="position:relative;">
+        {% if request.user.is_authenticated %}
         <a class="btn btn-primary" href="{% url 'culture_update' object.pk %}" style="position:absolute; right:5%; top:10px"><i class="icon icon-edit"></i></a>
+        {% endif %}
         <div class="my-2">
             <h2>{{object.name}} Sites</h2>
             <div style="height: 480px;" id="map"></div><br>
@@ -49,6 +51,7 @@
                     </td>
                     {% endif %}
                     <td>
+                      {% if request.user.is_authenticated %}
                       <div class="popover popover-right">
                         <button class="btn"><i class="icon icon-menu"></i></button>
                         <div class="popover-container">
@@ -59,7 +62,7 @@
                           </div>
                         </div>
                       </div>
-
+                      {% endif %}
                     </td>
                   </tr>
                 </tbody>

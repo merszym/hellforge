@@ -21,14 +21,13 @@ import json
 import seaborn as sns
 from django.db.models import Q
 from collections import defaultdict
-from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
 from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, make smarter later
 from django.urls import path
 from main.views import ProjectAwareDetailView, ProjectAwareListView
 
 
 ## Cultures ##
-class CultureDetailView(LoginRequiredMixin, ProjectAwareDetailView):
+class CultureDetailView(ProjectAwareDetailView):
     model = Culture
     template_name = "main/culture/culture_detail.html"
 
@@ -149,7 +148,7 @@ class CultureCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class CultureListView(LoginRequiredMixin, ProjectAwareListView):
+class CultureListView(ProjectAwareListView):
     model = Culture
     template_name = "main/culture/culture_list.html"
 

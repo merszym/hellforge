@@ -19,8 +19,6 @@ import json
 import seaborn as sns
 from django.db.models import Q
 from collections import defaultdict
-from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
-from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, make smarter later
 from main.tools.projects import get_project
 
 
@@ -54,7 +52,6 @@ class ProjectAwareDetailView(DetailView):
 
 
 # now the other views..
-@login_required
 def landing(request):
     return render(request, "main/common/landing.html")
 

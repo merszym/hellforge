@@ -19,7 +19,9 @@
                 <div class="panel" style="max-height:480px;">
                     <div class="panel-header">
                         <div class="panel-title"><h3>Site List</h3></div>
+                        {% if request.user.is_authenticated %}
                         <a href="{% url 'main_site_add' %}">New Site</a>
+                        {% endif %}
                             <div class="has-icon-left">
                                 <input class="form-input" id="site-list-search" type="text" placeholder="Find Site" style="width:50%;">
                                 <i class="form-icon icon icon-search"></i>

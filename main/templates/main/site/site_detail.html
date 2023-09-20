@@ -36,6 +36,7 @@
     <span id="site_info_update_click" style="display: none;" class="generic_reload" data-reload="mobile"></span>
     <div class="column col-4" id='mobile' style="position:relative;">
         <div style="position:absolute; right:5%; top:10px">
+        {% if request.user.is_authenticated %}
         <a class="btn btn-primary tooltip tooltip-left" href="{% url 'main_site_update' object.pk %}" data-tooltip="Edit Site">
             <i class="icon icon-edit"></i>
         </a>
@@ -49,6 +50,7 @@
             data-x="site_{{object.pk}}" data-y="project_{{project.pk}}" data-url="{% url 'main_remove_site_from_project' %}">
             <i class="icon icon-minus"></i>
         </span>
+        {% endif %}
         {% endif %}
         </div>
         <div class="my-2">
@@ -109,6 +111,7 @@
                             <td>{{object.elevation}} m</td>
                             {% endif %}
                             <td>
+                                {% if request.user.is_authenticated %}
                                 <div class="popover popover-left">
                                     <button class="btn"><i class="icon icon-menu"></i></button>
                                     <div class="popover-container">
@@ -119,6 +122,7 @@
                                     </div>
                                     </div>
                                 </div>
+                                {% endif %}
                             </td>
                         </tr>
                         </tbody>

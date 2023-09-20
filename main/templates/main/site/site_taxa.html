@@ -17,15 +17,16 @@
 </style>
 
 <div id="site_taxa_content">
+    {% if request.user.is_authenticated %}
     {% csrf_token %}
     <input style="display: none;" name="info" value="site_{{object.pk}}">
     <input class="fill_modal" type="file" id="fauna-batch-input" data-url="{% url 'fauna_upload' %}">
-
+    {% endif %}
     <div style="padding-top: 20px;" id='profile-taxa'>
         <div class="container">
-            <div class="columns">
+            <div class="columns" style="flex-wrap: nowrap; overflow: scroll;">
               <div class="column">
-                    <h4>Layers</h4>
+                    <strong>Layers</strong>
                     <table class="table">
                         <thead>
                             <tr>
@@ -35,7 +36,7 @@
                         <tbody>
                             {% for layer in object.layer.all %}
                             <tr>
-                                <td><div style="height:15px;">{{layer.name}}</div></td>
+                                <td><div style="height:12px;white-space: nowrap;">{{layer.name}}</div></td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -43,12 +44,12 @@
               </div>
               {% for fam in taxa %}
               <div class="column">
-                <h4>{{fam}}</h4>
+                <strong>{{fam}}</strong>
                 <table class="table">
                     <thead>
                         <tr>
                             {% for sp in taxa|lookup:fam %}
-                            <th><div style="height: 50px;">{{sp.scientific_name}}</div></th>
+                            <td><div style="height: 50px;"><i>{{sp.scientific_name}}</i></div></td>
                             {% endfor %}
                         </tr>
                     </thead>
@@ -56,7 +57,7 @@
                         {% for layer in object.layer.all %}
                         <tr>
                             {% for sp in taxa|lookup:fam %}
-                            <td><div style="height:15px;">
+                            <td><div style="height:12px;">
                                 {% if taxa|lookup:fam|lookup:sp|lookup:layer %}
                                     <span class="{{taxa|lookup:fam|lookup:sp|lookup:layer}}">
                                         {{ taxa|lookup:fam|lookup:sp|lookup:layer }}
