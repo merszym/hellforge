@@ -1,0 +1,13 @@
+<div class="panel-header" style="position:relative;">
+    <a class="btn btn-primary tooltip tooltip-right" href="{% url 'main_descr_update' description.pk %}" data-tooltip="Edit Description">
+        <i class="icon icon-edit"></i>
+    </a>
+    <span id="resize-editor" class="btn tooltip tooltip-left" style="position:absolute; right: 15px" data-tooltip="Toggle Full Width">
+        <i class="icon icon-resize-horiz"></i>
+    </span>
+</div>
+<div class="panel-body" style="max-height:720px;">
+    <h5>Authors</h5>
+    {% include 'main/description/author_tile.html' with object=description %}
+    {% include 'main/editor/editor-body.html' with description=description model=model %}
+</div>

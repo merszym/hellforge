@@ -30,6 +30,12 @@ class SiteDetailView(LoginRequiredMixin, ProjectAwareDetailView):
         # Create an instance of the nested defaultdict
         taxa = nested_dict()
 
+        # get the project description
+        try:
+            project_description = Description.objects.get(project=context.get("project"), site=self.get_object())
+        except:
+            project_description = None
+
         for layer in Layer.objects.filter(Q(site=self.object) & Q(assemblage__isnull=False)):
             for assemblage in layer.assemblage.all():
                 for found_taxon in assemblage.taxa.all():
@@ -37,11 +43,7 @@ class SiteDetailView(LoginRequiredMixin, ProjectAwareDetailView):
                     taxa[taxon.family][taxon][layer] = found_taxon.abundance
 
         context.update(
-            {
-                "profile_form": ProfileForm,
-                "tab": tab,
-                "taxa": taxa,
-            }
+            {"profile_form": ProfileForm, "tab": tab, "taxa": taxa, "project_description": project_description}
         )
         return context
 

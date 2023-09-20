@@ -8,6 +8,8 @@ import json
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
 from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, make smarter later
+from main.tools.generic import get_instance_from_string
+from django.shortcuts import render
 
 
 # Get description json for detail views in editor.js
@@ -78,10 +80,16 @@ def delete_author(request):
     return delete_x(request)
 
 
+def render_description(request, pk):
+    description = Description.objects.get(pk=int(pk))
+    return render(request, "main/description/description_render.html", {"description": description, "model": "site"})
+
+
 urlpatterns = [
     path("edit/<int:pk>", DescriptionUpdateView.as_view(), name="main_descr_update"),
     path("add-author", create_and_add_author, name="main_description_author_add"),
     path("delete-author", delete_author, name="main_description_author_delete"),
     path("save", save_description, name="ajax_description_save"),
     path("get-content", get_description_content, name="ajax_description_get"),
+    path("render_description/<int:pk>", render_description, name="main_render_description"),
 ]

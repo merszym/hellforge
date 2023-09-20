@@ -187,3 +187,13 @@ $('body').on("click", '#site_project_remove', function(){
         });
 
 });
+
+// load descriptions
+$('body').on("click", '.render_description', function(){
+    $.ajax({
+        type: "GET",
+        url: $(this).attr('data-url'),
+        }).done(function(html){
+            $('#description-description').html(html)
+        });
+});

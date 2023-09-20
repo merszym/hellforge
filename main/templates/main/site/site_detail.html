@@ -60,7 +60,10 @@
             {% endif %}
             <div class="btn-group">
                 <button id='btn-overview' class="btn btn-primary overview-toggle">Overview</button>
-                <button id='btn-descr' class="btn overview-toggle">Description</button>
+                <button id='btn-descr' class="btn render_description overview-toggle"  data-url="{% url 'main_render_description' object.description.first.pk %}">Description</button>
+                {% if project_description and site in project.site.all %}
+                <button id='btn-project_descr' class="btn render_description overview-toggle" data-url="{% url 'main_render_description' project_description.pk %}">{{project}}</button>
+                {% endif %}
             </div>
             <div id="description-overview" style="padding:10px;" class="panel">
                 <br>
@@ -131,19 +134,6 @@
                 <div style="height: 480px;" id="map"></div><br>
             </div>
             <div id="description-description" class="panel" style="display:none;">
-                <div class="panel-header" style="position:relative;">
-                    <a class="btn btn-primary tooltip tooltip-right" href="{% url 'main_descr_update' object.description.first.pk %}" data-tooltip="Edit Description">
-                        <i class="icon icon-edit"></i>
-                    </a>
-                    <span id="resize-editor" class="btn tooltip tooltip-left" style="position:absolute; right: 15px" data-tooltip="Toggle Full Width">
-                        <i class="icon icon-resize-horiz"></i>
-                    </span>
-                </div>
-                <div class="panel-body" style="max-height:720px;">
-                    <h5>Authors</h5>
-                    {% include 'main/description/author_tile.html' with object=object.description.first %}
-                    {% include 'main/editor/editor-body.html' with description=object.description.first model="site" %}
-                </div>
             </div>
         </div>
     </div>
