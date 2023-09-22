@@ -26,6 +26,8 @@ def save_description(request):
 
     data = json.loads(request.POST.get("data"))
     description.content = json.dumps(data)
+    # this is used to get to the detail view of the correct model
+    origin = request.POST.get("origin", None)
 
     # now save the site references
     ## clear the reference field
@@ -40,8 +42,22 @@ def save_description(request):
 
     description.save()
 
+    if origin:
+        model = origin.split("_")[0]
+    else:
+        model = "site"
+
+    goto = {"site": "site_detail", "project": "main_project_detail"}
+    model_kwargs = {
+        "site": {"pk": description.content_object.id},
+        "project": {"namespace": description.content_object.namespace},
+    }
+
     return JsonResponse(
-        {"data": True, "redirect": reverse("site_detail", kwargs={"pk": description.content_object.id})}
+        {
+            "data": True,
+            "redirect": reverse(goto[model], kwargs=model_kwargs[model]),
+        }
     )
 
 
@@ -81,8 +97,13 @@ def delete_author(request):
 
 
 def render_description(request, pk):
+    origin = request.GET.get("origin", None)
     description = Description.objects.get(pk=int(pk))
-    return render(request, "main/description/description_render.html", {"description": description, "model": "site"})
+    return render(
+        request,
+        "main/description/description_render.html",
+        {"description": description, "model": "site", "origin": origin},
+    )
 
 
 urlpatterns = [

@@ -1,32 +1,27 @@
 {% extends 'main/base.html' %}
 {% block head %}
 {% load static %}
-<title>{{object}}</title>
+<title>Project: {{object}}</title>
+{% include 'main/editor/editor-head.html' %}
 {% endblock %}
-{% block body %}
-<h1>{{object.name}}</h1>
+{% block headline %}<a href="{% url 'site_list' %}">{{object.name}}</a>{% endblock %}
 
+{% block body %}
 <div class='columns' style="padding:10px;">
-    <div class="column col-4" id='mobile' style="position:relative;">
+    <div class="column col-4" style="position:relative;">
         <h3>Project Description</h3>
-        <a href="{% url 'main_project_close' %}">Log Out</a>
+        <div style="position:absolute; right:5%; top:10px">
+            <a class="btn btn-primary tooltip tooltip-left" href="{% url 'main_project_update' object.pk %}" data-tooltip="Edit Project">
+                <i class="icon icon-edit"></i>
+            </a>
+            <a class="btn btn-primary tooltip tooltip-right" href="{% url 'main_project_close' %}" data-tooltip="Log out">
+                <i class="icon icon-shutdown"></i>
+            </a>
+        </div>
         <div class="my-2">
-            <a href="{% url 'main_project_update' object.pk %}">Edit Project</a>
+            <a >Edit Project</a>
             <div id="description-description" class="panel">
-                <div class="panel-header" style="position:relative;">
-                    #TODO: Make Work!
-                    <a class="btn btn-primary tooltip tooltip-right" href="#" data-tooltip="Edit Description">
-                        <i class="icon icon-edit"></i>
-                    </a>
-                    <span id="resize-editor" class="btn tooltip tooltip-left" style="position:absolute; right: 15px" data-tooltip="Toggle Full Width">
-                        <i class="icon icon-resize-horiz"></i>
-                    </span>
-                </div>
-                <div class="panel-body" style="max-height:720px;">
-                    <h5>Authors</h5>
-                    {% include 'main/description/author_tile.html' with object=object.description.first %}
-                    {% include 'main/editor/editor-body.html' with description=object.description.first model="site" %}
-                </div>
+
             </div>
         </div>
     </div>
@@ -37,4 +32,16 @@
         </div>
     </div>
 </div>
+<script>
+    // load descriptions
+$('document').ready(function(){
+    $.ajax({
+        type: "GET",
+        url: "{% url 'main_render_description' object.project_description.first.pk %}?origin=project_{{object.pk}}",
+        }).done(function(html){
+            $('#description-description').html(html)
+        });
+});
+</script>
+
 {% endblock %}

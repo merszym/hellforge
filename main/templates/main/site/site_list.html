@@ -35,8 +35,7 @@
                                 <th>Country</th>
                                 <th>Type</th>
                                 <th>Elevation</th>
-                                <th>Description?</th>
-                                <th>Layers?</th>
+                                <th></th>
                             </tr>
                             </thead>
                             <tbody>
@@ -46,8 +45,8 @@
                                         <td>{{object.country}}</td>
                                         <td>{{object.type}}</td>
                                         <td>{{object.elevation}} m</td>
-                                        <td>{% if object.description %}Yes{%else%}Missing{%endif%}</td>
-                                        <td>{% if object.profile.first %}Yes{%else%}Missing{%endif%}</td>
+                                        <td><a href="{% url 'site_detail'  object.pk %}"><span class="btn">Go</span></a></td>
+
                                     </tr>
                                 {% endfor %}
                             </tbody>

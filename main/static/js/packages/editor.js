@@ -79,6 +79,10 @@ $.getJSON({
                     formdata = new FormData()
                     formdata.append('references', reference_string)
                     formdata.append('data', JSON.stringify(savedData))
+                    //get the origin -> description for site, project or culture?
+                    let searchParams = new URLSearchParams(window.location.search)
+                    let origin = searchParams.get('origin')
+                    formdata.append('origin', origin)
                     // and save the description
                     $.post({
                         processData: false,

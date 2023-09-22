@@ -97,17 +97,31 @@
                 $(element).addClass('nopadding')
                 var div = document.createElement('div');
                 $(div).css({'width':'100%','height':'35px'})
-                $(div).html(`
-                <div style="width:200%; height:100%; overflow:visible; display:block; white-space: nowrap">
-                    <svg viewBox="0 0 100 100" preserveAspectRatio="none" style="width:50%; height:100%; display: inline-block">
-                        <polygon class="${data.className}" points="${data.polygon}" />
-                    </svg>
-                    <div style="display: inline-block; line-height:1;">
-                        <span class="text-small text-gray">14C: ${data.oxa}</span><br>
-                        <span>${data.content}</span>
+                if(data.oxa){
+                    $(div).html(`
+                    <div style="width:200%; height:100%; overflow:visible; display:block; white-space: nowrap">
+                        <svg viewBox="0 0 100 100" preserveAspectRatio="none" style="width:50%; height:100%; display: inline-block">
+                            <polygon class="${data.className}" points="${data.polygon}" />
+                        </svg>
+                        <div style="display: inline-block; line-height:1;">
+                            <span class="text-small text-gray">14C: ${data.oxa}</span><br>
+                            <span>${data.content}</span>
+                        </div>
                     </div>
-                </div>
-                `)
+                    `)
+                }
+                else {
+                    $(div).html(`
+                    <div style="width:200%; height:100%; overflow:visible; display:block; white-space: nowrap">
+                        <svg viewBox="0 0 100 100" preserveAspectRatio="none" style="width:50%; height:100%; display: inline-block">
+                            <polygon class="${data.className}" points="${data.polygon}" />
+                        </svg>
+                        <div style="display: inline-block; line-height:1;">
+                            <span>${data.content}</span>
+                        </div>
+                    </div>
+                    `)
+                }
                 return div
                 },
         };

@@ -29,14 +29,20 @@ def get_classname(x):
 
 class Project(models.Model):
     name = models.CharField("name", max_length=500, unique=True)
+    published = models.BooleanField("published", default=False)
     password = models.TextField("password", blank=True, null=True)
     namespace = models.CharField("slug", max_length=300, unique=True, blank=True, null=True)
+    project_description = GenericRelation("Description", related_query_name="project_project")
 
     def __str__(self):
         return self.name
 
     def get_absolute_url(self):
         return reverse("main_project_detail", kwargs={"namespace": self.namespace})
+
+    @property
+    def model(self):
+        return "project"
 
 
 #
@@ -49,11 +55,16 @@ def get_image_path(instance, filename):
     # filename = the original filename
     description = instance.gallery.description
     object = description.content_object
+    model = object.model
+    if model == "project":
+        name = object.namespace
+    else:
+        name = object.name
     try:
         project = description.project.first().namespace
-        return f'descriptions/{object.model}/{object.name.replace(" ","_")}/{project}/{filename.replace(" ","_")}'
+        return f'descriptions/{model}/{name.replace(" ","_")}/{project}/{filename.replace(" ","_")}'
     except:
-        return f'descriptions/{object.model}/{object.name.replace(" ","_")}/{filename.replace(" ","_")}'
+        return f'descriptions/{model}/{name.replace(" ","_")}/{filename.replace(" ","_")}'
 
 
 class Image(models.Model):

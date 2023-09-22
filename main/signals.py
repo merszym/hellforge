@@ -175,13 +175,6 @@ def update_checkpoint(sender, instance, **kwargs):
         j.save()
 
 
-@receiver(post_save, sender=Project)
-def create_description(sender, instance, **kwargs):
-    if not instance.description:
-        tmp = Description(project=instance)
-        tmp.save()
-
-
 # after adding a site to a project - add a description if it doesnt yet exist
 @receiver(m2m_changed, sender=Project.site.through)
 def create_description(sender, instance, **kwargs):

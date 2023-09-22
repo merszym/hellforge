@@ -3,16 +3,37 @@
 {% load static %}
 <title>Projects</title>
 {% endblock %}
+{% block headline %}<a href="/">Projects</a>{% endblock %}
+
 {% block body %}
-<h1>Projects</h1>
-
 <div class='columns'>
-<ul>
-{% for project in object_list %}
+    <div class="column col-5">
+        <h3>Public Projects</h3>
+        {% for project in public_projects %}
+        <li><a href="{% url 'main_project_checkout' project.namespace %}">Checkout: {{project.name}}</a></li>
 
-<li><a href="{% url 'main_project_checkout' project.namespace %}">Checkout: {{project.name}}</a></li>
+        {% empty %}
 
-{% endfor %}
-</ul>
+        <div class="empty">
+            <div class="empty-icon">
+            <i class="icon icon-flag"></i>
+            </div>
+            <p class="empty-title h5">No public projects</p>
+            <p class="empty-subtitle"></p>
+        </div>
+
+        {% endfor %}
+    </div>
+    <div class="column col-5">
+        {% if request.user.is_authenticated %}
+        <h3>Protected Projects</h3>
+
+        <ul>
+            {% for project in private_projects %}
+            <li><a href="{% url 'main_project_checkout' project.namespace %}">Checkout: {{project.name}}</a></li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

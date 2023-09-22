@@ -1,9 +1,10 @@
 from django.views.generic import ListView, DetailView, UpdateView
 from django.urls import path
-from main.models import Project
+from main.models import Project, Description
 from django.http import JsonResponse
 from main.tools.generic import add_x_to_y_m2m, remove_x_from_y_m2m, get_instance_from_string, delete_x
 from django.shortcuts import redirect, render
+from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, make smarter later
 
 
 def get_project(request):
@@ -36,8 +37,17 @@ class ProjectListView(ListView):
     model = Project
     template_name = "main/project/project_list.html"
 
+    def get_context_data(self, **kwargs):
+        context = super(ProjectListView, self).get_context_data(**kwargs)
+        queryset = self.get_queryset()
+        public_project = queryset.filter(published=True)
+        private_projects = queryset.filter(published=False)
 
-class ProjectUpdateView(UpdateView):
+        context.update({"public_projects": public_project, "private_projects": private_projects})
+        return context
+
+
+class ProjectUpdateView(LoginRequiredMixin, UpdateView):
     model = Project
     fields = "__all__"
     template_name = "main/project/project_update.html"
@@ -48,6 +58,16 @@ class ProjectDetailView(DetailView):
     template_name = "main/project/project_detail.html"
     slug_url_kwarg = "namespace"
     slug_field = "namespace"
+
+    def get_context_data(self, **kwargs):
+        context = super(ProjectDetailView, self).get_context_data(**kwargs)
+        # this is quick and dirty - create a description if non exists for a project
+        project = self.get_object()
+        if not project.project_description.first():
+            tmp = Description(content_object=project)
+            print(tmp)
+            tmp.save()
+        return context
 
 
 urlpatterns = [

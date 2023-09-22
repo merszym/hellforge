@@ -62,7 +62,9 @@
             {% endif %}
             <div class="btn-group">
                 <button id='btn-overview' class="btn btn-primary overview-toggle">Overview</button>
+                {% if request.user.is_authenticated %}
                 <button id='btn-descr' class="btn render_description overview-toggle"  data-url="{% url 'main_render_description' object.description.first.pk %}">Notes</button>
+                {% endif %}
                 {% if project_description and site in project.site.all %}
                 <button id='btn-project_descr' class="btn render_description overview-toggle" data-url="{% url 'main_render_description' project_description.pk %}">{{project}}</button>
                 {% endif %}
