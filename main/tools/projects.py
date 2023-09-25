@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from main.tools.generic import add_x_to_y_m2m, remove_x_from_y_m2m, get_instance_from_string, delete_x
 from django.shortcuts import redirect, render
 from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, make smarter later
+import hashlib
 
 
 def get_project(request):
@@ -17,8 +18,18 @@ def checkout_project(request, namespace):
     # Store the selected project in the session.
     # only set the cookie if project exists
     try:
-        Project.objects.get(namespace=namespace)
-        request.session["session_project"] = namespace
+        tmp = Project.objects.get(namespace=namespace)
+        if (tmp.password != "") and (request.user.is_authenticated == False):
+            # check the link hash
+            expected = hashlib.md5(tmp.password.encode()).hexdigest()
+            if given := request.GET.get("pw", False):
+                # verify
+                if given == expected:
+                    request.session["session_project"] = namespace
+                else:
+                    pass  # TODO: display wrong password message
+        else:
+            request.session["session_project"] = namespace
     except:
         pass
     return redirect("landing")
@@ -49,7 +60,7 @@ class ProjectListView(ListView):
 
 class ProjectUpdateView(LoginRequiredMixin, UpdateView):
     model = Project
-    fields = "__all__"
+    fields = ["name", "password"]
     template_name = "main/project/project_update.html"
 
 
@@ -63,9 +74,10 @@ class ProjectDetailView(DetailView):
         context = super(ProjectDetailView, self).get_context_data(**kwargs)
         # this is quick and dirty - create a description if non exists for a project
         project = self.get_object()
+        if project.password:
+            context["public_link_pw"] = hashlib.md5(project.password.encode()).hexdigest()
         if not project.project_description.first():
             tmp = Description(content_object=project)
-            print(tmp)
             tmp.save()
         return context
 

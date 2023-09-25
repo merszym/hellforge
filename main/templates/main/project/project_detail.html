@@ -26,7 +26,10 @@
     <div class="column">
         <div class="my-2">
             <h3>Project Overview</h3>
-
+            <h5>Public Link:</h5>
+            <div style="background-color: lightgray;">
+                <p>{{request.scheme}}://{{request.get_host}}{% url 'main_project_checkout' object.namespace %}?pw={{public_link_pw}}</p>
+            </div>
         </div>
     </div>
 </div>
