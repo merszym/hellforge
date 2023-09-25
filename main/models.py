@@ -162,7 +162,7 @@ class Person(models.Model):
     @classmethod
     def filter(self, kw):
         return Person.objects.filter(
-            Q(name__contains=kw) | Q(email__contains=kw) | Q(tags__contains=kw) | Q(affiliation__contains=kw)
+            Q(name__contains=kw) | Q(email__contains=kw) | Q(tags__contains=kw) | Q(affiliation_name__contains=kw)
         )
 
     class Meta:
@@ -324,7 +324,18 @@ class Date(models.Model):
     @classmethod
     def table_columns(self):
         # human readable representation of the dates
-        return ["Layer", "Method", "Lab Code", "Date", "Error", "Upper Bound", "Lower Bound", "Notes", "Reference"]
+        return [
+            "Layer",
+            "Method",
+            "Lab Code",
+            "Date",
+            "Error",
+            "Curve",
+            "Upper Bound",
+            "Lower Bound",
+            "Notes",
+            "Reference",
+        ]
 
     def to_ms(self):
         if self.upper and self.lower:
@@ -640,6 +651,9 @@ class Layer(models.Model):
     date = models.ManyToManyField(Date, verbose_name="date", blank=True, related_name="model")
     mean_upper = models.IntegerField(blank=True, default=1000000)
     mean_lower = models.IntegerField(blank=True, default=0)
+    # set the date according to the archaeologists
+    set_upper = models.IntegerField(blank=True, null=True)
+    set_lower = models.IntegerField(blank=True, null=True)
     ref = models.ManyToManyField(Reference, verbose_name="reference", blank=True, related_name="layer")
 
     class Meta:
@@ -700,10 +714,15 @@ class Layer(models.Model):
 
     @property
     def age_summary(self):
+        if self.set_upper and self.set_lower:
+            return Date(upper=self.set_upper, lower=self.set_lower)
         if dates := self.date.all():
             if len(dates) == 1:
                 return dates.first()
-        return Date(upper=self.mean_upper, lower=self.mean_lower)
+            else:
+                return Date(upper=self.mean_upper, lower=self.mean_lower)
+        else:
+            return "Undated"
 
     def get_absolute_url(self):
         return f"{reverse('site_detail', kwargs={'pk':self.site.id})}#profile"

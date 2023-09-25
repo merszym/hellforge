@@ -70,25 +70,24 @@ def get_timeline_data(site_id, hidden=False, related=False, curves=False):
     ]
     dates = []
     for layer in layers:
+        if sup := layer.set_upper:
+            if slo := layer.set_lower:
+                set_date = Date(upper=sup, lower=slo)
+                # convert to ms
+                sup, slo = set_date.to_ms()
+                background = {
+                    "start": sup,
+                    "end": slo,
+                    "order": sup * -1,
+                    "content": f"{set_date}",
+                    "group": layer.name.lower(),
+                    "type": "background",
+                    "background": True,
+                }
+                dates.append(background)
         tmp_dates = list(layer.date.all())
         if hidden:
             tmp_dates.extend(layer.hidden_dates)
-        if related:
-            for reldate in layer.reldates:
-                prefix = {"older": ">", "younger": "<", "same": ""}[reldate.how]
-                upper, lower = Date(upper=reldate.upper, lower=reldate.lower).to_ms()
-                if not upper:
-                    continue
-                layerdata = {
-                    "start": upper,
-                    "end": lower,
-                    "order": upper * -5,
-                    "content": f"{prefix} {reldate.get_content(layer)}",
-                    "group": layer.name.lower(),
-                    "className": f"{reldate.how}",
-                    "type": "range",
-                }
-                dates.append(layerdata)
         for date in tmp_dates:
             upper, lower = date.to_ms()
             layerdata = {
@@ -103,6 +102,7 @@ def get_timeline_data(site_id, hidden=False, related=False, curves=False):
                 "polygon": f"{date.get_polygon_css() if date.raw else ''}",
                 "oxa": f"{date.oxa if date.oxa else ''}",
                 "method": date.method,
+                "background": False,
             }
             if date.hidden:
                 layerdata.update({"className": "hidden" if not (date.raw and curves) else "hiddenfill"})

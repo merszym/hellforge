@@ -88,6 +88,7 @@ def fill_date(sender, instance, **kwargs):
             if instance.estimate and instance.plusminus:  # some legacy dates dont have that?
                 est = int(instance.estimate)
                 pm = int(instance.plusminus)
+                print(est, pm)
                 raw, upper, lower, curve = dating.calibrate(est, pm)
                 if raw:
                     instance.upper = upper

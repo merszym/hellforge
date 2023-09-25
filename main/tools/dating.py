@@ -9,8 +9,8 @@ from main.tools.generic import remove_x_from_y_m2m, delete_x, get_instance_from_
 from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
 
 
-@login_required
 def calibrate(estimate, plusminus, curve="intcal20"):
+    print("test")
     curve = curve
     r = R(int(estimate), int(plusminus), "tmp")
     try:
@@ -127,6 +127,10 @@ def save_verified_batchdata(request):
                 tmp.description = dat["Notes"]
             tmp.save()
             tmp.refresh_from_db()
+            if "Curve" in dat:
+                curve = dat["Curve"]
+                # TODO: do something with the curve.
+                # TODO: this is not working yet!
 
         if "Reference" in dat:
             tmp.ref.add(Reference.objects.get(pk=dat["Reference"]["id"]))

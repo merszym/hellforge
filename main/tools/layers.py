@@ -52,6 +52,21 @@ def set_name(request):
     return JsonResponse({"status": True})
 
 
+@login_required
+def set_bounds(request):
+    object = get_instance_from_string(request.POST.get("instance_x"))
+    try:
+        object.set_upper = int(request.POST.get("upper"))
+    except ValueError:
+        object.set_upper = None
+    try:
+        object.set_lower = int(request.POST.get("lower"))
+    except ValueError:
+        object.set_lower = None
+    object.save()
+    return JsonResponse({"status": True})
+
+
 class LayerDeleteView(LoginRequiredMixin, DeleteView):
     model = Layer
     template_name = "main/confirm_delete.html"
@@ -79,6 +94,7 @@ class LayerUpdateView(LoginRequiredMixin, UpdateView):
 # and the respective urlpatterns
 urlpatterns = [
     path("set-name", set_name, name="main_layer_setname"),
+    path("set-bounds", set_bounds, name="main_layer_setbounds"),
     path("clone/<int:pk>", clone, name="main_layer_clone"),
     path("positions/<int:site_id>", update_positions, name="main_layer_positionupdate"),
     path("delete/<int:pk>", LayerDeleteView.as_view(), name="main_layer_delete"),

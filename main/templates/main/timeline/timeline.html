@@ -21,24 +21,6 @@
     stroke: black;
     color: grey
 }
-.younger{
-  background-image: linear-gradient(to right, rgba(211, 211, 211, 1), rgba(211, 211, 211, 0));
-  background-color: rgba(0,0,0,0);
-  border: solid 0px grey;
-  color: grey;
-}
-.older{
-  background-image: linear-gradient(to right, rgba(211, 211, 211, 0), rgba(211, 211, 211, 1));
-  background-color: rgba(0,0,0,0);
-  border: solid 0px grey;
-  color: grey;
-}
-.same{
-  background-color: lightgrey;
-  border: solid 0px grey;
-  color: grey;
-}
-
 .nopadding{
     padding: 0px !important;
 }
@@ -48,6 +30,9 @@
 }
 .vis-item-content{
     width: 100% !important ;
+}
+.vis-item.vis-background{
+    background-color: rgba(148, 131, 131, 0.2);;
 }
 {% for cult,color in cultures %}
 .{{cult}}{
@@ -89,7 +74,7 @@
                 minorLabels: function(date, scale, step) {
                     return `${parseInt(date.format("YYYY"))*-1} kya`;
                 },
-            },
+            }, // templates are based on the timelinedata properties set in site views (get_timeline_data)
             'template': function(item, element, data){
                 if (data.usesvg == false){
                     return `${data.method}: ${data.content}`
@@ -109,6 +94,9 @@
                         </div>
                     </div>
                     `)
+                }
+                else if (data.background){
+                    $(div).html(`<span class="text-gray px-2 text-small">${data.content}</span>`)
                 }
                 else {
                     $(div).html(`
