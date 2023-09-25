@@ -9,7 +9,7 @@
 </div>
 <div class="modal-body">
     <div class="content my-2">
-        <h6>Set Layer Boundaries:</h6>
+        <h6>{% if request.user.is_authenticated%}Set {% endif %}Layer Boundaries:</h6>
         <div class="input-group">
             <span class="input-group-addon">Upper Bound</span>
             <input type="text" class="form-input" name="set_upper" placeholder="upper"
@@ -18,7 +18,9 @@
             <input type="text" class="form-input" name="set_lower" placeholder="lower"
             value="{%if object.set_lower %}{{object.set_lower}}{%endif%}"
             >
+            {% if request.user.is_authenticated %}
             <button id="set_layer_bounds" class="btn btn-primary input-group-btn" data-url="{% url 'main_layer_setbounds' %}" data-x="layer_{{object.pk}}">Set</button>
+            {% endif %}
         </div>
         <div id="modal-form">
             {% include 'main/dating/dating-table.html' with date_list=object.date.all mode='visible' title='Used Dates' %}
