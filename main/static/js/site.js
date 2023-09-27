@@ -92,9 +92,11 @@ $("body").on('click',"#resize-editor", function(){
 $(window).resize(function resize(){
     if ($(window).width() < 1000) {
         $('#mobile').removeClass('col-4')
+        $('#content-part').removeClass('col-8')
         $('#mobile').addClass('col-12')
     } else {
         $('#mobile').removeClass('col-12')
+        $('#content-part').addClass('col-8')
         $('#mobile').addClass('col-4')
     }
 }).trigger('resize');

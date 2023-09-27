@@ -13,6 +13,10 @@
 .Low{
     color: grey;
 }
+.Yes{
+    background-color: darkgrey;
+    color: darkgrey;
+}
 
 </style>
 
@@ -59,9 +63,9 @@
                         {% for layer in object.layer.all %}
                         <tr>
                             {% for sp in taxa|lookup:fam %}
-                            <td><div>
+                            <td class="{{taxa|lookup:fam|lookup:sp|lookup:layer}}"><div>
                                 {% if taxa|lookup:fam|lookup:sp|lookup:layer %}
-                                    <span class="{{taxa|lookup:fam|lookup:sp|lookup:layer}}">
+                                    <span>
                                         {{ taxa|lookup:fam|lookup:sp|lookup:layer }}
                                     </span>
                                 {% else %}

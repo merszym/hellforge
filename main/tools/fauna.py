@@ -60,22 +60,33 @@ def save_verified(request):
     for layer, dat in df.groupby(["Layer"]):
         tmp_layer = Layer.objects.filter(Q(site=site) & Q(name=layer)).first()
 
-        assemblage = FaunalAssemblage(layer=tmp_layer)
-        assemblage.save()
-        assemblage.refresh_from_db()
+        assemblage = FaunalAssemblage.objects.filter(layer=tmp_layer).first()
+        if not assemblage:
+            assemblage = FaunalAssemblage(layer=tmp_layer)
+            assemblage.save()
+            assemblage.refresh_from_db()
 
         for fam, sp, common, abundance in zip(dat["Family"], dat["Species"], dat["Common Name"], dat["Abundance"]):
             try:
-                taxon = Taxon.objects.get(scientific_name=sp)
+                taxon = Taxon.objects.get(scientific_name=sp, family=fam)
             except:
                 taxon = Taxon(scientific_name=sp, common_name=common, family=fam)
                 taxon.save()
                 taxon.refresh_from_db()
-            found_taxon = FoundTaxon(taxon=taxon, abundance=abundance)
-            found_taxon.save()
-            found_taxon.refresh_from_db()
-            assemblage.taxa.add(found_taxon)
-
+            finally:
+                # check if a found taxon is already in...
+                create = True
+                for found_taxon in assemblage.taxa.all():
+                    # if already in: update the abundance
+                    if found_taxon.taxon == taxon:
+                        found_taxon.abundance = abundance
+                        found_taxon.save()
+                        create = False
+                if create:
+                    found_taxon = FoundTaxon(taxon=taxon, abundance=abundance)
+                    found_taxon.save()
+                    found_taxon.refresh_from_db()
+                    assemblage.taxa.add(found_taxon)
         try:
             for ref_id in set([x["id"] for x in dat["Reference"]]):
                 reference = Reference.objects.get(id=ref_id)

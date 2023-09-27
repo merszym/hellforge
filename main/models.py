@@ -790,6 +790,11 @@ class FaunalAssemblage(models.Model):
         columns = ["Layer", "Family", "Species", "Common Name", "Abundance", "Reference"]
         return columns
 
+    def __str__(self):
+        if self.layer.site:
+            return str(self.layer.site)
+        return self
+
 
 models = {
     "site": Site,
