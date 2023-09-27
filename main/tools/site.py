@@ -24,26 +24,35 @@ class SiteDetailView(ProjectAwareDetailView):
     def get_context_data(self, **kwargs):
         context = super(SiteDetailView, self).get_context_data(**kwargs)
         tab = self.request.GET.get("tab", "layers")
+        object = self.get_object()
+        # get the first profile
+        profile = object.profile.first()
+
+        # get the project description
+        try:
+            project_description = Description.objects.get(project=context.get("project"), site=object)
+        except:
+            project_description = None
 
         # create jsons for expected taxa:
         nested_dict = lambda: defaultdict(nested_dict)
         # Create an instance of the nested defaultdict
         taxa = nested_dict()
 
-        # get the project description
-        try:
-            project_description = Description.objects.get(project=context.get("project"), site=self.get_object())
-        except:
-            project_description = None
-
-        for layer in Layer.objects.filter(Q(site=self.object) & Q(assemblage__isnull=False)):
+        for layer in Layer.objects.filter(Q(site=object) & Q(assemblage__isnull=False)):
             for assemblage in layer.assemblage.all():
                 for found_taxon in assemblage.taxa.all():
                     taxon = found_taxon.taxon
                     taxa[taxon.family][taxon][layer] = found_taxon.abundance
 
         context.update(
-            {"profile_form": ProfileForm, "tab": tab, "taxa": taxa, "project_description": project_description}
+            {
+                "profile_form": ProfileForm,
+                "tab": tab,
+                "taxa": taxa,
+                "project_description": project_description,
+                "profile": profile,
+            }
         )
         return context
 

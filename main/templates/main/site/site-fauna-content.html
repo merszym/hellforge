@@ -28,15 +28,15 @@
               <div class="column">
                     <strong>Layers</strong>
                     <table class="table">
-                        <thead>
+                        <thead style="height: 80px;">
                             <tr>
-                                <th><div style="height: 50px;"></div></th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for layer in object.layer.all %}
                             <tr>
-                                <td><div style="height:12px;white-space: nowrap;">{{layer.name}}</div></td>
+                                <td><div style="white-space: nowrap;">{{layer.name}}</div></td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -46,10 +46,10 @@
               <div class="column">
                 <strong>{{fam}}</strong>
                 <table class="table">
-                    <thead>
+                    <thead style="height: 80px;">
                         <tr>
                             {% for sp in taxa|lookup:fam %}
-                            <td><div style="height: 50px;"><i>{{sp.scientific_name}}</i></div></td>
+                            <td><div><i>{{sp.scientific_name}}</i></div></td>
                             {% endfor %}
                         </tr>
                     </thead>
@@ -57,7 +57,7 @@
                         {% for layer in object.layer.all %}
                         <tr>
                             {% for sp in taxa|lookup:fam %}
-                            <td><div style="height:12px;">
+                            <td><div>
                                 {% if taxa|lookup:fam|lookup:sp|lookup:layer %}
                                     <span class="{{taxa|lookup:fam|lookup:sp|lookup:layer}}">
                                         {{ taxa|lookup:fam|lookup:sp|lookup:layer }}

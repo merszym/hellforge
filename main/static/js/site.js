@@ -1,3 +1,4 @@
+//#TODO: find better way to sort the layers!
 function makeSortable(){
     $("#layer_tbody").sortable({
         items:'tr',
@@ -27,13 +28,8 @@ function makeSortable(){
         },
     });
 };
-
-function getProfile(pk=null){
-    if(pk != null){
-        url = $('#profile-add').attr('data-url').replace('1',pk)
-    } else {
-        url = $('.tab-item.active').attr('data-url')
-    }
+function getProfile(pk){
+    url = $('#profile-add').attr('data-url').replace('1',pk)
     if(url){
         $.ajax({
             type: "GET",
@@ -45,6 +41,18 @@ function getProfile(pk=null){
         }
 }
 
+// switch between profiles
+$('body').on('click','.minor', function(){
+    $.ajax({
+        type: "GET",
+        url: $(this).attr('data-url'),
+        }).done(function(data){
+            $('#profile-detail').html(data)
+            makeSortable()
+        });
+});
+
+// add profiles
 $('body').on('click','#profile-add', function(){
     $('#modal-profile').addClass('active')
 });
@@ -60,14 +68,8 @@ $('body').on('click', '#profile-submit', function(){
         url: $('#profile-submit').attr('data-url'),
         data: $("#profile-form").serialize()
         }).done(function(html){
-            $('#profile-list').replaceWith(html);
+            $('#layers_update_click').click()
         });
-});
-
-$('body').on('click','.tab-item', function(){
-    $('.tab-item').removeClass('active')
-    $(this).addClass('active')
-    getProfile()
 });
 
 $('.overview-toggle').on('click', function(){
@@ -141,12 +143,10 @@ function reloadTimeline(){
 }
 
 $( document ).ready(function(){
-    getProfile()
     reloadTimeline()
 });
 
 $('body').on('click', '.refresh_profile', function(){
-    getProfile()
     reloadTimeline()
 })
 
@@ -156,7 +156,6 @@ $('body').on("click", '#site_project_add', function(){
     formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
     formdata.append('instance_x', $(this).attr('data-x')); //site
     formdata.append('instance_y', $(this).attr('data-y')); //project
-    console.log(formdata)
     $.ajax({
         type: "POST",
         processData: false,
@@ -175,7 +174,6 @@ $('body').on("click", '#site_project_remove', function(){
     formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
     formdata.append('instance_x', $(this).attr('data-x')); //site
     formdata.append('instance_y', $(this).attr('data-y')); //project
-    console.log(formdata)
     $.ajax({
         type: "POST",
         processData: false,
@@ -196,4 +194,10 @@ $('body').on("click", '.render_description', function(){
         }).done(function(html){
             $('#description-description').html(html)
         });
+});
+
+// switch between main tabs on the site level
+$('body').on('click', '.select-block-content', function(){
+    $('.block-content').hide();
+    $(`#${$(this).attr('data-select')}`).show();
 });

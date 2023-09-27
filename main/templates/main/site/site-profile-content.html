@@ -25,7 +25,7 @@
     </div>
     <ul class="tab tab-block" id="profile-list">
         {% for profile in object.profile.all %}
-        <li class="tab-item {% if forloop.counter == 1 %}active{% endif %}" data-url="{% url 'main_profile_get' profile.pk %}">
+        <li class="tab-item minor {% if forloop.counter == 1 %}active{% endif %}" data-url="{% url 'main_profile_get' profile.pk %}">
             <a style="cursor:pointer;">{{profile.name}}</a>
         </li>
         {% endfor %}
@@ -36,6 +36,9 @@
         {% endif %}
     </ul>
     <div style="padding-top: 20px;" id='profile-detail'>
+        {% if profile %}
+        {% include 'main/profile/profile-detail.html' with object=profile %}
+        {% else %}
         <div class="empty">
             <div class="empty-icon">
             <i class="icon icon-flag"></i>
@@ -43,5 +46,6 @@
             <p class="empty-title h5">No Profiles yet</p>
             <p class="empty-subtitle">Click the button above to add a profile.</p>
         </div>
+        {% endif %}
     </div>
 </div>

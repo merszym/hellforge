@@ -32,8 +32,9 @@
 </style>
 </div>
 <div class='columns' style="padding:10px;">
-    <!--This span used by ajax to reload the site information panel-->
+    <!--This spans are used by ajax to reload the site panels-->
     <span id="site_info_update_click" style="display: none;" class="generic_reload" data-reload="mobile"></span>
+    <span id="layers_update_click" style="display: none;" class="generic_reload" data-reload="site_layer"></span>
     <div class="column col-4" id='mobile' style="position:relative;">
         <div style="position:absolute; right:5%; top:10px">
         {% if request.user.is_authenticated %}
@@ -186,22 +187,29 @@
 
             </div>
             {% else %}
-            <!--#TODO Load both, hide one
-                necessary for project-cultures
-            -->
+            <!-- Site is a real site -->
             <ul class="tab tab-block">
-                <li class="tab-item">
-                    <a href="?tab=layers"><h4 class="text-grey" id="profile">Profiles and Layers</h4></a>
+                <li class="tab-item main active">
+                    <a style="cursor: pointer;" class="select-block-content" data-select="site_layer"><h4>Profiles and Layers</h4></a>
                 </li>
-                <li class="tab-item">
-                    <a href="?tab=taxa"><h4 class="text-grey" id="profile">Expected Taxa</h4></a>
+                <li class="tab-item main">
+                    <a style="cursor: pointer;" class="select-block-content" data-select="site_samples"><h4>Samples</h4></a>
+                </li>
+                <li class="tab-item main">
+                    <a style="cursor: pointer;" class="select-block-content" data-select="site_fauna"><h4>Fauna</h4></a>
                 </li>
             </ul>
-            {% if tab == 'layers' %}
-            {% include 'main/site/site_profile_and_layers.html' %}
-            {% elif tab == 'taxa' %}
-            {% include 'main/site/site_taxa.html' %}
-            {% endif %}
+
+            <div class="block-content" id="site_layer">
+                {% include 'main/site/site-profile-content.html' %}
+            </div>
+            <div class="block-content" id="site_samples" style="display: none;">
+                {# include 'main/site/site-sample-content.html' #}
+            </div>
+            <div class="block-content" id="site_fauna" style="display: none;">
+                {% include 'main/site/site-fauna-content.html' %}
+            </div>
+
             {% endif %}
         </div>
     </div>
@@ -209,9 +217,6 @@
 {% if object.layer.first %}
 <div class="btn-group mx-2">
     <button class="btn timeline-filter" id="timeline-show-hidden">Toggle Hidden</button>
-    <!--
-    <button class="btn timeline-filter btn-primary" id="timeline-show-related">Toggle Related</button>
-    -->
     <button class="btn timeline-filter btn-primary" id="timeline-show-curves">14C Curve</button>
 </div>
 <div class="m-2 self_reload" id="timeline-content" data-url="{% url 'main_timeline_render' 'site' object.pk %}"></div>

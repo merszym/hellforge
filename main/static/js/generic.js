@@ -53,3 +53,18 @@ $(document).ready(function(){
         }
     });
 });
+
+// Generic Styling!
+// for spectre elements
+
+// general style of
+$('body').on('click','.tab-item', function(){
+    if ($(this).hasClass('main')){
+        $('.main').removeClass('active')
+        $(this).addClass('active')
+    }
+    else{
+        $('.minor').removeClass('active')
+        $(this).addClass('active')
+    }
+});

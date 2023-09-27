@@ -729,12 +729,24 @@ class Layer(models.Model):
 
 
 class Sample(models.Model):
-    name = models.CharField("name", max_length=200)
+    type = models.CharField("sample type", max_length=400, null=True, blank=True)
+    name = models.CharField("name", max_length=200, null=True, blank=True)
     synonyms = models.ManyToManyField(Synonym, blank=True, verbose_name="synonym", related_name="sample")
-    description = models.TextField("description", blank=True)
+    batch = models.CharField("sample batch", max_length=400, null=True, blank=True)
+    year_of_collection = models.IntegerField("year of collection", blank=True, null=True)
+    # description
+    description = GenericRelation(Description, related_query_name="sample")
+    # origin of samples
     layer = models.ForeignKey(Layer, verbose_name="layer", related_name="sample", on_delete=models.PROTECT)
+    provenience = models.JSONField("provenience", blank=True, null=True)
+    # date related fields
     date = models.ManyToManyField(Date, verbose_name="date", blank=True)
-    ref = models.ManyToManyField(Reference, verbose_name="reference", blank=True)
+    mean_upper = models.IntegerField(blank=True, null=True)
+    mean_lower = models.IntegerField(blank=True, null=True)
+    set_upper = models.IntegerField(blank=True, null=True)
+    set_lower = models.IntegerField(blank=True, null=True)
+    # references
+    ref = models.ManyToManyField(Reference, verbose_name="reference", blank=True, related_name="sample")
 
     @property
     def model(self):
