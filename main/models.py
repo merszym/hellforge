@@ -784,6 +784,12 @@ class FaunalAssemblage(models.Model):
     taxa = models.ManyToManyField(FoundTaxon)
     ref = models.ManyToManyField(Reference, verbose_name="reference", blank=True)
 
+    @classmethod
+    def table_columns(self):
+        # for the upload of expected taxa
+        columns = ["Layer", "Family", "Species", "Common Name", "Abundance", "Reference"]
+        return columns
+
 
 models = {
     "site": Site,

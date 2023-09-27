@@ -16,12 +16,14 @@
 
 </style>
 
-<div id="site_taxa_content">
+<div class="my-2" id="site_taxa_content">
     {% if request.user.is_authenticated %}
     {% csrf_token %}
     <input style="display: none;" name="info" value="site_{{object.pk}}">
     <input class="fill_modal" type="file" id="fauna-batch-input" data-url="{% url 'fauna_upload' %}">
+    <span id='fauna-batch-header' data-url="{% url 'download_header' %}?model=assemblage" class="btn tooltip tooltip-right get-batch-header" data-tooltip="Batch Download Template"><i class="icon icon-download"></i></span>
     {% endif %}
+    {% if taxa %}
     <div style="padding-top: 20px;" id='profile-taxa'>
         <div class="container">
             <div class="columns" style="flex-wrap: nowrap; overflow: scroll;">
@@ -49,7 +51,7 @@
                     <thead style="height: 80px;">
                         <tr>
                             {% for sp in taxa|lookup:fam %}
-                            <td><div><i>{{sp.scientific_name}}</i></div></td>
+                            <td><div class="tooltip tooltip-top" data-tooltip="{{sp.common_name}}"><i>{{sp.scientific_name}}</i></div></td>
                             {% endfor %}
                         </tr>
                     </thead>
@@ -76,8 +78,47 @@
             </div>
         </div>
     </div>
+    {% else %}
+    <div class="empty">
+        <div class="empty-icon">
+          <i class="icon icon-flag"></i>
+        </div>
+        <p class="empty-title h5">No Faunal Data imported</p>
+    </div>
+    {% endif %}
 </div>
-
+{% if taxa %}
+<div>
+    <p><strong>Warning!</strong>. The species abundance values are highly subjective. Please see the cited papers for more information.
+        The rough approximation is:</p>
+        <table class="table">
+            <thead><tr><th>Key</th><th>Notes</th></tr></thead>
+            <tbody>
+                <tr><td><span class="Low"> Low</span></td>
+                    <td> <strong>10 or less</strong> bones/fragments (NISP) found.</td>
+                </tr>
+                <tr><td><span class="Medium"> Medium</span></td>
+                    <td><strong>Between 10 and 100</strong> bones/fragments (NISP) found.</td>
+                </tr>
+                <tr><td><span class="High"> High</span></td>
+                    <td><strong>100 or more</strong> bones/fragments (NISP) found.</td>
+                </tr>
+                <tr><td>Yes</td>
+                    <td>Only Presence-Absence data available</td>
+                </tr>
+            </tbody>
+        </table>
+</div>
+<br>
+<h5>References</h5>
+<table class="table table-striped my-2">
+    <tbody id="description-reference-tbody" style="border-top: 1px solid lightgrey;">
+        {% for ref in taxa_references %}
+        {% include 'main/reference/reference-tablerow.html' with display=True %}
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
 
 
 

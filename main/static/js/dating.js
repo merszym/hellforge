@@ -100,7 +100,7 @@ $('body').on('click','#calibrate',function(){
 
 // Handle batch upload or download of dates for a site or layer
 // download header
-$('body').on('click','#date-batch-header', function(){
+$('body').on('click','.get-batch-header', function(){
     $.ajax({
         type: "GET",
         url: $(this).attr('data-url'),

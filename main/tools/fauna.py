@@ -11,6 +11,8 @@ from django.db.models import Q
 def fauna_upload(request):
     import pandas as pd
 
+    # TODO: create taxa upon assemblageUpload
+
     df = pd.read_csv(request.FILES["file"], sep=",")
     df.drop_duplicates(inplace=True)
 
@@ -18,7 +20,7 @@ def fauna_upload(request):
     all_layers = [x.name for x in site.layer.all()]
 
     # filter for expected/unexpected columns
-    expected = ["Layer", "Species", "Abundance", "Reference"]
+    expected = FaunalAssemblage.table_columns()
     issues = []
     if dropped := [x for x in df.columns if x not in expected]:
         issues.append(f"Dropped Table Columns: {','.join(dropped)}")
@@ -57,22 +59,29 @@ def save_verified(request):
     # create an assemblage for each layer!
     for layer, dat in df.groupby(["Layer"]):
         tmp_layer = Layer.objects.filter(Q(site=site) & Q(name=layer)).first()
-        dat = dat.dropna()
 
         assemblage = FaunalAssemblage(layer=tmp_layer)
         assemblage.save()
         assemblage.refresh_from_db()
 
-        for sp, abundance in zip(dat["Species"], dat["Abundance"]):
-            taxon = Taxon.objects.get(scientific_name=sp)
+        for fam, sp, common, abundance in zip(dat["Family"], dat["Species"], dat["Common Name"], dat["Abundance"]):
+            try:
+                taxon = Taxon.objects.get(scientific_name=sp)
+            except:
+                taxon = Taxon(scientific_name=sp, common_name=common, family=fam)
+                taxon.save()
+                taxon.refresh_from_db()
             found_taxon = FoundTaxon(taxon=taxon, abundance=abundance)
             found_taxon.save()
             found_taxon.refresh_from_db()
             assemblage.taxa.add(found_taxon)
 
-        for ref_id in set([x["id"] for x in dat["Reference"]]):
-            reference = Reference.objects.get(id=ref_id)
-            assemblage.ref.add(reference)
+        try:
+            for ref_id in set([x["id"] for x in dat["Reference"]]):
+                reference = Reference.objects.get(id=ref_id)
+                assemblage.ref.add(reference)
+        except TypeError:  # no reference available
+            pass
 
     return JsonResponse({"status": True})
 
