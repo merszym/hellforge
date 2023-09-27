@@ -4,18 +4,21 @@
 
 .High{
     color:green;
+    background-color: green;
     font-weight: 800;
 }
 .Medium{
     color:orange;
+    background-color: orange;
     font-weight: 500;
 }
 .Low{
     color: grey;
+    background-color: grey;
 }
 .Yes{
-    background-color: darkgrey;
-    color: darkgrey;
+    background-color: black;
+    color: black;
 }
 
 </style>
@@ -98,17 +101,17 @@
         <table class="table">
             <thead><tr><th>Key</th><th>Notes</th></tr></thead>
             <tbody>
-                <tr><td><span class="Low"> Low</span></td>
+                <tr><td class="Low" style="width: 30px;"><span > Low</span></td>
                     <td> <strong>10 or less</strong> bones/fragments (NISP) found.</td>
                 </tr>
-                <tr><td><span class="Medium"> Medium</span></td>
+                <tr><td class="Medium" style="width: 30px;"><span > Medium</span></td>
                     <td><strong>Between 10 and 100</strong> bones/fragments (NISP) found.</td>
                 </tr>
-                <tr><td><span class="High"> High</span></td>
+                <tr><td class="High" style="width: 30px;"><span > High</span></td>
                     <td><strong>100 or more</strong> bones/fragments (NISP) found.</td>
                 </tr>
-                <tr><td>Yes</td>
-                    <td>Only Presence-Absence data available</td>
+                <tr><td class="Yes" style="width: 30px;"><span > Yes</span></td>
+                    <td>Taxon found (Only Presence-Absence data available)</td>
                 </tr>
             </tbody>
         </table>
