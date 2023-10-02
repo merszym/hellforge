@@ -41,12 +41,24 @@ class SiteDetailView(ProjectAwareDetailView):
         taxrefs = []
 
         for layer in Layer.objects.filter(Q(site=object) & Q(assemblage__isnull=False)):
+            # load the taxa
             for assemblage in layer.assemblage.all():
                 for ref in assemblage.ref.all():
                     taxrefs.append(ref)
                 for found_taxon in assemblage.taxa.all():
                     taxon = found_taxon.taxon
                     taxa[taxon.family][taxon][layer] = found_taxon.abundance
+        # load the samples
+        samples = nested_dict()
+
+        for layer in Layer.objects.filter(Q(site=object)):
+            qs = layer.sample.filter(project=context.get("project"))
+            if len(qs) > 0:
+                if not "All" in samples:
+                    samples["All"] = []
+                samples["All"].extend(qs)
+                samples[layer] = qs
+
         context.update(
             {
                 "profile_form": ProfileForm,
@@ -55,6 +67,7 @@ class SiteDetailView(ProjectAwareDetailView):
                 "taxa_references": set(taxrefs),
                 "project_description": project_description,
                 "profile": profile,
+                "samples": samples,
             }
         )
         return context

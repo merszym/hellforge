@@ -1,0 +1,54 @@
+{% load format %}
+
+<div class="my-2" id="site_sample_content">
+    {% if request.user.is_authenticated %}
+    {% csrf_token %}
+    <input class="fill_modal" type="file" id="fauna-batch-input" data-url="{% url 'main_sample_upload' %}">
+    <span id='fauna-batch-header' data-url="{% url 'download_header' %}?model=sample" class="btn tooltip tooltip-right get-batch-header" data-tooltip="Batch Download Template"><i class="icon icon-download"></i></span>
+    {% endif %}
+    {% if samples %}
+    <div style="padding-top: 20px;" id='profile-taxa'>
+        <div class="container">
+            <div class="columns" style="flex-wrap: nowrap; overflow: scroll;">
+              <div class="column">
+                    <h3> Samples </h3>
+                    <!-- #TODO: only samples of the given project... -->
+                    <ul class="tab">
+                        {% for layer in samples %}
+                        <li class="tab-item toggle_samples {% if forloop.counter == 1%} active {% endif %}" data-x="layer_{{layer.pk}}" data-group="samples" style="cursor: pointer;">
+                            <a class="badge" data-badge="{{samples|lookup:layer|length}}">{% if layer.name%}{{layer.name}}{%else%}All{% endif %}</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% for layer in samples %}
+                    {% include 'main/samples/sample-table.html' with object_list=samples|lookup:layer counter=forloop.counter %}
+                    {% endfor %}
+              </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty">
+        <div class="empty-icon">
+          <i class="icon icon-flag"></i>
+        </div>
+        <p class="empty-title h5">No Sample Data imported</p>
+    </div>
+    {% endif %}
+</div>
+{% if sample_references %}
+<h5>References</h5>
+<table class="table table-striped my-2">
+    <tbody id="description-reference-tbody" style="border-top: 1px solid lightgrey;">
+        {% for ref in sample_references %}
+        {% include 'main/reference/reference-tablerow.html' with display=True %}
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+
+
+
+
+

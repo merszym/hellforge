@@ -1,0 +1,35 @@
+<div class="sample_table" id="samples_layer_{{layer.pk}}" style="{% if counter != 1 %} display: none;{% endif %}">
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Layer</th>
+            <th>Type</th>
+            <th>Sample</th>
+            <th>Sample Age</th>
+            <th>Year of Collection</th>
+            <th>Sample Location</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for object in object_list %}
+        <tr>
+            <td>{{object.layer.name}}</td>
+            <td>{{object.type}}</td>
+            <td>{{object.name}}
+                {% for syn in object.synonyms.all %}
+                <br><span class="small text-gray">{{syn.type}}: {{syn.name}}</span>
+                {% endfor %}
+            </td>
+            <td>TBD</td>
+            <td>{{object.year_of_collection}}</td>
+            <td>{% for k,v in object.get_provenience %}
+                <span class="text-gray small">{{k}}: {{v}}</span><br>
+                {% endfor %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+
+
+</table>
+</div>

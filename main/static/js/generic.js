@@ -57,14 +57,9 @@ $(document).ready(function(){
 // Generic Styling!
 // for spectre elements
 
-// general style of
+// general style of tab-items
 $('body').on('click','.tab-item', function(){
-    if ($(this).hasClass('main')){
-        $('.main').removeClass('active')
-        $(this).addClass('active')
-    }
-    else{
-        $('.minor').removeClass('active')
-        $(this).addClass('active')
-    }
+    var group = $(this).attr('data-group')
+    $(`.tab-item[data-group=${group}]`).removeClass('active')
+    $(this).addClass('active')
 });

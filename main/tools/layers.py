@@ -45,7 +45,7 @@ def update_positions(request, site_id):
 
 @login_required
 def set_name(request):
-    object = get_instance_from_string(request.POST.get("info"))
+    object = get_instance_from_string(request.POST.get("instance_x"))
     object.name = request.POST.get("name")
     object.unit = request.POST.get("unit", None)
     object.save()

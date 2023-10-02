@@ -732,6 +732,7 @@ class Sample(models.Model):
     type = models.CharField("sample type", max_length=400, null=True, blank=True)
     name = models.CharField("name", max_length=200, null=True, blank=True)
     synonyms = models.ManyToManyField(Synonym, blank=True, verbose_name="synonym", related_name="sample")
+    project = models.ManyToManyField(Project, blank=True, verbose_name="project", related_name="sample")
     batch = models.CharField("sample batch", max_length=400, null=True, blank=True)
     year_of_collection = models.IntegerField("year of collection", blank=True, null=True)
     # description
@@ -748,9 +749,25 @@ class Sample(models.Model):
     # references
     ref = models.ManyToManyField(Reference, verbose_name="reference", blank=True, related_name="sample")
 
+    def get_provenience(self):
+        data = json.loads(self.provenience)
+        return [(k, v) for k, v in data.items()]
+
     @property
     def model(self):
         return "sample"
+
+    @classmethod
+    def table_columns(self):
+        return [
+            "Layer",
+            "Name",
+            "Synonyms",
+            "Type",
+            "Year of Collection",
+            "Provenience",
+            "Reference",
+        ]
 
 
 ### The expected Taxa section
@@ -815,4 +832,5 @@ models = {
     "description": Description,
     "author": Author,
     "project": Project,
+    "sample": Sample,
 }

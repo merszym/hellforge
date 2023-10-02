@@ -42,7 +42,7 @@ def save_description(request):
 
     description.save()
 
-    if origin:
+    if origin != "null":
         model = origin.split("_")[0]
     else:
         model = "site"
@@ -50,7 +50,7 @@ def save_description(request):
     goto = {"site": "site_detail", "project": "main_project_detail"}
     model_kwargs = {
         "site": {"pk": description.content_object.id},
-        "project": {"namespace": description.content_object.namespace},
+        "project": {"namespace": getattr(description.content_object, "namespace", None)},
     }
 
     return JsonResponse(
