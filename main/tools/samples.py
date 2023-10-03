@@ -70,7 +70,7 @@ def save_verified(request):
             s.project.add(project)
             # add synonyms
             # since synonyms are stored as id_label:id, id_label2:id2
-            if synonyms == synonyms:
+            if synonyms == synonyms and synonyms:
                 sample_synonyms = s.synonyms.all()
                 for syn in synonyms.split(","):
                     syn_label, syn_name = syn.split(":", 1)

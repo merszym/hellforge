@@ -20,8 +20,8 @@
                 <br><span class="small text-gray">{{syn.type}}: {{syn.name}}</span>
                 {% endfor %}
             </td>
-            <td>TBD</td>
-            <td>{{object.year_of_collection}}</td>
+            <td>{{object.layer.age_summary}}</td>
+            <td>{% if object.year_of_collection%}{{object.year_of_collection}}{% endif%}</td>
             <td>{% for k,v in object.get_provenience %}
                 <span class="text-gray small">{{k}}: {{v}}</span><br>
                 {% endfor %}

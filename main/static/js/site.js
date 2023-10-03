@@ -1,6 +1,6 @@
 //#TODO: find better way to sort the layers!
 function makeSortable(){
-    $("#layer_tbody").sortable({
+    $(".layer_tbody").sortable({
         items:'tr',
         containment: "parent",
         axis:'y',
@@ -42,14 +42,9 @@ function getProfile(pk){
 }
 
 // switch between profiles
-$('body').on('click','.minor', function(){
-    $.ajax({
-        type: "GET",
-        url: $(this).attr('data-url'),
-        }).done(function(data){
-            $('#profile-detail').html(data)
-            makeSortable()
-        });
+$('body').on('click','.switch_profile', function(){
+    $('.show_profile').hide();
+    $(`#show_${$(this).attr('data-show')}`).show()
 });
 
 // add profiles
@@ -146,6 +141,7 @@ function reloadTimeline(){
 
 $( document ).ready(function(){
     reloadTimeline()
+    makeSortable()
 });
 
 $('body').on('click', '.refresh_profile', function(){

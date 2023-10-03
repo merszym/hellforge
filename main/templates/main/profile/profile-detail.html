@@ -1,6 +1,5 @@
 {% load static %}
-<script src="{% static 'js/packages/jquery-ui.js' %}"></script>
-<section class="m-2">
+<section class="m-2 show_profile" style="padding-top: 20px;{% if counter != 1%}display:none;{% endif %}" id="show_profile_{{object.pk}}">
     <div style="position: relative;">
       <h3>{{object.name}}</h3>
       {% if request.user.is_authenticated %}

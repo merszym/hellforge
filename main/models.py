@@ -749,6 +749,9 @@ class Sample(models.Model):
     # references
     ref = models.ManyToManyField(Reference, verbose_name="reference", blank=True, related_name="sample")
 
+    class Meta:
+        ordering = ["name"]
+
     def get_provenience(self):
         data = json.loads(self.provenience)
         return [(k, v) for k, v in data.items()]
