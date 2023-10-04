@@ -28,18 +28,6 @@ function makeSortable(){
         },
     });
 };
-function getProfile(pk){
-    url = $('#profile-add').attr('data-url').replace('1',pk)
-    if(url){
-        $.ajax({
-            type: "GET",
-            url: url,
-            }).done(function(data){
-                $('#profile-detail').html(data)
-                makeSortable()
-            });
-        }
-}
 
 // switch between profiles
 $('body').on('click','.switch_profile', function(){
@@ -58,12 +46,13 @@ $('body').on('click', '#modal-profile-close', function(){
 
 $('body').on('click', '#profile-submit', function(){
     $('#modal-profile').removeClass('active')
+    var reload = $(this).attr('data-reload')
     $.ajax({
         type: "POST",
         url: $('#profile-submit').attr('data-url'),
         data: $("#profile-form").serialize()
-        }).done(function(html){
-            $('#layers_update_click').click()
+        }).done(function(){
+            reloadElement(reload)
         });
 });
 

@@ -3,7 +3,7 @@
     <div style="position: relative;">
       <h3>{{object.name}}</h3>
       {% if request.user.is_authenticated %}
-      <span class="btn btn-primary tooltip tooltip-left profile_delete" data-url="{% url 'main_profile_delete' %}"
+      <span class="btn btn-primary tooltip tooltip-left generic_delete" data-x="profile_{{object.pk}}" data-reload="site_profile_content"
           data-tooltip="Delete the Profile" style="position:absolute; right:5%; top:10px">
           <i class="icon icon-delete"></i>
       </span>
@@ -50,14 +50,17 @@
                   <div class="card">
                     <div class="card-body">
                       <button class="btn clone_layer tooltip tooltip-top" data-tooltip="Clone Layer" id="clone_layer_{{layer.pk}}" data-url="{% url 'main_layer_clone' layer.pk %}"><i class="icon icon-plus"></i></button>
-                      <button class="btn layer_profile tooltip tooltip-top" data-tooltip="Remove Layer from Profile" id="remove_layer_{{layer.pk}}" data-url="{% url 'main_profile_layer_remove' %}"><i class="icon icon-downward"></i></button>
-                      <a class="btn tooltip tooltip-top" data-tooltip="Delete Layer" href="{% url 'main_layer_delete' layer.pk%}"><i class="icon icon-delete"></i></a>
+                      <button class="btn tooltip tooltip-top generic_rmm2m" data-x="layer_{{layer.pk}}" data-y="profile_{{object.pk}}" data-reload="show_profile_{{object.pk}}" data-tooltip="Remove Layer from Profile"><i class="icon icon-downward"></i></button>
+                      <a class="btn tooltip tooltip-top generic_delete"
+                            data-tooltip="Delete Layer"
+                            data-x="layer_{{layer.pk}}"
+                            data-reload="profiledetail_{{object.pk}}"
+                      ><i class="icon icon-delete"></i></a>
                       <div class="divider"></div>
                       <button id="layer_edit_modal" class="btn fill_modal tooltip tooltip-top" data-info="layer_{{layer.pk}}" data-tooltip="Edit Layer" data-url="{% url 'ajax_fill_modal' %}?type=layer_edit"><i class="icon icon-edit"></i></button>
                       <button id="layer_edit_modal" class="btn fill_modal tooltip tooltip-top" data-info="layer_{{layer.pk}}" data-tooltip="Edit Layer Properties" data-url="{% url 'ajax_fill_modal' %}?type=layer_properties">Prop</button>
                       <div class="divider"></div>
                       <button id='date_modal' class='btn fill_modal tooltip tooltip-top' data-info="layer_{{layer.pk}}" data-tooltip="Add Dating" data-url="{% url 'ajax_fill_modal' %}?type=dating"><i class="icon icon-time"></i></button>
-                      <button id='reldate_modal' class='btn fill_modal tooltip tooltip-top' data-info="layer_{{layer.pk}}" data-tooltip="Add Relative Dating" data-url="{% url 'ajax_fill_modal' %}?type=reldate"><i class="icon icon-link"></i></button>
                     </div>
                   </div>
                 </div>
@@ -70,7 +73,13 @@
         </table>
         {% if request.user.is_authenticated %}
         <div class="panel-footer">
-          <span class="btn btn-primary add_new_layer tooltip tooltip-right" data-tooltip="Add a new Layer" id="layerprofile_{{object.pk}}" data-url="{% url 'main_profile_layer_add' %}"><i class="icon icon-plus"></i></span>
+          <span class="btn btn-primary add_new_layer tooltip tooltip-right"
+              data-tooltip="Add a new Layer"
+              data-y="profile_{{object.pk}}"
+              data-url="{% url 'main_profile_layer_add' %}"
+              data-reload="profiledetail_{{object.pk}}">
+              <i class="icon icon-plus"></i>
+          </span>
         </div>
         {%endif %}
       <br>
@@ -83,7 +92,12 @@
         {% if request.user.is_authenticated %}
         <p class="empty-subtitle">Click the button to add a new Layer.</p>
         <div class="empty-action">
-          <button class="btn btn-primary add_new_layer" id="layerprofile_{{object.pk}}" data-url="{% url 'main_profile_layer_add' %}">Add layer</button>
+          <button class="btn btn-primary add_new_layer"
+              data-y="profile_{{object.pk}}"
+              data-url="{% url 'main_profile_layer_add' %}"
+              data-reload="profiledetail_{{object.pk}}">
+              Add layer
+          </button>
         </div>
         {% endif %}
       </div>
@@ -108,7 +122,7 @@
           <tr>
             <td>{{layer.in_profile}}</td>
             {% include 'main/profile/layer-tablecells.html' %}
-            <td><span class="btn layer_profile"  data-url="{% url 'main_profile_layer_add' %}" id="existing_layer_{{layer.pk}}"><i class="icon icon-upward"></span></td>
+            <td><span class="btn generic_addm2m" data-x="layer_{{layer.pk}}" data-y="profile_{{object.pk}}" data-reload="show_profile_{{object.pk}}"><i class="icon icon-upward"></span></td>
           </tr>
         {% endfor %}
         </tbody>

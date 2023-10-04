@@ -1,4 +1,4 @@
-from .forms import ReferenceForm, DateForm, ContactForm, RelDateForm
+from .forms import ReferenceForm, DateForm, ContactForm
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from .models import (
@@ -55,10 +55,6 @@ def fill_modal(request):
             request,
             "main/dating/dating-modal-content.html",
             {"datingoptions": DatingMethod.objects.all(), "origin": "form"},
-        )
-    if choice == "reldate":
-        html = render(
-            request, "main/dating/reldate-modal-content.html", {"form": RelDateForm(request.POST), "object": object}
         )
     if choice == "culture":
         html = render(request, "main/culture/culture-parent-modal.html", {"object": object, "origin": "culture"})

@@ -29,8 +29,7 @@ $('body').on('keyup paste','#search-input',function(){
 
 // generic reload of element, instead of rendering with html-snippets!
 // get the webpage again by loading the same url, only bind the required element to the dom
-$('body').on('click', '.generic_reload', function(){
-    var element = $(this).attr('data-reload')
+function reloadElement(element){
     $.ajax({
         url: document.URL,
         success: function(response) {
@@ -38,8 +37,14 @@ $('body').on('click', '.generic_reload', function(){
             var update = $(response).find(`#${element}`);
             // Insert the element into the DOM
             $(`#${element}`).replaceWith(update)
+            //in case its hidden by default
+            $(`#${element}`).show()
         }
     });
+}
+$('body').on('click', '.generic_reload', function(){
+    var element = $(this).attr('data-reload')
+    reloadElement(element)
 })
 
 
@@ -62,4 +67,77 @@ $('body').on('click','.tab-item', function(){
     var group = $(this).attr('data-group')
     $(`.tab-item[data-group=${group}]`).removeClass('active')
     $(this).addClass('active')
+});
+
+//
+// GENERIC ADD, REMOVE, DELETE
+//
+
+// generic delete --> add confirm class and remove it after 3 sec
+$('body').on('click','.generic_delete', function(){
+    $(this).addClass('generic_delete_confirm text-error')
+    $(this).attr('data-tooltip', 'Confirm Delete!')
+    var element = $(this).attr('data-x')
+    setTimeout(function() {
+        $('.generic_delete').attr('data-tooltip', `Delete ${element.split('_')[0]}`)
+        $('.generic_delete').removeClass('generic_delete_confirm text-error')
+    }, 2000);
+})
+
+
+$('body').on('click','.generic_delete_confirm', function(){
+    var formdata = new FormData();
+    var reload = $(this).attr('data-reload')
+    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
+    formdata.append('instance_x', $(this).attr('data-x'));
+    $.ajax({
+        type: "POST",
+        processData: false,
+        contentType: false,
+        data: formdata,
+        url: $('#url_generic_delete').attr("data-url"),
+        success: function() {
+            reloadElement(reload)
+        }
+    });
+})
+
+// generic m2m functions
+// add
+
+$('body').on('click', '.generic_addm2m', function(){
+    var formdata = new FormData()
+    var reload = $(this).attr('data-reload')
+    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
+    formdata.append('instance_x', $(this).attr('data-x'));
+    formdata.append('instance_y', $(this).attr('data-y'));
+    $.ajax({
+        type: "POST",
+        processData: false,
+        contentType: false,
+        data: formdata,
+        url: $('#url_generic_addm2m').attr('data-url'),
+        success: function() {
+            reloadElement(reload)
+        }
+    });
+});
+
+//remove
+$('body').on('click', '.generic_rmm2m', function(){
+    var formdata = new FormData()
+    var reload = $(this).attr('data-reload')
+    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
+    formdata.append('instance_x', $(this).attr('data-x'));
+    formdata.append('instance_y', $(this).attr('data-y'));
+    $.ajax({
+        type: "POST",
+        processData: false,
+        contentType: false,
+        data: formdata,
+        url: $('#url_generic_rmm2m').attr('data-url'),
+        success: function() {
+            reloadElement(reload)
+        }
+    });
 });

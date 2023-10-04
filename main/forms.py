@@ -28,14 +28,6 @@ class ProfileForm(forms.ModelForm):
         fields = ["name", "type"]
 
 
-class RelDateForm(forms.ModelForm):
-    info = forms.CharField(required=False)
-
-    class Meta:
-        model = RelativeDate
-        fields = ["info", "ref", "how", "offset", "relation"]
-
-
 class DateForm(forms.ModelForm):
     info = forms.CharField(required=False)
 

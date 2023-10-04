@@ -54,9 +54,11 @@ def set_x_fk_to_y(request, field, response=True):
 
 
 @login_required
-def add_x_to_y_m2m(request, field, response=True):
+def add_x_to_y_m2m(request, field=None, response=True):
     x = get_instance_from_string(request.POST.get("instance_x"))
     y = get_instance_from_string(request.POST.get("instance_y"))
+    if not field:
+        field = request.POST.get("instance_x").split("_")[0]
     if x and y:
         getattr(y, field).add(x)
         return JsonResponse({"status": True}) if response else (True, x, y)
@@ -64,9 +66,11 @@ def add_x_to_y_m2m(request, field, response=True):
 
 
 @login_required
-def remove_x_from_y_m2m(request, field, response=True):
+def remove_x_from_y_m2m(request, field=None, response=True):
     x = get_instance_from_string(request.POST.get("instance_x"))
     y = get_instance_from_string(request.POST.get("instance_y"))
+    if not field:
+        field = request.POST.get("instance_x").split("_")[0]
     if x and y:
         getattr(y, field).remove(x)
         return JsonResponse({"status": True}) if response else (True, x, y)
@@ -86,8 +90,10 @@ def delete_x(request, response=True):
 urlpatterns = [
     path("search", search, name="main_generic_search"),
     path("rmm2m/<str:field>", remove_x_from_y_m2m, name="main_generic_rmm2m"),
+    path("rmm2m", remove_x_from_y_m2m, name="main_generic_rmm2m"),
     path("unsetfk/<str:field>", unset_fk, name="main_generic_unsetfk"),
     path("setfk/<str:field>", set_x_fk_to_y, name="main_generic_setfk"),
     path("addm2m/<str:field>", add_x_to_y_m2m, name="main_generic_addm2m"),
+    path("addm2m", add_x_to_y_m2m, name="main_generic_addm2m"),
     path("deletex", delete_x, name="main_generic_delete"),
 ]

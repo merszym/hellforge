@@ -671,12 +671,6 @@ class Layer(models.Model):
         except ValueError:
             return 1
 
-    @property
-    def reldates(self):
-        dates = list(self.reldate.all())
-        dates.extend(list(self.junction.first().reldate.all()) if self.junction.first() else [])
-        return dates
-
     def get_upper_sibling(self):
         return Layer.objects.filter(
             Q(pos__lt=self.pos) & Q(site=self.site) & (Q(date__isnull=False) | Q(checkpoint__isnull=False))
@@ -828,7 +822,6 @@ models = {
     "reference": Reference,
     "contact": Person,
     "person": Person,
-    "reldate": RelativeDate,
     "assemblage": FaunalAssemblage,
     "taxon": Taxon,
     "affiliation": Affiliation,

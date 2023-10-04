@@ -16,7 +16,7 @@
                         <input class="form-input" type="text" id="{{field.name}}_id" name="{{field.name}}" placeholder="{{field.name}}" required>
                     </div>
                     {% endfor %}
-                    <span id='profile-submit' class="btn btn-primary" data-url="{% url 'main_site_profile_create' object.pk%}">Add</span>
+                    <span id='profile-submit' class="btn btn-primary" data-reload="site_layer" data-url="{% url 'main_site_profile_create' object.pk%}">Add</span>
                     </form>
                     <br>
                 </div>
@@ -31,20 +31,20 @@
         {% endfor %}
         {% if request.user.is_authenticated %}
         <li id="before-profile-add">
-            <span style="margin:5px;" data-tooltip="Add a Profile" class="btn btn-primary tooltip tooltip-left" id="profile-add" data-url="{% url 'main_profile_get' 1 %}"> Add Profile </span>
+            <span style="margin:5px;" data-tooltip="Add a Profile" class="btn btn-primary tooltip tooltip-left" id="profile-add" data-url="{% url 'main_site_profile_create' object.pk %}"> Add Profile </span>
         </li>
         {% endif %}
     </ul>
     {% for profile in object.profile.all %}
     {% include 'main/profile/profile-detail.html' with object=profile counter=forloop.counter %}
-        {% empty %}
-        <div class="empty">
-            <div class="empty-icon">
-            <i class="icon icon-flag"></i>
-            </div>
-            <p class="empty-title h5">No Profiles yet</p>
-            <p class="empty-subtitle">Click the button above to add a profile.</p>
+    {% empty %}
+    <div class="empty">
+        <div class="empty-icon">
+        <i class="icon icon-flag"></i>
         </div>
-        {% endfor %}
+        <p class="empty-title h5">No Profiles yet</p>
+        <p class="empty-subtitle">Click the button above to add a profile.</p>
+    </div>
+    {% endfor %}
     </div>
 </div>

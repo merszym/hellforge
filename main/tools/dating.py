@@ -10,7 +10,6 @@ from django.contrib.auth.decorators import login_required  # this is for now, ma
 
 
 def calibrate(estimate, plusminus, curve="intcal20"):
-    print("test")
     curve = curve
     r = R(int(estimate), int(plusminus), "tmp")
     try:
@@ -189,24 +188,6 @@ def delete(request):
     return JsonResponse({"status": True})
 
 
-# TODO: move to relative?
-@login_required
-def add_relative(request):
-    from main.forms import RelDateForm
-
-    form = RelDateForm(request.POST)
-    if form.is_valid():  # is always valid because nothing is required
-        obj = form.save()
-        # if we have an associated model (e.g. Layer)
-        if info := form.cleaned_data.get("info", False):
-            layer = get_instance_from_string(info)
-            layer.reldate.add(obj)
-            layer.save()  # not needed for adding, but for post-save signal in layer
-        return JsonResponse({"status": True})
-        # error validation
-    return render(request, "main/dating/reldate-modal-content.html", {"form": form})
-
-
 @login_required
 def toggle_use(request):
     date = get_instance_from_string(request.POST.get("instance_x"))
@@ -221,7 +202,6 @@ urlpatterns = [
     path("upload", batch_upload, name="ajax_date_batch_upload"),
     path("save-batch", save_verified_batchdata, name="ajax_save_verified_batchdata"),
     path("calibrate", calibrate_c14, name="ajax_date_cal"),
-    path("add_rel", add_relative, name="ajax_add_reldate"),
     path("toggle_use", toggle_use, name="ajax_date_toggle"),
     path("recalibrate", recalibrate_c14, name="ajax_date_recalibrate"),
 ]
