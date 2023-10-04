@@ -95,7 +95,6 @@ def calc_culture_range(sender, instance, **kwargs):
             # this is for recursion
             culture.upper = upper
             culture.lower = lower
-            print(culture, upper, lower)
             culture.save()
 
 

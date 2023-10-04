@@ -36,6 +36,7 @@ class CultureDetailView(ProjectAwareDetailView):
         context = super(CultureDetailView, self).get_context_data(**kwargs)
         items = []
         groupdata = []
+        groupdata_tmp = {}
         geo = {"type": "FeatureCollection", "features": []}
         nochildren = self.request.GET.get("nochildren", False)
         query = sorted(self.object.all_cultures(nochildren=nochildren), key=lambda x: x.upper * -1)
@@ -50,7 +51,7 @@ class CultureDetailView(ProjectAwareDetailView):
         site_color_dict = {
             site.lower(): f"{col}" for site, col in zip(all_sites, sns.color_palette("husl", len(all_sites)).as_hex())
         }
-        for cult in query:
+        for cult in sorted(query, key=lambda x: int(x.upper)):
             ordered_sites = sorted(cult.all_sites(nochildren=True), key=lambda x: x[1].lowest_date(cult=cult) * -1)
             sites = []
             [sites.append(site) for (cult, site) in ordered_sites if site not in sites]
@@ -78,14 +79,13 @@ class CultureDetailView(ProjectAwareDetailView):
                         "geometry": site.geometry,
                     }
                 )
-                groupdata.append(
-                    {
-                        "id": f"{cult.name.lower()}-{site.name.lower()}",
-                        "content": f'{site.name}: <a href="{reverse("site_detail", kwargs={"pk":site.pk})}" class="btn-link">view</a>',
-                        "treeLevel": 3,
-                        # include the order within across sites within culture!
-                    }
-                )
+                groupdata_tmp[f"{cult.name.lower()}-{site.name.lower()}"] = {
+                    "id": f"{cult.name.lower()}-{site.name.lower()}",
+                    "content": f'{site.name}: <a href="{reverse("site_detail", kwargs={"pk":site.pk})}" class="btn-link">view</a>',
+                    "treeLevel": 3,
+                    # include the order within across sites within culture!
+                }
+
             for layer in cult.layer.all():
                 if len(layer.date.all()) == 0 and not layer.set_upper:
                     continue
@@ -114,7 +114,14 @@ class CultureDetailView(ProjectAwareDetailView):
                             }
                         )
                     items.append(culturedata)
+                    # update the order of the groupdata
+                    tmp = groupdata_tmp[f"{cult.name.lower()}-{k.lower()}"]
+                    tmp["order"] = max(v)
+                    groupdata.append(tmp)
+
                 except ValueError:  # no date for the site-culture
+                    tmp = groupdata_tmp[f"{cult.name.lower()}-{k.lower()}"]
+                    groupdata.append(tmp)
                     continue
 
         context["itemdata"] = json.dumps(items)
