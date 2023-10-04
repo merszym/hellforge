@@ -671,16 +671,6 @@ class Layer(models.Model):
         except ValueError:
             return 1
 
-    def get_upper_sibling(self):
-        return Layer.objects.filter(
-            Q(pos__lt=self.pos) & Q(site=self.site) & (Q(date__isnull=False) | Q(checkpoint__isnull=False))
-        ).last()
-
-    def get_lower_sibling(self):
-        return Layer.objects.filter(
-            Q(pos__gt=self.pos) & Q(site=self.site) & (Q(date__isnull=False) | Q(checkpoint__isnull=False))
-        ).first()
-
     @property
     def hidden_dates(self):
         return Date.objects.filter(Q(hidden=True) & Q(model=self))

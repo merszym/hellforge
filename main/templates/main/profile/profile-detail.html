@@ -35,9 +35,9 @@
             {% endif %}
           </tr>
         </thead>
-        <tbody id="layer_tbody" data-url="{% url 'main_layer_positionupdate' object.site.pk %}">
+        <tbody data-url="{% url 'main_layer_positionupdate' object.site.pk %}">
           {% for layer in object.layer.all %}
-          <tr class="table_row" id="layer_{{layer.pk}}" style="padding:2px;">
+          <tr class="table_row" id="layer_{{layer.pk}}" data-pos="{{layer.pos}}" style="padding:2px;">
             {% if request.user.is_authenticated %}
             <td class="sort_handle" style="cursor:move;"><i class="icon icon-resize-vert"></i></td>
             {% endif %}

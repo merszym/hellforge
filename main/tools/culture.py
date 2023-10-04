@@ -87,27 +87,36 @@ class CultureDetailView(ProjectAwareDetailView):
                     }
                 )
             for layer in cult.layer.all():
-                site_date_dict[layer.site.name].extend([int(layer.mean_lower), int(layer.mean_upper)])
+                if len(layer.date.all()) == 0 and not layer.set_upper:
+                    continue
+                upper = layer.set_upper if layer.set_upper else layer.mean_upper
+                lower = layer.set_lower if layer.set_lower else layer.mean_lower
+                site_date_dict[layer.site.name].extend([int(lower), int(upper)])
 
             for k, v in site_date_dict.items():
-                culturedata = {
-                    "start": max(v) * -31556952 - (1970 * 31556952000),  # 1/1000 year in ms, start with year 0
-                    "content": f"{k} | {max(v):,} ya",
-                    "group": f"{cult.name.lower()}-{k.lower()}",
-                    "type": "point",
-                    "usesvg": False,
-                    "method": "Site",
-                }
-                if max(v) != min(v):
-                    culturedata.update(
-                        {
-                            "end": min(v) * -31556952 - (1970 * 31556952000),
-                            "content": f"{k} | {max(v):,} - {min(v):,} ya",
-                            "style": f"background-color: {site_color_dict[k.lower()]};",
-                            "type": "range",
-                        }
-                    )
-                items.append(culturedata)
+                try:
+                    maxv = max(v)
+                    culturedata = {
+                        "start": max(v) * -31556952 - (1970 * 31556952000),  # 1/1000 year in ms, start with year 0
+                        "content": f"{k} | {max(v):,} ya",
+                        "group": f"{cult.name.lower()}-{k.lower()}",
+                        "type": "point",
+                        "usesvg": False,
+                        "method": "Site",
+                    }
+                    if max(v) != min(v):
+                        culturedata.update(
+                            {
+                                "end": min(v) * -31556952 - (1970 * 31556952000),
+                                "content": f"{k} | {max(v):,} - {min(v):,} ya",
+                                "style": f"background-color: {site_color_dict[k.lower()]};",
+                                "type": "range",
+                            }
+                        )
+                    items.append(culturedata)
+                except ValueError:  # no date for the site-culture
+                    continue
+
         context["itemdata"] = json.dumps(items)
         context["groups"] = json.dumps(groupdata)
         context["geo"] = geo

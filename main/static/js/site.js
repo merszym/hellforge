@@ -1,33 +1,39 @@
 //#TODO: find better way to sort the layers!
-function makeSortable(){
-    $(".layer_tbody").sortable({
-        items:'tr',
-        containment: "parent",
-        axis:'y',
-        cursor:'move',
-        delay: 200,
-        handle:'.sort_handle',
-        opacity: 0.7,
-        stop: function( event, ui ) {
-            //get the new order of layers
-            positions = []
-            $(".table_row").each(function(ind){
-                pos = $(this).attr('id')
-                if(pos){
-                    positions.push(pos.split('_')[1])
-                }
-            });
-            //make ajax call to save udpdates pos
-            $.ajax({
-                type: "GET",
-                url: $('#layer_tbody').attr('data-url'),
-                data: {'new_positions':positions.join(',')},
-                }).done(function(){
-                    reloadTimeline()
-                });
-        },
-    });
-};
+$("tbody").sortable({
+    items:'tr',
+    containment: "parent",
+    axis:'y',
+    cursor:'move',
+    handle:'.sort_handle',
+    opacity: 0.7,
+    stop: function( event, ui ) {
+        var table = event.target
+        //get the new order of layers
+        ids = []
+        positions = []
+        $(table).children().each(function(){
+            let id = $(this).attr('id')
+            let pos = $(this).attr('data-pos')
+            positions.push(pos)
+            ids.push(id.split('_')[1])
+        });
+        //make ajax call to save updated positions
+        var formdata = new FormData();
+        formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
+        formdata.append('ids', ids.join(','));
+        formdata.append('positions', positions.join(','));
+        $.ajax({
+            type: "POST",
+            processData: false,
+            contentType: false,
+            data: formdata,
+            url: $(table).attr('data-url'),
+            success: function() {
+                reloadTimeline()
+            }
+        });
+    },
+});
 
 // switch between profiles
 $('body').on('click','.switch_profile', function(){

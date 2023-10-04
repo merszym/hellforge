@@ -55,7 +55,6 @@ def set_x_fk_to_y(request, field, response=True):
 
 @login_required
 def add_x_to_y_m2m(request, field=None, response=True):
-    print(request)
     x = get_instance_from_string(request.POST.get("instance_x"))
     y = get_instance_from_string(request.POST.get("instance_y"))
     if not field:

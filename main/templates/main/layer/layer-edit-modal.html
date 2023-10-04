@@ -14,8 +14,6 @@
                 <div class="input-group">
                     <span class="input-group-addon">Layer Name</span>
                     <input type="text" class="form-input" name="layer-name" value="{{object.name}}">
-                    <span class="input-group-addon">Unit</span>
-                    <input type="text" class="form-input" name="layer-unit" placeholder="Structural Unit" value="{%if object.unit%}{{object.unit}}{%endif%}">
                     <span id="layer-setname" class="btn btn-primary input-group-btn" data-x="layer_{{object.pk}}" data-url="{% url 'main_layer_setname' %}">OK</span>
                 </div>
                 <p class="form-input-hint">Update the Layer name. Provide a "Unit" to group multiple Layers</p>
