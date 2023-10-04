@@ -185,22 +185,10 @@ def site_create_update(request, pk=None):
     return render(request, "main/site/site_form.html", {"form": SiteForm(instance=copy(object)), "object": object})
 
 
-@login_required
-def add_site_to_project(request):
-    return add_x_to_y_m2m(request, "site")
-
-
-@login_required
-def remove_site_from_project(request):
-    return remove_x_from_y_m2m(request, "site")
-
-
 urlpatterns = [
     path("add-profile/<int:site_id>", add_profile, name="main_site_profile_create"),
     path("create", site_create_update, name="main_site_add"),
     path("edit/<int:pk>", site_create_update, name="main_site_update"),
     path("list", SiteListView.as_view(), name="site_list"),
     path("<int:pk>", SiteDetailView.as_view(), name="site_detail"),
-    path("add_to_project", add_site_to_project, name="main_add_site_to_project"),
-    path("remove_from_project", remove_site_from_project, name="main_remove_site_from_project"),
 ]

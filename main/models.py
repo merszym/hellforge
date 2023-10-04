@@ -162,7 +162,7 @@ class Person(models.Model):
     @classmethod
     def filter(self, kw):
         return Person.objects.filter(
-            Q(name__contains=kw) | Q(email__contains=kw) | Q(tags__contains=kw) | Q(affiliation_name__contains=kw)
+            Q(name__contains=kw) | Q(email__contains=kw) | Q(tags__contains=kw) | Q(affiliation__name__contains=kw)
         )
 
     class Meta:

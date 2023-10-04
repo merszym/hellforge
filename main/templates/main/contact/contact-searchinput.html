@@ -1,9 +1,7 @@
 {% load static %}
-{% csrf_token %}
-<span id='site_contact_set' style="display: none;" data-url="{% url 'main_generic_addm2m' 'site' %}"></span>
 <div class="input-group">
     <span class="input-group-addon"><i class="form-icon icon icon-search"></i> Contact</span>
-    <input type="text" data-origin="{{origin}}" data-model='contact' class="form-input" placeholder="Search" id="search-input" data-url="{% url 'main_generic_search' %}">
+    <input type="text" data-origin="{{origin}}_{{object.pk}}" data-model='contact' class="form-input" placeholder="Search" id="search-input" data-url="{% url 'main_generic_search' %}">
     <a href="#" target="_blank" class="btn btn-primary input-group-btn tooltip tooltip-left" data-tooltip="Add new Contact"><i class="icon icon-plus"></i></a>
 </div>
 <div class="contact-search-appear"></div>

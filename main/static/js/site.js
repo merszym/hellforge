@@ -56,6 +56,7 @@ $('body').on('click', '#profile-submit', function(){
         });
 });
 
+// overview buttons
 $('.overview-toggle').on('click', function(){
     $('.overview-toggle').removeClass('btn-primary')
     $(this).addClass('btn-primary')
@@ -68,6 +69,7 @@ $('.overview-toggle').on('click', function(){
     }
 })
 
+// resize sideboard
 $("body").on('click',"#resize-editor", function(){
     $('#mobile').toggleClass('col-4')
     $('#mobile').toggleClass('col-12')
@@ -84,25 +86,6 @@ $(window).resize(function resize(){
         $('#mobile').addClass('col-4')
     }
 }).trigger('resize');
-
-// Attach search results to site
-// = contactperson
-$("body").on('click', '.site-search-item', function(){
-    var formdata = new FormData();
-    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
-    formdata.append('instance_x', $('[name=info]').val()); //site
-    formdata.append('instance_y', $(this).attr('id')); //model
-    var model = $(this).attr('id').split('_')[0]
-    $.ajax({
-        type: "POST",
-        processData: false,
-        contentType: false,
-        url: $(`#site_${model}_set`).attr('data-url'),
-        data: formdata,
-        }).done(function(){
-            $('#reload').click();
-        });
-})
 
 // load the timeline-data
 $('body').on('click', '.timeline-filter', function(){
@@ -137,41 +120,6 @@ $('body').on('click', '.refresh_profile', function(){
     reloadTimeline()
 })
 
-// add site to project on clicking the button
-$('body').on("click", '#site_project_add', function(){
-    var formdata = new FormData();
-    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
-    formdata.append('instance_x', $(this).attr('data-x')); //site
-    formdata.append('instance_y', $(this).attr('data-y')); //project
-    $.ajax({
-        type: "POST",
-        processData: false,
-        contentType: false,
-        url: $(this).attr('data-url'),
-        data: formdata,
-        }).done(function(){
-            location.reload()
-        });
-
-});
-
-// remove site from project by clicking the button
-$('body').on("click", '#site_project_remove', function(){
-    var formdata = new FormData();
-    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
-    formdata.append('instance_x', $(this).attr('data-x')); //site
-    formdata.append('instance_y', $(this).attr('data-y')); //project
-    $.ajax({
-        type: "POST",
-        processData: false,
-        contentType: false,
-        url: $(this).attr('data-url'),
-        data: formdata,
-        }).done(function(){
-            location.reload()
-        });
-
-});
 
 // load descriptions
 $('body').on("click", '.render_description', function(){

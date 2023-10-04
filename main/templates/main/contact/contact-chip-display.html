@@ -3,7 +3,7 @@
     <div class="tile tile-centered">
         <div class="tile-icon">
             <div class="example-tile-icon">
-            <button class="btn unset-item" id="contact_{{contact.pk}}" data-url="{% url 'main_generic_rmm2m' object.model %}">
+            <button class="btn generic_rmm2m" data-x="contact_{{contact.pk}}" data-y="{{object.model}}_{{object.pk}}" data-click="reload">
                 <i class="icon icon-delete"></i>
             </button>
             </div>

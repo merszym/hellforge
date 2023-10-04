@@ -12,7 +12,7 @@
         <div id="modal-form">
             <h6 class="m-2">Contacts</h6>
             {% include 'main/contact/contact-chip-display.html' %}
-            {% include 'main/contact/contact-searchinput.html' %}
+            {% include 'main/contact/contact-searchinput.html' with object=object %}
             <h6 class="m-2">Parent Site</h6>
             {% include 'main/site/site-chip-display.html' %}
             {% include 'main/site/site-searchinput.html' %}

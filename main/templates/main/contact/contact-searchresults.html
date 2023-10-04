@@ -8,7 +8,7 @@
                 <th></th>
             </tr>
         </thead>
-        <tbody id='culture-search-tbody'>
+        <tbody id='contact-search-tbody'>
             {% for contact in object_list %}
             <tr>
                 <td>{{contact.name}}</td>
@@ -17,7 +17,7 @@
                     {% endfor %}
                 </td>
                 <td>
-                    <span class='btn {{origin}}-search-item' id="contact_{{contact.pk}}">Pick</span>
+                    <span class='btn generic_addm2m' data-x="contact_{{contact.pk}}" data-y="{{origin}}" data-click="reload">Pick</span>
                 </td>
             </tr>
             {% endfor %}

@@ -29,19 +29,28 @@ $('body').on('keyup paste','#search-input',function(){
 
 // generic reload of element, instead of rendering with html-snippets!
 // get the webpage again by loading the same url, only bind the required element to the dom
-function reloadElement(element){
-    $.ajax({
-        url: document.URL,
-        success: function(response) {
-            // Find the element you want to load
-            var update = $(response).find(`#${element}`);
-            // Insert the element into the DOM
-            $(`#${element}`).replaceWith(update)
-            //in case its hidden by default
-            $(`#${element}`).show()
-        }
-    });
+function clickElement(element){
+    $(`#${element}`).click()
 }
+
+function reloadElement(element){
+    if(element==='location'){
+        location.reload()
+    }else{
+        $.ajax({
+            url: document.URL,
+            success: function(response) {
+                // Find the element you want to load
+                var update = $(response).find(`#${element}`);
+                // Insert the element into the DOM
+                $(`#${element}`).replaceWith(update)
+                //in case its hidden by default
+                $(`#${element}`).show()
+            }
+        });
+    }
+}
+
 $('body').on('click', '.generic_reload', function(){
     var element = $(this).attr('data-reload')
     reloadElement(element)
@@ -88,6 +97,7 @@ $('body').on('click','.generic_delete', function(){
 $('body').on('click','.generic_delete_confirm', function(){
     var formdata = new FormData();
     var reload = $(this).attr('data-reload')
+    var click = $(this).attr('data-click')
     formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
     formdata.append('instance_x', $(this).attr('data-x'));
     $.ajax({
@@ -97,7 +107,11 @@ $('body').on('click','.generic_delete_confirm', function(){
         data: formdata,
         url: $('#url_generic_delete').attr("data-url"),
         success: function() {
-            reloadElement(reload)
+            if(click){
+                clickElement(click)
+            }else{
+                reloadElement(reload)
+            }
         }
     });
 })
@@ -108,6 +122,7 @@ $('body').on('click','.generic_delete_confirm', function(){
 $('body').on('click', '.generic_addm2m', function(){
     var formdata = new FormData()
     var reload = $(this).attr('data-reload')
+    var click = $(this).attr('data-click')
     formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
     formdata.append('instance_x', $(this).attr('data-x'));
     formdata.append('instance_y', $(this).attr('data-y'));
@@ -118,7 +133,11 @@ $('body').on('click', '.generic_addm2m', function(){
         data: formdata,
         url: $('#url_generic_addm2m').attr('data-url'),
         success: function() {
-            reloadElement(reload)
+            if(click){
+                clickElement(click)
+            }else{
+                reloadElement(reload)
+            }
         }
     });
 });
@@ -127,6 +146,7 @@ $('body').on('click', '.generic_addm2m', function(){
 $('body').on('click', '.generic_rmm2m', function(){
     var formdata = new FormData()
     var reload = $(this).attr('data-reload')
+    var click = $(this).attr('data-click')
     formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
     formdata.append('instance_x', $(this).attr('data-x'));
     formdata.append('instance_y', $(this).attr('data-y'));
@@ -137,7 +157,11 @@ $('body').on('click', '.generic_rmm2m', function(){
         data: formdata,
         url: $('#url_generic_rmm2m').attr('data-url'),
         success: function() {
-            reloadElement(reload)
+            if(click){
+                clickElement(click)
+            }else{
+                reloadElement(reload)
+            }
         }
     });
 });
