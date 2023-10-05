@@ -12,7 +12,7 @@
             <tr>
                 <td>{{site.name}}</td>
                 <td>
-                    <span class='btn {{origin}}-search-item' id="site_{{site.pk}}">Pick</span>
+                    <span class='btn generic_setfk' data-x="{{origin}}" data-y="site_{{site.pk}}" data-click="reload">Set</span>
                 </td>
             </tr>
             {% endfor %}

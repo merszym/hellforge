@@ -165,3 +165,52 @@ $('body').on('click', '.generic_rmm2m', function(){
         }
     });
 });
+
+//Foreign Key relationships
+//set
+$('body').on('click', '.generic_setfk', function(){
+    var formdata = new FormData()
+    var reload = $(this).attr('data-reload')
+    var click = $(this).attr('data-click')
+    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
+    formdata.append('instance_x', $(this).attr('data-x'));
+    formdata.append('instance_y', $(this).attr('data-y'));
+    $.ajax({
+        type: "POST",
+        processData: false,
+        contentType: false,
+        data: formdata,
+        url: $('#url_generic_setfk').attr('data-url'),
+        success: function() {
+            if(click){
+                clickElement(click)
+            }else{
+                reloadElement(reload)
+            }
+        }
+    });
+});
+
+//unset
+$('body').on('click', '.generic_unsetfk', function(){
+    var formdata = new FormData()
+    var reload = $(this).attr('data-reload')
+    var click = $(this).attr('data-click')
+    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
+    formdata.append('instance_x', $(this).attr('data-x'));
+    formdata.append('field', $(this).attr('data-y'));
+    $.ajax({
+        type: "POST",
+        processData: false,
+        contentType: false,
+        data: formdata,
+        url: $('#url_generic_unsetfk').attr('data-url'),
+        success: function() {
+            if(click){
+                clickElement(click)
+            }else{
+                reloadElement(reload)
+            }
+        }
+    });
+});

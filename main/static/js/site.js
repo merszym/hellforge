@@ -119,10 +119,10 @@ function reloadTimeline(){
 
 $( document ).ready(function(){
     reloadTimeline()
-    makeSortable()
 });
 
 $('body').on('click', '.refresh_profile', function(){
+    reloadElement('site_layer')
     reloadTimeline()
 })
 

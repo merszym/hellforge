@@ -2,7 +2,7 @@
     <div class="tile tile-centered">
         <div class="tile-icon">
             <div class="example-tile-icon">
-            <button class="btn unset-item" data-url="{% url 'main_generic_unsetfk' 'parent' %}">
+            <button class="btn generic_unsetfk" data-x="{{object.model}}_{{object.pk}}" data-y="site" data-click="reload">
                 <i class="icon icon-delete"></i>
             </button>
             </div>

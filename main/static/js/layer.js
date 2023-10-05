@@ -19,25 +19,6 @@ $('body').on('click', '#layer-setname', function(){
 
 });
 
-// Attach search results to layers
-// = epoch, culture, checkpoint
-$("body").on('click', '.layer-search-item', function(){
-    var formdata = new FormData();
-    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
-    formdata.append('instance_x', $('[name=info]').val()); //layer
-    formdata.append('instance_y', $(this).attr('id')); //model
-    var model = $(this).attr('id').split('_')[0]
-    $.ajax({
-        type: "POST",
-        processData: false,
-        contentType: false,
-        url: $(`#layer_${model}_set`).attr('data-url'),
-        data: formdata,
-        }).done(function(){
-            $('#reload').click();
-        });
-})
-
 // remove forein key model from layer
 // if id exists, its a m2m model --> remove that as well
 // = epoch, culture, parent

@@ -8,7 +8,7 @@
 <span id='culture_reference_set' style="display: none;" data-url="{% url 'main_generic_addm2m' 'culture' %}"></span>
 <div class="input-group">
     <span class="input-group-addon"><i class="form-icon icon icon-search"></i> Reference</span>
-    <input type="text" data-origin="{{origin}}" data-model='reference' class="form-input" placeholder="Search" id="search-input" data-url="{% url 'main_generic_search' %}">
+    <input type="text" data-origin="{{object.model}}_{{object.pk}}" data-model='reference' class="form-input" placeholder="Search" id="search-input" data-url="{% url 'main_generic_search' %}">
     <a href="{% url 'ref_add' %}" target="_blank" class="btn btn-primary input-group-btn tooltip tooltip-left" data-tooltip="Add new Reference"><i class="icon icon-plus"></i></a>
 </div>
 <div class="reference-search-appear"></div>

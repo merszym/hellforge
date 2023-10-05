@@ -547,7 +547,7 @@ class Epoch(models.Model):
 
 
 class Site(models.Model):
-    parent = models.ForeignKey(
+    site = models.ForeignKey(
         "self", verbose_name="parent", related_name="child", blank=True, null=True, on_delete=models.SET_NULL
     )
     contact = models.ManyToManyField(Person, blank=True, verbose_name="contact", related_name="site")
@@ -565,6 +565,10 @@ class Site(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def parent(self):
+        return self.site
 
     @property
     def coordinates(self):
@@ -810,6 +814,7 @@ models = {
     "epoch": Epoch,
     "checkpoint": Checkpoint,
     "reference": Reference,
+    "ref": Reference,
     "contact": Person,
     "person": Person,
     "assemblage": FaunalAssemblage,

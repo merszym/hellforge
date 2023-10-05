@@ -12,13 +12,10 @@
         <div id="modal-form">
             <h6>Culture</h6>
             {% include 'main/culture/culture-chip-display.html' %}
-            {% include 'main/culture/culture-searchinput.html' %}
+            {% include 'main/culture/culture-searchinput.html' with object=object %}
             <h6>Epoch</h6>
             {% include 'main/epoch/epoch-chip-display.html' %}
             {% include 'main/epoch/epoch-searchinput.html' %}
-            <h6>Checkpoint</h6>
-            {% include 'main/checkpoint/checkpoint-chip-display.html' %}
-            {% include 'main/checkpoint/checkpoint-searchinput.html' %}
             <h6>References</h6>
             {% include 'main/reference/reference-chip-display.html' %}
             {% include 'main/reference/reference-searchinput.html' %}

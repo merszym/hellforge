@@ -22,11 +22,13 @@ def get_instance_from_string(string):
 
 
 @login_required
-def unset_fk(request, field, response=True):
+def unset_fk(request, field=None, response=True):
     """
     set the foreign key relationship to None
     """
     x = get_instance_from_string(request.POST.get("instance_x"))
+    if not field:
+        field = request.POST.get("field")
     if x:
         setattr(x, field, None)
         x.save()
@@ -35,7 +37,7 @@ def unset_fk(request, field, response=True):
 
 
 @login_required
-def set_x_fk_to_y(request, field, response=True):
+def set_x_fk_to_y(request, field=None, response=True):
     """
     set the foreign key of x to y
     x = profile
@@ -44,8 +46,11 @@ def set_x_fk_to_y(request, field, response=True):
     --
     profile.site = site
     """
+    if not field:
+        field = request.POST.get("instance_y").split("_")[0]
     x = get_instance_from_string(request.POST.get("instance_x"))
     y = get_instance_from_string(request.POST.get("instance_y"))
+    print(x, y, field)
     if x and y:
         setattr(x, field, y)
         x.save()
@@ -92,7 +97,9 @@ urlpatterns = [
     path("rmm2m/<str:field>", remove_x_from_y_m2m, name="main_generic_rmm2m"),
     path("rmm2m", remove_x_from_y_m2m, name="main_generic_rmm2m"),
     path("unsetfk/<str:field>", unset_fk, name="main_generic_unsetfk"),
+    path("unsetfk", unset_fk, name="main_generic_unsetfk"),
     path("setfk/<str:field>", set_x_fk_to_y, name="main_generic_setfk"),
+    path("setfk/", set_x_fk_to_y, name="main_generic_setfk"),
     path("addm2m/<str:field>", add_x_to_y_m2m, name="main_generic_addm2m"),
     path("addm2m", add_x_to_y_m2m, name="main_generic_addm2m"),
     path("deletex", delete_x, name="main_generic_delete"),

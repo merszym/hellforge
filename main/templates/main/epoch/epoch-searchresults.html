@@ -12,7 +12,7 @@
                 <tr>
                     <td>{{epoch.name}}</td>
                     <td>
-                        <span class='btn {{origin}}-search-item' id="epoch_{{epoch.pk}}">Pick</span>
+                        <span class='btn generic_setfk' data-x="{{origin}}" data-y="epoch_{{epoch.pk}}" data-click="reload">Set</span>
                     </td>
                 </tr>
                 {% endfor %}
