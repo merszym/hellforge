@@ -132,22 +132,6 @@ $('body').on('click', '#dating-table-confirm', function(){
         });
 })
 
-$('body').on('click', '.date_delete', function(){
-    var form_data = new FormData();
-    form_data.append('instance_x',`${$(this).attr('id').split('__')[0]}`);
-    form_data.append('instance_y',`${$(this).attr('id').split('__')[1]}`);
-    form_data.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
-    $.ajax({
-        type: "POST",
-        url: $(this).attr('data-url'),
-        processData: false,
-        contentType: false,
-        data: form_data
-        }).done(function(){
-            $('#reload').click()
-        });
-});
-
 $('body').on('click', '.date_toggle', function(){
     var form_data = new FormData();
     form_data.append('instance_x',`${$(this).attr('id')}`);

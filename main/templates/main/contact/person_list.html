@@ -59,10 +59,12 @@
             <div class="panel p-2" id="person_detail_container">
               <!--Render all panels, but hide-->
               {% for person in object_list %}
-              <span id="tableupdate_{{person.pk}}" class="generic_reload" data-reload="trperson_{{person.pk}}" style="display: none;">click</span>
               <div id="person_form_{{person.pk}}" class="person_form" style="display: none;">
 
-                <button class="btn btn-error btn-sm float-right tooltip tooltip-left delete_person_button" data-url="{% url 'main_person_delete' %}" data-x="person_{{person.pk}}" data-tooltip="Cancel this Person">
+                <button class="btn btn-sm float-right tooltip tooltip-left generic_delete"
+                    data-reload="location"
+                    data-x="person_{{person.pk}}"
+                    data-tooltip="Cancel this Person">
                   <i class="icon icon-delete"></i>
                 </button>
 
@@ -87,7 +89,6 @@
                   <button id="person_{{person.pk}}" data-url="{% url 'main_contact_affiliation_add' %}" class="btn btn-primary input-group-btn add_affiliation">Add</button>
                 </div>
 
-                <div id="affiliations_{{person.pk}}" class="p-2 my-2 generic_reload" data-reload="affiliations_{{person.pk}}">
                 <strong>Affiliations</strong>
                 {% for aff in person.affiliation.all %}
                 <div class="tile tile-centered my-1">
@@ -100,7 +101,10 @@
                     <div class="tile-title">{{aff}}</div>
                   </div>
                   <div class="tile-action">
-                      <button class="btn affiliation_delete" data-x="affiliation_{{aff.pk}}" data-y="person_{{person.pk}}" data-url="{% url 'main_contact_affiliation_remove' %}">
+                      <button class="btn generic_rmm2m"
+                          data-x="affiliation_{{aff.pk}}"
+                          data-y="person_{{person.pk}}"
+                          data-reload="person_form_{{person.pk}},trperson_{{person.pk}}">
                       <i class="icon icon-delete"></i>
                     </button>
                   </div>
@@ -112,7 +116,6 @@
                 <p>{{author}}</p>
                 {% endfor %}
                 -->
-                </div>
               </div>
               {% endfor %}
             </div>

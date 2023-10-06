@@ -82,6 +82,35 @@ $('body').on('click','.tab-item', function(){
 // GENERIC ADD, REMOVE, DELETE
 //
 
+//
+// A generic instance_x and instance_y function
+//
+
+$('body').on('click', '.generic_xy', function(){
+    var formdata = new FormData();
+    var reload = $(this).attr('data-reload')
+    var click = $(this).attr('data-click')
+    formdata.append('instance_x',$(this).attr('data-x'));
+    formdata.append('instance_y',$(this).attr('data-y'));
+    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
+    $.ajax({
+        type: "POST",
+        url: $(this).attr('data-url'),
+        processData: false,
+        contentType: false,
+        data: formdata
+        }).done(function(){
+            if(click){
+                clickElement(click)
+            }else{
+                $.each(reload.split(','), function(i,val){
+                    reloadElement(val)
+                });
+            }
+        });
+});
+
+
 // generic delete --> add confirm class and remove it after 3 sec
 $('body').on('click','.generic_delete', function(){
     $(this).addClass('generic_delete_confirm text-error')
@@ -110,7 +139,9 @@ $('body').on('click','.generic_delete_confirm', function(){
             if(click){
                 clickElement(click)
             }else{
-                reloadElement(reload)
+                $.each(reload.split(','), function(i,val){
+                    reloadElement(val)
+                });
             }
         }
     });
@@ -136,7 +167,9 @@ $('body').on('click', '.generic_addm2m', function(){
             if(click){
                 clickElement(click)
             }else{
-                reloadElement(reload)
+                $.each(reload.split(','), function(i,val){
+                    reloadElement(val)
+                });
             }
         }
     });
@@ -160,7 +193,9 @@ $('body').on('click', '.generic_rmm2m', function(){
             if(click){
                 clickElement(click)
             }else{
-                reloadElement(reload)
+                $.each(reload.split(','), function(i,val){
+                    reloadElement(val)
+                });
             }
         }
     });
@@ -190,7 +225,9 @@ $('body').on('click', '.generic_setfk', function(){
             if(click){
                 clickElement(click)
             }else{
-                reloadElement(reload)
+                $.each(reload.split(','), function(i,val){
+                    reloadElement(val)
+                });
             }
         }
     });
@@ -214,7 +251,9 @@ $('body').on('click', '.generic_unsetfk', function(){
             if(click){
                 clickElement(click)
             }else{
-                reloadElement(reload)
+                $.each(reload.split(','), function(i,val){
+                    reloadElement(val)
+                });
             }
         }
     });

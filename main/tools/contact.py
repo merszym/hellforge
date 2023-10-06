@@ -71,16 +71,9 @@ def update_person(request):
     return JsonResponse({"status": True})
 
 
-@login_required
-def delete_person(request):
-    """Delete a person"""
-    return delete_x(request)
-
-
 urlpatterns = [
     path("list", PersonListView.as_view(), name="main_person_list"),
     path("create", create_from_string, name="main_person_create"),
-    path("delete", delete_person, name="main_person_delete"),
     path("affiliation_add", create_and_add_affiliation, name="main_contact_affiliation_add"),
     path("affiliation_remove", remove_affiliation, name="main_contact_affiliation_remove"),
     path("update", update_person, name="main_person_update"),

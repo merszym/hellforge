@@ -53,30 +53,10 @@ $("body").on('click', '.add_affiliation', function(){
         url: $(this).attr('data-url'),
         data: formdata,
         }).done(function(){
-            $(`#affiliations_${id}`).click()
-            $(`#tableupdate_${id}`).click()
+            reloadElement(`trperson_${id}`)
+            reloadElement(`person_form_${id}`)
         });
 })
-
-// Remove affiliation from person
-$('body').on('click','.affiliation_delete', function(){
-    var formdata = new FormData();
-    var id = $(this).attr('data-y').split('_')[1]
-    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
-    formdata.append('instance_x', $(this).attr('data-x'));
-    formdata.append('instance_y', $(this).attr('data-y'));
-    $.ajax({
-        type: "POST",
-        processData: false,
-        contentType: false,
-        data: formdata,
-        url: $(this).attr("data-url"),
-        success: function() {
-            $(`#affiliations_${id}`).click()
-            $(`#tableupdate_${id}`).click()
-        }
-    });
-});
 
 //Add a person from the search String
 $('body').on('click','#create_person_from_string', function(){
@@ -94,26 +74,6 @@ $('body').on('click','#create_person_from_string', function(){
         success: function(data) {
             // do right later
             location.reload()
-        }
-    });
-});
-
-//Delete a person with the delete-button
-$('body').on('click','.delete_person_button', function(){
-
-    var formdata = new FormData();
-    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
-    formdata.append('instance_x',$(this).attr("data-x"))
-
-    $.ajax({
-        type: "POST",
-        processData: false,
-        contentType: false,
-        data: formdata,
-        url: $(this).attr("data-url"),
-        success: function(data) {
-            // do right later
-            location.reload();
         }
     });
 });

@@ -67,7 +67,11 @@
                 <td>{{date.ref.first.short}}</td>
                 <td>
                     {% if request.user.is_authenticated %}
-                    <span class="btn date_delete tooltip tooltip-left" data-tooltip="Delete Date!" id="date_{{date.pk}}__layer_{{object.pk}}" data-url="{% url 'ajax_date_unlink'%}">
+                    <span class="btn generic_xy tooltip tooltip-left" data-tooltip="Delete Date!"
+                            data-x="date_{{date.pk}}"
+                            data-y="layer_{{object.pk}}"
+                            data-url="{% url 'ajax_date_unlink'%}"
+                            data-click="reload">
                         <i class="icon icon-delete"></i>
                     </span>
                     {% endif %}
