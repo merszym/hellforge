@@ -633,7 +633,7 @@ class Profile(models.Model):
 class Layer(models.Model):
     name = models.CharField("name", max_length=200)
     synonyms = models.ManyToManyField(Synonym, blank=True, verbose_name="synonym", related_name="layer")
-    parent = models.ForeignKey(
+    layer = models.ForeignKey(
         "self", verbose_name="parent layer", related_name="child", blank=True, null=True, on_delete=models.SET_NULL
     )
     unit = models.CharField("unit", max_length=300, blank=True, null=True)
@@ -667,6 +667,10 @@ class Layer(models.Model):
         dates = self.date.all()
         if len(dates) > 0:
             return self.mean_upper, self.mean_lower
+
+    @property
+    def parent(self):
+        return self.layer
 
     @property
     def hierarchie(self):

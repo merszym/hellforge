@@ -24,7 +24,7 @@ Edit Description
 
 <span class="chip">
   {{author.position}}. {{author.person}}
-  <span class="btn btn-clear delete_author" data-url="{% url 'main_description_author_delete'%}" data-x="author_{{author.pk}}" aria-label="Close" role="button"></span>
+  <span class="btn btn-clear generic_delete" data-x="author_{{author.pk}}" data-reload="authorblock" aria-label="Close" role="button"></span>
 </span>
 
 {% empty %}

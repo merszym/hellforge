@@ -67,17 +67,6 @@ def set_bounds(request):
     return JsonResponse({"status": True})
 
 
-class LayerDeleteView(LoginRequiredMixin, DeleteView):
-    model = Layer
-    template_name = "main/confirm_delete.html"
-
-    def get_success_url(self):
-        if self.get_object().site:
-            return reverse("site_detail", kwargs={"pk": self.get_object().site.id})
-        else:
-            return reverse("site_detail", kwargs={"pk": self.get_object().profile.first().site.id})
-
-
 # TODO: this is mostly deprectated, finish the replacement and remove!
 class LayerUpdateView(LoginRequiredMixin, UpdateView):
     model = Layer
@@ -97,6 +86,5 @@ urlpatterns = [
     path("set-bounds", set_bounds, name="main_layer_setbounds"),
     path("clone/<int:pk>", clone, name="main_layer_clone"),
     path("positions/<int:site_id>", update_positions, name="main_layer_positionupdate"),
-    path("delete/<int:pk>", LayerDeleteView.as_view(), name="main_layer_delete"),
     path("edit/<int:pk>", LayerUpdateView.as_view(), name="main_layer_update"),
 ]

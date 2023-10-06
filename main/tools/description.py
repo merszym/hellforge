@@ -88,28 +88,19 @@ def create_and_add_author(request):
     return JsonResponse({"status": True})
 
 
-@login_required
-def delete_author(request):
-    """
-    Delete an author from the description
-    """
-    return delete_x(request)
-
-
 def render_description(request, pk):
     origin = request.GET.get("origin", None)
     description = Description.objects.get(pk=int(pk))
     return render(
         request,
         "main/description/description_render.html",
-        {"description": description, "model": "site", "origin": origin},
+        {"description": description, "model": "site", "origin": origin, "object": description},
     )
 
 
 urlpatterns = [
     path("edit/<int:pk>", DescriptionUpdateView.as_view(), name="main_descr_update"),
     path("add-author", create_and_add_author, name="main_description_author_add"),
-    path("delete-author", delete_author, name="main_description_author_delete"),
     path("save", save_description, name="ajax_description_save"),
     path("get-content", get_description_content, name="ajax_description_get"),
     path("render_description/<int:pk>", render_description, name="main_render_description"),

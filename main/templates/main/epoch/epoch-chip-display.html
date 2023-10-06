@@ -2,7 +2,7 @@
 <div class="tile tile-centered">
     <div class="tile-icon">
         <div class="example-tile-icon">
-        <button class="btn unset-item" id="layer_unset_epoch" data-url="{% url 'main_generic_unsetfk' 'epoch' %}">
+        <button class="btn generic_unsetfk" data-x="{{object.model}}_{{object.pk}}" data-y="epoch" data-click="reload">
             <i class="icon icon-delete"></i>
         </button>
         </div>

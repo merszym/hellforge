@@ -8,8 +8,6 @@ from hellforge import settings
 
 urlpatterns = [
     path("", views.landing, name="landing"),
-    path("checkpoint/add", views.CheckpointCreateView.as_view(), name="checkpoint_add"),
-    path("checkpoint/edit/<int:pk>", views.CheckpointUpdateView.as_view(), name="checkpoint_update"),
     path("", include("main.urls_ajax")),
     path("favicon.ico", RedirectView.as_view(url=staticfiles_storage.url("img/favicon.ico"))),
 ]

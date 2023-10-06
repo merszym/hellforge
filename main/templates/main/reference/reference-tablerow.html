@@ -8,6 +8,6 @@
     {% if display %}
         <td><a class="btn" href="{{ref.link}}" target="_blank">Open</a></td>
     {% else %}
-        <td><span class='btn generic_addm2m' data-x="ref_{{ref.pk}}" data-y="{{origin}}" data-click="reload">Add</span></td>
+        <td><span id="reference_{{ref.pk}}" class="btn {% if origin != '_' %}generic_addm2m{% endif %} editorjs-search-item" data-x="ref_{{ref.pk}}" data-y="{{origin}}" data-click="reload">Add</span></td>
     {% endif %}
 </tr>

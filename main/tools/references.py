@@ -20,7 +20,7 @@ def find(kw):
 
 
 def get_modal(request):
-    return render(request, "main/reference/reference-searchinput.html", {"origin": "editorjs"})
+    return render(request, "main/reference/reference-searchinput.html", {"origin": "editorjs", "editor": True})
 
 
 def get_popup(request):

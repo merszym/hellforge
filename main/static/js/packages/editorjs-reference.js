@@ -37,7 +37,8 @@ class Reference {
         this.wrap(range);
     }
     wrap(range){
-        const ref = document.createElement(this.tag);
+        //create empty <reference-tag> tag
+        //const ref = document.createElement(this.tag);
         const api = this.api
         $.ajax({
             type: "GET",
@@ -46,19 +47,29 @@ class Reference {
                 $('#reference-modal').addClass('active')
                 $('#reference-modal-content').html(html)
                 $('#search-input').focus()
-                $('body').on('click','.editorjs-search-item' ,function(){
-                    const selectedText = range.extractContents();
-                    const id = $(this).attr('id').split('_')[1]
-                    $('#reference-search-appear').html("")
-                    $('#reference-modal').removeClass('active')
-                    // Render the modal, wait until click of
-                    ref.id = id
-                    ref.classList.add('reference')
-                    // Append selected TextNode
-                    ref.appendChild(selectedText);
-                    range.insertNode(ref);
-                    // Insert new element
-                    api.selection.expandToTag(ref);
+                $('body').off('click', '.editorjs-search-item').on('click', '.editorjs-search-item', function () {
+                    //this is to wrap the selected text
+                    const ref = document.createElement('reference-tag');
+                    let selectedText = range.extractContents();
+                    // this is to prevent that references get inserted into references
+                    // happend by some weird js functionality that I dont understand...
+                    if($(selectedText).find('reference-tag').length == 0){
+                        // this gets the id of the selected reference
+                        const id = $(this).attr('id').split('_')[1]
+                        // close the modal
+                        $('#reference-search-appear').html("")
+                        $('#reference-modal').removeClass('active')
+                        //give the <reference-tag> an id attr
+                        $(ref).attr('id',id)
+                        $(ref).addClass('reference')
+
+                        // Append selected TextNode
+                        $(ref).html(selectedText);
+                        range.insertNode(ref);
+                        // Insert new element
+                        api.selection.expandToTag(ref);
+                    }
+
                 })
             });
     }

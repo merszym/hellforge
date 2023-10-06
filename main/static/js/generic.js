@@ -173,8 +173,13 @@ $('body').on('click', '.generic_setfk', function(){
     var reload = $(this).attr('data-reload')
     var click = $(this).attr('data-click')
     formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
+    if ($(this).attr('data-y-select')){ // for cases, were the object comes from an options select form field
+        formdata.append('instance_y', $(`[name=${$(this).attr('data-y-select')}]`).val());
+    }else{
+        formdata.append('instance_y', $(this).attr('data-y'));
+    }
     formdata.append('instance_x', $(this).attr('data-x'));
-    formdata.append('instance_y', $(this).attr('data-y'));
+
     $.ajax({
         type: "POST",
         processData: false,
