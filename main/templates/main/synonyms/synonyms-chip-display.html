@@ -2,10 +2,10 @@
 {% for syn in object.synonyms.all %}
 <div class="tile tile-centered">
     <div class="tile-icon">
-      <button id="synonym_{{syn.pk}}"
-              class="btn synonym_delete tooltip tooltip-right"
+      <button class="btn generic_delete tooltip tooltip-right"
               data-tooltip="Delete Synonym"
-              data-url="{% url 'main_synonym_delete' %}">
+              data-x="synonym_{{syn.pk}}"
+              data-click="reload">
         <i class="icon icon-delete" centered></i>
       </button>
     </div>

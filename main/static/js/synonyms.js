@@ -18,22 +18,3 @@ $('body').on('click','#synonym-add', function(){
         }
     });
 });
-
-$('body').on('click','.synonym_delete', function(){
-    //delete a synonym on click
-    var formdata = new FormData();
-    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
-    formdata.append('instance_x', `synonym_${$(this).attr('id').split('_')[1]}`);
-    $.ajax({
-        type: "POST",
-        processData: false,
-        contentType: false,
-        data: formdata,
-        url: $(this).attr("data-url"),
-        success: function(data) {
-            if(data['status']){
-                $('#reload').click()
-            }
-        }
-    });
-});

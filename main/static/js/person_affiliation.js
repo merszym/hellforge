@@ -32,7 +32,8 @@ $("body").on('click', '.update_person', function(){
         url: $(this).attr('data-url'),
         data: formdata,
         }).done(function(){
-            $(`#tableupdate_${id}`).click()
+            reloadElement(`trperson_${id}`)
+            reloadElement(`person_form_${id}`)
         });
 })
 
