@@ -1,38 +1,60 @@
 //#TODO: find better way to sort the layers!
-$("tbody").sortable({
-    items:'tr',
-    containment: "parent",
-    axis:'y',
-    cursor:'move',
-    handle:'.sort_handle',
-    opacity: 0.7,
-    stop: function( event, ui ) {
-        var table = event.target
-        //get the new order of layers
-        ids = []
-        positions = []
-        $(table).children().each(function(){
-            let id = $(this).attr('id')
-            let pos = $(this).attr('data-pos')
-            positions.push(pos)
-            ids.push(id.split('_')[1])
-        });
-        //make ajax call to save updated positions
-        var formdata = new FormData();
-        formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
-        formdata.append('ids', ids.join(','));
-        formdata.append('positions', positions.join(','));
-        $.ajax({
-            type: "POST",
-            processData: false,
-            contentType: false,
-            data: formdata,
-            url: $(table).attr('data-url'),
-            success: function() {
-                reloadTimeline()
-            }
-        });
-    },
+function makeSortable(){
+    $("tbody").sortable({
+        items:'tr',
+        containment: "parent",
+        axis:'y',
+        cursor:'move',
+        handle:'.sort_handle',
+        opacity: 0.7,
+        stop: function( event, ui ) {
+            var table = event.target
+            //get the new order of layers
+            ids = []
+            positions = []
+            $(table).children().each(function(){
+                let id = $(this).attr('id')
+                let pos = $(this).attr('data-pos')
+                positions.push(pos)
+                ids.push(id.split('_')[1])
+            });
+            //make ajax call to save updated positions
+            var formdata = new FormData();
+            formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
+            formdata.append('ids', ids.join(','));
+            formdata.append('positions', positions.join(','));
+            $.ajax({
+                type: "POST",
+                processData: false,
+                contentType: false,
+                data: formdata,
+                url: $(table).attr('data-url'),
+                success: function() {
+                    reloadTimeline()
+                }
+            });
+        },
+    });
+}
+
+function reloadTimeline(){
+    var gets = ""
+    // check if filters are toggled:
+    if($('#timeline-show-hidden').hasClass('btn-primary')){
+        gets = `hidden=1`
+    }
+    if($('#timeline-show-curves').hasClass('btn-primary')){
+        gets = `${gets}&curves=1`
+    }
+    ele = $('#timeline-content')
+    if(ele.length){
+        ele.load(`${ele.attr('data-url')}?${gets}`)
+    }
+}
+
+$( document ).ready(function(){
+    reloadTimeline()
+    makeSortable()
 });
 
 // switch between profiles
@@ -99,27 +121,7 @@ $('body').on('click', '.timeline-filter', function(){
     reloadTimeline()
 });
 
-function reloadTimeline(){
-    var gets = ""
-    // check if filters are toggled:
-    if($('#timeline-show-hidden').hasClass('btn-primary')){
-        gets = `hidden=1`
-    }
-    if($('#timeline-show-related').hasClass('btn-primary')){
-        gets = `${gets}&related=1`
-    }
-    if($('#timeline-show-curves').hasClass('btn-primary')){
-        gets = `${gets}&curves=1`
-    }
-    ele = $('#timeline-content')
-    if(ele.length){
-        ele.load(`${ele.attr('data-url')}?${gets}`)
-    }
-}
 
-$( document ).ready(function(){
-    reloadTimeline()
-});
 
 $('body').on('click', '.refresh_profile', function(){
     reloadElement('site_layer')
