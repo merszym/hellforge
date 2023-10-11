@@ -23,5 +23,6 @@ urlpatterns = [
     path("locs/search", ajax.search_loc, name="ajax_loc_search"),
     path("fillmodal", ajax.fill_modal, name="ajax_fill_modal"),
     path("upload", ajax.upload_image, name="upload"),
+    path("upload-url", ajax.upload_url, name="upload_url"),
     path("download-header", ajax.download_header, name="download_header"),
 ]

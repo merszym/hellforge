@@ -11,7 +11,7 @@
 {% load static %}
 
 <div class='columns'>
-    <div class="column col-4" style="position:relative;">
+    <div id="mobile" class="column col-4" style="position:relative;">
         {% if request.user.is_authenticated %}
         <a class="btn btn-primary" href="{% url 'culture_update' object.pk %}" style="position:absolute; right:5%; top:10px"><i class="icon icon-edit"></i></a>
         {% endif %}
@@ -23,16 +23,12 @@
           </div>
           <div id="description-overview" style="padding:10px;" class="panel">
             <div style="height: 480px;" id="map"></div><br>
-            <h4>Culture</h4>
             <table class="table" id="culture_detail_table">
                 <thead>
                   <tr>
                     <th>Associated Hominin</th>
                     <th>Parent Culture</th>
                     <th>Children</th>
-                    {% if object.ref.first %}
-                    <th>References</th>
-                    {% endif %}
                     <th></th>
                   </tr>
                 </thead>
@@ -49,13 +45,6 @@
                     <a class='btn-link' href="{% url 'culture_detail' child.pk %}">{{child.name}}</a><br>
                     {% endfor %}
                     </td>
-                    {% if object.ref.first %}
-                    <td>
-                        {% for ref in object.ref.all %}
-                            {% include 'main/reference/reference-popup.html' %}<br>
-                        {% endfor %}
-                    </td>
-                    {% endif %}
                     <td>
                       {% if request.user.is_authenticated %}
                       <div class="popover popover-right">

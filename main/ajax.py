@@ -66,6 +66,18 @@ def fill_modal(request):
 
 
 @csrf_exempt
+def upload_url(request):
+    url = json.loads(request.body).get("url")
+    res = {
+        "success": 1,
+        "file": {
+            "url": url,
+        },
+    }
+    return JsonResponse(res)
+
+
+@csrf_exempt
 def upload_image(request):
     description = Description.objects.get(pk=int(request.GET.get("id")))
 

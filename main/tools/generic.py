@@ -50,7 +50,6 @@ def set_x_fk_to_y(request, field=None, response=True):
         field = request.POST.get("instance_y").split("_")[0]
     x = get_instance_from_string(request.POST.get("instance_x"))
     y = get_instance_from_string(request.POST.get("instance_y"))
-    print(x, y, field)
     if x and y:
         setattr(x, field, y)
         x.save()

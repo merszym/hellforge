@@ -34,8 +34,9 @@ $.getJSON({
                     class: ImageTool,
                     config: {
                       endpoints: {
-                        byFile: $('#guide').attr('data-url'), // Your backend file uploader endpoint
-                      }
+                        byFile: $('#guide').attr('data-url'),
+                        byUrl: $('#guideurl').attr('data-url'),
+                      },
                     }
                 },
                 list: {
