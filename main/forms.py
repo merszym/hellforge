@@ -90,7 +90,7 @@ class EpochForm(forms.ModelForm):
 class CultureForm(forms.ModelForm):
     class Meta:
         model = Culture
-        fields = ["name", "description", "hominin_group"]
+        fields = ["name", "hominin_group"]
 
 
 class CheckpointForm(forms.ModelForm):

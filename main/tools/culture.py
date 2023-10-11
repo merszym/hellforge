@@ -1,16 +1,7 @@
 from django.views.generic import CreateView, ListView, UpdateView, DetailView, DeleteView
 from django.urls import reverse
 from django.shortcuts import render
-from main.models import (
-    Layer,
-    Culture,
-    Date,
-    Epoch,
-    Checkpoint,
-    DatingMethod,
-    get_classname,
-    Project,
-)
+from main.models import Layer, Culture, Date, Epoch, Checkpoint, DatingMethod, get_classname, Project, Description
 from main.forms import (
     ReferenceForm,
     CultureForm,
@@ -33,6 +24,12 @@ class CultureDetailView(ProjectAwareDetailView):
 
     # create the nested groups for the timeline template
     def get_context_data(self, **kwargs):
+        object = self.object
+        # the lacy check if a description is missing...
+        if not object.description.first():
+            tmp = Description(content_object=object)
+            tmp.save()
+
         context = super(CultureDetailView, self).get_context_data(**kwargs)
         items = []
         groupdata = []

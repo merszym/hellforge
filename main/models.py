@@ -451,7 +451,7 @@ class Checkpoint(models.Model):
 
 class Culture(models.Model):
     name = models.CharField("name", max_length=200)
-    description = models.TextField("description", blank=True)
+    description = GenericRelation(Description, related_query_name="culture")
     hominin_group = models.CharField("hominin_group", max_length=500, blank=True)
     culture = models.ForeignKey(
         "self", verbose_name="parent", related_name="child", blank=True, null=True, on_delete=models.SET_NULL

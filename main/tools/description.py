@@ -47,9 +47,10 @@ def save_description(request):
     else:
         model = "site"
 
-    goto = {"site": "site_detail", "project": "main_project_detail"}
+    goto = {"site": "site_detail", "project": "main_project_detail", "culture": "culture_detail"}
     model_kwargs = {
         "site": {"pk": description.content_object.id},
+        "culture": {"pk": description.content_object.id},
         "project": {"namespace": getattr(description.content_object, "namespace", None)},
     }
 

@@ -3,6 +3,7 @@
 <title>Hellforge: {{object.name}}</title>
 {% include 'main/location/location-head.html' %}
 {% include 'main/timeline/timeline-head.html' %}
+{% include 'main/editor/editor-head.html' %}
 {% endblock %}
 {% block headline %}<a href="{% url 'culture_list' %}">Culture</a>{% endblock %}
 
@@ -15,7 +16,12 @@
         <a class="btn btn-primary" href="{% url 'culture_update' object.pk %}" style="position:absolute; right:5%; top:10px"><i class="icon icon-edit"></i></a>
         {% endif %}
         <div class="my-2">
-            <h2>{{object.name}} Sites</h2>
+          <h2>{{object.name}} Sites</h2>
+          <div class="btn-group">
+            <button id='btn-overview' class="btn btn-primary overview-toggle">Culture Overview</button>
+            <button id='btn-descr' class="btn render_description overview-toggle"  data-url="{% url 'main_render_description' object.description.first.pk %}?origin=culture">Notes</button>
+          </div>
+          <div id="description-overview" style="padding:10px;" class="panel">
             <div style="height: 480px;" id="map"></div><br>
             <h4>Culture</h4>
             <table class="table" id="culture_detail_table">
@@ -67,8 +73,9 @@
                   </tr>
                 </tbody>
               </table>
-            <br>
-            <p>{{object.description}}</p>
+          </div>
+          <div id="description-description" class="panel" style="display:none;">
+          </div>
         </div>
     </div>
     <div class="column">
@@ -83,9 +90,8 @@
         <script src="{% static 'js/location.js' %}"></script>
         <script> drawJson({{ geo | safe }}); fitBounds();</script>
         <script src="{% static 'js/site.js' %}"></script>
-        <script src="{% static 'js/layer.js' %}"></script>
         <script src="{% static 'js/profile.js' %}"></script>
-        <script src="{% static 'js/culture.js' %}"></script>
+        <script src="{% static 'js/description.js' %}"></script>
     </div>
 </div>
 {% endblock %}
