@@ -1,10 +1,12 @@
 // Handle the upload file
 $('body').on('change','#fauna-batch-input', function(){
     var file_data = $('#fauna-batch-input').prop('files')[0];
+    console.log(file_data)
     var form_data = new FormData();
     form_data.append('file', file_data);
     form_data.append('instance_x', $('[name=info]').val())
     form_data.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
+    console.log(form_data)
     $.ajax({
         type: "POST",
         url: $(this).attr('data-url'),

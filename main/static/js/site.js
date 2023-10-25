@@ -1,5 +1,6 @@
 //#TODO: find better way to sort the layers!
 function makeSortable(){
+    const ui = $.ui
     $("tbody").sortable({
         items:'tr',
         containment: "parent",
@@ -36,6 +37,8 @@ function makeSortable(){
         },
     });
 }
+
+
 
 function reloadTimeline(){
     var gets = ""

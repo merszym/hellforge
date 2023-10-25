@@ -29,9 +29,3 @@ $('body').on('click', '#sample-table-confirm', function(){
             }
         });
 })
-
-$('body').on('click', '.toggle_samples', function(){
-    var layer = $(this).attr('data-x')
-    $('.sample_table').hide()
-    $(`#samples_${layer}`).show()
-});

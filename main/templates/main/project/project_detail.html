@@ -1,15 +1,27 @@
 {% extends 'main/base.html' %}
 {% block head %}
 {% load static %}
+{% load format %}
 <title>Project: {{object}}</title>
 {% include 'main/editor/editor-head.html' %}
+{% include 'main/location/location-head.html' %}
 {% endblock %}
-{% block headline %}<a href="{% url 'site_list' %}">{{object.name}}</a>{% endblock %}
+{% block headline %}<a href="{% url 'main_project_list' %}">{{object.name}}</a>{% endblock %}
 
 {% block body %}
+<style>
+    th{
+        cursor: pointer;
+        white-space: nowrap;
+    }
+</style>
 <div class='columns' style="padding:10px;">
     <div class="column col-4" style="position:relative;">
-        <h3>Project Description</h3>
+        <h3>Project Details</h3>
+        <ul class="tab">
+            <li data-group="project" data-show="project-overview" class="tab-item active" style="cursor:pointer;"><a>Overview</a></li>
+            <li data-group="project" data-show="description-description" class="tab-item" style="cursor:pointer;"><a>Description</a></li>
+        </ul>
         <div style="position:absolute; right:5%; top:10px">
             <a class="btn btn-primary tooltip tooltip-left" href="{% url 'main_project_update' object.pk %}" data-tooltip="Edit Project">
                 <i class="icon icon-edit"></i>
@@ -18,23 +30,88 @@
                 <i class="icon icon-shutdown"></i>
             </a>
         </div>
-        <div class="my-2">
-            <div id="description-description" class="panel">
+        <!-- Project Overview Tab -->
+        <div id="project-overview" data-group="project" style="padding:10px;" class="panel tab-panel">
+            <h4>Project Sites</h4>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Sites</th>
+                        <th>Collected Samples</th>
+                        <th>Project Visibility</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{object_list|length}}</td>
+                        <td>{{sample_list|length}}</td>
+                        <td>{{ object.published|yesno:"Published,Private,NA" }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div style="height: 480px;margin-top: 20px;" id="map"></div>
+            <a href="{% url 'site_list' %}" style="margin-bottom: 20px;">All Sites</a>
+            <h5>Share Project</h5>
+            <div style="background-color: lightgray;">
+                <p>{{request.scheme}}://{{request.get_host}}{% url 'main_project_checkout' object.namespace %}?pw={{public_link_pw}}</p>
             </div>
+        </div>
+        <div id="description-description" data-group="project" class="panel tab-panel" style="display:none;">
         </div>
     </div>
     <div class="column">
-        <div class="my-2">
-            <h3>Project Overview</h3>
-            <h5>Public Link:</h5>
-            <div style="background-color: lightgray;">
-                <p>{{request.scheme}}://{{request.get_host}}{% url 'main_project_checkout' object.namespace %}?pw={{public_link_pw}}</p>
+        <div id="project-content" class="my-2">
+            <ul class="tab tab-block">
+                <li class="tab-item active" data-group="project-main" data-show="project-sample-overview" style="cursor:pointer;"><a><h4>Sample Overview</h4></a></li>
+                <li class="tab-item" data-group="project-main" data-show="project-collab-overview" style="cursor:pointer;"><a><h4>Processed Samples</h4></a></li>
+            </ul>
+            <div class="tab-panel m-2 p-2 panel" data-group="project-main" id="project-sample-overview" style="height:720px;overflow: scroll;">
+                <div class="panel-header" style="position: sticky; top: 0;">
+                    <div class="has-icon-left">
+                        <input class="form-input" id="list-search" type="text" placeholder="Filter" style="width:50%;">
+                        <i class="form-icon icon icon-search"></i>
+                    </div>
+                </div>
+                <div>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Country</th>
+                                <th>Site</th>
+                                <th>Samples</th>
+                                <th>Analyzed</th>
+                                <th>Collaborators</th>
+                                <th>Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for site in object_list %}
+                                <tr id="site_{{site.pk}}" class="searchable">
+                                    <td>{{site.country}}</td>
+                                    <td>{{site.name}}</td>
+                                    {% with sample_count=sample_dict|lookup:site.name|length %}
+                                    <td>{% if sample_count == 0 %}ToDo{% else %}{{sample_count}}{% endif %}</td>
+                                    {% endwith %}
+                                    <td></td>
+                                    <td><span>{{site.contact.all|join:", "}}</span><br>
+                                    </td>
+                                    <td></td>
+                                    <td><span class="btn"><a href="{% url 'site_detail' site.pk %}">Go</a></span></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="tab-panel" data-group="project-main" id="project-collab-overview" style="display: none;">
+                This content doesnt exist yet
             </div>
         </div>
     </div>
 </div>
 <script>
-    // load descriptions
+// load descriptions
 $('document').ready(function(){
     $.ajax({
         type: "GET",
@@ -44,5 +121,33 @@ $('document').ready(function(){
         });
 });
 </script>
-
+<script src="{% static 'js/location.js' %}"></script>
+    {% for object in object_list %}
+        <script>
+        var json = {{object.loc.first.geo | safe }}
+        json.features[0].properties['popupContent'] = `
+            <strong>{{object.name}}</strong><br>
+            <a href={% url 'site_detail' pk=object.pk %} class=btn-link>Details</a>
+            `
+        json.features[0].properties['id'] = "{{object.pk}}"
+        drawJson(json);
+        </script>
+    {% endfor %}
+    <script>fitBounds()</script>
+    <script>
+        $('#list-search').on("keyup", function() {
+            var value = $("#list-search").val().toLowerCase();
+            $("tbody>tr.searchable").filter(function() {
+                if($(this).text().toLowerCase().indexOf(value) > -1){
+                    $(this).show()
+                } else {
+                    $(this).hide()
+                }
+            });
+        });
+        $('tr.searchable').on('click', function(){
+            var pk = $(this).attr('id').split('_')[1]
+            openPopup(parseInt(pk))
+        })
+    </script>
 {% endblock %}

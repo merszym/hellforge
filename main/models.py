@@ -749,6 +749,10 @@ class Sample(models.Model):
         return [(k, v) for k, v in data.items()]
 
     @property
+    def site(self):
+        return self.layer.site
+
+    @property
     def model(self):
         return "sample"
 

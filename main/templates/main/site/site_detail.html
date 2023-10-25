@@ -133,7 +133,7 @@
                         </tbody>
                     </table>
                     {% if object.contact.first %}
-                    <h5> Contact Person </h5>
+                    <h5>Collaborators</h5>
                     {% for contact in object.contact.all %}
                         {% include 'main/contact/contact-tile.html' %}
                     {% endfor %}

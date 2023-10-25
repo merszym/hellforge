@@ -1,11 +1,12 @@
 from django.views.generic import ListView, DetailView, UpdateView
 from django.urls import path
-from main.models import Project, Description
+from main.models import Project, Description, Site, Sample
 from django.http import JsonResponse
 from main.tools.generic import add_x_to_y_m2m, remove_x_from_y_m2m, get_instance_from_string, delete_x
 from django.shortcuts import redirect, render
 from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, make smarter later
 import hashlib
+from collections import defaultdict
 
 
 def get_project(request):
@@ -32,7 +33,7 @@ def checkout_project(request, namespace):
             request.session["session_project"] = namespace
     except:
         pass
-    return redirect("landing")
+    return redirect(tmp)
 
 
 def close_project(request):
@@ -79,6 +80,15 @@ class ProjectDetailView(DetailView):
         if not project.project_description.first():
             tmp = Description(content_object=project)
             tmp.save()
+        # display the project sites
+        object_list = sorted(Site.objects.filter(project=project, child=None), key=lambda x: x.country)
+        context["object_list"] = object_list
+        # get the related samples
+        sample_dict = defaultdict(int)
+        for site in object_list:
+            sample_dict[site.name] = Sample.objects.filter(project=project, layer__site=site)
+        context["sample_list"] = Sample.objects.filter(project=project)
+        context["sample_dict"] = sample_dict
         return context
 
 

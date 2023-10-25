@@ -22,7 +22,7 @@ $('body').on('click', '.clone_layer', function(){
         type: "GET",
         url: $(this).attr('data-url'),
         }).done(function(){
-            getProfile(pk)
+            reloadElement('site_layer')
         });
 });
 
