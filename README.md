@@ -1,5 +1,6 @@
-# Hellforge #
-Hesitantly labeled layers (for geneticists)
+# Hellforge
+
+Helpfully labeled layers (for geneticists)
 
 A Database/Webapp to provide archaeological context for samples.
 
@@ -25,10 +26,3 @@ python3 manage.py runserver
 ```
 
 And in your browser navigate to `localhost:8000`
-
-
-
-
-
-
-

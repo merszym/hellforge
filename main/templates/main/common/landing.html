@@ -1,16 +1,13 @@
-{% extends 'main/base.html' %}
-{% block head %}
+{% extends 'main/base.html' %} {% block head %}
 <title>Hellforge</title>
-{% endblock %}
-{% block paddingless %}
+{% endblock %} {% block paddingless %}
 <div class="hero bg-primary">
-    <div class="hero-body">
-        <h1 style="margin:0px;">Hellforge</h1>
-        <p>Hesitantly labeled layers (for geneticists)</p>
-    </div>
+  <div class="hero-body">
+    <h1 style="margin: 0px">Hellforge</h1>
+    <p>Helpfully labeled layers (for geneticists)</p>
+  </div>
 </div>
-{% endblock %}
-{% block body %}
-<a href="{% url 'site_list' %}" class="btn-link">All Sites</a><br>
+{% endblock %} {% block body %}
+<a href="{% url 'site_list' %}" class="btn-link">All Sites</a><br />
 <a href="{% url 'culture_list' %}" class="btn-link">All Cultures</a>
 {% endblock %}
