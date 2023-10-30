@@ -12,8 +12,6 @@ def fauna_upload(request):
     import pandas as pd
 
     # TODO: create taxa upon assemblageUpload
-    print(request.FILES)
-    print(request.POST)
     df = pd.read_csv(request.FILES["file"], sep=",")
     df.drop_duplicates(inplace=True)
 

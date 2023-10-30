@@ -81,6 +81,7 @@
                             <tr>
                                 <th>Country</th>
                                 <th>Site</th>
+                                <th>Site Name</th>
                                 <th>Samples</th>
                                 <th>Analyzed</th>
                                 <th>Collaborators</th>
@@ -92,6 +93,7 @@
                             {% for site in object_list %}
                                 <tr id="site_{{site.pk}}" class="searchable">
                                     <td>{{site.country}}</td>
+                                    <td>{{site.coredb_id}}</td>
                                     <td>{{site.name}}</td>
                                     {% with sample_count=sample_dict|lookup:site.name|length %}
                                     <td>{% if sample_count == 0 %}ToDo{% else %}{{sample_count}}{% endif %}</td>
@@ -100,7 +102,7 @@
                                     <td><span>{{site.contact.all|join:", "}}</span><br>
                                     </td>
                                     <td></td>
-                                    <td><span class="btn"><a href="{% url 'site_detail' site.pk %}">Go</a></span></td>
+                                    <td><a href="{% url 'site_detail' site.pk %}"><span class="btn">Go</span></a></td>
                                 </tr>
                             {% endfor %}
                         </tbody>

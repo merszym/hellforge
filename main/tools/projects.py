@@ -55,6 +55,7 @@ def get_dataset(request):
             q.append(
                 {
                     "Site": s.layer.site.name,
+                    "Site Id": s.layer.site.coredb_id,
                     "Layer": s.layer.name,
                     "Culture": s.layer.culture.name if s.layer.culture else None,
                     "Umbrella Culture": s.layer.culture.get_highest().name if s.layer.culture else None,

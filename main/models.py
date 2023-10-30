@@ -550,6 +550,7 @@ class Site(models.Model):
     site = models.ForeignKey(
         "self", verbose_name="parent", related_name="child", blank=True, null=True, on_delete=models.SET_NULL
     )
+    coredb_id = models.CharField("coreDB Id", null=True, blank=True, max_length=4)
     contact = models.ManyToManyField(Person, blank=True, verbose_name="contact", related_name="site")
     name = models.CharField("name", max_length=200)
     synonyms = models.ManyToManyField(Synonym, blank=True, verbose_name="synonym", related_name="site")
