@@ -67,7 +67,7 @@ def get_dataset(request):
                 }
             )
         df = pd.DataFrame.from_records(q)
-        return download_csv(df, name=f"samples_{project}.csv")
+        return download_csv(df, name=f"samples_{project.namespace}.csv")
 
     return redirect("landing")
 

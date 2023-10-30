@@ -3,6 +3,7 @@ from django.http import JsonResponse, HttpResponse
 from django.urls import path
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
+from datetime import datetime
 
 
 @login_required
@@ -95,9 +96,10 @@ def delete_x(request, response=True):
 def download_csv(df, name="download.csv"):
     from django.core.files.base import ContentFile
 
+    today = datetime.strftime(datetime.today(), "%Y%m%d")
     file_to_send = ContentFile(df.to_csv(index=False))
     response = HttpResponse(file_to_send, content_type="application/octet-stream")
-    response["Content-Disposition"] = f"attachment; filename={name}"
+    response["Content-Disposition"] = f"attachment; filename={today}_{name}"
 
     return response
 
