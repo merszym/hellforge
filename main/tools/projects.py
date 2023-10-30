@@ -2,11 +2,12 @@ from django.views.generic import ListView, DetailView, UpdateView
 from django.urls import path
 from main.models import Project, Description, Site, Sample
 from django.http import JsonResponse
-from main.tools.generic import add_x_to_y_m2m, remove_x_from_y_m2m, get_instance_from_string, delete_x
+from main.tools.generic import add_x_to_y_m2m, remove_x_from_y_m2m, get_instance_from_string, delete_x, download_csv
 from django.shortcuts import redirect, render
 from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, make smarter later
 import hashlib
 from collections import defaultdict
+import pandas as pd
 
 
 def get_project(request):
@@ -43,6 +44,32 @@ def close_project(request):
 
 def get_project_status_tile(request):
     return render(request, "main/project/project_status_tile.html", {"project": get_project(request)})
+
+
+def get_dataset(request):
+    if project := get_project(request):
+        qs = Sample.objects.filter(project=project).order_by("layer__site", "layer__name")
+        # TODO: make this some sort of API!
+        q = []
+        for s in qs:
+            q.append(
+                {
+                    "Site": s.layer.site.name,
+                    "Layer": s.layer.name,
+                    "Culture": s.layer.culture.name if s.layer.culture else None,
+                    "Umbrella Culture": s.layer.culture.get_highest().name if s.layer.culture else None,
+                    "Epoch": s.layer.epoch.name if s.layer.epoch else None,
+                    "Layer Age": s.layer.age_summary(export=True),
+                    "Sample Type": s.type,
+                    "Sample Name": s.name,
+                    "Sample Synonyms": ";".join([str(x) for x in s.synonyms.all()]),
+                    "Year of Collection": s.year_of_collection,
+                }
+            )
+        df = pd.DataFrame.from_records(q)
+        return download_csv(df, name=f"samples_{project}.csv")
+
+    return redirect("landing")
 
 
 class ProjectListView(ListView):
@@ -97,6 +124,7 @@ urlpatterns = [
     path("checkout/<str:namespace>", checkout_project, name="main_project_checkout"),
     path("close", close_project, name="main_project_close"),
     path("status", get_project_status_tile, name="main_project_status"),
+    path("get-dataset", get_dataset, name="main_project_get_dataset"),
     path("<str:namespace>", ProjectDetailView.as_view(), name="main_project_detail"),
     path("<int:pk>/edit", ProjectUpdateView.as_view(), name="main_project_update"),
 ]

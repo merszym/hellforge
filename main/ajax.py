@@ -21,7 +21,7 @@ from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from .models import models
-from main.tools.generic import get_instance_from_string
+from main.tools.generic import get_instance_from_string, download_csv
 
 
 def download_header(request):
@@ -32,10 +32,7 @@ def download_header(request):
     cols = model.table_columns()
     df = pd.DataFrame(columns=cols)
 
-    file_to_send = ContentFile(df.to_csv(index=False))
-    response = HttpResponse(file_to_send, "application/octet-stream")
-
-    return response
+    return download_csv(df)
 
 
 # belongs into site, layer or profile tools

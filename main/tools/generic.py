@@ -1,5 +1,5 @@
 from main.models import models
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.urls import path
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
@@ -89,6 +89,17 @@ def delete_x(request, response=True):
     x = get_instance_from_string(request.POST.get("instance_x"))
     x.delete()
     return JsonResponse({"status": True}) if response else True
+
+
+# data download from dataframe
+def download_csv(df, name="download.csv"):
+    from django.core.files.base import ContentFile
+
+    file_to_send = ContentFile(df.to_csv(index=False))
+    response = HttpResponse(file_to_send, content_type="application/octet-stream")
+    response["Content-Disposition"] = f"attachment; filename={name}"
+
+    return response
 
 
 urlpatterns = [

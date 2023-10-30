@@ -39,16 +39,19 @@
                         <th>Sites</th>
                         <th>Collected Samples</th>
                         <th>Project Visibility</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td>{{object_list|length}}</td>
                         <td>{{sample_list|length}}</td>
-                        <td>{{ object.published|yesno:"Published,Private,NA" }}</td>
+                        <td>{{object.published|yesno:"Published,Private,NA"}}</td>
+                        <td><a target="_blank" href="{% url 'main_project_get_dataset' %}"><i class="icon icon-download"></i></a></td>
                     </tr>
                 </tbody>
             </table>
+
             <div style="height: 480px;margin-top: 20px;" id="map"></div>
             <a href="{% url 'site_list' %}" style="margin-bottom: 20px;">All Sites</a>
             <h5>Share Project</h5>

@@ -210,7 +210,7 @@ class Synonym(models.Model):
     type = models.CharField("type", max_length=300, blank=True, null=True)
 
     def __str__(self):
-        return self.name
+        return f"{self.type}:{self.name}"
 
 
 class CheckpointLayerJunction(models.Model):
@@ -704,16 +704,19 @@ class Layer(models.Model):
     def model(self):
         return "layer"
 
-    @property
-    def age_summary(self):
+    def age_summary(self, export=False):
         if self.set_upper and self.set_lower:
             return Date(upper=self.set_upper, lower=self.set_lower)
         if dates := self.date.all():
             if len(dates) == 1:
+                if export:
+                    return Date(upper=dates.first().upper, lower=dates.first().lower)
                 return dates.first()
             else:
                 return Date(upper=self.mean_upper, lower=self.mean_lower)
         else:
+            if export:
+                return None
             return "Undated"
 
     def get_absolute_url(self):
