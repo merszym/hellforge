@@ -734,7 +734,13 @@ class Sample(models.Model):
     # description
     description = GenericRelation(Description, related_query_name="sample")
     # origin of samples
-    layer = models.ForeignKey(Layer, verbose_name="layer", related_name="sample", on_delete=models.PROTECT)
+    # site for the cases, where the layer is yet unknown
+    site = models.ForeignKey(
+        Site, verbose_name="site", related_name="sample", on_delete=models.PROTECT, blank=True, null=True
+    )
+    layer = models.ForeignKey(
+        Layer, verbose_name="layer", related_name="sample", on_delete=models.PROTECT, blank=True, null=True
+    )
     provenience = models.JSONField("provenience", blank=True, null=True)
     # date related fields
     date = models.ManyToManyField(Date, verbose_name="date", blank=True)
@@ -751,10 +757,6 @@ class Sample(models.Model):
     def get_provenience(self):
         data = json.loads(self.provenience)
         return [(k, v) for k, v in data.items()]
-
-    @property
-    def site(self):
-        return self.layer.site
 
     @property
     def model(self):
@@ -782,8 +784,7 @@ class Taxon(models.Model):
     family = models.CharField("family", max_length=400, blank=True, null=True)
 
     def __str__(self):
-        if self.common_name:
-            return f"{self.common_name} ({self.family})"
+        return f"{self.family}:{self.scientific_name} ({self.common_name if self.common_name else ''})"
 
     class Meta:
         ordering = ["family"]

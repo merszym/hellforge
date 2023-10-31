@@ -8,6 +8,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, ma
 import hashlib
 from collections import defaultdict
 import pandas as pd
+import json
 
 
 def get_project(request):
@@ -54,17 +55,19 @@ def get_dataset(request):
         for s in qs:
             q.append(
                 {
-                    "Site": s.layer.site.name,
-                    "Site Id": s.layer.site.coredb_id,
-                    "Layer": s.layer.name,
-                    "Culture": s.layer.culture.name if s.layer.culture else None,
-                    "Umbrella Culture": s.layer.culture.get_highest().name if s.layer.culture else None,
-                    "Epoch": s.layer.epoch.name if s.layer.epoch else None,
-                    "Layer Age": s.layer.age_summary(export=True),
+                    "Project": project.name,
+                    "Site": s.site.name,
+                    "Site Id": s.site.coredb_id,
+                    "Layer": s.layer.name if s.layer else "Unassigned",
+                    "Culture": s.layer.culture.name if (s.layer and s.layer.culture) else None,
+                    "Umbrella Culture": s.layer.culture.get_highest().name if (s.layer and s.layer.culture) else None,
+                    "Epoch": s.layer.epoch.name if (s.layer and s.layer.epoch) else None,
+                    "Layer Age": s.layer.age_summary(export=True) if s.layer else None,
                     "Sample Type": s.type,
                     "Sample Name": s.name,
                     "Sample Synonyms": ";".join([str(x) for x in s.synonyms.all()]),
                     "Year of Collection": s.year_of_collection,
+                    "Sample Provenience": ";".join([f"{k}:{v}" for k, v in json.loads(s.provenience).items()]),
                 }
             )
         df = pd.DataFrame.from_records(q)
@@ -114,7 +117,7 @@ class ProjectDetailView(DetailView):
         # get the related samples
         sample_dict = defaultdict(int)
         for site in object_list:
-            sample_dict[site.name] = Sample.objects.filter(project=project, layer__site=site)
+            sample_dict[site.name] = Sample.objects.filter(project=project, site=site)
         context["sample_list"] = Sample.objects.filter(project=project)
         context["sample_dict"] = sample_dict
         return context

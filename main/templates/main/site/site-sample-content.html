@@ -14,14 +14,18 @@
                     <h3> Samples </h3>
                     <!-- #TODO: only samples of the given project... -->
                     <ul class="tab">
-                        {% for layer in samples %}
+                        {% for layer in sample_layers %}
+                        {% if layer != 'unknown' %}
                         <li class="tab-item toggle_samples {% if forloop.counter == 1%} active {% endif %}" data-show="samples_layer_{{layer.pk}}" data-group="samples" style="cursor: pointer;">
                             <a class="badge" data-badge="{{samples|lookup:layer|length}}">{% if layer.name%}{{layer.name}}{%else%}All{% endif %}</a>
                         </li>
+                        {% endif %}
                         {% endfor %}
                     </ul>
-                    {% for layer in samples %}
+                    {% for layer in sample_layers %}
+                    {% if layer != 'unknown' %}
                     {% include 'main/samples/sample-table.html' with object_list=samples|lookup:layer counter=forloop.counter %}
+                    {% endif %}
                     {% endfor %}
               </div>
             </div>

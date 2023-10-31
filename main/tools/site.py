@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect
 from django.views.generic import CreateView, ListView, UpdateView, DetailView
 from django.db.models import Q
 from main.forms import ProfileForm, SiteForm, ReferenceForm, ContactForm, DateForm
-from main.models import Site, DatingMethod, Location, Culture, Checkpoint, Layer, Date, Description, Project
+from main.models import Site, DatingMethod, Location, Culture, Checkpoint, Layer, Date, Description, Project, Sample
 from copy import copy
 import json
 import seaborn as sns
@@ -51,12 +51,16 @@ class SiteDetailView(ProjectAwareDetailView):
         # load the samples
         samples = nested_dict()
 
-        for layer in Layer.objects.filter(Q(site=object)):
-            qs = layer.sample.filter(project=context.get("project"))
+        for layer in set([x["layer"] for x in Sample.objects.filter(Q(site=object)).values("layer").distinct()]):
+            qs = Sample.objects.filter(project=context.get("project"), site=object, layer=layer)
             if len(qs) > 0:
                 if not "All" in samples:
                     samples["All"] = []
                 samples["All"].extend(qs)
+                if layer == None:
+                    layer = "unknown"
+                else:
+                    layer = Layer.objects.get(pk=int(layer))
                 samples[layer] = qs
 
         context.update(
@@ -68,6 +72,7 @@ class SiteDetailView(ProjectAwareDetailView):
                 "project_description": project_description,
                 "profile": profile,
                 "samples": samples,
+                "sample_layers": sorted(samples, key=lambda x: getattr(x, "pos", 0)),
             }
         )
         return context

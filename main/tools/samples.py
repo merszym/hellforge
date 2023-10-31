@@ -30,7 +30,7 @@ def sample_upload(request):
         if "Not Found" in set(df["Reference"]):
             issues.append("Reference was not found (see Table)")
 
-    layer_wrong = df[df.Layer.isin(all_layers) == False].copy()
+    layer_wrong = df[(df.Layer.isin(all_layers) == False) & (df.Layer == df.Layer)].copy()
     if len(layer_wrong) > 0:
         issues.append(f"Removed non-existing Layers: {','.join(set(layer_wrong['Layer']))}")
         df.drop(layer_wrong.index, inplace=True)
@@ -52,8 +52,12 @@ def save_verified(request):
     df.convert_dtypes()
 
     # go through the layers
+    df["Layer"] = df.Layer.fillna("unknown")
     for layer, dat in df.groupby("Layer"):
-        l = Layer.objects.filter(site=site, name=layer).first()
+        if layer == "unknown":
+            l = None
+        else:
+            l = Layer.objects.filter(site=site, name=layer).first()
 
         for sample, synonyms, type, yoc, provenience, ref in zip(
             dat["Name"],
@@ -64,7 +68,11 @@ def save_verified(request):
             dat["Reference"],
         ):
             # check if a sample exists already, get it
-            s, created = Sample.objects.get_or_create(name=sample, layer=l)
+            # if no layer is given, create in site
+            if l:
+                s, created = Sample.objects.get_or_create(name=sample, layer=l, site=site)
+            else:
+                s, created = Sample.objects.get_or_create(name=sample, site=site)
             # add project
             project = Project.objects.get(namespace=request.session["session_project"])
             s.project.add(project)
@@ -72,7 +80,7 @@ def save_verified(request):
             # since synonyms are stored as id_label:id, id_label2:id2
             if synonyms == synonyms and synonyms:
                 sample_synonyms = s.synonyms.all()
-                for syn in synonyms.split(","):
+                for syn in synonyms.split(";"):
                     syn_label, syn_name = syn.split(":", 1)
                     syn_label = syn_label.strip()
                     syn_name = syn_name.strip()
@@ -100,7 +108,7 @@ def save_verified(request):
                 prov = json.loads("{}")
             new_prov = dict()
             if provenience and provenience == provenience:
-                for item in provenience.split(","):
+                for item in provenience.split(";"):
                     k, v = item.split(":")
                     new_prov[k.strip()] = v.strip()
             prov.update(new_prov)
