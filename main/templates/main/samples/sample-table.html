@@ -1,5 +1,10 @@
 <div class="sample_table tab-panel" data-group="samples"
     id="samples_layer_{{layer.pk}}" style="{% if counter != 1 %} display: none;{% endif %} height:500px; overflow:scroll;">
+<style>
+    .unassigned{
+        background-color: rgb(201, 115, 115) !important;
+    }
+</style>
 <table class="table table-striped">
     <thead>
         <tr>
@@ -14,7 +19,7 @@
     <tbody>
         {% for object in object_list %}
         <tr>
-            <td>{% if object.layer %}{{object.layer.name}}{% else %}Unassigned{% endif %}</td>
+            <td class="{{object.layer|yesno:'assigned,unassigned'}}">{% if object.layer %}{{object.layer.name}}{% else %}Unassigned{% endif %}</td>
             <td>{{object.type}}</td>
             <td>{{object.name}}
                 {% for syn in object.synonyms.all %}

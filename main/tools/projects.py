@@ -40,7 +40,7 @@ def checkout_project(request, namespace):
 
 def close_project(request):
     del request.session["session_project"]
-    return redirect("landing")
+    return redirect("main_project_list")
 
 
 def get_project_status_tile(request):

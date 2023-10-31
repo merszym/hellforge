@@ -774,6 +774,9 @@ class Sample(models.Model):
             "Reference",
         ]
 
+    def __str__(self):
+        return self.name
+
 
 ### The expected Taxa section
 
