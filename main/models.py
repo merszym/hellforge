@@ -617,6 +617,10 @@ class SampleBatch(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def classname(self):
+        return "".join([x for x in self.name if x != " "])
+
 
 class Sample(models.Model):
     type = models.CharField("sample type", max_length=400, null=True, blank=True)

@@ -8,8 +8,8 @@
     </div>
 {% else %}
 
-<div class="sample_table tab-panel" data-group="samples"
-    id="samples_layer_{{layer.pk}}" style="{% if counter != 1 %} display: none;{% endif %} height:500px; overflow:scroll;">
+<div class="sample_table tab-panel" data-group="samples-{{batch.classname}}"
+    id="{{batch.classname}}-samples_layer_{{layer.pk}}" style="{% if counter != 1 %} display: none;{% endif %} height:500px; overflow:scroll;">
 <style>
     .unassigned{
         background-color: rgb(201, 115, 115) !important;
@@ -18,6 +18,7 @@
 <table class="table table-striped">
     <thead>
         <tr>
+            <th>Project</th>
             <th>Layer</th>
             <th>Type</th>
             <th>Sample</th>
@@ -29,18 +30,69 @@
     <tbody>
         {% for object in object_list %}
         <tr>
+            <td style="width:30px;">
+            {% with projectsamples=project.sample.all %}
+                {% if project and not object in projectsamples %}
+                <span class="tooltip tooltip-right generic_addm2m" data-tooltip="Add Sample to Project"
+                    data-x="sample_{{object.pk}}" data-y="project_{{project.pk}}" data-reload="{{batch.classname}}-samples_layer_{{layer.pk}}">
+                    <i class="icon icon-plus" style="color:green; cursor: pointer;"></i>
+                </span>
+                {% elif project and object in projectsamples %}
+                <span class="tooltip tooltip-right generic_rmm2m" data-tooltip="Remove Sample from Project"
+                    data-x="sample_{{object.pk}}" data-y="project_{{project.pk}}" data-reload="{{batch.classname}}-samples_layer_{{layer.pk}}">
+                    <i class="icon icon-minus" style="color:red; cursor: pointer;"></i>
+                </span>
+                {% endif %}
+            {% endwith %}
+            </td>
             <td class="{{object.layer|yesno:'assigned,unassigned'}}">{% if object.layer %}{{object.layer.name}}{% else %}Unassigned{% endif %}</td>
             <td>{{object.type}}</td>
-            <td>{{object.name}}
-                {% for syn in object.synonyms.all %}
-                <br><span class="small text-gray">{{syn.type}}: {{syn.name}}</span>
-                {% endfor %}
+            <td>
+                <div class="popover popover-right">
+                    <span style="cursor:pointer;" >{{object.name}}</span>
+                    <div class="popover-container">
+                        <div class="card">
+                            <div class="card-header">
+                                {{object.name}}
+                            </div>
+                            <div class="card-body">
+                                {% for syn in object.synonyms.all %}
+                                <br><span class="small text-gray">{{syn.type}}: {{syn.name}}</span>
+                                {% endfor %}
+                                <br>
+                                Add more Synonyms (TODO)
+                            </div>
+                            <div class="card-footer">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </td>
             <td>{{object.layer.age_summary}}</td>
             <td>{% if object.year_of_collection%}{{object.year_of_collection}}{% endif%}</td>
-            <td>{% for k,v in object.get_provenience %}
-                <span class="text-gray small">{{k}}: {{v}}</span><br>
-                {% endfor %}
+            <td>
+                <div class="popover popover-left">
+                    <span style="cursor:pointer;"><span class="text-gray small">Hover to Show</span>
+                    <div class="popover-container">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6>Provenience</h6>
+                            </div>
+                            <div class="card-body">
+                                {% for k,v in object.get_provenience %}
+                                <span class="text-gray small">{{k}}: {{v}}</span><br>
+                                {% endfor %}
+                                TODO: Add and edit
+                            </div>
+                            <div class="card-footer">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
             </td>
         </tr>
         {% endfor %}

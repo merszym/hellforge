@@ -1,5 +1,5 @@
 from main.models import models
-from main.models import Reference, Sample, Synonym, Site, Layer, Project
+from main.models import Reference, Sample, Synonym, Site, Layer, Project, SampleBatch
 from main.forms import SampleBatchForm
 from django.http import JsonResponse
 from django.urls import path
@@ -15,6 +15,8 @@ from django.contrib.auth.decorators import login_required  # this is for now, ma
 def sample_upload(request):
     df = pd.read_csv(request.FILES["file"], sep=",")
     df.drop_duplicates(inplace=True)
+
+    batch = request.GET.get("batch", None)
 
     site = get_instance_from_string(request.POST.get("instance_x"))
     all_layers = [x.name for x in site.layer.all()]
@@ -36,6 +38,10 @@ def sample_upload(request):
     if len(layer_wrong) > 0:
         issues.append(f"Removed non-existing Layers: {','.join(set(layer_wrong['Layer']))}")
         df.drop(layer_wrong.index, inplace=True)
+
+    # add the sample batch
+    df.insert(0, "SampleBatch", batch)
+
     return render(
         request,
         "main/samples/sample-batch-confirm.html",
@@ -61,7 +67,8 @@ def save_verified(request):
         else:
             l = Layer.objects.filter(site=site, name=layer).first()
 
-        for sample, synonyms, type, yoc, provenience, ref in zip(
+        for batch, sample, synonyms, type, yoc, provenience, ref in zip(
+            dat["SampleBatch"],
             dat["Name"],
             dat["Synonyms"],
             dat["Type"],
@@ -70,11 +77,12 @@ def save_verified(request):
             dat["Reference"],
         ):
             # check if a sample exists already, get it
-            # if no layer is given, create in site
-            if l:
-                s, created = Sample.objects.get_or_create(name=sample, layer=l, site=site)
-            else:
-                s, created = Sample.objects.get_or_create(name=sample, site=site)
+            s, created = Sample.objects.get_or_create(name=sample, layer=l, site=site)
+            # if layer is given: Update the layer
+            s.layer = l
+            # get the batch
+            batch = SampleBatch.objects.get(site=site, name=batch)
+            s.batch = batch
             # add project
             project = Project.objects.get(namespace=request.session["session_project"])
             s.project.add(project)

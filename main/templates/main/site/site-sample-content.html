@@ -2,67 +2,61 @@
 
 <div class="my-2" id="site_sample_content">
     {% include "main/samples/sample-batch-modal.html" %}
-    {% if request.user.is_authenticated %}
-    {% csrf_token %}
-    <input class="fill_modal" type="file" id="sample-batch-input" data-url="{% url 'main_sample_upload' %}">
-    <span id='fauna-batch-header' data-url="{% url 'download_header' %}?model=sample" class="btn tooltip tooltip-right get-batch-header" data-tooltip="Batch Download Template"><i class="icon icon-download"></i></span>
-    {% endif %}
     {% if samples %}
-    <div style="padding-top: 20px;" id='profile-taxa'>
-        <div class="container">
-            <div class="columns" style="flex-wrap: nowrap; overflow: scroll;">
-              <div class="column">
-                    <!-- Start with the sample batches -->
-                    <ul class="tab" id="samplebatch-list">
-                        {% for samplebatch in samples %}
-                        <li class="tab-item {% if forloop.counter == 1 %}active{% endif %}"
-                            data-group="sample-batch"
-                            data-show="sample-batch_{{samplebatch.pk}}">
-                            <a style="cursor:pointer;">{{samplebatch}}</a>
-                        </li>
-                        {% endfor %}
-                        {% if request.user.is_authenticated %}
-                        <li id="before-profile-add">
-                            <span style="margin-bottom:5px;" class="btn btn-primary modal_open" data-open="sample-batch-modal"> Add Batch </span>
-                        </li>
-                        {% endif %}
-                    </ul>
-                    <!-- Now go through the samples in each batch! -->
-                    {% for samplebatch in samples %}
-                        <div class="tab-panel my-2" data-group="sample-batch" id="sample-batch_{{samplebatch.pk}}">
-                            <div style="position: relative;">
-                                <h3>{{samplebatch}}</h3>
+    <div id='profile-taxa'>
+        <!-- Start with the sample batches -->
+        <ul class="tab" id="samplebatch-list">
+            {% for samplebatch in samples %}
+            <li class="tab-item {% if forloop.counter == 1 %}active{% endif %}"
+                data-group="sample-batch"
+                data-show="sample-batch_{{samplebatch.pk}}">
+                <a style="cursor:pointer;">{{samplebatch}}</a>
+            </li>
+            {% endfor %}
+            {% if request.user.is_authenticated %}
+            <li id="before-profile-add">
+                <span style="margin-bottom:5px;" class="btn btn-primary modal_open" data-open="sample-batch-modal"> Add Batch </span>
+            </li>
+            {% endif %}
+        </ul>
+        <!-- Now go through the samples in each batch! -->
+        {% for samplebatch in samples %}
+            <div class="tab-panel my-2" data-group="sample-batch" id="sample-batch_{{samplebatch.pk}}" style="{% if forloop.counter != 1 %} display: none;{% endif %}">
+                <div style="position: relative;">
+                    <h3>{{samplebatch}}</h3>
 
-                                <span class="btn btn-primary tooltip tooltip-left generic_delete"
-                                    data-x="sample-batch_{{samplebatch.pk}}"
-                                    data-reload="site_sample_content"
-                                    data-tooltip="Delete the Batch" style="position:absolute; top:0px; right:5%">
-                                    <i class="icon icon-delete"></i>
-                                </span>
+                    <span class="btn btn-primary tooltip tooltip-left generic_delete"
+                        data-x="sample-batch_{{samplebatch.pk}}"
+                        data-reload="site_sample_content"
+                        data-tooltip="Delete the Batch" style="position:absolute; top:0px; right:5%">
+                        <i class="icon icon-delete"></i>
+                    </span>
 
-                            </div>
-                            <ul class="tab">
-                                {% for layer in sample_layers|lookup:samplebatch %}
-                                {% if layer != 'unknown' %}
-                                <li class="tab-item toggle_samples {% if forloop.counter == 1%} active {% endif %}" data-show="samples_layer_{{layer.pk}}" data-group="samples" style="cursor: pointer;">
-                                    <a class="badge" data-badge="{{samples|lookup:samplebatch|lookup:layer|length}}">{% if layer.name%}{{layer.name}}{%else%}All{% endif %}</a>
-                                </li>
-                                {% endif %}
-                                {% endfor %}
-                            </ul>
-                            {% for layer in sample_layers|lookup:samplebatch %}
-                                {% if layer != 'unknown' %}
-                                    {% include 'main/samples/sample-table.html' with object_list=samples|lookup:samplebatch|lookup:layer counter=forloop.counter %}
-                                {% endif %}
-                            {% empty %}
-                                {% include 'main/samples/sample-table.html' with object_list="empty" counter=forloop.counter %}
-                            {% endfor %}
-
-                        </div>
+                </div>
+                {% if request.user.is_authenticated %}
+                {% csrf_token %}
+                <input class="fill_modal" type="file" id="sample-batch-input" data-url="{% url 'main_sample_upload' %}?batch={{samplebatch}}">
+                <span id='fauna-batch-header' data-url="{% url 'download_header' %}?model=sample" class="btn tooltip tooltip-right get-batch-header" data-tooltip="Batch Download Template"><i class="icon icon-download"></i></span>
+                {% endif %}
+                <ul class="tab">
+                    {% for layer in sample_layers|lookup:samplebatch %}
+                    {% if layer != 'unknown' %}
+                    <li class="tab-item toggle_samples {% if forloop.counter == 1%} active {% endif %}" data-show="{{samplebatch.classname}}-samples_layer_{{layer.pk}}" data-group="samples-{{samplebatch.classname}}" style="cursor: pointer;">
+                        <a class="badge" data-badge="{{samples|lookup:samplebatch|lookup:layer|length}}">{% if layer.name%}{{layer.name}}{%else%}All{% endif %}</a>
+                    </li>
+                    {% endif %}
                     {% endfor %}
-              </div>
+                </ul>
+                {% for layer in sample_layers|lookup:samplebatch %}
+                    {% if layer != 'unknown' %}
+                        {% include 'main/samples/sample-table.html' with object_list=samples|lookup:samplebatch|lookup:layer counter=forloop.counter batch=samplebatch %}
+                    {% endif %}
+                {% empty %}
+                    {% include 'main/samples/sample-table.html' with object_list="empty" counter=forloop.counter %}
+                {% endfor %}
+
             </div>
-        </div>
+        {% endfor %}
     </div>
     {% else %}
     <div class="empty">

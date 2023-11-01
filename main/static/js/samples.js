@@ -1,6 +1,6 @@
 // Handle the upload file
 $('body').on('change','#sample-batch-input', function(){
-    var file_data = $('#sample-batch-input').prop('files')[0];
+    var file_data = $(this).prop('files')[0];
     var form_data = new FormData();
     form_data.append('file', file_data);
     form_data.append('instance_x', $('[name=info]').val())

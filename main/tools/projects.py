@@ -65,6 +65,7 @@ def get_dataset(request):
                     "Layer Age": s.layer.age_summary(export=True) if s.layer else None,
                     "Sample Type": s.type,
                     "Sample Name": s.name,
+                    "Sample Batch": s.batch.name if s.batch else "",
                     "Sample Synonyms": ";".join([str(x) for x in s.synonyms.all()]),
                     "Year of Collection": s.year_of_collection,
                     "Sample Provenience": ";".join([f"{k}:{v}" for k, v in json.loads(s.provenience).items()]),

@@ -61,12 +61,11 @@ class SiteDetailView(ProjectAwareDetailView):
 
         # load the samples and batches
         # first create a batch for the samples that dont have one yet...
+        tmp, c = SampleBatch.objects.get_or_create(name="Undefined Batch", site=object)
         nobatch = Sample.objects.filter(Q(site=object, batch=None))
-        if len(nobatch) > 0:
-            tmp, c = SampleBatch.objects.get_or_create(name="Undefined Batch", site=object)
-            for sample in nobatch:
-                sample.batch = tmp
-                sample.save()
+        for sample in nobatch:
+            sample.batch = tmp
+            sample.save()
         # then load the samples into a nested dict
         samples = nested_dict()
         sample_layers = nested_dict()
