@@ -29,3 +29,8 @@ $('body').on('click', '#sample-table-confirm', function(){
             }
         });
 })
+
+// create a sample batch
+$('body').on('click','#samplebatch_submit', function(){
+
+});

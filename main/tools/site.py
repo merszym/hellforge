@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.views.generic import CreateView, ListView, UpdateView, DetailView
 from django.db.models import Q
-from main.forms import ProfileForm, SiteForm
+from main.forms import ProfileForm, SiteForm, SampleBatchForm
 from main.models import (
     Site,
     Location,
@@ -73,14 +73,14 @@ class SiteDetailView(ProjectAwareDetailView):
 
         # iterate over the batches
         for batch in object.sample_batch.all():
+            if not "All" in samples[batch]:
+                samples[batch]["All"] = []
             batch_samples = Sample.objects.filter(Q(site=object, batch=batch))
             # iterate over the layers
             for layer in sorted(list(set([x.layer for x in batch_samples])), key=lambda x: getattr(x, "pos", 0)):
                 # get the samples
                 qs = batch_samples.filter(layer=layer)
                 if len(qs) > 0:
-                    if not "All" in samples[batch]:
-                        samples[batch]["All"] = []
                     samples[batch]["All"].extend(qs)
                     if layer == None:
                         layer = "unknown"
@@ -94,6 +94,7 @@ class SiteDetailView(ProjectAwareDetailView):
         context.update(
             {
                 "profile_form": ProfileForm,
+                "samplebatch_form": SampleBatchForm,
                 "tab": tab,
                 "taxa": taxa,
                 "taxa_references": set(taxrefs),

@@ -1,5 +1,6 @@
 from main.models import models
 from main.models import Reference, Sample, Synonym, Site, Layer, Project
+from main.forms import SampleBatchForm
 from django.http import JsonResponse
 from django.urls import path
 from django.shortcuts import render
@@ -8,6 +9,7 @@ import main.tools as tools
 from django.db.models import Q
 import pandas as pd
 import json
+from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
 
 
 def sample_upload(request):
@@ -118,7 +120,17 @@ def save_verified(request):
     return JsonResponse({"status": True})
 
 
+@login_required
+def samplebatch_create(request):
+    if request.method == "POST":
+        obj = SampleBatchForm(request.POST)
+        obj.save()
+        return JsonResponse({"status": True})
+    return JsonResponse({"status": False})
+
+
 urlpatterns = [
     path("upload", sample_upload, name="main_sample_upload"),
     path("save", save_verified, name="ajax_save_verified_samples"),
+    path("create-batch", samplebatch_create, name="main_samplebatch_create"),
 ]

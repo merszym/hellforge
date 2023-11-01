@@ -8,12 +8,12 @@ from .models import (
     Profile,
     Layer,
     Culture,
-    Epoch,
     Person,
     Image,
     Gallery,
     DatingMethod,
     Description,
+    Date,
 )
 from django.db.models import Q
 from django.urls import reverse

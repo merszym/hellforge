@@ -1,3 +1,13 @@
+{% if object_list == "empty" %}
+    <div class="empty">
+        <div class="empty-icon">
+            <i class="icon icon-flag"></i>
+        </div>
+        <p class="empty-title h5">No samples assigned to the batch</p>
+        <p class="empty-subtitle">Assign the batch on the sample level</p>
+    </div>
+{% else %}
+
 <div class="sample_table tab-panel" data-group="samples"
     id="samples_layer_{{layer.pk}}" style="{% if counter != 1 %} display: none;{% endif %} height:500px; overflow:scroll;">
 <style>
@@ -39,3 +49,4 @@
 
 </table>
 </div>
+{% endif %}

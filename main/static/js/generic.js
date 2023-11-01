@@ -87,9 +87,54 @@ $('body').on('click','.tab-item', function(){
     $(`#${$(this).attr("data-show")}`).show()
 });
 
+// generic modal handling
+$('body').on('click','.modal_open', function(){
+    var element = $(`#${$(this).attr('data-open')}`)
+    console.log(element)
+    element.addClass('active')
+});
+$('body').on('click','.modal_close', function(){
+    $('.modal.active').removeClass('active')
+});
+
+
 //
 // GENERIC ADD, REMOVE, DELETE
 //
+
+function postGen(click, reload){
+    if(click){
+        clickElement(click)
+    }else{
+        $.each(reload.split(','), function(i,val){
+            reloadElement(val)
+        });
+    }
+}
+
+//
+// A generic form and instance_y function
+//
+$('body').on('click', '.generic_form', function(){
+    // specify the form id with data-form
+    var form = $(`#${$(this).attr('data-form')}`)
+    var formdata = new FormData(form[0]);
+    var reload = $(this).attr('data-reload')
+    var click = $(this).attr('data-click')
+    formdata.append('instance_x',$(this).attr('data-x'));
+    formdata.append('instance_y',$(this).attr('data-y'));
+    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
+    $.ajax({
+        type: "POST",
+        url: $(this).attr('data-url'),
+        processData: false,
+        contentType: false,
+        data: formdata
+        }).done(function(){
+            postGen(click, reload)
+        });
+});
+
 
 //
 // A generic instance_x and instance_y function
@@ -109,13 +154,7 @@ $('body').on('click', '.generic_xy', function(){
         contentType: false,
         data: formdata
         }).done(function(){
-            if(click){
-                clickElement(click)
-            }else{
-                $.each(reload.split(','), function(i,val){
-                    reloadElement(val)
-                });
-            }
+            postGen(click, reload)
         });
 });
 
@@ -145,13 +184,7 @@ $('body').on('click','.generic_delete_confirm', function(){
         data: formdata,
         url: $('#url_generic_delete').attr("data-url"),
         success: function() {
-            if(click){
-                clickElement(click)
-            }else{
-                $.each(reload.split(','), function(i,val){
-                    reloadElement(val)
-                });
-            }
+            postGen(click, reload)
         }
     });
 })
@@ -173,13 +206,7 @@ $('body').on('click', '.generic_addm2m', function(){
         data: formdata,
         url: $('#url_generic_addm2m').attr('data-url'),
         success: function() {
-            if(click){
-                clickElement(click)
-            }else{
-                $.each(reload.split(','), function(i,val){
-                    reloadElement(val)
-                });
-            }
+            postGen(click, reload)
         }
     });
 });
@@ -199,13 +226,7 @@ $('body').on('click', '.generic_rmm2m', function(){
         data: formdata,
         url: $('#url_generic_rmm2m').attr('data-url'),
         success: function() {
-            if(click){
-                clickElement(click)
-            }else{
-                $.each(reload.split(','), function(i,val){
-                    reloadElement(val)
-                });
-            }
+            postGen(click, reload)
         }
     });
 });
@@ -231,13 +252,7 @@ $('body').on('click', '.generic_setfk', function(){
         data: formdata,
         url: $('#url_generic_setfk').attr('data-url'),
         success: function() {
-            if(click){
-                clickElement(click)
-            }else{
-                $.each(reload.split(','), function(i,val){
-                    reloadElement(val)
-                });
-            }
+            postGen(click, reload)
         }
     });
 });
@@ -257,13 +272,7 @@ $('body').on('click', '.generic_unsetfk', function(){
         data: formdata,
         url: $('#url_generic_unsetfk').attr('data-url'),
         success: function() {
-            if(click){
-                clickElement(click)
-            }else{
-                $.each(reload.split(','), function(i,val){
-                    reloadElement(val)
-                });
-            }
+            postGen(click, reload)
         }
     });
 });

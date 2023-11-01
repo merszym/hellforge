@@ -1,6 +1,7 @@
 {% load format %}
 
 <div class="my-2" id="site_sample_content">
+    {% include "main/samples/sample-batch-modal.html" %}
     {% if request.user.is_authenticated %}
     {% csrf_token %}
     <input class="fill_modal" type="file" id="sample-batch-input" data-url="{% url 'main_sample_upload' %}">
@@ -22,13 +23,24 @@
                         {% endfor %}
                         {% if request.user.is_authenticated %}
                         <li id="before-profile-add">
-                            <span style="margin-bottom:5px;" class="btn btn-primary" id="samplebatch-add" data-url="#"> Add Batch </span>
+                            <span style="margin-bottom:5px;" class="btn btn-primary modal_open" data-open="sample-batch-modal"> Add Batch </span>
                         </li>
                         {% endif %}
                     </ul>
                     <!-- Now go through the samples in each batch! -->
                     {% for samplebatch in samples %}
-                        <div class="tab-panel" data-group="sample-batch" id="sample-batch_{{samplebatch.pk}}">
+                        <div class="tab-panel my-2" data-group="sample-batch" id="sample-batch_{{samplebatch.pk}}">
+                            <div style="position: relative;">
+                                <h3>{{samplebatch}}</h3>
+
+                                <span class="btn btn-primary tooltip tooltip-left generic_delete"
+                                    data-x="sample-batch_{{samplebatch.pk}}"
+                                    data-reload="site_sample_content"
+                                    data-tooltip="Delete the Batch" style="position:absolute; top:0px; right:5%">
+                                    <i class="icon icon-delete"></i>
+                                </span>
+
+                            </div>
                             <ul class="tab">
                                 {% for layer in sample_layers|lookup:samplebatch %}
                                 {% if layer != 'unknown' %}
@@ -42,7 +54,10 @@
                                 {% if layer != 'unknown' %}
                                     {% include 'main/samples/sample-table.html' with object_list=samples|lookup:samplebatch|lookup:layer counter=forloop.counter %}
                                 {% endif %}
+                            {% empty %}
+                                {% include 'main/samples/sample-table.html' with object_list="empty" counter=forloop.counter %}
                             {% endfor %}
+
                         </div>
                     {% endfor %}
               </div>

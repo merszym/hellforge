@@ -1,7 +1,7 @@
+import json
 from django.db import models
 from django.urls import reverse
 from django.db.models import Q
-import json
 from django.contrib.contenttypes.fields import GenericForeignKey  # for the description
 from django.contrib.contenttypes.models import ContentType  # for the description
 from django.contrib.contenttypes.fields import GenericRelation
@@ -326,10 +326,9 @@ class Location(models.Model):
                 geo = json.loads(self.geo)
             except:
                 geo = self.geo
-            finally:
-                for feat in geo["features"]:
-                    if feat["geometry"]["type"] == "Point":
-                        return feat["geometry"]["coordinates"]
+            for feat in geo["features"]:
+                if feat["geometry"]["type"] == "Point":
+                    return feat["geometry"]["coordinates"]
         return None, None
 
     def get_absolute_url(self):
@@ -741,4 +740,5 @@ models = {
     "author": Author,
     "project": Project,
     "sample": Sample,
+    "sample-batch": SampleBatch,
 }

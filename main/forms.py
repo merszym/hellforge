@@ -1,14 +1,11 @@
 from django import forms
-from .models import (
-    Reference,
-    Site,
-    Profile,
-    Culture,
-    Date,
-    Epoch,
-    Person,
-    Synonym,
-)
+from .models import Reference, Site, Profile, Culture, Date, Epoch, Person, Synonym, SampleBatch
+
+
+class SampleBatchForm(forms.ModelForm):
+    class Meta:
+        model = SampleBatch
+        fields = "__all__"
 
 
 class SynonymForm(forms.ModelForm):
