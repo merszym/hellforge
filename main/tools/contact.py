@@ -1,18 +1,11 @@
 from django.views.generic import CreateView, UpdateView, ListView
 from django.urls import path
 from main.models import Person, Affiliation
-from main.forms import ContactForm
 from django.http import JsonResponse
 import copy
 from main.tools.generic import add_x_to_y_m2m, remove_x_from_y_m2m, get_instance_from_string, delete_x
 from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
 from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, make smarter later
-
-
-class ContactCreateView(LoginRequiredMixin, CreateView):
-    model = Person
-    form_class = ContactForm
-    template_name = "main/contact/contact-form.html"
 
 
 class PersonListView(LoginRequiredMixin, ListView):

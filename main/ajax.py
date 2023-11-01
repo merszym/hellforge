@@ -9,7 +9,6 @@ from .models import (
     Layer,
     Culture,
     Epoch,
-    Checkpoint,
     Person,
     Image,
     Gallery,

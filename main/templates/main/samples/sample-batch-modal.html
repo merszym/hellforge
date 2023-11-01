@@ -1,0 +1,24 @@
+<div class="modal" id="sample-batch-modal">
+    <a href="#close" class="modal-overlay" aria-label="Close"></a>
+    <div class="modal-container">
+        <div class="modal-header">
+        <span class="btn btn-clear float-right" aria-label="Close"></span>
+        <div class="modal-title h5">New Sample Batch</div>
+        </div>
+        <div class="modal-body">
+            <div class="content">
+                <form id='samplebatch-form' method="POST">
+                {% csrf_token %}
+                {% for field in sample_batch_form %}
+                <div class="form-group">
+                    <label class="form-label" for="{{field.name}}_id">{{field.name|title}}</label>
+                    <input class="form-input" type="text" id="{{field.name}}_id" name="{{field.name}}" placeholder="{{field.name}}" required>
+                </div>
+                {% endfor %}
+                <span class="btn btn-primary" data-reload="site_sample_content" data-url="#">Add</span>
+                </form>
+                <br>
+            </div>
+        </div>
+    </div>
+</div>

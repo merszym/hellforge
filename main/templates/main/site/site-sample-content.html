@@ -11,21 +11,39 @@
         <div class="container">
             <div class="columns" style="flex-wrap: nowrap; overflow: scroll;">
               <div class="column">
-                    <h3> Samples </h3>
-                    <!-- #TODO: only samples of the given project... -->
-                    <ul class="tab">
-                        {% for layer in sample_layers %}
-                        {% if layer != 'unknown' %}
-                        <li class="tab-item toggle_samples {% if forloop.counter == 1%} active {% endif %}" data-show="samples_layer_{{layer.pk}}" data-group="samples" style="cursor: pointer;">
-                            <a class="badge" data-badge="{{samples|lookup:layer|length}}">{% if layer.name%}{{layer.name}}{%else%}All{% endif %}</a>
+                    <!-- Start with the sample batches -->
+                    <ul class="tab" id="samplebatch-list">
+                        {% for samplebatch in samples %}
+                        <li class="tab-item {% if forloop.counter == 1 %}active{% endif %}"
+                            data-group="sample-batch"
+                            data-show="sample-batch_{{samplebatch.pk}}">
+                            <a style="cursor:pointer;">{{samplebatch}}</a>
+                        </li>
+                        {% endfor %}
+                        {% if request.user.is_authenticated %}
+                        <li id="before-profile-add">
+                            <span style="margin-bottom:5px;" class="btn btn-primary" id="samplebatch-add" data-url="#"> Add Batch </span>
                         </li>
                         {% endif %}
-                        {% endfor %}
                     </ul>
-                    {% for layer in sample_layers %}
-                    {% if layer != 'unknown' %}
-                    {% include 'main/samples/sample-table.html' with object_list=samples|lookup:layer counter=forloop.counter %}
-                    {% endif %}
+                    <!-- Now go through the samples in each batch! -->
+                    {% for samplebatch in samples %}
+                        <div class="tab-panel" data-group="sample-batch" id="sample-batch_{{samplebatch.pk}}">
+                            <ul class="tab">
+                                {% for layer in sample_layers|lookup:samplebatch %}
+                                {% if layer != 'unknown' %}
+                                <li class="tab-item toggle_samples {% if forloop.counter == 1%} active {% endif %}" data-show="samples_layer_{{layer.pk}}" data-group="samples" style="cursor: pointer;">
+                                    <a class="badge" data-badge="{{samples|lookup:samplebatch|lookup:layer|length}}">{% if layer.name%}{{layer.name}}{%else%}All{% endif %}</a>
+                                </li>
+                                {% endif %}
+                                {% endfor %}
+                            </ul>
+                            {% for layer in sample_layers|lookup:samplebatch %}
+                                {% if layer != 'unknown' %}
+                                    {% include 'main/samples/sample-table.html' with object_list=samples|lookup:samplebatch|lookup:layer counter=forloop.counter %}
+                                {% endif %}
+                            {% endfor %}
+                        </div>
                     {% endfor %}
               </div>
             </div>

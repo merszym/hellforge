@@ -1,7 +1,7 @@
 from django.views.generic import CreateView, ListView, UpdateView, DetailView, DeleteView
 from django.urls import reverse
 from django.shortcuts import render
-from main.models import Layer, Culture, Date, Epoch, Checkpoint, DatingMethod, get_classname, Project, Description
+from main.models import Layer, Culture, Date, Epoch, DatingMethod, get_classname, Project, Description
 from main.forms import (
     ReferenceForm,
     CultureForm,

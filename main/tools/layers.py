@@ -4,7 +4,7 @@ from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DeleteView, UpdateView
 from main.models import Layer, Profile, Site, Culture, models
-from main.forms import LayerForm, ReferenceForm
+from main.forms import ReferenceForm
 from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
 from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, make smarter later
 from main.tools.generic import add_x_to_y_m2m, get_instance_from_string, set_x_fk_to_y
@@ -24,8 +24,6 @@ def clone(request, pk):
         new_layer.profile.add(profile)
     for ref in layer.ref.all():
         new_layer.ref.add(ref)
-    for cp in layer.checkpoint.all():
-        new_layer.checkpoint.add(cp)
     return JsonResponse({"pk": new_layer.pk})
 
 
@@ -67,24 +65,10 @@ def set_bounds(request):
     return JsonResponse({"status": True})
 
 
-# TODO: this is mostly deprectated, finish the replacement and remove!
-class LayerUpdateView(LoginRequiredMixin, UpdateView):
-    model = Layer
-    form_class = LayerForm
-    extra_context = {"reference_form": ReferenceForm}
-    template_name = "main/layer/layer_form.html"
-
-    def get_context_data(self, **kwargs):
-        context = super(LayerUpdateView, self).get_context_data(**kwargs)
-        context.update(self.extra_context)
-        return context
-
-
 # and the respective urlpatterns
 urlpatterns = [
     path("set-name", set_name, name="main_layer_setname"),
     path("set-bounds", set_bounds, name="main_layer_setbounds"),
     path("clone/<int:pk>", clone, name="main_layer_clone"),
     path("positions/<int:site_id>", update_positions, name="main_layer_positionupdate"),
-    path("edit/<int:pk>", LayerUpdateView.as_view(), name="main_layer_update"),
 ]

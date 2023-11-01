@@ -1,24 +1,6 @@
-from django.views.generic import CreateView, ListView, UpdateView, DetailView, DeleteView
-from django.urls import reverse
+from django.views.generic import ListView, DetailView
 from django.shortcuts import render
-from .models import (
-    Location,
-    Reference,
-    Site,
-    Layer,
-    Culture,
-    Date,
-    Epoch,
-    Checkpoint,
-    DatingMethod,
-    get_classname,
-    Project,
-)
-from .forms import ReferenceForm, SiteForm, ProfileForm, CultureForm, DateForm, EpochForm, CheckpointForm, ContactForm
-import json
-import seaborn as sns
-from django.db.models import Q
-from collections import defaultdict
+from .models import Project
 from main.tools.projects import get_project
 
 

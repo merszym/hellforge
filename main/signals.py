@@ -1,6 +1,6 @@
 from django.db.models.signals import post_save, m2m_changed, post_delete
 from django.dispatch import receiver
-from main.models import Layer, Culture, Epoch, Checkpoint, Site, Date, CheckpointLayerJunction, Project, Description
+from main.models import Layer, Culture, Site, Date, Project, Description
 from main.tools import dating
 import statistics
 import json

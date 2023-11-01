@@ -3,8 +3,18 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.views.generic import CreateView, ListView, UpdateView, DetailView
 from django.db.models import Q
-from main.forms import ProfileForm, SiteForm, ReferenceForm, ContactForm, DateForm
-from main.models import Site, DatingMethod, Location, Culture, Checkpoint, Layer, Date, Description, Project, Sample
+from main.forms import ProfileForm, SiteForm
+from main.models import (
+    Site,
+    Location,
+    Culture,
+    Layer,
+    Date,
+    Description,
+    Project,
+    Sample,
+    SampleBatch,
+)
 from copy import copy
 import json
 import seaborn as sns
@@ -48,20 +58,38 @@ class SiteDetailView(ProjectAwareDetailView):
                 for found_taxon in assemblage.taxa.all():
                     taxon = found_taxon.taxon
                     taxa[taxon.family][taxon][layer] = found_taxon.abundance
-        # load the samples
-        samples = nested_dict()
 
-        for layer in set([x["layer"] for x in Sample.objects.filter(Q(site=object)).values("layer").distinct()]):
-            qs = Sample.objects.filter(project=context.get("project"), site=object, layer=layer)
-            if len(qs) > 0:
-                if not "All" in samples:
-                    samples["All"] = []
-                samples["All"].extend(qs)
-                if layer == None:
-                    layer = "unknown"
-                else:
-                    layer = Layer.objects.get(pk=int(layer))
-                samples[layer] = qs
+        # load the samples and batches
+        # first create a batch for the samples that dont have one yet...
+        nobatch = Sample.objects.filter(Q(site=object, batch=None))
+        if len(nobatch) > 0:
+            tmp, c = SampleBatch.objects.get_or_create(name="Undefined Batch", site=object)
+            for sample in nobatch:
+                sample.batch = tmp
+                sample.save()
+        # then load the samples into a nested dict
+        samples = nested_dict()
+        sample_layers = nested_dict()
+
+        # iterate over the batches
+        for batch in object.sample_batch.all():
+            batch_samples = Sample.objects.filter(Q(site=object, batch=batch))
+            # iterate over the layers
+            for layer in sorted(list(set([x.layer for x in batch_samples])), key=lambda x: getattr(x, "pos", 0)):
+                # get the samples
+                qs = batch_samples.filter(layer=layer)
+                if len(qs) > 0:
+                    if not "All" in samples[batch]:
+                        samples[batch]["All"] = []
+                    samples[batch]["All"].extend(qs)
+                    if layer == None:
+                        layer = "unknown"
+                    samples[batch][layer] = qs
+                    # add the layer to the layer-list
+                    try:
+                        sample_layers[batch].append(layer)
+                    except:
+                        sample_layers[batch] = ["All", layer]
 
         context.update(
             {
@@ -72,7 +100,7 @@ class SiteDetailView(ProjectAwareDetailView):
                 "project_description": project_description,
                 "profile": profile,
                 "samples": samples,
-                "sample_layers": sorted(samples, key=lambda x: getattr(x, "pos", 0)),
+                "sample_layers": sample_layers,
             }
         )
         return context

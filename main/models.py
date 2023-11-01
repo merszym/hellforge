@@ -213,81 +213,6 @@ class Synonym(models.Model):
         return f"{self.type}:{self.name}"
 
 
-class CheckpointLayerJunction(models.Model):
-    layer = models.ForeignKey(
-        "Layer", verbose_name="layer", related_name="junction", null=True, blank=True, on_delete=models.CASCADE
-    )
-    checkpoint = models.ForeignKey(
-        "Checkpoint",
-        verbose_name="checkpoint",
-        related_name="junction",
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-    )
-
-    def __str__(self):
-        if self.layer:
-            return str(self.layer)
-        return str(self.checkpoint)
-
-    @property
-    def model(self):
-        if self.layer:
-            return self.layer
-        return self.checkpoint
-
-
-class RelativeDate(models.Model):
-    layer = models.ForeignKey(
-        "Layer", on_delete=models.CASCADE, related_name="reldate", verbose_name="layer", null=True, blank=True
-    )
-    relation = models.ForeignKey(
-        CheckpointLayerJunction, verbose_name="relation", on_delete=models.CASCADE, related_name="reldate"
-    )
-    how = models.CharField(
-        "how", max_length=20, choices=[("same", "Same Age"), ("younger", "Younger"), ("older", "Older")]
-    )
-    offset = models.IntegerField("offset", default=0)
-    ref = models.ManyToManyField(Reference, verbose_name="reference", blank=True)
-
-    def __str__(self):
-        if self.how == "same":
-            return f"{self.layer}={self.relation.model}"
-        elif self.how == "younger":
-            return f"{self.layer}<{self.relation.model}"
-        else:
-            return f"{self.layer}>{self.relation.model}"
-
-    # get the content to display
-    # from the perspective of a layer return the other layer,
-    def get_content(self, layer):
-        if self.layer == layer:  # origin
-            return self.relation.model
-        else:
-            return self.layer
-
-    # the upper and lower values are just set to 10k away from the reference point
-    # this is just for display, so that they can fade out
-    @property
-    def upper(self):
-        if self.how == "same":
-            return self.relation.model.mean_upper + self.offset
-        elif self.how == "older":
-            return self.relation.model.mean_upper + 5000 + self.offset
-        else:
-            return self.relation.model.mean_lower - self.offset
-
-    @property
-    def lower(self):
-        if self.how == "same":
-            return self.relation.model.mean_lower + self.offset
-        elif self.how == "older":
-            return self.relation.model.mean_upper + self.offset
-        else:
-            return self.relation.model.mean_lower - 5000 - self.offset
-
-
 class DatingMethod(models.Model):
     option = models.CharField("option", max_length=200)
 
@@ -412,41 +337,6 @@ class Location(models.Model):
 
     def __str__(self):
         return self.name
-
-
-class Checkpoint(models.Model):
-    name = models.CharField("name", max_length=200)
-    description = models.TextField("description", blank=True)
-    category = models.CharField("category", max_length=200, blank=True, null=True)
-    type = models.CharField("type", max_length=200, blank=True, null=True)
-    date = models.ManyToManyField(Date, verbose_name="date", blank=True)
-    loc = models.ManyToManyField(Location, verbose_name="location", blank=True)
-    ref = models.ManyToManyField(Reference, verbose_name="reference", blank=True)
-
-    @classmethod
-    def filter(self, kw):
-        return Checkpoint.objects.filter(Q(name__contains=kw) | Q(type__contains=kw) | Q(description__contains=kw))
-
-    @property
-    def mean_upper(self):
-        return self.date.first().upper
-
-    @property
-    def mean_lower(self):
-        return self.date.first().lower
-
-    @property
-    def age_summary(self):
-        ## Todo: Make a real summary...
-        if self.date.first():
-            return self.date.first()
-        return "Date Unset"
-
-    def __str__(self):
-        return self.name
-
-    def get_absolute_url(self):
-        return reverse("checkpoint_update", kwargs={"pk": self.id})
 
 
 class Culture(models.Model):
@@ -598,10 +488,6 @@ class Site(models.Model):
         return sorted(list(set([x.hierarchie for x in self.layer.all() if x.hierarchie > 1])))
 
     @property
-    def checkpoints(self):
-        return Checkpoint.objects.filter(layer__in=self.layer.all()).all()
-
-    @property
     def cultures(self):
         return set([x.culture for x in self.layer.all()])
 
@@ -652,7 +538,6 @@ class Layer(models.Model):
     epoch = models.ForeignKey(
         Epoch, verbose_name="epoch", related_name="layer", on_delete=models.PROTECT, blank=True, null=True
     )
-    checkpoint = models.ManyToManyField(Checkpoint, verbose_name="checkpoint", blank=True, related_name="layer")
     date = models.ManyToManyField(Date, verbose_name="date", blank=True, related_name="model")
     mean_upper = models.IntegerField(blank=True, default=1000000)
     mean_lower = models.IntegerField(blank=True, default=0)
@@ -724,12 +609,29 @@ class Layer(models.Model):
         return f"{reverse('site_detail', kwargs={'pk':self.site.id})}#profile"
 
 
+class SampleBatch(models.Model):
+    name = models.CharField("name", max_length=400, null=True, blank=True)
+    site = models.ForeignKey(Site, verbose_name="site", on_delete=models.PROTECT, related_name="sample_batch")
+    sampled_by = models.CharField("sampled_by", max_length=400, null=True, blank=True)
+    year_of_arrival = models.IntegerField("year_of_arrival", null=True, blank=True)
+
+    def __str__(self):
+        return self.name
+
+
 class Sample(models.Model):
     type = models.CharField("sample type", max_length=400, null=True, blank=True)
     name = models.CharField("name", max_length=200, null=True, blank=True)
     synonyms = models.ManyToManyField(Synonym, blank=True, verbose_name="synonym", related_name="sample")
     project = models.ManyToManyField(Project, blank=True, verbose_name="project", related_name="sample")
-    batch = models.CharField("sample batch", max_length=400, null=True, blank=True)
+    batch = models.ForeignKey(
+        SampleBatch,
+        blank=True,
+        null=True,
+        verbose_name="sample_batch",
+        related_name="sample",
+        on_delete=models.PROTECT,
+    )
     year_of_collection = models.IntegerField("year of collection", blank=True, null=True)
     # description
     description = GenericRelation(Description, related_query_name="sample")
@@ -828,7 +730,6 @@ models = {
     "synonym": Synonym,
     "profile": Profile,
     "epoch": Epoch,
-    "checkpoint": Checkpoint,
     "reference": Reference,
     "ref": Reference,
     "contact": Person,

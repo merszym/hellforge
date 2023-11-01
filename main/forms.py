@@ -1,17 +1,12 @@
 from django import forms
 from .models import (
-    Location,
     Reference,
     Site,
     Profile,
-    Layer,
     Culture,
     Date,
     Epoch,
-    Checkpoint,
     Person,
-    Image,
-    RelativeDate,
     Synonym,
 )
 
@@ -72,12 +67,6 @@ class SiteForm(forms.ModelForm):
             self.fields[field].initial = ""
 
 
-class LayerForm(forms.ModelForm):
-    class Meta:
-        model = Layer
-        fields = ["name", "description", "site_use", "ref", "epoch", "checkpoint", "unit"]
-
-
 class EpochForm(forms.ModelForm):
     upper = forms.IntegerField()
     lower = forms.IntegerField()
@@ -91,12 +80,3 @@ class CultureForm(forms.ModelForm):
     class Meta:
         model = Culture
         fields = ["name", "hominin_group"]
-
-
-class CheckpointForm(forms.ModelForm):
-    upper = forms.IntegerField()
-    lower = forms.IntegerField()
-
-    class Meta:
-        model = Checkpoint
-        fields = ["name", "description", "category", "type", "ref", "loc", "upper", "lower"]
