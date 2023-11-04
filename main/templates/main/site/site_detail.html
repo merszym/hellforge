@@ -193,23 +193,26 @@
                     <a style="cursor: pointer;" class="select-block-content" data-select="site_layer"><h4>Profiles and Layers</h4></a>
                 </li>
                 <li class="tab-item" data-group="main">
-                    <a style="cursor: pointer;" class="select-block-content" data-select="site_samples"><h4>Samples</h4></a>
-                </li>
-                <li class="tab-item" data-group="main">
                     <a style="cursor: pointer;" class="select-block-content" data-select="site_fauna"><h4>Fauna</h4></a>
                 </li>
+                {% if object in project.site.all %}
+                <li class="tab-item" data-group="main">
+                    <a style="cursor: pointer;" class="select-block-content" data-select="site_samples"><h4>Samples</h4></a>
+                </li>
+                {% endif %}
             </ul>
 
             <div class="block-content" id="site_layer">
                 {% include 'main/site/site-profile-content.html' %}
             </div>
-            <div class="block-content" id="site_samples" style="display: none;">
-                {% include 'main/site/site-sample-content.html' %}
-            </div>
             <div class="block-content" id="site_fauna" style="display: none;">
                 {% include 'main/site/site-fauna-content.html' %}
             </div>
-
+            {% if object in project.site.all %}
+            <div class="block-content" id="site_samples" style="display: none;">
+                {% include 'main/site/site-sample-content.html' %}
+            </div>
+            {% endif %}
             {% endif %}
         </div>
     </div>

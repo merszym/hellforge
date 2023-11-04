@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.contrib.contenttypes.fields import GenericForeignKey  # for the description
 from django.contrib.contenttypes.models import ContentType  # for the description
 from django.contrib.contenttypes.fields import GenericRelation
+import re
 
 
 # In case models implement the 'hidden' attribute
@@ -619,7 +620,7 @@ class SampleBatch(models.Model):
 
     @property
     def classname(self):
-        return "".join([x for x in self.name if x != " "])
+        return get_classname(self.name)
 
 
 class Sample(models.Model):

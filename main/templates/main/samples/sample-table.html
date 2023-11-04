@@ -18,7 +18,9 @@
 <table class="table table-striped">
     <thead>
         <tr>
+            {% if site in project.site.all %}
             <th>Project</th>
+            {% endif %}
             <th>Layer</th>
             <th>Type</th>
             <th>Sample</th>
@@ -30,21 +32,23 @@
     <tbody>
         {% for object in object_list %}
         <tr>
+            {% if site in project.site.all %}
             <td style="width:30px;">
             {% with projectsamples=project.sample.all %}
                 {% if project and not object in projectsamples %}
                 <span class="tooltip tooltip-right generic_addm2m" data-tooltip="Add Sample to Project"
-                    data-x="sample_{{object.pk}}" data-y="project_{{project.pk}}" data-reload="{{batch.classname}}-samples_layer_{{layer.pk}}">
-                    <i class="icon icon-plus" style="color:green; cursor: pointer;"></i>
+                    data-x="sample_{{object.pk}}" data-y="project_{{project.pk}}" data-reload="{{batch.classname}}-samples_layer_{{layer.pk}}"
+                    style="color:red; cursor: pointer;">No
                 </span>
                 {% elif project and object in projectsamples %}
                 <span class="tooltip tooltip-right generic_rmm2m" data-tooltip="Remove Sample from Project"
-                    data-x="sample_{{object.pk}}" data-y="project_{{project.pk}}" data-reload="{{batch.classname}}-samples_layer_{{layer.pk}}">
-                    <i class="icon icon-minus" style="color:red; cursor: pointer;"></i>
+                    data-x="sample_{{object.pk}}" data-y="project_{{project.pk}}" data-reload="{{batch.classname}}-samples_layer_{{layer.pk}}"
+                    style="color:green; cursor: pointer;">Yes
                 </span>
                 {% endif %}
             {% endwith %}
             </td>
+            {% endif %}
             <td class="{{object.layer|yesno:'assigned,unassigned'}}">{% if object.layer %}{{object.layer.name}}{% else %}Unassigned{% endif %}</td>
             <td>{{object.type}}</td>
             <td>

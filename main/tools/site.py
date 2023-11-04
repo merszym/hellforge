@@ -72,6 +72,7 @@ class SiteDetailView(ProjectAwareDetailView):
 
         # iterate over the batches
         for batch in object.sample_batch.all():
+            # TODO: check if Undefined Batch should be displayed...
             if not "All" in samples[batch]:
                 samples[batch]["All"] = []
             batch_samples = Sample.objects.filter(Q(site=object, batch=batch))

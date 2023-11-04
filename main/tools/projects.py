@@ -119,7 +119,7 @@ class ProjectDetailView(DetailView):
         sample_dict = defaultdict(int)
         for site in object_list:
             sample_dict[site.name] = Sample.objects.filter(project=project, site=site)
-        context["sample_list"] = Sample.objects.filter(project=project)
+        context["sample_list"] = Sample.objects.filter(project=project, site__in=object_list)
         context["sample_dict"] = sample_dict
         return context
 

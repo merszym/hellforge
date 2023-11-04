@@ -1,9 +1,50 @@
-from main.models import models
+from main.models import models, Sample
 from django.http import JsonResponse, HttpResponse
 from django.urls import path
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
 from datetime import datetime
+import json
+import pandas as pd
+
+def get_dataset(request):
+    """
+    Download a Dataset
+    This is the API to get Data out of the Database again.
+
+    This is not yet thought through or finished...
+
+    GET request:
+    ?level --> site, project
+    ?include --> ??
+    ?
+
+    specifiy at each model, how the output part looks like...
+    """
+    # for now, only site...
+    site = get_instance_from_string(request.GET.get('site'))
+    qs = Sample.objects.filter(site=site).order_by("layer__site", "layer__name")
+    q = []
+    for s in qs:
+        q.append(
+            {
+                "Site": s.site.name,
+                "Site Id": s.site.coredb_id,
+                "Layer": s.layer.name if s.layer else "Unassigned",
+                "Culture": s.layer.culture.name if (s.layer and s.layer.culture) else None,
+                "Umbrella Culture": s.layer.culture.get_highest().name if (s.layer and s.layer.culture) else None,
+                "Epoch": s.layer.epoch.name if (s.layer and s.layer.epoch) else None,
+                "Layer Age": s.layer.age_summary(export=True) if s.layer else None,
+                "Sample Type": s.type,
+                "Sample Name": s.name,
+                "Sample Batch": s.batch.name if s.batch else "",
+                "Sample Synonyms": ";".join([str(x) for x in s.synonyms.all()]),
+                "Year of Collection": s.year_of_collection,
+                "Sample Provenience": ";".join([f"{k}:{v}" for k, v in json.loads(s.provenience).items()]),
+            }
+        )
+    df = pd.DataFrame.from_records(q)
+    return download_csv(df, name=f"samples_{site}.csv")
 
 
 @login_required
@@ -115,4 +156,5 @@ urlpatterns = [
     path("addm2m/<str:field>", add_x_to_y_m2m, name="main_generic_addm2m"),
     path("addm2m", add_x_to_y_m2m, name="main_generic_addm2m"),
     path("deletex", delete_x, name="main_generic_delete"),
+    path("get-dataset", get_dataset, name="get_dataset")
 ]
