@@ -199,6 +199,9 @@
                 <li class="tab-item" data-group="main">
                     <a style="cursor: pointer;" class="select-block-content" data-select="site_samples"><h4>Samples</h4></a>
                 </li>
+                <li class="tab-item" data-group="main">
+                    <a style="cursor: pointer;" class="select-block-content" data-select="site_analyzedsamples"><h4>Analyzed Samples</h4></a>
+                </li>
                 {% endif %}
             </ul>
 
@@ -211,6 +214,9 @@
             {% if object in project.site.all %}
             <div class="block-content" id="site_samples" style="display: none;">
                 {% include 'main/site/site-sample-content.html' %}
+            </div>
+            <div class="block-content" id="site_analyzedsamples" style="display: none;">
+                {% include 'main/site/site-analyses-content.html' %}
             </div>
             {% endif %}
             {% endif %}

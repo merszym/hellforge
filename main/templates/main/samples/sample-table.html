@@ -61,10 +61,8 @@
                             </div>
                             <div class="card-body">
                                 {% for syn in object.synonyms.all %}
-                                <br><span class="small text-gray">{{syn.type}}: {{syn.name}}</span>
+                                <span class="small text-gray">{{syn.type}}: {{syn.name}}</span><br>
                                 {% endfor %}
-                                <br>
-                                Add more Synonyms (TODO)
                             </div>
                             <div class="card-footer">
                             </div>
@@ -87,16 +85,12 @@
                                 {% for k,v in object.get_provenience %}
                                 <span class="text-gray small">{{k}}: {{v}}</span><br>
                                 {% endfor %}
-                                TODO: Add and edit
                             </div>
                             <div class="card-footer">
                             </div>
                         </div>
                     </div>
                 </div>
-
-
-
             </td>
         </tr>
         {% endfor %}

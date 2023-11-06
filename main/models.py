@@ -684,6 +684,32 @@ class Sample(models.Model):
         return self.name
 
 
+### The analyzed Sample section
+
+class AnalyzedSample(models.Model):
+    sample = models.ForeignKey(Sample, related_name="analyzed_sample", on_delete=models.PROTECT)
+    library = models.CharField('library', max_length=200)
+    probes = models.CharField('probes', max_length=200, blank=True, null=True)
+    seqrun = models.CharField('sequencing run', max_length=400)
+    project = models.ManyToManyField(Project, blank=True, verbose_name="project", related_name="analyzedsample")
+    metadata = models.JSONField("metadata", blank=True, null=True)
+
+    class Meta:
+        unique_together = [["library", "seqrun"]]
+
+    def __str__(self):
+        return f"{self.library}_{self.seqrun}"
+
+    @classmethod
+    def table_columns(self):
+        return [
+            "Sample",
+            "Library",
+            "Capture Probe",
+            "Sequencing Run",
+            "Metadata",
+        ]
+
 ### The expected Taxa section
 
 
@@ -746,4 +772,5 @@ models = {
     "project": Project,
     "sample": Sample,
     "sample-batch": SampleBatch,
+    "analyzedsample": AnalyzedSample,
 }

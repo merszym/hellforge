@@ -14,6 +14,7 @@ from main.models import (
     Project,
     Sample,
     SampleBatch,
+    AnalyzedSample
 )
 from copy import copy
 import json
@@ -91,6 +92,10 @@ class SiteDetailView(ProjectAwareDetailView):
                     except:
                         sample_layers[batch] = ["All", layer]
 
+
+        # load the analyzed samples
+        analyzed_samples = AnalyzedSample.objects.filter(sample__in = Sample.objects.filter(Q(site=object)))
+
         context.update(
             {
                 "profile_form": ProfileForm,
@@ -102,6 +107,7 @@ class SiteDetailView(ProjectAwareDetailView):
                 "profile": profile,
                 "samples": samples,
                 "sample_layers": sample_layers,
+                "analyzed_samples": analyzed_samples
             }
         )
         return context

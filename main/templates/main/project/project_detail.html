@@ -38,6 +38,8 @@
                     <tr>
                         <th>Sites</th>
                         <th>Collected Samples</th>
+                        <th>Analyzed</th>
+                        <th>Libraries</th>
                         <th>Project Visibility</th>
                         <th></th>
                     </tr>
@@ -46,6 +48,8 @@
                     <tr>
                         <td>{{object_list|length}}</td>
                         <td>{{sample_list|length}}</td>
+                        <td>{{analyzedsample_set|length}}</td>
+                        <td>{{analyzedsample_list|length}}</td>
                         <td>{{object.published|yesno:"Published,Private,NA"}}</td>
                         <td><a target="_blank" href="{% url 'main_project_get_dataset' %}"><i class="icon icon-download"></i></a></td>
                     </tr>
@@ -84,6 +88,7 @@
                                 <th>Site Name</th>
                                 <th>Samples</th>
                                 <th>Analyzed</th>
+                                <th>Libraries</th>
                                 <th>Collaborators</th>
                                 <th>Status</th>
                                 <th></th>
@@ -98,7 +103,12 @@
                                     {% with sample_count=sample_dict|lookup:site.name|length %}
                                     <td>{% if sample_count == 0 %}ToDo{% else %}{{sample_count}}{% endif %}</td>
                                     {% endwith %}
-                                    <td></td>
+                                    {% with analyzedsample_count=analyzedsample_dict|lookup:site.name|lookup:'libraries'|length %}
+                                    {% with analyzedsample_set_count=analyzedsample_dict|lookup:site.name|lookup:'samples'|length %}
+                                    <td>{% if analyzedsample_count == 0 %}WIP{% else %}{{analyzedsample_set_count}}{% endif %}</td>
+                                    <td>{% if analyzedsample_count == 0 %}WIP{% else %}{{analyzedsample_count}}{% endif %}</td>
+                                    {% endwith %}
+                                    {% endwith %}
                                     <td><span>{{site.contact.all|join:", "}}</span><br>
                                     </td>
                                     <td></td>

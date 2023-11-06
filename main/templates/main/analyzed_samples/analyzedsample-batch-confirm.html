@@ -1,0 +1,11 @@
+<strong>Verify Upload</strong><br>
+{% for issue in issues %}
+<div class="toast toast-warning">{{issue}}</div>
+{% endfor %}
+{{dataframe|safe}}
+<form id='sample-batch-verify-form'>
+    {% csrf_token %}
+    <textarea name="batch-data" type="text" style="display:none;">{{json}}</textarea>
+</form>
+<br>
+<span id="sample-table-confirm" data-url="{% url 'ajax_save_verified_analyzedsamples' %}" class="btn">Confirm</span>

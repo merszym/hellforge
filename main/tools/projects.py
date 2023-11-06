@@ -1,6 +1,6 @@
 from django.views.generic import ListView, DetailView, UpdateView
 from django.urls import path
-from main.models import Project, Description, Site, Sample
+from main.models import Project, Description, Site, Sample, AnalyzedSample
 from django.http import JsonResponse
 from main.tools.generic import add_x_to_y_m2m, remove_x_from_y_m2m, get_instance_from_string, delete_x, download_csv
 from django.shortcuts import redirect, render
@@ -117,10 +117,21 @@ class ProjectDetailView(DetailView):
         context["object_list"] = object_list
         # get the related samples
         sample_dict = defaultdict(int)
+        analyzedsample_dict = defaultdict()
         for site in object_list:
-            sample_dict[site.name] = Sample.objects.filter(project=project, site=site)
-        context["sample_list"] = Sample.objects.filter(project=project, site__in=object_list)
+            sample_list = Sample.objects.filter(project=project, site=site)
+            sample_dict[site.name] = sample_list
+            analyzedsample_dict[site.name] = defaultdict()
+            analyzedsample_dict[site.name]['libraries'] = AnalyzedSample.objects.filter(project=project, sample__in=sample_list)
+            analyzedsample_dict[site.name]['samples'] = set([x.sample for x in analyzedsample_dict[site.name]['libraries']])
+        # summary stats
+        sample_list = Sample.objects.filter(project=project, site__in=object_list)
+        analyzedsample_list = AnalyzedSample.objects.filter(project=project, sample__in=sample_list)
+        context["sample_list"] = sample_list
+        context["analyzedsample_list"] = analyzedsample_list
+        context["analyzedsample_set"] = set([x.sample for x in analyzedsample_list])
         context["sample_dict"] = sample_dict
+        context["analyzedsample_dict"] = analyzedsample_dict
         return context
 
 

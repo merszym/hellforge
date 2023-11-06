@@ -1,0 +1,43 @@
+<table class="table table-striped">
+    <thead>
+        <tr>
+            {% if site in project.site.all %}
+            <th>Project</th>
+            {% endif %}
+            <th>Layer</th>
+            <th>Sample</th>
+            <th>Library</th>
+            <th>Capture Probe</th>
+            <th>Sequencing Run</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for object in object_list %}
+        <tr>
+            {% if site in project.site.all %}
+            <td style="width:30px;">
+            {% with projectsamples=project.analyzedsample.all %}
+                {% if project and not object in projectsamples %}
+                <span class="tooltip tooltip-right generic_addm2m" data-tooltip="Add Analyzed Sample to Project"
+                    data-x="analyzedsample_{{object.pk}}" data-y="project_{{project.pk}}" data-reload="site_analyses_content"
+                    style="color:red; cursor: pointer;">No
+                </span>
+                {% elif project and object in projectsamples %}
+                <span class="tooltip tooltip-right generic_rmm2m" data-tooltip="Remove Analyzed Sample from Project"
+                    data-x="analyzedsample_{{object.pk}}" data-y="project_{{project.pk}}" data-reload="site_analyses_content"
+                    style="color:green; cursor: pointer;">Yes
+                </span>
+                {% endif %}
+            {% endwith %}
+            </td>
+            {% endif %}
+            <td class="{{object.sample.layer|yesno:'assigned,unassigned'}}">{% if object.sample.layer %}{{object.sample.layer.name}}{% else %}Unassigned{% endif %}</td>
+            <td>{{object.sample}}</td>
+            <td>{{object.library}}</td>
+            <td>{{object.probes}}</td>
+            <td>{{object.seqrun}}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
