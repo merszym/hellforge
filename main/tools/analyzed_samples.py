@@ -61,8 +61,6 @@ def save_verified(request):
             )
             object.save()
             object.refresh_from_db()
-
-        print(object)
         #set or update
         object.sample = Sample.objects.get(name=row['Sample'])
         object.project.add(Project.objects.get(

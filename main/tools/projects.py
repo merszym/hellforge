@@ -53,24 +53,52 @@ def get_dataset(request):
         # TODO: make this some sort of API!
         q = []
         for s in qs:
-            q.append(
-                {
-                    "Project": project.name,
-                    "Site": s.site.name,
-                    "Site Id": s.site.coredb_id,
-                    "Layer": s.layer.name if s.layer else "Unassigned",
-                    "Culture": s.layer.culture.name if (s.layer and s.layer.culture) else None,
-                    "Umbrella Culture": s.layer.culture.get_highest().name if (s.layer and s.layer.culture) else None,
-                    "Epoch": s.layer.epoch.name if (s.layer and s.layer.epoch) else None,
-                    "Layer Age": s.layer.age_summary(export=True) if s.layer else None,
-                    "Sample Type": s.type,
-                    "Sample Name": s.name,
-                    "Sample Batch": s.batch.name if s.batch else "",
-                    "Sample Synonyms": ";".join([str(x) for x in s.synonyms.all()]),
-                    "Year of Collection": s.year_of_collection,
-                    "Sample Provenience": ";".join([f"{k}:{v}" for k, v in json.loads(s.provenience).items()]),
-                }
-            )
+            if analyzed := AnalyzedSample.objects.filter(project=project, sample=s):
+                # TODO: make less ugly...
+                for a in analyzed:
+                    q.append(
+                    {
+                        "Project": project.name,
+                        "Site": s.site.name,
+                        "Site Id": s.site.coredb_id,
+                        "Layer": s.layer.name if s.layer else "Unassigned",
+                        "Culture": s.layer.culture.name if (s.layer and s.layer.culture) else None,
+                        "Umbrella Culture": s.layer.culture.get_highest().name if (s.layer and s.layer.culture) else None,
+                        "Epoch": s.layer.epoch.name if (s.layer and s.layer.epoch) else None,
+                        "Layer Age": s.layer.age_summary(export=True) if s.layer else None,
+                        "Sample Type": s.type,
+                        "Sample Name": s.name,
+                        "Sample Batch": s.batch.name if s.batch else "",
+                        "Sample Synonyms": ";".join([str(x) for x in s.synonyms.all()]),
+                        "Year of Collection": s.year_of_collection,
+                        "Sample Provenience": ";".join([f"{k}:{v}" for k, v in json.loads(s.provenience).items()]),
+                        "Library": a.library,
+                        "Probeset": a.probes,
+                        "Sequencing Run": a.seqrun
+                    }
+                )
+            else:
+                q.append(
+                    {
+                        "Project": project.name,
+                        "Site": s.site.name,
+                        "Site Id": s.site.coredb_id,
+                        "Layer": s.layer.name if s.layer else "Unassigned",
+                        "Culture": s.layer.culture.name if (s.layer and s.layer.culture) else None,
+                        "Umbrella Culture": s.layer.culture.get_highest().name if (s.layer and s.layer.culture) else None,
+                        "Epoch": s.layer.epoch.name if (s.layer and s.layer.epoch) else None,
+                        "Layer Age": s.layer.age_summary(export=True) if s.layer else None,
+                        "Sample Type": s.type,
+                        "Sample Name": s.name,
+                        "Sample Batch": s.batch.name if s.batch else "",
+                        "Sample Synonyms": ";".join([str(x) for x in s.synonyms.all()]),
+                        "Year of Collection": s.year_of_collection,
+                        "Sample Provenience": ";".join([f"{k}:{v}" for k, v in json.loads(s.provenience).items()]),
+                        "Library": "",
+                        "Probeset": "",
+                        "Sequencing Run": ""
+                    }
+                )
         df = pd.DataFrame.from_records(q)
         return download_csv(df, name=f"samples_{project.namespace}.csv")
 
