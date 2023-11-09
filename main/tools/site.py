@@ -14,7 +14,8 @@ from main.models import (
     Project,
     Sample,
     SampleBatch,
-    AnalyzedSample
+    AnalyzedSample,
+    Gallery
 )
 from copy import copy
 import json
@@ -77,6 +78,12 @@ class SiteDetailView(ProjectAwareDetailView):
         batches = object.sample_batch.all()
 
         for batch in batches:
+            if not batch.gallery:
+                #TODO: move to signals
+                tmp = Gallery(title=batch.name)
+                tmp.save()
+                batch.gallery = tmp
+                batch.save()
             # hide Undefinied batch if empty and other ones exist
             if (len(batches) > 1) and (batch.name == "Undefined Batch") and (len(batch.sample.all()) == 0):
                 continue

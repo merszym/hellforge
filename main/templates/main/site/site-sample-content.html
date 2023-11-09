@@ -31,20 +31,36 @@
             <div class="tab-panel my-2" data-group="sample-batch" id="sample-batch_{{samplebatch.pk}}" style="{% if forloop.counter != 1 %} display: none;{% endif %}">
                 <div style="position: relative;">
                     <h3>{{samplebatch}}</h3>
-
                     <span class="btn btn-primary tooltip tooltip-left generic_delete"
                         data-x="sample-batch_{{samplebatch.pk}}"
                         data-reload="site_sample_content"
                         data-tooltip="Delete the Batch" style="position:absolute; top:0px; right:5%">
                         <i class="icon icon-delete"></i>
                     </span>
-
                 </div>
                 {% if request.user.is_authenticated %}
                 {% csrf_token %}
                 <input class="fill_modal" type="file" id="sample-batch-input" data-url="{% url 'main_sample_upload' %}?batch={{samplebatch}}">
                 <span id='fauna-batch-header' data-url="{% url 'download_header' %}?model=sample" class="btn tooltip tooltip-right get-batch-header" data-tooltip="Get Sample Upload Template"><i class="icon icon-download"></i></span>
+                <br>
                 {% endif %}
+                <h5>Sample Batch Gallery</h5>
+                <div class="image_gallery" style="display: flex; flex-wrap: wrap;">
+                {% for image in samplebatch.gallery.image.all %}
+                    <img src="{{image.image_path}}">
+                {% endfor %}
+                    <div class="empty" style="min-height:200px; min-width:200px;">
+                        <div class="empty-icon">
+                        <i class="icon icon-photo"></i>
+                        </div>
+                        <div class="empty-action">
+                            <button class="btn btn-primary add_samplebatch_image">Add Image</button>
+                        </div>
+                    </div>
+
+                </div>
+                <!--Add an image to the gallery-->
+                <!-- Display the samples -->
                 <ul class="tab">
                     {% for layer in sample_layers|lookup:samplebatch %}
                     {% if layer != 'unknown' %}

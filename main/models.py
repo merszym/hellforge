@@ -614,6 +614,7 @@ class SampleBatch(models.Model):
     site = models.ForeignKey(Site, verbose_name="site", on_delete=models.PROTECT, related_name="sample_batch")
     sampled_by = models.CharField("sampled_by", max_length=400, null=True, blank=True)
     year_of_arrival = models.IntegerField("year_of_arrival", null=True, blank=True)
+    gallery = models.OneToOneField(Gallery, related_name="sample_batch", blank=True, null=True, on_delete=models.PROTECT)
 
     class Meta:
         ordering = ["name"]

@@ -29,3 +29,24 @@ $('body').on('click', '#sample-table-confirm', function(){
             }
         });
 })
+
+//Add image to a sample-batch-gallery
+$('body').on('click','.add_samplebatch_image',function(){
+    var fileinput = $('<input>').attr({
+            type: 'file',
+            name: 'batch_image'
+    })
+    // click the button
+    fileinput.change(function () {
+        console.log(fileinput.get(0).files.length)
+        if (fileinput.get(0).files.length === 0) {
+            console.log("No files selected.");
+        } else {
+            // handle the upload
+            alert("Upload image");
+
+        }
+    });
+    fileinput.click();
+
+})

@@ -1,4 +1,4 @@
-<div class="sample_table tab-panel {{batch.classname}}-samples_layer_{{layer.pk}}" data-group="samples-{{batch.classname}}"
+<div class="panel sample_table tab-panel {{batch.classname}}-samples_layer_{{layer.pk}}" data-group="samples-{{batch.classname}}"
     style="{% if counter != 1 %} display: none;{% endif %} max-height:500px; overflow:scroll;">
     {% if object_list|length == 0 %}
 
@@ -7,7 +7,7 @@
     {% else %}
 <a class="generic_filter text-primary" style="cursor:pointer;" data-term="SP" data-search=".{{batch.classname}}_libtr">Reset sample filter</a>
 <table class="table table-striped">
-    <thead>
+    <thead style="position: sticky; top:0; background-color: white; z-index: 999;">
         <tr>
             {% if site in project.site.all %}
             <th>Project</th>
