@@ -9,7 +9,7 @@
 {% else %}
 
 <div class="sample_table tab-panel" data-group="samples-{{batch.classname}}"
-    id="{{batch.classname}}-samples_layer_{{layer.pk}}" style="{% if counter != 1 %} display: none;{% endif %} height:500px; overflow:scroll;">
+    id="{{batch.classname}}-samples_layer_{{layer.pk}}" style="{% if counter != 1 %} display: none;{% endif %} max-height:500px; overflow:scroll;">
 <style>
     .unassigned{
         background-color: rgb(201, 115, 115) !important;
@@ -24,6 +24,7 @@
             <th>Layer</th>
             <th>Type</th>
             <th>Sample</th>
+            <th>Libraries</th>
             <th>Sample Age</th>
             <th>Year of Collection</th>
             <th>Sample Location</th>
@@ -70,6 +71,8 @@
                     </div>
                 </div>
 
+            </td>
+            <td class="generic_filter text-primary" style="cursor:pointer;" data-term="{{object}}" data-search=".{{batch.classname}}_libtr">{{object.analyzed_sample.all | length}}
             </td>
             <td>{{object.layer.age_summary}}</td>
             <td>{% if object.year_of_collection%}{{object.year_of_collection}}{% endif%}</td>

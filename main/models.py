@@ -615,6 +615,9 @@ class SampleBatch(models.Model):
     sampled_by = models.CharField("sampled_by", max_length=400, null=True, blank=True)
     year_of_arrival = models.IntegerField("year_of_arrival", null=True, blank=True)
 
+    class Meta:
+        ordering = ["name"]
+
     def __str__(self):
         return self.name
 
@@ -696,6 +699,7 @@ class AnalyzedSample(models.Model):
 
     class Meta:
         unique_together = [["library", "seqrun"]]
+        ordering = ["sample__layer", "probes", "sample"]
 
     def __str__(self):
         return f"{self.library}_{self.seqrun}"

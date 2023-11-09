@@ -72,29 +72,37 @@ class SiteDetailView(ProjectAwareDetailView):
         sample_layers = nested_dict()
 
         # iterate over the batches
-        for batch in object.sample_batch.all():
-            # TODO: check if Undefined Batch should be displayed...
-            if not "All" in samples[batch]:
-                samples[batch]["All"] = []
-            batch_samples = Sample.objects.filter(Q(site=object, batch=batch))
+        sample_query = Sample.objects.filter(Q(site=object))
+        analyzed_samples = AnalyzedSample.objects.filter(sample__in = sample_query)
+        batches = object.sample_batch.all()
+
+        for batch in batches:
+            # hide Undefinied batch if empty and other ones exist
+            if (len(batches) > 1) and (batch.name == "Undefined Batch") and (len(batch.sample.all()) == 0):
+                continue
+            # create All placeholders
+            if not "All" in samples[batch]['samples']:
+                samples[batch]['samples']["All"] = []
+                samples[batch]['libraries']["All"] = []
+            batch_samples = sample_query.filter(batch=batch)
             # iterate over the layers
             for layer in sorted(list(set([x.layer for x in batch_samples])), key=lambda x: getattr(x, "pos", 0)):
                 # get the samples
                 qs = batch_samples.filter(layer=layer)
+                libs = analyzed_samples.filter(sample__in=qs)
+                # and add them to the dict
                 if len(qs) > 0:
-                    samples[batch]["All"].extend(qs)
                     if layer == None:
                         layer = "unknown"
-                    samples[batch][layer] = qs
+                    samples[batch]['samples']["All"].extend(qs)
+                    samples[batch]['libraries']["All"].extend(libs)
+                    samples[batch]['samples'][layer] = qs
+                    samples[batch]['libraries'][layer] = libs
                     # add the layer to the layer-list
                     try:
                         sample_layers[batch].append(layer)
                     except:
                         sample_layers[batch] = ["All", layer]
-
-
-        # load the analyzed samples
-        analyzed_samples = AnalyzedSample.objects.filter(sample__in = Sample.objects.filter(Q(site=object)))
 
         context.update(
             {
@@ -107,7 +115,6 @@ class SiteDetailView(ProjectAwareDetailView):
                 "profile": profile,
                 "samples": samples,
                 "sample_layers": sample_layers,
-                "analyzed_samples": analyzed_samples
             }
         )
         return context

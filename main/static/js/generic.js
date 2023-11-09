@@ -32,6 +32,22 @@ $('body').on('keyup paste','#search-input',function(){
     }
 });
 
+//generic filter function
+$('body').on('click', '.generic_filter', function(){
+    console.log($(this).attr("data-term"))
+    var term = $(this).attr('data-term').toLowerCase()
+    var search = $(this).attr('data-search')
+    $(search).filter(function() {
+        if($(this).text().toLowerCase().indexOf(term) > -1){
+            $(this).show()
+        } else {
+            $(this).hide()
+        }
+    });
+
+});
+
+
 // generic reload of element, instead of rendering with html-snippets!
 // get the webpage again by loading the same url, only bind the required element to the dom
 function clickElement(element){
@@ -85,6 +101,7 @@ $('body').on('click','.tab-item', function(){
     //change the tab
     $(`.tab-panel[data-group=${group}]`).hide()
     $(`#${$(this).attr("data-show")}`).show()
+    $(`.${$(this).attr("data-show")}`).show()
 });
 
 // generic modal handling

@@ -1,3 +1,11 @@
+<div class="sample_table tab-panel {{batch.classname}}-samples_layer_{{layer.pk}}" data-group="samples-{{batch.classname}}"
+    style="{% if counter != 1 %} display: none;{% endif %} max-height:500px; overflow:scroll;">
+    {% if object_list|length == 0 %}
+
+    No libraries yet
+
+    {% else %}
+<a class="generic_filter text-primary" style="cursor:pointer;" data-term="SP" data-search=".{{batch.classname}}_libtr">Reset sample filter</a>
 <table class="table table-striped">
     <thead>
         <tr>
@@ -13,7 +21,7 @@
     </thead>
     <tbody>
         {% for object in object_list %}
-        <tr>
+        <tr class="{{batch.classname}}_libtr">
             {% if site in project.site.all %}
             <td style="width:30px;">
             {% with projectsamples=project.analyzedsample.all %}
@@ -40,4 +48,5 @@
         {% endfor %}
     </tbody>
 </table>
+{% endif %}
 </div>
