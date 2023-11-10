@@ -97,7 +97,7 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td>{{object.name}}</td>
+                            <td>{{object.name}} ({{object.coredb_id}})</td>
                             {% if object.parent %}
                             <td><a href="{% url 'site_detail' pk=object.parent.pk %}">{{object.parent}}</a></td>
                             {% endif %}

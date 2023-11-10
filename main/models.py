@@ -54,6 +54,11 @@ class Project(models.Model):
 def get_image_path(instance, filename):
     # instance = the new Image instance
     # filename = the original filename
+    if not instance.gallery.description:
+        batch = instance.gallery.sample_batch
+        site = batch.site
+        #direct upload via gallery
+        return f'batches/{site.name.replace(" ","_")}/{batch.classname}/{filename.replace(" ","_")}'
     description = instance.gallery.description
     object = description.content_object
     model = object.model
@@ -85,6 +90,10 @@ class Gallery(models.Model):
         blank=True,
         null=True,
     )
+
+    @property
+    def model(self):
+        return "gallery"
 
 
 class Description(models.Model):
@@ -778,4 +787,6 @@ models = {
     "sample": Sample,
     "sample-batch": SampleBatch,
     "analyzedsample": AnalyzedSample,
+    "gallery": Gallery,
+    "image": Image
 }

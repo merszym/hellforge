@@ -75,15 +75,21 @@ def upload_url(request):
 
 @csrf_exempt
 def upload_image(request):
-    description = Description.objects.get(pk=int(request.GET.get("id")))
-
     try:
-        gallery = description.gallery
-    except:  # gallery doesnt exist yet
-        gallery = Gallery(description=description)
-        gallery.save()
+        file = request.FILES.get("image")
+    except:
+        file = request.FILES.get("file")
+    if gal:= request.POST.get('instance_x', False):
+        gallery = get_instance_from_string(gal)
+    else:
+        description = Description.objects.get(pk=int(request.GET.get("id")))
+        try:
+            gallery = description.gallery
+        except:  # gallery doesnt exist yet
+            gallery = Gallery(description=description)
+            gallery.save()
 
-    image = Image(image=request.FILES.get("image"), gallery=gallery)
+    image = Image(image=file, gallery=gallery)
     image.save()
     image.refresh_from_db()
 
