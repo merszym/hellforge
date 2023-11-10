@@ -47,64 +47,6 @@ def get_project_status_tile(request):
     return render(request, "main/project/project_status_tile.html", {"project": get_project(request)})
 
 
-def get_dataset(request):
-    if project := get_project(request):
-        qs = Sample.objects.filter(project=project).order_by("layer__site", "layer__name")
-        # TODO: make this some sort of API!
-        q = []
-        for s in qs:
-            if analyzed := AnalyzedSample.objects.filter(project=project, sample=s):
-                # TODO: make less ugly...
-                for a in analyzed:
-                    q.append(
-                    {
-                        "Project": project.name,
-                        "Site": s.site.name,
-                        "Site Id": s.site.coredb_id,
-                        "Layer": s.layer.name if s.layer else "Unassigned",
-                        "Culture": s.layer.culture.name if (s.layer and s.layer.culture) else None,
-                        "Umbrella Culture": s.layer.culture.get_highest().name if (s.layer and s.layer.culture) else None,
-                        "Epoch": s.layer.epoch.name if (s.layer and s.layer.epoch) else None,
-                        "Layer Age": s.layer.age_summary(export=True) if s.layer else None,
-                        "Sample Type": s.type,
-                        "Sample Name": s.name,
-                        "Sample Batch": s.batch.name if s.batch else "",
-                        "Sample Synonyms": ";".join([str(x) for x in s.synonyms.all()]),
-                        "Year of Collection": s.year_of_collection,
-                        "Sample Provenience": ";".join([f"{k}:{v}" for k, v in json.loads(s.provenience).items()]),
-                        "Library": a.library,
-                        "Probeset": a.probes,
-                        "Sequencing Run": a.seqrun
-                    }
-                )
-            else:
-                q.append(
-                    {
-                        "Project": project.name,
-                        "Site": s.site.name,
-                        "Site Id": s.site.coredb_id,
-                        "Layer": s.layer.name if s.layer else "Unassigned",
-                        "Culture": s.layer.culture.name if (s.layer and s.layer.culture) else None,
-                        "Umbrella Culture": s.layer.culture.get_highest().name if (s.layer and s.layer.culture) else None,
-                        "Epoch": s.layer.epoch.name if (s.layer and s.layer.epoch) else None,
-                        "Layer Age": s.layer.age_summary(export=True) if s.layer else None,
-                        "Sample Type": s.type,
-                        "Sample Name": s.name,
-                        "Sample Batch": s.batch.name if s.batch else "",
-                        "Sample Synonyms": ";".join([str(x) for x in s.synonyms.all()]),
-                        "Year of Collection": s.year_of_collection,
-                        "Sample Provenience": ";".join([f"{k}:{v}" for k, v in json.loads(s.provenience).items()]),
-                        "Library": "",
-                        "Probeset": "",
-                        "Sequencing Run": ""
-                    }
-                )
-        df = pd.DataFrame.from_records(q)
-        return download_csv(df, name=f"samples_{project.namespace}.csv")
-
-    return redirect("landing")
-
-
 class ProjectListView(ListView):
     model = Project
     template_name = "main/project/project_list.html"
@@ -168,7 +110,6 @@ urlpatterns = [
     path("checkout/<str:namespace>", checkout_project, name="main_project_checkout"),
     path("close", close_project, name="main_project_close"),
     path("status", get_project_status_tile, name="main_project_status"),
-    path("get-dataset", get_dataset, name="main_project_get_dataset"),
     path("<str:namespace>", ProjectDetailView.as_view(), name="main_project_detail"),
     path("<int:pk>/edit", ProjectUpdateView.as_view(), name="main_project_update"),
 ]

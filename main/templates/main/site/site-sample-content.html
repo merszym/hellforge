@@ -6,7 +6,7 @@
     <div>
         <div class="my-2" style="display:flex;">
             <span><strong>Download Samples:</strong></span>
-            <a class="mx-2" target="_blank" href="{% url 'get_dataset' %}?site=site_{{object.pk}}">
+            <a class="mx-2" target="_blank" href="{% url 'get_dataset' %}?from=site_{{object.pk}}&unique=library&include=samplebatch,sample,layer">
                 <i class="icon icon-download"></i></a>
         </div>
     </div>
@@ -32,7 +32,7 @@
                 <div style="position: relative;">
                     <h3>{{samplebatch}}</h3>
                     <span class="btn btn-primary tooltip tooltip-left generic_delete"
-                        data-x="sample-batch_{{samplebatch.pk}}"
+                        data-x="samplebatch_{{samplebatch.pk}}"
                         data-reload="site_sample_content"
                         data-tooltip="Delete the Batch" style="position:absolute; top:0px; right:5%">
                         <i class="icon icon-delete"></i>

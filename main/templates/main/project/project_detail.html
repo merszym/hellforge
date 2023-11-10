@@ -51,7 +51,7 @@
                         <td>{{analyzedsample_set|length}}</td>
                         <td>{{analyzedsample_list|length}}</td>
                         <td>{{object.published|yesno:"Published,Private,NA"}}</td>
-                        <td><a target="_blank" href="{% url 'main_project_get_dataset' %}"><i class="icon icon-download"></i></a></td>
+                        <td><a target="_blank" href="{% url 'get_dataset' %}?from=project_{{object.pk}}&unique=library&include=site,layer,samplebatch,sample"><i class="icon icon-download"></i></a></td>
                     </tr>
                 </tbody>
             </table>

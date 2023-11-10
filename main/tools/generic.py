@@ -1,4 +1,5 @@
 from main.models import models, Sample
+from main.queries import queries
 from django.http import JsonResponse, HttpResponse
 from django.urls import path
 from django.shortcuts import render
@@ -15,36 +16,39 @@ def get_dataset(request):
     This is not yet thought through or finished...
 
     GET request:
-    ?level --> site, project
-    ?include --> ??
-    ?
+    ?start --> site, project
+    ?unique --> which parameter is the unique (m:1) column (library, sample, layer?)
+    ?include --> include intermediate columns (like sample information)
 
-    specifiy at each model, how the output part looks like...
+    specifiy at each model(!) or separate queries.py file, how the output columns look like.
     """
-    # for now, only site...
-    site = get_instance_from_string(request.GET.get('site'))
-    qs = Sample.objects.filter(site=site).order_by("layer__site", "layer__name")
-    q = []
-    for s in qs:
-        q.append(
-            {
-                "Site": s.site.name,
-                "Site Id": s.site.coredb_id,
-                "Layer": s.layer.name if s.layer else "Unassigned",
-                "Culture": s.layer.culture.name if (s.layer and s.layer.culture) else None,
-                "Umbrella Culture": s.layer.culture.get_highest().name if (s.layer and s.layer.culture) else None,
-                "Epoch": s.layer.epoch.name if (s.layer and s.layer.epoch) else None,
-                "Layer Age": s.layer.age_summary(export=True) if s.layer else None,
-                "Sample Type": s.type,
-                "Sample Name": s.name,
-                "Sample Batch": s.batch.name if s.batch else "",
-                "Sample Synonyms": ";".join([str(x) for x in s.synonyms.all()]),
-                "Year of Collection": s.year_of_collection,
-                "Sample Provenience": ";".join([f"{k}:{v}" for k, v in json.loads(s.provenience).items()]),
-            }
-        )
-    df = pd.DataFrame.from_records(q)
-    return download_csv(df, name=f"samples_{site}.csv")
+    # for now, only site works
+    # define the starting point, its the classical model_pk syntax
+    start = get_instance_from_string(request.GET.get('from'))
+    column = start.model
+    unique = request.GET.get('unique')
+    include = request.GET.get('include').split(',')
+
+    #now set up the query
+    filter = {queries(column,unique):start}
+    qs = models[unique].objects.filter(**filter)
+
+    # iterate over the m:1 frame, collect information from models
+    records = []
+    for entry in qs:
+        data = start.get_data()
+        for incl in include:
+            try:
+                data.update(getattr(entry, incl, False).get_data())
+            except AttributeError:
+                empty = {k:None for k in models[incl].table_columns()}
+                data.update(empty)
+        data.update(entry.get_data())
+        records.append(data)
+    df = pd.DataFrame.from_records(records)
+
+    #download the data
+    return download_csv(df, name=f"{start}_{unique}_m_1.csv")
 
 
 @login_required

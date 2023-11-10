@@ -45,6 +45,13 @@ class Project(models.Model):
     def model(self):
         return "project"
 
+    def get_data(self):
+        # for an entry, return a dict {'col': data} that is used for the export of the data
+        # dont include sample or project - that is exported with the respective query
+        data = {
+            "Project Name":self.name,
+        }
+        return data
 
 #
 # Description model
@@ -508,6 +515,17 @@ class Site(models.Model):
     def filter(self, kw):
         return Site.objects.filter(Q(name__contains=kw) | Q(country__contains=kw))
 
+    def get_data(self):
+        # for an entry, return a dict {'col': data} that is used for the export of the data
+        # dont include sample or project - that is exported with the respective query
+        data = {
+            "Site Name":self.name,
+            "Site Id": self.coredb_id,
+            "Site Country": self.country,
+            "Site Coordinates": f"{self.coordinates[0]},{self.coordinates[1]}"
+        }
+        return data
+
 
 class Profile(models.Model):
     name = models.CharField("name", max_length=200)
@@ -617,6 +635,28 @@ class Layer(models.Model):
     def get_absolute_url(self):
         return f"{reverse('site_detail', kwargs={'pk':self.site.id})}#profile"
 
+    def get_data(self):
+        # for an entry, return a dict {'col': data} that is used for the export of the data
+        # dont include site or project - that is exported with the respective query
+        data = {
+            "Layer Name":self.name,
+            "Layer Age": self.age_summary(export=True),
+            "Layer Culture": self.culture.name if self.culture else None,
+            "Layer Umbrella Culture": self.culture.get_highest().name if self.culture else None,
+            "Layer Epoch": self.epoch.name if self.epoch else None,
+        }
+        return data
+
+    @classmethod
+    def table_columns(self):
+        # the table_columns for uploading and empty columns
+        return [
+            "Layer Name",
+            "Layer Age",
+            "Layer Culture",
+            "Layer Umbrella Culture",
+            "Layer Epoch"
+        ]
 
 class SampleBatch(models.Model):
     name = models.CharField("name", max_length=400, null=True, blank=True)
@@ -634,6 +674,15 @@ class SampleBatch(models.Model):
     @property
     def classname(self):
         return get_classname(self.name)
+
+    def get_data(self):
+        # for an entry, return a dict {'col': data} that is used for the export of the data
+        # dont include sample or project - that is exported with the respective query
+        data = {
+            "Sample Batch Name":self.name,
+            "Sample Batch Arrival": self.year_of_arrival,
+        }
+        return data
 
 
 class Sample(models.Model):
@@ -671,7 +720,7 @@ class Sample(models.Model):
     ref = models.ManyToManyField(Reference, verbose_name="reference", blank=True, related_name="sample")
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["site","batch","layer__pos","name"]
 
     def get_provenience(self):
         data = json.loads(self.provenience)
@@ -681,20 +730,35 @@ class Sample(models.Model):
     def model(self):
         return "sample"
 
+    @property
+    def samplebatch(self):
+        return self.batch
+
     @classmethod
     def table_columns(self):
         return [
-            "Layer",
-            "Name",
-            "Synonyms",
-            "Type",
-            "Year of Collection",
-            "Provenience",
-            "Reference",
+            "Sample Layer",
+            "Sample Name",
+            "Sample Synonyms",
+            "Sample Type",
+            "Sample Year of Collection",
+            "Sample Provenience",
         ]
 
     def __str__(self):
         return self.name
+
+    def get_data(self):
+        # for an entry, return a dict {'col': data} that is used for the export of the data
+        # dont include layer or project - that is exported with the respective query
+        data = {
+            "Sample Name":self.name,
+            "Sample Synonyms": ";".join([str(x) for x in self.synonyms.all()]),
+            "Sample Type": self.type,
+            "Sample Year of Collection": self.year_of_collection,
+            "Sample Provenience": ";".join([f"{k}:{v}" for k, v in json.loads(self.provenience).items()]),
+        }
+        return data
 
 
 ### The analyzed Sample section
@@ -709,23 +773,44 @@ class AnalyzedSample(models.Model):
 
     class Meta:
         unique_together = [["library", "seqrun"]]
-        ordering = ["sample__layer", "probes", "sample"]
+        ordering = ["sample__site","sample__layer", "sample", "probes"]
 
     def __str__(self):
         return f"{self.library}_{self.seqrun}"
 
+    def get_data(self):
+        # for an entry, return a dict {'col': data} that is used for the export of the data
+        # dont include sample or project - that is exported with the respective query
+        data = {
+            "Library":self.library,
+            "Capture Probe": self.probes,
+            "Sequencing Run": self.seqrun,
+        }
+        return data
+
+
+    @property
+    def site(self):
+        return self.sample.site
+
+    @property
+    def layer(self):
+        return self.sample.layer
+
+    @property
+    def samplebatch(self):
+        return self.sample.batch
+
     @classmethod
     def table_columns(self):
         return [
-            "Sample",
+            "Analyzed Sample",
             "Library",
             "Capture Probe",
             "Sequencing Run",
-            "Metadata",
         ]
 
 ### The expected Taxa section
-
 
 class Taxon(models.Model):
     common_name = models.CharField("common name", max_length=400, blank=True, null=True)
@@ -785,8 +870,9 @@ models = {
     "author": Author,
     "project": Project,
     "sample": Sample,
-    "sample-batch": SampleBatch,
+    "samplebatch": SampleBatch,
     "analyzedsample": AnalyzedSample,
+    "library":AnalyzedSample,
     "gallery": Gallery,
     "image": Image
 }
