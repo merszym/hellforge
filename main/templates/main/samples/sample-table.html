@@ -27,7 +27,7 @@
             <th>Libraries</th>
             <th>Sample Age</th>
             <th>Year of Collection</th>
-            <th>Sample Location</th>
+            <th>Sample Origin</th>
         </tr>
     </thead>
     <tbody>
@@ -77,23 +77,9 @@
             <td>{{object.layer.age_summary}}</td>
             <td>{% if object.year_of_collection%}{{object.year_of_collection}}{% endif%}</td>
             <td>
-                <div class="popover popover-left">
-                    <span style="cursor:pointer;"><span class="text-gray small">Hover to Show</span>
-                    <div class="popover-container">
-                        <div class="card">
-                            <div class="card-header">
-                                <h6>Provenience</h6>
-                            </div>
-                            <div class="card-body">
-                                {% for k,v in object.get_provenience %}
-                                <span class="text-gray small">{{k}}: {{v}}</span><br>
-                                {% endfor %}
-                            </div>
-                            <div class="card-footer">
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                {% for k,v in object.get_provenience %}
+                <span class="text-gray small">{{k}}: {{v}},</span>
+                {% endfor %}
             </td>
         </tr>
         {% endfor %}

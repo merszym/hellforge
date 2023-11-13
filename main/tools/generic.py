@@ -7,6 +7,23 @@ from django.contrib.auth.decorators import login_required  # this is for now, ma
 from datetime import datetime
 import json
 import pandas as pd
+import numpy as np
+
+def get_dataset_df(qs, start, include):
+    # iterate over the m:1 frame, collect information from models
+    records = []
+    for entry in qs:
+        data = start.get_data()
+        for incl in include:
+            try:
+                data.update(getattr(entry, incl, False).get_data())
+            except AttributeError:
+                empty = {k:None for k in models[incl].table_columns()}
+                data.update(empty)
+        data.update(entry.get_data())
+        records.append(data)
+    df = pd.DataFrame.from_records(records)
+    return df
 
 def get_dataset(request):
     """
@@ -27,25 +44,34 @@ def get_dataset(request):
     start = get_instance_from_string(request.GET.get('from'))
     column = start.model
     unique = request.GET.get('unique')
-    include = request.GET.get('include').split(',')
+    include = request.GET.get('include',0).split(',')
+    extend = request.GET.get('extend',0)
 
     #now set up the query
     filter = {queries(column,unique):start}
     qs = models[unique].objects.filter(**filter)
+    # and get the dataframe
+    df = get_dataset_df(qs, start, include)
 
-    # iterate over the m:1 frame, collect information from models
-    records = []
-    for entry in qs:
-        data = start.get_data()
-        for incl in include:
-            try:
-                data.update(getattr(entry, incl, False).get_data())
-            except AttributeError:
-                empty = {k:None for k in models[incl].table_columns()}
-                data.update(empty)
-        data.update(entry.get_data())
-        records.append(data)
-    df = pd.DataFrame.from_records(records)
+    # if extend, add the entries of a lower hierarchie that are not in unique
+    # e.g. all samples even if no libraries exist
+    if extend:
+        # now some of the entries are a subset of the first query
+        # so lets filter them out
+        excl = qs.values(extend)
+        eqs = models[extend].objects.filter(**{queries(column,extend):start}).exclude(pk__in=excl)
+
+        # and get the dataset
+        df2 = get_dataset_df(eqs, start, include)
+        df2 = df2[[x for x in df2.columns if x in df.columns]].copy()
+        df = pd.concat([df,df2], ignore_index=True)
+
+        #remove some weird error message
+        for col in df.columns:
+            df[col] = df[col].fillna("").apply(lambda x: str(x))
+
+        #sort the data again
+        df = df.sort_values(by=list(df2.columns))
 
     #download the data
     return download_csv(df, name=f"{start}_{unique}_m_1.csv")
