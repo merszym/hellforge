@@ -34,7 +34,7 @@ def sample_upload(request):
         if "Not Found" in set(df["Reference"]):
             issues.append("Reference was not found (see Table)")
 
-    layer_wrong = df[(df.Layer.isin(all_layers) == False) & (df.Layer == df.Layer)].copy()
+    layer_wrong = df[(df["Sample Layer"].isin(all_layers) == False) & (df["Sample Layer"] == df["Sample Layer"])].copy()
     if len(layer_wrong) > 0:
         issues.append(f"Removed non-existing Layers: {','.join(set(layer_wrong['Layer']))}")
         df.drop(layer_wrong.index, inplace=True)
@@ -60,21 +60,20 @@ def save_verified(request):
     df.convert_dtypes()
 
     # go through the layers
-    df["Layer"] = df.Layer.fillna("unknown")
-    for layer, dat in df.groupby("Layer"):
+    df["Layer"] = df["Sample Layer"].fillna("unknown")
+    for layer, dat in df.groupby("Sample Layer"):
         if layer == "unknown":
             l = None
         else:
             l = Layer.objects.filter(site=site, name=layer).first()
 
-        for batch, sample, synonyms, type, yoc, provenience, ref in zip(
+        for batch, sample, synonyms, type, yoc, provenience, in zip(
             dat["SampleBatch"],
-            dat["Name"],
-            dat["Synonyms"],
-            dat["Type"],
-            dat["Year of Collection"],
-            dat["Provenience"],
-            dat["Reference"],
+            dat["Sample Name"],
+            dat["Sample Synonyms"],
+            dat["Sample Type"],
+            dat["Sample Year of Collection"],
+            dat["Sample Provenience"],
         ):
             # check if a sample exists already, get it
             s, created = Sample.objects.get_or_create(name=sample, layer=l, site=site)

@@ -30,7 +30,8 @@
         {% for samplebatch in samples %}
             <div class="tab-panel my-2" data-group="sample-batch" id="sample-batch_{{samplebatch.pk}}" style="{% if forloop.counter != 1 %} display: none;{% endif %}">
                 <div style="position: relative;">
-                    <h3>{{samplebatch}}</h3>
+                    <h3 style="margin-bottom:0px;">{{samplebatch}}</h3>
+                    <span class="text-gray form-input-hint" style="margin-bottom: 14px;">From: {{samplebatch.sampled_by}} ({{samplebatch.year_of_arrival}})</span>
                     <span class="btn btn-primary tooltip tooltip-left generic_delete"
                         data-x="samplebatch_{{samplebatch.pk}}"
                         data-reload="site_sample_content"
@@ -96,7 +97,7 @@
 
                 {% if request.user.is_authenticated %}
                 {% csrf_token %}
-                <input class="fill_modal" type="file" id="sample-batch-input" data-url="{% url 'main_sample_upload' %}?batch={{samplebatch}}">
+                <input class="fill_modal" type="file" id="sample-batch-input" data-url="{% url 'main_analyzedsample_upload' %}">
                 <span id='fauna-batch-header' data-url="{% url 'download_header' %}?model=analyzedsample" class="btn tooltip tooltip-right get-batch-header" data-tooltip="Get Sample Upload Template"><i class="icon icon-download"></i></span>
                 {% endif %}
                 {% for layer in sample_layers|lookup:samplebatch %}

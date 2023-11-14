@@ -24,11 +24,11 @@ def sample_upload(request):
     df = df[[x for x in df.columns if x in expected]]
 
     # check if sample parents exist
-    samples = [x.name for x in Sample.objects.all()]
+    samples = Sample.objects.values('name')
 
-    if dropped := [x for x in df.Sample if x not in samples]:
+    if dropped := [x for x in df["Analyzed Sample"] if len(samples.filter(name=x))==0]:
         issues.append(f"Samples not in Database: {','.join(dropped)}")
-    df = df[df.Sample.isin(samples)]
+    df = df[df["Analyzed Sample"].isin(dropped)==False]
 
     return render(
         request,
@@ -55,14 +55,14 @@ def save_verified(request):
             )
         except:
             object = AnalyzedSample(
-                sample = Sample.objects.get(name=row['Sample']),
+                sample = Sample.objects.get(name=row['Analyzed Sample']),
                 library = row['Library'],
                 seqrun = row['Sequencing Run'],
             )
             object.save()
             object.refresh_from_db()
         #set or update
-        object.sample = Sample.objects.get(name=row['Sample'])
+        object.sample = Sample.objects.get(name=row['Analyzed Sample'])
         object.project.add(Project.objects.get(
             namespace=request.session["session_project"]
             )
