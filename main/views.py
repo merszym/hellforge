@@ -11,20 +11,6 @@ class ProjectAwareListView(ListView):
         context["project"] = get_project(self.request)
         return context
 
-    def get_queryset(self, **kwargs):
-        queryset = super(ProjectAwareListView, self).get_queryset(**kwargs)
-        # 1. authenticated users are admin
-        if self.request.user.is_authenticated:
-            return queryset
-        # 2. then project related view
-        if project := get_project(self.request):
-            try:
-                return queryset.filter(project=project)  # catch lists that dont have a project
-            except:
-                pass
-        # 3. #TODO return only completely public view
-        return queryset
-
 
 class ProjectAwareDetailView(DetailView):
     def get_context_data(self, **kwargs):
