@@ -18,7 +18,7 @@
 <table class="table table-striped">
     <thead style="position: sticky; top:0; background-color: white; z-index: 999;">
         <tr>
-            {% if site in project.site.all %}
+            {% if site in project_sites %}
             <th>Project</th>
             {% endif %}
             <th>Layer</th>
@@ -33,7 +33,7 @@
     <tbody>
         {% for object in object_list %}
         <tr>
-            {% if site in project.site.all %}
+            {% if site in project_sites %}
             <td style="width:30px;">
             {% with projectsamples=project.sample.all %}
                 {% if project and not object in projectsamples %}

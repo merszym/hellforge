@@ -26,7 +26,7 @@ from collections import defaultdict
 from django.shortcuts import get_object_or_404
 from main.views import ProjectAwareListView, ProjectAwareDetailView
 from main.tools.generic import add_x_to_y_m2m, remove_x_from_y_m2m
-
+from main.tools.projects import get_project
 
 ## Sites
 class SiteDetailView(ProjectAwareDetailView):
@@ -136,7 +136,9 @@ class SiteListView(ProjectAwareListView):
         return queryset.filter(child=None)
 
 
-def get_timeline_data(site_id, hidden=False, related=False, curves=False):
+def get_timeline_data(site_id, hidden=False, curves=False, request=False):
+    if request:
+        project = get_project(request)
     data = {}
     site = Site.objects.get(pk=site_id)
     layers = Layer.objects.filter(site=site).prefetch_related("date")
@@ -164,7 +166,14 @@ def get_timeline_data(site_id, hidden=False, related=False, curves=False):
                     "background": True,
                 }
                 dates.append(background)
-        tmp_dates = list(layer.date.all())
+
+        #now for the dates
+        if (project and site in project.site.all()) or (request.user.is_authenticated):
+            tmp_dates = list(layer.date.all())
+        else:
+            # if not in project and view-only dont display unpublished dates
+            tmp_dates = [x for x in list(layer.date.all()) if len(x.ref.all())>0]
+
         if hidden:
             tmp_dates.extend(layer.hidden_dates)
         for date in tmp_dates:

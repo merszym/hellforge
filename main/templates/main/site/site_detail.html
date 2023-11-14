@@ -41,12 +41,12 @@
         <a class="btn btn-primary tooltip tooltip-left" href="{% url 'main_site_update' object.pk %}" data-tooltip="Edit Site">
             <i class="icon icon-edit"></i>
         </a>
-        {% if project and not object in project.site.all %}
+        {% if project and not object in project_sites %}
         <span class="btn bg-success tooltip tooltip-top generic_addm2m" data-tooltip="Add Site to Project"
             data-x="site_{{object.pk}}" data-y="project_{{project.pk}}" data-reload="location">
             <i class="icon icon-plus"></i>
         </span>
-        {% elif project and object in project.site.all %}
+        {% elif project and object in project_sites %}
         <span class="btn bg-warning tooltip tooltip-top generic_rmm2m" data-tooltip="Remove Site from Project"
             data-x="site_{{object.pk}}" data-y="project_{{project.pk}}" data-reload="location">
             <i class="icon icon-minus"></i>
@@ -56,9 +56,9 @@
         </div>
         <div class="my-2">
             <h2 style="margin-bottom: 2px;">Site Information</h2>
-            {% if project and not object in project.site.all %}
+            {% if project and not object in project_sites %}
             <small class="label label-warning my-2">Site not in Project</small><br>
-            {% elif project and object in project.site.all %}
+            {% elif project and object in project_sites %}
             <small class="label label-success my-2">Site in Project</small><br>
             {% endif %}
             <div class="btn-group">
@@ -66,7 +66,7 @@
                 {% if request.user.is_authenticated %}
                 <button id='btn-descr' class="btn render_description overview-toggle"  data-url="{% url 'main_render_description' object.description.first.pk %}">Notes</button>
                 {% endif %}
-                {% if project_description and site in project.site.all %}
+                {% if project_description and site in project_sites %}
                 <button id='btn-project_descr' class="btn render_description overview-toggle" data-url="{% url 'main_render_description' project_description.pk %}">
                     Site Description ({{project}})
                 </button>
@@ -195,7 +195,7 @@
                 <li class="tab-item" data-group="main">
                     <a style="cursor: pointer;" class="select-block-content" data-select="site_fauna"><h4>Fauna</h4></a>
                 </li>
-                {% if object in project.site.all %}
+                {% if object in project_sites %}
                 <li class="tab-item" data-group="main">
                     <a style="cursor: pointer;" class="select-block-content" data-select="site_samples"><h4>Samples</h4></a>
                 </li>
@@ -208,7 +208,7 @@
             <div class="block-content" id="site_fauna" style="display: none;">
                 {% include 'main/site/site-fauna-content.html' %}
             </div>
-            {% if object in project.site.all %}
+            {% if object in project_sites %}
             <div class="block-content" id="site_samples" style="display: none;">
                 {% include 'main/site/site-sample-content.html' %}
             </div>

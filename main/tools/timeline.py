@@ -8,8 +8,9 @@ def render_timeline(request, model, pk):
         context = get_timeline_data(
             pk,
             hidden=request.GET.get('hidden', False),
-            related=request.GET.get('related', False),
-            curves=request.GET.get('curves', False))
+            curves=request.GET.get('curves', False),
+            request=request
+        )
     return render(request, 'main/timeline/timeline.html', context)
 
 urlpatterns = [
