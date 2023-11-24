@@ -10,7 +10,7 @@ class ProjectAwareListView(ListView):
         context = super(ProjectAwareListView, self).get_context_data(**kwargs)
         project = get_project(self.request)
         context["project"] = project
-        context["project_sites"] = project.site.all() if project else []
+        context["project_sites"] = list(project.site.values_list('pk', flat=True)) if project else []
         return context
 
 
@@ -19,7 +19,7 @@ class ProjectAwareDetailView(DetailView):
         context = super(ProjectAwareDetailView, self).get_context_data(**kwargs)
         project = get_project(self.request)
         context["project"] = project
-        context["project_sites"] = project.site.all() if project else []
+        context["project_sites"] = list(project.site.values_list('pk', flat=True)) if project else []
         return context
 
 

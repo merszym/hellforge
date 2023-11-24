@@ -9,7 +9,7 @@
 <table class="table table-striped">
     <thead style="position: sticky; top:0; background-color: white; z-index: 999;">
         <tr>
-            {% if site in project_sites %}
+            {% if site.id in project_sites %}
             <th>Project</th>
             {% endif %}
             <th>Layer</th>
@@ -22,7 +22,7 @@
     <tbody>
         {% for object in object_list %}
         <tr class="{{batch.classname}}_libtr">
-            {% if site in project_sites %}
+            {% if site.id in project_sites %}
             <td style="width:30px;">
             {% with projectsamples=project.analyzedsample.all %}
                 {% if project and not object in projectsamples %}

@@ -19,7 +19,7 @@
         </thead>
         <tbody >
         {% for date in date_list %}
-            {% if object in project_sites or request.user.is_authenticated or date.ref.first %}
+            {% if object.id in project_sites or request.user.is_authenticated or date.ref.first %}
             <tr>
                 <td>
                 {% if request.user.is_authenticated %}
