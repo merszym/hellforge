@@ -14,10 +14,10 @@
         <!-- Start with the sample batches -->
         <ul class="tab" id="samplebatch-list">
             {% for samplebatch in samples %}
-            <li class="tab-item {% if forloop.counter == 1 %}active{% endif %}"
+            <li class="tab-item {% if forloop.counter == 1 %}active{% endif %} batch"
                 data-group="sample-batch"
                 data-show="sample-batch_{{samplebatch.pk}}">
-                <a style="cursor:pointer;">{{samplebatch}}</a>
+                <a class="badge" data-badge="{{samples|lookup:samplebatch|lookup:'samples'|lookup:'All'|length}}" style="cursor:pointer;">{{samplebatch}}</a>
             </li>
             {% endfor %}
             {% if request.user.is_authenticated %}
