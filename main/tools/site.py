@@ -61,69 +61,17 @@ class SiteDetailView(ProjectAwareDetailView):
                     taxon = found_taxon.taxon
                     taxa[taxon.family][taxon][layer] = found_taxon.abundance
 
-        # load the samples and batches
-        # first create a batch for the samples that dont have one yet...
-        tmp, c = SampleBatch.objects.get_or_create(name="Undefined Batch", site=object)
-        nobatch = Sample.objects.filter(Q(site=object, batch=None))
-        for sample in nobatch:
-            sample.batch = tmp
-            sample.save()
-        # then load the samples into a nested dict
-        samples = nested_dict()
-        sample_layers = nested_dict()
-
-        # iterate over the batches
-        sample_query = Sample.objects.filter(Q(site=object))
-        analyzed_samples = AnalyzedSample.objects.filter(sample__in = sample_query)
-        batches = object.sample_batch.all()
-
-        for batch in batches:
-            if not batch.gallery:
-                #TODO: move to signals
-                tmp = Gallery(title=batch.name)
-                tmp.save()
-                batch.gallery = tmp
-                batch.save()
-            # hide Undefinied batch if empty and other ones exist
-            if (len(batches) > 1) and (batch.name == "Undefined Batch") and (len(batch.sample.all()) == 0):
-                continue
-            # create All placeholders
-            if not "All" in samples[batch]['samples']:
-                samples[batch]['samples']["All"] = []
-                samples[batch]['libraries']["All"] = []
-            batch_samples = sample_query.filter(batch=batch)
-            # iterate over the layers
-            for layer in sorted(list(set([x.layer for x in batch_samples])), key=lambda x: getattr(x, "pos", 0)):
-                # get the samples
-                qs = batch_samples.filter(layer=layer)
-                libs = analyzed_samples.filter(sample__in=qs)
-                # and add them to the dict
-                if len(qs) > 0:
-                    if layer == None:
-                        layer = "unknown"
-                    samples[batch]['samples']["All"].extend(qs)
-                    samples[batch]['libraries']["All"].extend(libs)
-                    samples[batch]['samples'][layer] = qs
-                    samples[batch]['libraries'][layer] = libs
-                    # add the layer to the layer-list
-                    try:
-                        sample_layers[batch].append(layer)
-                    except:
-                        sample_layers[batch] = ["All", layer]
 
         context.update(
             {
                 "profile_form": ProfileForm,
-                "samplebatch_form": SampleBatchForm,
-                "tab": tab,
                 "taxa": taxa,
                 "taxa_references": set(taxrefs),
                 "project_description": project_description,
                 "profile": profile,
-                "samples": samples,
-                "sample_layers": sample_layers,
             }
         )
+
         return context
 
 
@@ -267,6 +215,68 @@ def get_site_geo(request):
     locations = [x for x in locations if x != {} ]
     return JsonResponse(locations, safe=False)
 
+def get_site_sample_tab(request):
+    nested_dict = lambda: defaultdict(nested_dict)
+    object = Site.objects.get(pk = int(request.GET.get("object")))
+    context = {"object":object}
+    # load the samples and batches
+    # first create a batch for the samples that dont have one yet...
+    tmp, c = SampleBatch.objects.get_or_create(name="Undefined Batch", site=object)
+    nobatch = Sample.objects.filter(Q(site=object, batch=None))
+    for sample in nobatch:
+        sample.batch = tmp
+        sample.save()
+    # then load the samples into a nested dict
+    samples = nested_dict()
+    sample_layers = nested_dict()
+
+    # iterate over the batches
+    sample_query = Sample.objects.filter(Q(site=object))
+    analyzed_samples = AnalyzedSample.objects.filter(sample__in = sample_query)
+    batches = object.sample_batch.all()
+
+    for batch in batches:
+        if not batch.gallery:
+            #TODO: move to signals
+            tmp = Gallery(title=batch.name)
+            tmp.save()
+            batch.gallery = tmp
+            batch.save()
+        # hide Undefinied batch if empty and other ones exist
+        if (len(batches) > 1) and (batch.name == "Undefined Batch") and (len(batch.sample.all()) == 0):
+            continue
+        # create All placeholders
+        if not "All" in samples[batch]['samples']:
+            samples[batch]['samples']["All"] = []
+            samples[batch]['libraries']["All"] = []
+        batch_samples = sample_query.filter(batch=batch)
+        # iterate over the layers
+        for layer in sorted(list(set([x.layer for x in batch_samples])), key=lambda x: getattr(x, "pos", 0)):
+            # get the samples
+            qs = batch_samples.filter(layer=layer)
+            libs = analyzed_samples.filter(sample__in=qs)
+            # and add them to the dict
+            if len(qs) > 0:
+                if layer == None:
+                    layer = "unknown"
+                samples[batch]['samples']["All"].extend(qs)
+                samples[batch]['libraries']["All"].extend(libs)
+                samples[batch]['samples'][layer] = qs
+                samples[batch]['libraries'][layer] = libs
+                # add the layer to the layer-list
+                try:
+                    sample_layers[batch].append(layer)
+                except:
+                    sample_layers[batch] = ["All", layer]
+    context.update(
+        {
+            "samplebatch_form": SampleBatchForm,
+            "samples": samples,
+            "sample_layers": sample_layers,
+        }
+    )
+    return render(request,"main/site/site-sample-content.html",context)
+
 urlpatterns = [
     path("add-profile/<int:site_id>", add_profile, name="main_site_profile_create"),
     path("create", site_create_update, name="main_site_add"),
@@ -274,5 +284,6 @@ urlpatterns = [
     path("list", SiteListView.as_view(), name="site_list"),
     path("<int:pk>", SiteDetailView.as_view(), name="site_detail"),
     path("overview", get_site_overview, name="main_site_overview"),
-    path("geodata", get_site_geo, name="main_site_geo")
+    path("geodata", get_site_geo, name="main_site_geo"),
+    path("sample-tab", get_site_sample_tab, name="main_site_sample_tab")
 ]

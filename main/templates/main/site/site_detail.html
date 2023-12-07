@@ -143,7 +143,12 @@
                 </li>
                 {% if object.id in project_sites %}
                 <li class="tab-item" data-group="main">
-                    <a style="cursor: pointer;" class="select-block-content" data-select="site_samples"><h4>Samples</h4></a>
+                    <a style="cursor: pointer;" class="select-block-content" data-select="site_samples"
+                        hx-get="{% url 'main_site_sample_tab' %}?object={{object.pk}}"
+                        hx-target="#site_samples"
+                        hx-trigger="click once">
+                        <h4>Samples</h4>
+                    </a>
                 </li>
                 {% endif %}
             </ul>
@@ -156,7 +161,6 @@
             </div>
             {% if object.id in project_sites %}
             <div class="block-content" id="site_samples" style="display: none;">
-                {% include 'main/site/site-sample-content.html' %}
             </div>
             {% endif %}
             {% endif %}
