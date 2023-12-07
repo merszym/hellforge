@@ -15,12 +15,24 @@
         white-space: nowrap;
     }
 </style>
+<span id="get_location_data" data-url="{% url 'main_project_geo' %}?object={{object.pk}}"></span>
 <div class='columns' style="padding:10px;">
     <div class="column col-4" style="position:relative;">
         <h3>Project Details</h3>
         <ul class="tab">
-            <li data-group="project" data-show="project-overview" class="tab-item active" style="cursor:pointer;"><a>Overview</a></li>
-            <li data-group="project" data-show="description-description" class="tab-item" style="cursor:pointer;"><a>Description</a></li>
+            <li data-group="project" class="tab-item active" style="cursor:pointer;"
+                hx-get="{% url 'main_project_overview' %}"
+                hx-target="#project-panel-1"
+                hx-vals='{"object":"{{object.pk}}"}'
+                hx-trigger="load,click"
+                >
+                <a>Overview</a>
+            </li>
+            <li data-group="project" class="tab-item" style="cursor:pointer;"
+                hx-get="{% url 'main_render_description' object.project_description.first.pk %}?origin=project"
+                hx-target="#project-panel-1">
+                <a>Description</a>
+            </li>
         </ul>
         <div style="position:absolute; right:5%; top:10px">
             <a class="btn btn-primary tooltip tooltip-left" href="{% url 'main_project_update' object.pk %}" data-tooltip="Edit Project">
@@ -31,39 +43,7 @@
             </a>
         </div>
         <!-- Project Overview Tab -->
-        <div id="project-overview" data-group="project" style="padding:10px;" class="panel tab-panel">
-            <h4>Project Sites</h4>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Sites</th>
-                        <th>Collected Samples</th>
-                        <th>Analyzed</th>
-                        <th>Libraries</th>
-                        <th>Project Visibility</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>{{object_list|length}}</td>
-                        <td>{{sample_list|length}}</td>
-                        <td>{{analyzedsample_set|length}}</td>
-                        <td>{{analyzedsample_list|length}}</td>
-                        <td>{{object.published|yesno:"Published,Private,NA"}}</td>
-                        <td><a target="_blank" href="{% url 'get_dataset' %}?from=project_{{object.pk}}&unique=library&include=site,layer,samplebatch,sample&extend=sample"><i class="icon icon-download"></i></a></td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <div style="height: 480px;margin-top: 20px;" id="map"></div>
-            <a href="{% url 'site_list' %}" style="margin-bottom: 20px;">All Sites</a>
-            <h5>Share Project</h5>
-            <div style="background-color: lightgray;">
-                <p>{{request.scheme}}://{{request.get_host}}{% url 'main_project_checkout' object.namespace %}?pw={{public_link_pw}}</p>
-            </div>
-        </div>
-        <div id="description-description" data-group="project" class="panel tab-panel" style="display:none;">
+        <div id="project-panel-1" class="panel" style="padding:10px;" >
         </div>
     </div>
     <div class="column">
@@ -125,44 +105,22 @@
         </div>
     </div>
 </div>
-<script>
-// load descriptions
-$('document').ready(function(){
-    $.ajax({
-        type: "GET",
-        url: "{% url 'main_render_description' object.project_description.first.pk %}?origin=project_{{object.pk}}",
-        }).done(function(html){
-            $('#description-description').html(html)
-        });
-});
-</script>
 <script src="{% static 'js/location.js' %}"></script>
-    {% for object in object_list %}
-        <script>
-        var json = {{object.loc.first.geo | safe }}
-        json.features[0].properties['popupContent'] = `
-            <strong>{{object.name}}</strong><br>
-            <a href={% url 'site_detail' pk=object.pk %} class=btn-link>Details</a>
-            `
-        json.features[0].properties['id'] = "{{object.pk}}"
-        drawJson(json);
-        </script>
-    {% endfor %}
-    <script>fitBounds()</script>
-    <script>
-        $('#list-search').on("keyup", function() {
-            var value = $("#list-search").val().toLowerCase();
-            $("tbody>tr.searchable").filter(function() {
-                if($(this).text().toLowerCase().indexOf(value) > -1){
-                    $(this).show()
-                } else {
-                    $(this).hide()
-                }
-            });
+
+<script>
+    $('#list-search').on("keyup", function() {
+        var value = $("#list-search").val().toLowerCase();
+        $("tbody>tr.searchable").filter(function() {
+            if($(this).text().toLowerCase().indexOf(value) > -1){
+                $(this).show()
+            } else {
+                $(this).hide()
+            }
         });
-        $('tr.searchable').on('click', function(){
-            var pk = $(this).attr('id').split('_')[1]
-            openPopup(parseInt(pk))
-        })
-    </script>
+    });
+    $('tr.searchable').on('click', function(){
+        var pk = $(this).attr('id').split('_')[1]
+        openPopup(parseInt(pk))
+    })
+</script>
 {% endblock %}

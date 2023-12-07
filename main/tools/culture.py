@@ -1,7 +1,8 @@
 from django.views.generic import CreateView, ListView, UpdateView, DetailView, DeleteView
 from django.urls import reverse
+from django.http import JsonResponse
 from django.shortcuts import render
-from main.models import Layer, Culture, Date, Epoch, DatingMethod, get_classname, Project, Description
+from main.models import Layer, Culture, Date, Epoch, DatingMethod, get_classname, Project, Description, Site
 from main.forms import (
     ReferenceForm,
     CultureForm,
@@ -126,7 +127,6 @@ class CultureDetailView(ProjectAwareDetailView):
         context["geo"] = geo
         return context
 
-
 class CultureUpdateView(LoginRequiredMixin, UpdateView):
     model = Culture
     form_class = CultureForm
@@ -203,10 +203,23 @@ class CultureListView(ProjectAwareListView):
         context["timelinedata"] = groupdata
         return context
 
+def get_culture_overview(request):
+    object = Culture.objects.get(pk=int(request.GET.get('object')))
+    return render(request,"main/culture/culture_overview.html",{"object":object})
+
+def get_culture_geodata(request):
+    object = Culture.objects.get(pk=int(request.GET.get("object")))
+    locations = []
+    for site in Site.objects.filter(layer__culture=object).all():
+        locations.append(site.get_location_features())
+    locations = [x for x in locations if x != {} ]
+    return JsonResponse(locations, safe=False)
 
 urlpatterns = [
     path("<int:pk>/edit", CultureUpdateView.as_view(), name="culture_update"),
     path("add", CultureCreateView.as_view(), name="culture_add"),
     path("list", CultureListView.as_view(), name="culture_list"),
     path("<int:pk>", CultureDetailView.as_view(), name="culture_detail"),
+    path("overview", get_culture_overview, name="main_culture_overview"),
+    path("geodata", get_culture_geodata, name="main_culture_geodata")
 ]

@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, reverse
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.views.generic import CreateView, ListView, UpdateView, DetailView
@@ -247,6 +247,25 @@ def site_create_update(request, pk=None):
         return render(request, "main/site/site_form.html", {"object": object, "form": form})
     return render(request, "main/site/site_form.html", {"form": SiteForm(instance=copy(object)), "object": object})
 
+def get_site_overview(request):
+    object = Site.objects.get(pk = int(request.GET.get("object")))
+    return render(request,"main/site/site_overview.html",{"object":object})
+
+def get_site_geo(request):
+    locations = []
+    if request.GET.get('all',False)=="1":
+        for site in Site.objects.all():
+            locations.append(site.get_location_features())
+    else:
+        object = Site.objects.get(pk=int(request.GET.get('object')))
+        if object.child.all():
+            # if this is an umbrella site
+            for child in object.child.all():
+                locations.append(child.get_location_features())
+        else:
+            locations.append(object.get_location_features())
+    locations = [x for x in locations if x != {} ]
+    return JsonResponse(locations, safe=False)
 
 urlpatterns = [
     path("add-profile/<int:site_id>", add_profile, name="main_site_profile_create"),
@@ -254,4 +273,6 @@ urlpatterns = [
     path("edit/<int:pk>", site_create_update, name="main_site_update"),
     path("list", SiteListView.as_view(), name="site_list"),
     path("<int:pk>", SiteDetailView.as_view(), name="site_detail"),
+    path("overview", get_site_overview, name="main_site_overview"),
+    path("geodata", get_site_geo, name="main_site_geo")
 ]

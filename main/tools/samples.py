@@ -36,7 +36,7 @@ def sample_upload(request):
 
     layer_wrong = df[(df["Sample Layer"].isin(all_layers) == False) & (df["Sample Layer"] == df["Sample Layer"])].copy()
     if len(layer_wrong) > 0:
-        issues.append(f"Removed non-existing Layers: {','.join(set(layer_wrong['Layer']))}")
+        issues.append(f"Removed non-existing Layers: {','.join(set(layer_wrong['Sample Layer']))}")
         df.drop(layer_wrong.index, inplace=True)
 
     # add the sample batch
@@ -60,7 +60,7 @@ def save_verified(request):
     df.convert_dtypes()
 
     # go through the layers
-    df["Layer"] = df["Sample Layer"].fillna("unknown")
+    df["Sample Layer"] = df["Sample Layer"].fillna("unknown")
     for layer, dat in df.groupby("Sample Layer"):
         if layer == "unknown":
             l = None

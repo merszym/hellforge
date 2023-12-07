@@ -31,6 +31,7 @@
     {% endfor %}
 </style>
 </div>
+<span id="get_location_data" data-url="{% url 'main_site_geo' %}?object={{object.pk}}"></span>
 <div class='columns' style="padding:10px;">
     <!--This spans are used by ajax to reload the site panels-->
     <span id="site_info_update_click" style="display: none;" class="generic_reload" data-reload="mobile"></span>
@@ -62,87 +63,32 @@
             <small class="label label-success my-2">Site in Project</small><br>
             {% endif %}
             <div class="btn-group">
-                <button id='btn-overview' class="btn btn-primary overview-toggle">Site Overview</button>
+                <div class="btn active tab-item"
+                    data-group="site-view-1"
+                    hx-get="{% url 'main_site_overview' %}"
+                    hx-vals='{ "object": "{{ object.pk }}" }'
+                    hx-target="#site-panel-1"
+                    hx-trigger="load,click">
+                    Site Overview
+                </div>
                 {% if request.user.is_authenticated %}
-                <button id='btn-descr' class="btn render_description overview-toggle"  data-url="{% url 'main_render_description' object.description.first.pk %}">Notes</button>
+                <div class="btn tab-item"
+                    data-group="site-view-1"
+                    hx-get="{% url 'main_render_description' object.description.first.pk %}"
+                    hx-target="#site-panel-1">
+                    Notes
+                </div>
                 {% endif %}
                 {% if project_description and site.id in project_sites %}
-                <button id='btn-project_descr' class="btn render_description overview-toggle" data-url="{% url 'main_render_description' project_description.pk %}">
+                <div class="btn tab-item"
+                    data-group="site-view-1"
+                    hx-get="{% url 'main_render_description' project_description.pk %}"
+                    hx-target="#site-panel-1">
                     Site Description ({{project}})
-                </button>
+                </div>
                 {% endif %}
             </div>
-            <div id="description-overview" style="padding:10px;" class="panel">
-                <br>
-                <div id='reload_site_overview'>
-                    <table class="table" style="margin-bottom:20px;">
-                        <thead>
-                        <tr>
-                            <th>Name</th>
-                            {% if object.parent %}
-                            <th>Parent</th>
-                            {% endif %}
-                            {% if object.child.all %}
-                            <th>Children</th>
-                            {% endif %}
-                            {% if object.country %}
-                            <th>Country</th>
-                            {% endif %}
-                            <th>Type</th>
-                            {% if object.elevation %}
-                            <th>Elevation</th>
-                            {% endif %}
-                            <th></th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td>{{object.name}} ({{object.coredb_id}})</td>
-                            {% if object.parent %}
-                            <td><a href="{% url 'site_detail' pk=object.parent.pk %}">{{object.parent}}</a></td>
-                            {% endif %}
-                            {% if object.child.first %}
-                            <td>
-                                {% for child in object.child.all %}
-                                <a href="{% url 'site_detail' pk=child.pk %}">{{child.name}}</a><br>
-                                {% endfor %}
-                            </td>
-                            {% endif %}
-                            {% if object.country %}
-                            <td>{{object.country}}</td>
-                            {% endif %}
-                            <td>{{object.type}}</td>
-                            {% if object.elevation %}
-                            <td>{{object.elevation}} m</td>
-                            {% endif %}
-                            <td>
-                                {% if request.user.is_authenticated %}
-                                <div class="popover popover-left">
-                                    <button class="btn"><i class="icon icon-menu"></i></button>
-                                    <div class="popover-container">
-                                    <div class="card">
-                                        <div class="card-body">
-                                        <button id='contact_modal' class='btn fill_modal tooltip tooltip-top' data-info="site_{{site.pk}}" data-tooltip="Add Contact" data-url="{% url 'ajax_fill_modal' %}?type=site_contact">Properties</button>
-                                        </div>
-                                    </div>
-                                    </div>
-                                </div>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                    {% if object.contact.first %}
-                    <h5>Collaborators</h5>
-                    {% for contact in object.contact.all %}
-                        {% include 'main/contact/contact-tile.html' %}
-                    {% endfor %}
-                    <br>
-                    {% endif %}
-                </div>
-                <div style="height: 480px;" id="map"></div><br>
-            </div>
-            <div id="description-description" class="panel" style="display:none;">
+            <div id="site-panel-1" style="padding:10px;" class="panel">
             </div>
         </div>
     </div>
@@ -226,21 +172,6 @@
 <div class="m-2 self_reload" id="timeline-content" data-url="{% url 'main_timeline_render' 'site' object.pk %}"></div>
 {% endif %}
 <script src="{% static 'js/location.js' %}"></script>
-    {% if object.loc.first.geo %}
-        <script> drawJson({{object.loc.first.geo | safe }})</script>
-    {% endif %}
-    {% for child in object.child.all %}
-        <script>
-        var json = {{child.loc.first.geo | safe }}
-        json.features[0].properties['popupContent'] = `
-            <strong>{{child.name}}</strong><br>
-            <a href={% url 'site_detail' pk=child.pk %} class=btn-link>Details</a>
-            `
-        json.features[0].properties['id'] = "{{child.pk}}"
-        drawJson(json);
-        </script>
-    {% endfor %}
-        <script>fitBounds()</script>
 <script src="{% static 'js/site.js' %}"></script>
 <script src="{% static 'js/synonyms.js'%}"></script>
 <script src="{% static 'js/layer.js'%}"></script>

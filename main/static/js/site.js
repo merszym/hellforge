@@ -132,15 +132,6 @@ $('body').on('click', '.refresh_profile', function(){
 })
 
 
-// load descriptions
-$('body').on("click", '.render_description', function(){
-    $.ajax({
-        type: "GET",
-        url: $(this).attr('data-url'),
-        }).done(function(html){
-            $('#description-description').html(html)
-        });
-});
 
 // switch between main tabs on the site level
 $('body').on('click', '.select-block-content', function(){

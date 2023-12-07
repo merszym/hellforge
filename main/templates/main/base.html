@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{% static 'css/jquery-ui.min.css' %}">
     <script  src="https://code.jquery.com/jquery-3.6.1.js" integrity="sha256-3zlB5s2uwoUzrXK3BT7AX3FyvojsraNFxCc2vC/7pNI="
          crossorigin="anonymous"></script>
+    <script src="{% static 'js/packages/htmx-min.js' %}"></script>
     {% block head %}{% endblock %}
 </head>
 <body>
@@ -27,7 +28,7 @@
         <div class='panel-header bg-primary' style='margin-top:-4px; padding: 20px;'>
             <div style="display: flex; justify-content: space-between;">
                 <h1>{% block headline %}{% endblock %}</h1>
-                <span id="project_status_tile" data-url="{% url 'main_project_status' %}"></span>
+                <div hx-get="{% url 'main_project_status' %}" hx-trigger="load"></div>
             </div>
 
             {% block breadcrumps %}{% endblock %}

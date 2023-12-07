@@ -1,0 +1,30 @@
+<h4>Project Overview</h4>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Sites</th>
+            <th>Collected Samples</th>
+            <th>Analyzed</th>
+            <th>Libraries</th>
+            <th>Project Visibility</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{site_count}}</td>
+            <td>{{sample_count}}</td>
+            <td>{{analyzedsample_count}}</td>
+            <td>{{library_count}}</td>
+            <td>{{object.published|yesno:"Published,Private,NA"}}</td>
+            <td><a target="_blank" href="{% url 'get_dataset' %}?from=project_{{object.pk}}&unique=library&include=site,layer,samplebatch,sample&extend=sample"><i class="icon icon-download"></i></a></td>
+        </tr>
+    </tbody>
+</table>
+
+<div style="height: 480px;margin-top: 20px;" id="map"></div>
+<a href="{% url 'site_list' %}" style="margin-bottom: 20px;">All Sites</a>
+<h5>Share Project</h5>
+<div style="background-color: lightgray;">
+    <p>{{request.scheme}}://{{request.get_host}}{% url 'main_project_checkout' object.namespace %}?pw={{public_link_pw}}</p>
+</div>

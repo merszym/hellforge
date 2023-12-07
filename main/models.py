@@ -526,6 +526,18 @@ class Site(models.Model):
         }
         return data
 
+    def get_location_features(self):
+        sgeo = self.loc.first().geo
+        if type(sgeo) == str:
+            sgeo = dict(json.loads(sgeo))
+        if sgeo:
+            site_view_url = reverse('site_detail', kwargs={"pk":self.pk})
+            sgeo["features"][0]["properties"]["popupContent"] = f"<strong>{self.name}</strong><br><a href={site_view_url} class=btn-link>Details</a>"
+            sgeo["features"][0]["properties"]["id"] = f"{self.pk}"
+            return sgeo
+        else:
+            return {}
+
 
 class Profile(models.Model):
     name = models.CharField("name", max_length=200)

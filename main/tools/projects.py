@@ -1,5 +1,5 @@
 from django.views.generic import ListView, DetailView, UpdateView
-from django.urls import path
+from django.urls import path, reverse
 from main.models import Project, Description, Site, Sample, AnalyzedSample
 from django.http import JsonResponse
 from main.tools.generic import add_x_to_y_m2m, remove_x_from_y_m2m, get_instance_from_string, delete_x, download_csv
@@ -77,8 +77,6 @@ class ProjectDetailView(DetailView):
         context = super(ProjectDetailView, self).get_context_data(**kwargs)
         # this is quick and dirty - create a description if non exists for a project
         project = self.get_object()
-        if project.password:
-            context["public_link_pw"] = hashlib.md5(project.password.encode()).hexdigest()
         if not project.project_description.first():
             tmp = Description(content_object=project)
             tmp.save()
@@ -104,12 +102,45 @@ class ProjectDetailView(DetailView):
         context["analyzedsample_dict"] = analyzedsample_dict
         return context
 
+def get_project_geo(request):
+    object = Project.objects.get(pk=int(request.GET.get('object')))
+    locations = []
+    for site in object.site.all():
+        sgeo = site.loc.first().geo
+        if sgeo:
+            site_view_url = reverse('site_detail', kwargs={"pk":site.pk})
+            sgeo["features"][0]["properties"]["popupContent"] = f"<strong>{site.name}</strong><br><a href={site_view_url} class=btn-link>Details</a>"
+            sgeo["features"][0]["properties"]["id"] = f"{site.pk}"
+            locations.append(sgeo)
+    return JsonResponse(locations, safe=False)
+
+def get_project_overview(request):
+    object = Project.objects.get(pk=int(request.GET.get('object')))
+    context = {"object":object}
+    # get context data
+    if object.password:
+            context["public_link_pw"] = hashlib.md5(object.password.encode()).hexdigest()
+    site_count = len(Site.objects.filter(project=object, child=None).values('pk'))
+    sample_count = len(object.sample.values("pk"))
+    analyzedsample_count = len(set(object.analyzedsample.values_list("sample", flat=True)))
+    library_count = len(object.analyzedsample.values('pk'))
+
+    context["site_count"] = site_count
+    context["sample_count"] = sample_count
+    context["analyzedsample_count"] = analyzedsample_count
+    context["library_count"] = library_count
+    object_list = sorted(Site.objects.filter(project=object, child=None), key=lambda x: x.country)
+    context["object_list"] = object_list
+
+    return render(request, "main/project/project_overview.html", context)
 
 urlpatterns = [
     path("list", ProjectListView.as_view(), name="main_project_list"),
     path("checkout/<str:namespace>", checkout_project, name="main_project_checkout"),
     path("close", close_project, name="main_project_close"),
     path("status", get_project_status_tile, name="main_project_status"),
+    path("overview", get_project_overview, name="main_project_overview"),
+    path("geodata", get_project_geo, name="main_project_geo"),
     path("<str:namespace>", ProjectDetailView.as_view(), name="main_project_detail"),
     path("<int:pk>/edit", ProjectUpdateView.as_view(), name="main_project_update"),
 ]

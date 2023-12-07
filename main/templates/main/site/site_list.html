@@ -8,6 +8,7 @@
 {% load static %}
 
 <div class="container">
+    <span id="get_location_data" data-url="{% url 'main_site_geo' %}?all=1"></span>
     <div class='columns'>
         <div class="column col-6">
             <div class="my-2">
@@ -58,32 +59,16 @@
     </div>
 </div>
 <script src="{% static 'js/location.js' %}"></script>
-    {% for object in object_list %}
-        <script>
-        var json = {{object.loc.first.geo | safe }}
-        json.features[0].properties['popupContent'] = `
-            <strong>{{object.name}}</strong><br>
-            <a href={% url 'site_detail' pk=object.pk %} class=btn-link>Details</a>
-            `
-        json.features[0].properties['id'] = "{{object.pk}}"
-        drawJson(json);
-        </script>
-    {% endfor %}
-    <script>
-        fitBounds()
-        $('tr').on('click', function(){
-            var pk = $(this).attr('id').split('_')[1]
-            openPopup(parseInt(pk))
-        })
-        $('#site-list-search').on("keyup", function() {
-            var value = $("#site-list-search").val().toLowerCase();
-            $("tr").filter(function() {
-                if($(this).text().toLowerCase().indexOf(value) > -1){
-                    $(this).show()
-                } else {
-                    $(this).hide()
-                }
-            });
+<script>
+    $('#site-list-search').on("keyup", function() {
+        var value = $("#site-list-search").val().toLowerCase();
+        $("tr").filter(function() {
+            if($(this).text().toLowerCase().indexOf(value) > -1){
+                $(this).show()
+            } else {
+                $(this).hide()
+            }
         });
-    </script>
+    });
+</script>
 {% endblock %}

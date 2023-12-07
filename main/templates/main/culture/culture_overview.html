@@ -1,0 +1,40 @@
+<div style="height: 480px;" id="map"></div>
+<table class="table" id="culture_detail_table">
+    <thead>
+        <tr>
+        <th>Associated Hominin</th>
+        <th>Parent Culture</th>
+        <th>Children</th>
+        <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+        <td>{{object.hominin_group}}</td>
+        <td>
+        {% if object.culture %}
+        <a class='btn-link' href="{% url 'culture_detail' object.culture.pk %}">{{object.culture.name}}</a>
+        {% endif %}
+        </td>
+        <td>
+        {% for child in object.children %}
+        <a class='btn-link' href="{% url 'culture_detail' child.pk %}">{{child.name}}</a><br>
+        {% endfor %}
+        </td>
+        <td>
+            {% if request.user.is_authenticated %}
+            <div class="popover popover-right">
+            <button class="btn"><i class="icon icon-menu"></i></button>
+            <div class="popover-container">
+                <div class="card">
+                <div class="card-body">
+                    <button class="btn tooltip tooltip-top fill_modal" data-tooltip="Properties" data-info="culture_{{object.pk}}" data-url="{% url 'ajax_fill_modal' %}?type=culture">Prop</button>
+                </div>
+                </div>
+            </div>
+            </div>
+            {% endif %}
+        </td>
+        </tr>
+    </tbody>
+</table>

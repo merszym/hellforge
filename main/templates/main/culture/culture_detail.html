@@ -11,6 +11,7 @@
 {% load static %}
 
 <div class='columns'>
+  <span id="get_location_data" data-url="{% url 'main_culture_geodata' %}?object={{object.pk}}"></span>
     <div id="mobile" class="column col-4" style="position:relative;">
         {% if request.user.is_authenticated %}
         <a class="btn btn-primary" href="{% url 'culture_update' object.pk %}" style="position:absolute; right:5%; top:10px"><i class="icon icon-edit"></i></a>
@@ -18,53 +19,22 @@
         <div class="my-2">
           <h2>{{object.name}} Sites</h2>
           <div class="btn-group">
-            <button id='btn-overview' class="btn btn-primary overview-toggle">Culture Overview</button>
-            <button id='btn-descr' class="btn render_description overview-toggle"  data-url="{% url 'main_render_description' object.description.first.pk %}?origin=culture">Notes</button>
+            <div class="btn tab-item active"
+              data-group="culture-panel-1"
+              hx-get="{% url 'main_culture_overview' %}"
+              hx-vals='{"object":"{{object.pk}}" }'
+              hx-target="#culture-panel-1"
+              hx-trigger="load,click">
+              Culture Overview
+            </div>
+            <div class="btn tab-item"
+              data-group="culture-panel-1"
+              hx-get="{% url 'main_render_description' object.description.first.pk %}?origin=culture"
+              hx-target="#culture-panel-1">
+              Notes
+            </div>
           </div>
-          <div id="description-overview" style="padding:10px;" class="panel">
-            <div style="height: 480px;" id="map"></div><br>
-            <table class="table" id="culture_detail_table">
-                <thead>
-                  <tr>
-                    <th>Associated Hominin</th>
-                    <th>Parent Culture</th>
-                    <th>Children</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>{{object.hominin_group}}</td>
-                    <td>
-                    {% if object.culture %}
-                    <a class='btn-link' href="{% url 'culture_detail' object.culture.pk %}">{{object.culture.name}}</a>
-                    {% endif %}
-                    </td>
-                    <td>
-                    {% for child in object.children %}
-                    <a class='btn-link' href="{% url 'culture_detail' child.pk %}">{{child.name}}</a><br>
-                    {% endfor %}
-                    </td>
-                    <td>
-                      {% if request.user.is_authenticated %}
-                      <div class="popover popover-right">
-                        <button class="btn"><i class="icon icon-menu"></i></button>
-                        <div class="popover-container">
-                          <div class="card">
-                            <div class="card-body">
-                              <button class="btn tooltip tooltip-top fill_modal" data-tooltip="Properties" data-info="culture_{{object.pk}}" data-url="{% url 'ajax_fill_modal' %}?type=culture">Prop</button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      {% endif %}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-          </div>
-          <div id="description-description" class="panel" style="display:none;">
-          </div>
+          <div id="culture-panel-1" style="padding:10px;" class="panel"></div>
         </div>
     </div>
     <div class="column">
@@ -77,7 +47,6 @@
             {% include 'main/timeline/timeline-body.html' %}
     </div>
         <script src="{% static 'js/location.js' %}"></script>
-        <script> drawJson({{ geo | safe }}); fitBounds();</script>
         <script src="{% static 'js/site.js' %}"></script>
         <script src="{% static 'js/profile.js' %}"></script>
         <script src="{% static 'js/description.js' %}"></script>

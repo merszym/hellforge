@@ -1,8 +1,3 @@
-//load the project status button in each page
-$(document).ready(function(){
-    loadElement()
-});
-
 //generic search function!
 //search-input is handled by the specific data-url tag!
 //make sure to have a csrf token ready
@@ -71,19 +66,6 @@ function reloadElement(element){
         });
     }
 }
-
-// display the project status
-function loadElement(){
-    var element = $('#project_status_tile')
-    $.ajax({
-        url: element.attr('data-url'),
-        success: function(html) {
-            element.html(html)
-        }
-    });
-}
-
-
 
 $('body').on('click', '.generic_reload', function(){
     var element = $(this).attr('data-reload')
