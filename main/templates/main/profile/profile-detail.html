@@ -3,8 +3,14 @@
     <div style="position: relative;">
       <h3>{{object.name}}</h3>
       {% if request.user.is_authenticated %}
-      <span class="btn btn-primary tooltip tooltip-left generic_delete" data-x="profile_{{object.pk}}" data-reload="site_profile_content"
-          data-tooltip="Delete the Profile" style="position:absolute; right:5%; top:10px">
+      <span class="btn btn-primary tooltip tooltip-left generic_delete"
+        hx-post="{% url 'main_generic_delete' %}"
+        hx-vals='{
+          "instance_x": "profile_{{object.pk}}"
+        }'
+        data-hide="show_profile_{{object.pk}},profile-tab_{{object.pk}}"
+        hx-confirm="Delete the profile"
+        data-tooltip="Delete the Profile" style="position:absolute; right:5%; top:10px">
           <i class="icon icon-delete"></i>
       </span>
       {% endif %}
@@ -51,10 +57,15 @@
                     <div class="card-body">
                       <button class="btn clone_layer tooltip tooltip-top" data-tooltip="Clone Layer" id="clone_layer_{{layer.pk}}" data-url="{% url 'main_layer_clone' layer.pk %}"><i class="icon icon-plus"></i></button>
                       <button class="btn tooltip tooltip-top generic_rmm2m" data-x="layer_{{layer.pk}}" data-y="profile_{{object.pk}}" data-reload="show_profile_{{object.pk}}" data-tooltip="Remove Layer from Profile"><i class="icon icon-downward"></i></button>
-                      <a class="btn tooltip tooltip-top generic_delete"
-                            data-tooltip="Delete Layer"
-                            data-x="layer_{{layer.pk}}"
-                            data-reload="profiledetail_{{object.pk}}"
+                      <a class="btn tooltip tooltip-top"
+                        hx-post="{% url 'main_generic_delete' %}"
+                        hx-vals='{
+                          "instance_x":"layer_{{layer.pk}}"
+                        }'
+                        hx-confirm="Delete Layer"
+                        hx-target="#layer_{{layer.pk}}"
+                        hx-swap="delete"
+                        data-tooltip="Delete Layer"
                       ><i class="icon icon-delete"></i></a>
                       <div class="divider"></div>
                       <button id="layer_edit_modal" class="btn fill_modal tooltip tooltip-top" data-info="layer_{{layer.pk}}" data-tooltip="Edit Layer" data-url="{% url 'ajax_fill_modal' %}?type=layer_edit"><i class="icon icon-edit"></i></button>

@@ -14,7 +14,7 @@
         <!-- Start with the sample batches -->
         <ul class="tab" id="samplebatch-list">
             {% for samplebatch in samples %}
-            <li class="tab-item {% if forloop.counter == 1 %}active{% endif %} batch"
+            <li id="samplebatch-tab_{{samplebatch.pk}}" class="tab-item {% if forloop.counter == 1 %}active{% endif %} batch"
                 data-group="sample-batch"
                 data-show="sample-batch_{{samplebatch.pk}}">
                 <a class="badge" data-badge="{{samples|lookup:samplebatch|lookup:'samples'|lookup:'All'|length}}" style="cursor:pointer;">{{samplebatch}}</a>
@@ -33,10 +33,14 @@
                     <h3 style="margin-bottom:0px;">Batch: {{samplebatch}}</h3>
                     <span class="text-gray form-input-hint" style="margin-bottom: 14px;">From: {{samplebatch.sampled_by}} ({{samplebatch.year_of_arrival}})</span>
                     {% if not samplebatch.sample.first %}
-                    <span class="btn btn-primary tooltip tooltip-left generic_delete"
-                        data-x="samplebatch_{{samplebatch.pk}}"
-                        data-reload="site_sample_content"
-                        data-tooltip="Delete the Batch" style="position:absolute; top:0px; right:5%">
+                    <span class="btn btn-primary generic_delete"
+                        hx-post="{% url 'main_generic_delete' %}"
+                        hx-vals='{
+                            "instance_x":"samplebatch_{{samplebatch.pk}}"
+                        }'
+                        hx-swap="none"
+                        hx-confirm="Delete the Batch?"
+                        data-hide="sample-batch_{{samplebatch.pk}},samplebatch-tab_{{samplebatch.pk}}">
                         <i class="icon icon-delete"></i>
                     </span>
                     {% endif %}

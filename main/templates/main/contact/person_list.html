@@ -62,9 +62,14 @@
               <div id="person_form_{{person.pk}}" class="person_form" style="display: none;">
 
                 <button class="btn btn-sm float-right tooltip tooltip-left generic_delete"
-                    data-reload="location"
-                    data-x="person_{{person.pk}}"
-                    data-tooltip="Cancel this Person">
+                    data-tooltip="Cancel this Person"
+                    hx-post="{% url 'main_generic_delete' %}"
+                    hx-vals='{
+                        "instance_x":"person_{{person.pk}}"
+                    }'
+                    hx-swap="none"
+                    hx-confirm="Delete the Person?"
+                    data-hide="reload">
                   <i class="icon icon-delete"></i>
                 </button>
 

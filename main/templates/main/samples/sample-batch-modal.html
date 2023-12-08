@@ -21,10 +21,9 @@
                 </div>
                 {% endif %}
                 {% endfor %}
-                <span class="btn btn-primary generic_form"
-                    data-form="samplebatch-form"
-                    data-reload="site_sample_content"
-                    data-url="{% url 'main_samplebatch_create' %}">Add</span>
+                <span class="btn btn-primary"
+                    hx-target="#site_sample_content"
+                    hx-post="{% url 'main_samplebatch_create' %}?object={{object.pk}}">Add</span>
                 </form>
                 <br>
             </div>

@@ -13,7 +13,6 @@
 </head>
 <body>
     <!--Elements that store generic links!-->
-    <span id="url_generic_delete" data-url="{% url 'main_generic_delete' %}"></span>
     <span id="url_generic_addm2m" data-url="{% url 'main_generic_addm2m' %}"></span>
     <span id="url_generic_rmm2m" data-url="{% url 'main_generic_rmm2m' %}"></span>
     <span id="url_generic_setfk" data-url="{% url 'main_generic_setfk' %}"></span>
@@ -54,6 +53,11 @@
     <script src="{% static 'js/reference.js' %}"></script>
     <script src="{% static 'js/generic.js' %}"></script>
     <script src="{% static 'js/packages/jquery-ui.min.js' %}"></script>
+    <script>
+        document.body.addEventListener('htmx:configRequest', (event) => {
+            event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+        })
+    </script>
 
 </body>
 </html>

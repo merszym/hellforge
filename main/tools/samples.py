@@ -10,6 +10,7 @@ from django.db.models import Q
 import pandas as pd
 import json
 from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
+from main.tools.site import get_site_sample_tab
 
 
 def sample_upload(request):
@@ -132,8 +133,8 @@ def samplebatch_create(request):
     if request.method == "POST":
         obj = SampleBatchForm(request.POST)
         obj.save()
-        return JsonResponse({"status": True})
-    return JsonResponse({"status": False})
+        return get_site_sample_tab(request)
+    return get_site_sample_tab(request)
 
 
 urlpatterns = [

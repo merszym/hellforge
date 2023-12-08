@@ -25,7 +25,7 @@
     </div>
     <ul class="tab tab-block" id="profile-list">
         {% for profile in object.profile.all %}
-        <li class="tab-item switch_profile {% if forloop.counter == 1 %}active{% endif %}" data-group="profile" data-show="profile_{{profile.pk}}">
+        <li id="profile-tab_{{profile.pk}}" class="tab-item switch_profile {% if forloop.counter == 1 %}active{% endif %}" data-group="profile" data-show="profile_{{profile.pk}}">
             <a style="cursor:pointer;">{{profile.name}}</a>
         </li>
         {% endfor %}

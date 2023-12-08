@@ -217,7 +217,10 @@ def get_site_geo(request):
 
 def get_site_sample_tab(request):
     nested_dict = lambda: defaultdict(nested_dict)
-    object = Site.objects.get(pk = int(request.GET.get("object")))
+    try:
+        object = Site.objects.get(pk = int(request.GET.get("object")))
+    except TypeError: #object is in POST
+        object = Site.objects.get(pk = int(request.POST.get("object")))
     context = {"object":object}
     # load the samples and batches
     # first create a batch for the samples that dont have one yet...

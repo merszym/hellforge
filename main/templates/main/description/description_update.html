@@ -22,9 +22,16 @@ Edit Description
 
 {% for author in object.author.all %}
 
-<span class="chip">
+<span class="chip" id="author-chip_{{author.id}}">
   {{author.position}}. {{author.person}}
-  <span class="btn btn-clear generic_delete" data-x="author_{{author.pk}}" data-reload="authorblock" aria-label="Close" role="button"></span>
+  <span class="btn btn-clear"
+    hx-post="{% url 'main_generic_delete' %}"
+    hx-vals='{
+      "instance_x":"author_{{author.pk}}"
+    }'
+    hx-target="#author-chip_{{author.id}}"
+    hx-swap="delete"
+    aria-label="Close" role="button"></span>
 </span>
 
 {% empty %}

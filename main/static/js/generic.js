@@ -29,7 +29,6 @@ $('body').on('keyup paste','#search-input',function(){
 
 //generic filter function
 $('body').on('click', '.generic_filter', function(){
-    console.log($(this).attr("data-term"))
     var term = $(this).attr('data-term').toLowerCase()
     var search = $(this).attr('data-search')
     $(search).filter(function() {
@@ -89,7 +88,6 @@ $('body').on('click','.tab-item', function(){
 // generic modal handling
 $('body').on('click','.modal_open', function(){
     var element = $(`#${$(this).attr('data-open')}`)
-    console.log(element)
     element.addClass('active')
 });
 $('body').on('click','.modal_close', function(){
@@ -158,34 +156,17 @@ $('body').on('click', '.generic_xy', function(){
 });
 
 
-// generic delete --> add confirm class and remove it after 3 sec
+// generic delete --> hide the element after delete request
 $('body').on('click','.generic_delete', function(){
-    $(this).addClass('generic_delete_confirm text-error')
-    $(this).attr('data-tooltip', 'Confirm Delete!')
-    var element = $(this).attr('data-x')
-    setTimeout(function() {
-        $('.generic_delete').attr('data-tooltip', `Delete ${element.split('_')[0]}`)
-        $('.generic_delete').removeClass('generic_delete_confirm text-error')
-    }, 2000);
-})
-
-
-$('body').on('click','.generic_delete_confirm', function(){
-    var formdata = new FormData();
-    var reload = $(this).attr('data-reload')
-    var click = $(this).attr('data-click')
-    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
-    formdata.append('instance_x', $(this).attr('data-x'));
-    $.ajax({
-        type: "POST",
-        processData: false,
-        contentType: false,
-        data: formdata,
-        url: $('#url_generic_delete').attr("data-url"),
-        success: function() {
-            postGen(click, reload)
-        }
-    });
+    var tohide = $(this).attr('data-hide')
+    if (tohide == 'reload'){
+        location.reload()
+    }
+    else {
+        $.each(tohide.split(','), function(i,val){
+            $(`#${val}`).hide()
+        });
+    }
 })
 
 // generic m2m functions

@@ -1,13 +1,16 @@
 <div class="divider text-center" data-content="Synonyms"></div>
 {% for syn in object.synonyms.all %}
-<div class="tile tile-centered">
-    <div class="tile-icon">
-      <button class="btn generic_delete tooltip tooltip-right"
-              data-tooltip="Delete Synonym"
-              data-x="synonym_{{syn.pk}}"
-              data-click="reload">
+<div class="tile tile-centered" id="synonym_{{syn.pk}}">
+    <div class="tile-icon"
+      hx-post="{% url 'main_generic_delete' %}"
+      hx-vals='{
+          "instance_x":"synonym_{{syn.pk}}"
+        }'
+      hx-target="#synonym_{{syn.pk}}"
+      hx-swap="delete">
+      <span class="btn tooltip tooltip-right" data-tooltip="Delete Synonym">
         <i class="icon icon-delete" centered></i>
-      </button>
+      </span>
     </div>
     <div class="tile-content">
         <div class="tile-title">{{syn.name}}</div>

@@ -1,7 +1,7 @@
 from main.models import models, Sample
 from main.queries import queries
 from django.http import JsonResponse, HttpResponse
-from django.urls import path
+from django.urls import path, reverse
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
 from datetime import datetime
@@ -160,6 +160,7 @@ def delete_x(request, response=True):
     """
     x = get_instance_from_string(request.POST.get("instance_x"))
     x.delete()
+
     return JsonResponse({"status": True}) if response else True
 
 

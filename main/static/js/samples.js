@@ -49,7 +49,6 @@ $('body').on('click','.add_samplebatch_image',function(){
             form_data.append('image', file_data);
             form_data.append('instance_x', instance_x)
             form_data.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
-            console.log(form_data)
             $.ajax({
                 type: "POST",
                 url: url,
