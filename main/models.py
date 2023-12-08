@@ -696,6 +696,13 @@ class SampleBatch(models.Model):
         }
         return data
 
+    @classmethod
+    def table_columns(self):
+        return [
+            "Sample Batch Name",
+            "Sample Batch Arrival"
+        ]
+
 
 class Sample(models.Model):
     type = models.CharField("sample type", max_length=400, null=True, blank=True)

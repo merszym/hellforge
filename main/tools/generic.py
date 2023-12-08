@@ -49,7 +49,9 @@ def get_dataset(request):
 
     #now set up the query
     filter = {queries(column,unique):start}
+
     qs = models[unique].objects.filter(**filter)
+
     # and get the dataframe
     df = get_dataset_df(qs, start, include)
 
