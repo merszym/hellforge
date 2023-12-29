@@ -1,0 +1,107 @@
+{% load static %}
+
+<a href="#close" class="modal-overlay" aria-label="Close"></a>
+<div class="modal-container">
+    <div class="modal-header">
+        <a id="modal-close" class="btn btn-clear float-right" href="#" aria-label="Close"></a>
+        <div class="modal-title h5">Edit Layer</div>
+    </div>
+
+    {% if type == "edit" %}
+
+    {# -------------------- #}
+    {#   LAYER EDIT MODAL   #}
+    {# -------------------- #}
+
+    <div class="modal-body">
+        <div class="content  my-2">
+            <div id="reldate-content">
+                <div id="modal-form">
+                    <h6>Edit Layer information</h6>
+                    <div class="input-group">
+                        <span class="input-group-addon">Layer Name</span>
+                        <input type="text" class="form-input" name="layer-name" value="{{object.name}}">
+                        <span id="layer-setname" class="btn btn-primary input-group-btn" data-x="layer_{{object.pk}}" data-url="{% url 'main_layer_setname' %}">OK</span>
+                    </div>
+                    <p class="form-input-hint">Update the Layer name. Provide a "Unit" to group multiple Layers</p>
+                    <h6>Add Additional Information</h6>
+                    {% include 'main/synonyms/synonyms-chip-display.html' %}
+                    {% include 'main/synonyms/synonyms-form.html' %}
+                    <div class="divider text-center" data-content="Parent"></div>
+                    {% if object.parent %}
+                    <div class="tile tile-centered">
+                        <div class="tile-icon my-1">
+                            <span class="btn tooltip tooltip-right generic_unsetfk" data-tooltip="Remove" data-x="layer_{{object.pk}}" data-y="layer" data-click="reload">
+                                <i class="icon icon-delete" centered></i>
+                            </span>
+                        </div>
+                        <div class="tile-content">
+                            <div class="tile-title">{{object.parent.name}}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="input-group">
+                        <span class="input-group-addon">Parent</span>
+                        <select class="form-select" name="parent">
+                            {% if object.parent %}
+                            <option value="layer_{{object.parent.pk}}" selected>{{object.parent}}</option>
+                            {% else %}
+                            <option value="">---</option>
+                            {% endif %}
+                            {% for option in parent_options %}
+                            <option value="layer_{{option.pk}}">{{option}}</option>
+                            {% endfor %}
+                        </select>
+                        <span class="btn btn-primary input-group-btn generic_setfk"
+                            data-x="layer_{{object.pk}}"
+                            data-y-select="parent"
+                            data-click="reload"
+                            >OK</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% elif type == "properties" %}
+
+    {# ------------------------ #}
+    {#   LAYER PROPERTY MODAL   #}
+    {# ------------------------ #}
+
+    <div class="modal-body">
+        <div class="content  my-2">
+            <div id="modal-form">
+                <h6>Culture</h6>
+                {% include 'main/culture/culture-chip-display.html' %}
+                {% include 'main/culture/culture-searchinput.html' with object=object %}
+                <h6>Epoch</h6>
+                {% include 'main/epoch/epoch-chip-display.html' %}
+                {% include 'main/epoch/epoch-searchinput.html' %}
+            </div>
+        </div>
+    </div>
+
+    {% elif type == "dates" %}
+
+    {# ------------------------ #}
+    {#   LAYER DATE MODAL       #}
+    {# ------------------------ #}
+
+    <div class="modal-body">
+        <div class="content">
+            <div id="dating-content">
+                <form id="modal-form" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {% include 'main/dating/dating-fields.html' %}
+                    <br>
+                    <span id="jax_add_date" class="btn btn-primary addDate" data-url="{% url 'ajax_date_add' %}">Save</span>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% endif %}
+
+</div>
+

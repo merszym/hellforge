@@ -41,6 +41,7 @@ const observer = new MutationObserver((mutationsList, observer) => {
                 if(drawnItems.getLayers().length > 0){
                     var json = drawnItems.toGeoJSON();
                     $('#geojson').html(JSON.stringify(json));
+                    console.log($("#geojson").html)
                 }
             }
             function onEachFeature(feature, layer){

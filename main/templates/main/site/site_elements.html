@@ -1,3 +1,8 @@
+{# ------------------ #}
+{# Now the site-tab-1 #}
+{# ------------------ #}
+
+{% if element == "overview" %}
 <table class="table" style="margin-bottom:20px;">
     <thead>
     <tr>
@@ -41,14 +46,14 @@
         <td>
             {% if request.user.is_authenticated %}
             <div class="popover popover-left">
-                <button class="btn"><i class="icon icon-menu"></i></button>
-                <div class="popover-container">
-                <div class="card">
-                    <div class="card-body">
-                    <button id='contact_modal' class='btn fill_modal tooltip tooltip-top' data-info="site_{{site.pk}}" data-tooltip="Add Contact" data-url="{% url 'ajax_fill_modal' %}?type=site_contact">Properties</button>
-                    </div>
-                </div>
-                </div>
+                <span
+                    class="btn tooltip tooltip-top modal_open"
+                    data-tooltip="Edit Site Properties"
+                    hx-get="{% url 'main_modal_get' %}"
+                    hx-vals='{ "object":"site_{{object.pk}}" }'
+                    hx-target="#modal-blank"
+                    ><i class="icon icon-edit"></i>
+                </span>
             </div>
             {% endif %}
         </td>
@@ -63,3 +68,4 @@
 <br>
 {% endif %}
 <div style="height: 480px;" id="map"></div>
+{% endif %}

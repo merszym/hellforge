@@ -19,6 +19,7 @@ urlpatterns = [
     path("projects/", include("main.tools.projects")),
     path("samples/", include("main.tools.samples")),
     path("analyzed-samples/", include("main.tools.analyzed_samples")),
+    path("ajax/", include("main.ajax")),
     path("contact/add", ajax.save_contact, name="ajax_contact_add"),
     path("contact/search", ajax.search_contact, name="ajax_contact_search"),
     path("locs/search", ajax.search_loc, name="ajax_loc_search"),

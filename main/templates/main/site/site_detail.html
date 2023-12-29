@@ -65,8 +65,8 @@
             <div class="btn-group">
                 <div class="btn active tab-item"
                     data-group="site-view-1"
-                    hx-get="{% url 'main_site_overview' %}"
-                    hx-vals='{ "object": "{{ object.pk }}" }'
+                    hx-get="{% url 'main_site_element' %}"
+                    hx-vals='{ "object": "{{ object.pk }}", "element":"overview" }'
                     hx-target="#site-panel-1"
                     hx-trigger="load,click">
                     Site Overview

@@ -15,18 +15,23 @@ from main.models import (
     Sample,
     SampleBatch,
     AnalyzedSample,
-    Gallery
+    Gallery,
 )
 from copy import copy
 import json
 import seaborn as sns
-from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, make smarter later
-from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
+from django.contrib.auth.mixins import (
+    LoginRequiredMixin,
+)  # this is for now, make smarter later
+from django.contrib.auth.decorators import (
+    login_required,
+)  # this is for now, make smarter later
 from collections import defaultdict
 from django.shortcuts import get_object_or_404
 from main.views import ProjectAwareListView, ProjectAwareDetailView
 from main.tools.generic import add_x_to_y_m2m, remove_x_from_y_m2m
 from main.tools.projects import get_project
+
 
 ## Sites
 class SiteDetailView(ProjectAwareDetailView):
@@ -42,7 +47,9 @@ class SiteDetailView(ProjectAwareDetailView):
 
         # get the project description
         try:
-            project_description = Description.objects.get(project=context.get("project"), site=object)
+            project_description = Description.objects.get(
+                project=context.get("project"), site=object
+            )
         except:
             project_description = None
 
@@ -60,7 +67,6 @@ class SiteDetailView(ProjectAwareDetailView):
                 for found_taxon in assemblage.taxa.all():
                     taxon = found_taxon.taxon
                     taxa[taxon.family][taxon][layer] = found_taxon.abundance
-
 
         context.update(
             {
@@ -91,11 +97,19 @@ def get_timeline_data(site_id, hidden=False, curves=False, request=False):
     site = Site.objects.get(pk=site_id)
     layers = Layer.objects.filter(site=site).prefetch_related("date")
     cultures = {}
-    for n, cult in enumerate(Culture.objects.filter(layer__in=layers).order_by("layer__pos")):
+    for n, cult in enumerate(
+        Culture.objects.filter(layer__in=layers).order_by("layer__pos")
+    ):
         cultures[cult.classname] = n
 
     groups = [
-        {"id": layer.name.lower(), "content": layer.name, "treeLevel": 2, "order": int(layer.pos)} for layer in layers
+        {
+            "id": layer.name.lower(),
+            "content": layer.name,
+            "treeLevel": 2,
+            "order": int(layer.pos),
+        }
+        for layer in layers
     ]
     dates = []
     for layer in layers:
@@ -115,12 +129,12 @@ def get_timeline_data(site_id, hidden=False, curves=False, request=False):
                 }
                 dates.append(background)
 
-        #now for the dates
+        # now for the dates
         if (project and site in project.site.all()) or (request.user.is_authenticated):
             tmp_dates = list(layer.date.all())
         else:
             # if not in project and view-only dont display unpublished dates
-            tmp_dates = [x for x in list(layer.date.all()) if len(x.ref.all())>0]
+            tmp_dates = [x for x in list(layer.date.all()) if len(x.ref.all()) > 0]
 
         if hidden:
             tmp_dates.extend(layer.hidden_dates)
@@ -141,7 +155,13 @@ def get_timeline_data(site_id, hidden=False, curves=False, request=False):
                 "background": False,
             }
             if date.hidden:
-                layerdata.update({"className": "hidden" if not (date.raw and curves) else "hiddenfill"})
+                layerdata.update(
+                    {
+                        "className": "hidden"
+                        if not (date.raw and curves)
+                        else "hiddenfill"
+                    }
+                )
 
             # if range instead of point
             if upper != lower:
@@ -152,7 +172,8 @@ def get_timeline_data(site_id, hidden=False, curves=False, request=False):
     data["cultures"] = [
         (k, v)
         for k, v in zip(
-            [x for x in sorted(cultures, key=lambda x: cultures[x])], sns.color_palette("husl", len(cultures)).as_hex()
+            [x for x in sorted(cultures, key=lambda x: cultures[x])],
+            sns.color_palette("husl", len(cultures)).as_hex(),
         )
     ]
     return data
@@ -182,7 +203,9 @@ def site_create_update(request, pk=None):
             description = Description(content_object=obj)
             description.save()
             if not obj.loc.first():
-                loc = Location(geo=form.cleaned_data.get("geo"), name=f"{obj.name} Location")
+                loc = Location(
+                    geo=form.cleaned_data.get("geo"), name=f"{obj.name} Location"
+                )
                 loc.save()
                 loc.refresh_from_db()
                 obj.loc.add(loc)
@@ -192,36 +215,48 @@ def site_create_update(request, pk=None):
                 loc.geo = form.cleaned_data.get("geo")
                 loc.save()
                 return redirect(obj)
-        return render(request, "main/site/site_form.html", {"object": object, "form": form})
-    return render(request, "main/site/site_form.html", {"form": SiteForm(instance=copy(object)), "object": object})
+        return render(
+            request, "main/site/site_form.html", {"object": object, "form": form}
+        )
+    return render(
+        request,
+        "main/site/site_form.html",
+        {"form": SiteForm(instance=copy(object)), "object": object},
+    )
 
-def get_site_overview(request):
-    object = Site.objects.get(pk = int(request.GET.get("object")))
-    return render(request,"main/site/site_overview.html",{"object":object})
+
+def get_site_element(request):
+    object = Site.objects.get(pk=int(request.GET.get("object")))
+    element = request.GET.get("element")
+    return render(
+        request, "main/site/site_elements.html", {"object": object, "element": element}
+    )
+
 
 def get_site_geo(request):
     locations = []
-    if request.GET.get('all',False)=="1":
+    if request.GET.get("all", False) == "1":
         for site in Site.objects.all():
             locations.append(site.get_location_features())
     else:
-        object = Site.objects.get(pk=int(request.GET.get('object')))
+        object = Site.objects.get(pk=int(request.GET.get("object")))
         if object.child.all():
             # if this is an umbrella site
             for child in object.child.all():
                 locations.append(child.get_location_features())
         else:
             locations.append(object.get_location_features())
-    locations = [x for x in locations if x != {} ]
+    locations = [x for x in locations if x != {}]
     return JsonResponse(locations, safe=False)
+
 
 def get_site_sample_tab(request):
     nested_dict = lambda: defaultdict(nested_dict)
     try:
-        object = Site.objects.get(pk = int(request.GET.get("object")))
-    except TypeError: #object is in POST
-        object = Site.objects.get(pk = int(request.POST.get("object")))
-    context = {"object":object}
+        object = Site.objects.get(pk=int(request.GET.get("object")))
+    except TypeError:  # object is in POST
+        object = Site.objects.get(pk=int(request.POST.get("object")))
+    context = {"object": object}
     # load the samples and batches
     # first create a batch for the samples that dont have one yet...
     tmp, c = SampleBatch.objects.get_or_create(name="Undefined Batch", site=object)
@@ -235,26 +270,33 @@ def get_site_sample_tab(request):
 
     # iterate over the batches
     sample_query = Sample.objects.filter(Q(site=object))
-    analyzed_samples = AnalyzedSample.objects.filter(sample__in = sample_query)
+    analyzed_samples = AnalyzedSample.objects.filter(sample__in=sample_query)
     batches = object.sample_batch.all()
 
     for batch in batches:
         if not batch.gallery:
-            #TODO: move to signals
+            # TODO: move to signals
             tmp = Gallery(title=batch.name)
             tmp.save()
             batch.gallery = tmp
             batch.save()
         # hide Undefinied batch if empty and other ones exist
-        if (len(batches) > 1) and (batch.name == "Undefined Batch") and (len(batch.sample.all()) == 0):
+        if (
+            (len(batches) > 1)
+            and (batch.name == "Undefined Batch")
+            and (len(batch.sample.all()) == 0)
+        ):
             continue
         # create All placeholders
-        if not "All" in samples[batch]['samples']:
-            samples[batch]['samples']["All"] = []
-            samples[batch]['libraries']["All"] = []
+        if not "All" in samples[batch]["samples"]:
+            samples[batch]["samples"]["All"] = []
+            samples[batch]["libraries"]["All"] = []
         batch_samples = sample_query.filter(batch=batch)
         # iterate over the layers
-        for layer in sorted(list(set([x.layer for x in batch_samples])), key=lambda x: getattr(x, "pos", 0)):
+        for layer in sorted(
+            list(set([x.layer for x in batch_samples])),
+            key=lambda x: getattr(x, "pos", 0),
+        ):
             # get the samples
             qs = batch_samples.filter(layer=layer)
             libs = analyzed_samples.filter(sample__in=qs)
@@ -262,10 +304,10 @@ def get_site_sample_tab(request):
             if len(qs) > 0:
                 if layer == None:
                     layer = "unknown"
-                samples[batch]['samples']["All"].extend(qs)
-                samples[batch]['libraries']["All"].extend(libs)
-                samples[batch]['samples'][layer] = qs
-                samples[batch]['libraries'][layer] = libs
+                samples[batch]["samples"]["All"].extend(qs)
+                samples[batch]["libraries"]["All"].extend(libs)
+                samples[batch]["samples"][layer] = qs
+                samples[batch]["libraries"][layer] = libs
                 # add the layer to the layer-list
                 try:
                     sample_layers[batch].append(layer)
@@ -278,7 +320,8 @@ def get_site_sample_tab(request):
             "sample_layers": sample_layers,
         }
     )
-    return render(request,"main/site/site-sample-content.html",context)
+    return render(request, "main/site/site-sample-content.html", context)
+
 
 urlpatterns = [
     path("add-profile/<int:site_id>", add_profile, name="main_site_profile_create"),
@@ -286,7 +329,7 @@ urlpatterns = [
     path("edit/<int:pk>", site_create_update, name="main_site_update"),
     path("list", SiteListView.as_view(), name="site_list"),
     path("<int:pk>", SiteDetailView.as_view(), name="site_detail"),
-    path("overview", get_site_overview, name="main_site_overview"),
+    path("element", get_site_element, name="main_site_element"),
     path("geodata", get_site_geo, name="main_site_geo"),
-    path("sample-tab", get_site_sample_tab, name="main_site_sample_tab")
+    path("sample-tab", get_site_sample_tab, name="main_site_sample_tab"),
 ]

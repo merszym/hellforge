@@ -87,7 +87,7 @@ $('body').on('click','.tab-item', function(){
 
 // generic modal handling
 $('body').on('click','.modal_open', function(){
-    var element = $(`#${$(this).attr('data-open')}`)
+    var element = $("#modal-blank")
     element.addClass('active')
 });
 $('body').on('click','.modal_close', function(){
@@ -157,6 +157,7 @@ $('body').on('click', '.generic_xy', function(){
 
 
 // generic delete --> hide the element after delete request
+// in case the one hx-target isnt enough...
 $('body').on('click','.generic_delete', function(){
     var tohide = $(this).attr('data-hide')
     if (tohide == 'reload'){

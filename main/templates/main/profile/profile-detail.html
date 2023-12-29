@@ -68,10 +68,27 @@
                         data-tooltip="Delete Layer"
                       ><i class="icon icon-delete"></i></a>
                       <div class="divider"></div>
-                      <button id="layer_edit_modal" class="btn fill_modal tooltip tooltip-top" data-info="layer_{{layer.pk}}" data-tooltip="Edit Layer" data-url="{% url 'ajax_fill_modal' %}?type=layer_edit"><i class="icon icon-edit"></i></button>
-                      <button id="layer_edit_modal" class="btn fill_modal tooltip tooltip-top" data-info="layer_{{layer.pk}}" data-tooltip="Edit Layer Properties" data-url="{% url 'ajax_fill_modal' %}?type=layer_properties">Prop</button>
+
+                      <span class="btn modal_open tooltip tooltip-top" data-tooltip="Edit Layer"
+                        hx-get="{% url 'main_modal_get' %}"
+                        hx-vals='{"object":"layer_{{layer.pk}}", "type":"edit"}'
+                        hx-target="#modal-blank">
+                        <i class="icon icon-edit"></i>
+                      </span>
+
+                      <span class="btn modal_open tooltip tooltip-top" data-tooltip="Edit Layer Properties"
+                        hx-get="{% url 'main_modal_get' %}"
+                        hx-vals='{"object":"layer_{{layer.pk}}","type":"properties"}'
+                        hx-target="#modal-blank">
+                        Prop
+                      </span>
                       <div class="divider"></div>
-                      <button id='date_modal' class='btn fill_modal tooltip tooltip-top' data-info="layer_{{layer.pk}}" data-tooltip="Add Dating" data-url="{% url 'ajax_fill_modal' %}?type=dating"><i class="icon icon-time"></i></button>
+                      <span class="btn modal_open tooltip tooltip-top" data-tooltip="Add Dating"
+                        hx-get="{% url 'main_modal_get' %}"
+                        hx-vals='{"object":"layer_{{layer.pk}}","type":"dates"}'
+                        hx-target="#modal-blank">
+                        <i class="icon icon-time"></i>
+                      </span>
                     </div>
                   </div>
                 </div>

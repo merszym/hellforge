@@ -4,9 +4,11 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.urls import path
 from django.db.models import Q
-from main.models import models, Date
+from main.models import models, Date, Site
 from main.tools.generic import remove_x_from_y_m2m, delete_x, get_instance_from_string
-from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
+from django.contrib.auth.decorators import (
+    login_required,
+)  # this is for now, make smarter later
 
 
 def calibrate(estimate, plusminus, curve="intcal20"):
@@ -14,7 +16,9 @@ def calibrate(estimate, plusminus, curve="intcal20"):
     r = R(int(estimate), int(plusminus), "tmp")
     try:
         calibrated = r.calibrate(curve)
-        raw = list([(x[0], round(x[1], 4)) for x in calibrated])  # list of datapoints [date, proportion]
+        raw = list(
+            [(x[0], round(x[1], 4)) for x in calibrated]
+        )  # list of datapoints [date, proportion]
         lower, upper = calibrated.quantiles()[95]
         return raw, upper, lower, curve
     except ValueError:
@@ -40,7 +44,9 @@ def calibrate_c14(request):
     pm = request.GET.get("pm", False)
     if date and pm and pm != "0":
         raw, upper, lower, curve = calibrate(date, pm)
-        return JsonResponse({"status": True, "lower": lower, "upper": upper, "curve": curve})
+        return JsonResponse(
+            {"status": True, "lower": lower, "upper": upper, "curve": curve}
+        )
     return JsonResponse({"status": False})
 
 
@@ -62,7 +68,7 @@ def batch_upload(request):
     df = pd.read_csv(request.FILES["file"], sep=",")
     df.drop_duplicates(inplace=True)
 
-    site = get_instance_from_string(request.POST.get("instance_x")).site
+    site = Site.objects.get(pk=int(request.GET.get("site")))
     all_layers = [x.name for x in site.layer.all()]
 
     # filter for expected/unexpected columns
@@ -79,13 +85,17 @@ def batch_upload(request):
 
     layer_wrong = df[df.Layer.isin(all_layers) == False].copy()
     if len(layer_wrong) > 0:
-        issues.append(f"Removed non-existing Layers: {','.join(set(layer_wrong['Layer']))}")
+        issues.append(
+            f"Removed non-existing Layers: {','.join(set(layer_wrong['Layer']))}"
+        )
         df.drop(layer_wrong.index, inplace=True)
     return render(
         request,
         "main/dating/dating-batch-confirm.html",
         {
-            "dataframe": df.fillna("").to_html(index=False, classes="table table-striped col-12"),
+            "dataframe": df.fillna("").to_html(
+                index=False, classes="table table-striped col-12"
+            ),
             "issues": issues,
             "json": df.to_json(),
             "site": site,
@@ -157,8 +167,15 @@ def add(request):
                 pass
         # validate that dates exist in the form... is relevant if the date doesnt exist yet
         if not obj.pk:
-            if any([form.cleaned_data.get(x, False) for x in ["estimate", "upper", "lower"]]):
-                obj = form.save()  # post_safe signal fires here to calibrate if not done yet
+            if any(
+                [
+                    form.cleaned_data.get(x, False)
+                    for x in ["estimate", "upper", "lower"]
+                ]
+            ):
+                obj = (
+                    form.save()
+                )  # post_safe signal fires here to calibrate if not done yet
                 obj.refresh_from_db()
             else:
                 form.add_error(None, "Please provide a Date")
@@ -175,7 +192,9 @@ def add(request):
         return JsonResponse({"status": True})
         # error validation
     return render(
-        request, "main/dating/dating-modal-content.html", {"datingoptions": DatingMethod.objects.all(), "form": form}
+        request,
+        "main/dating/dating-modal-content.html",
+        {"datingoptions": DatingMethod.objects.all(), "form": form},
     )
 
 

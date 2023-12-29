@@ -16,7 +16,7 @@ from .models import (
     Date,
 )
 from django.db.models import Q
-from django.urls import reverse
+from django.urls import reverse, path
 from django.views.decorators.csrf import csrf_exempt
 import json
 from .models import models
@@ -34,30 +34,47 @@ def download_header(request):
     return download_csv(df)
 
 
+def get_modal_context(context):
+    object = context["object"]
+    # Add layer edit context
+    if object.model == "layer" and context["type"] == "edit":
+        options = Layer.objects.filter(Q(site=object.site)).exclude(id=object.pk)
+        if object.parent:
+            options = options.exclude(id=object.parent.pk)
+        context.update({"parent_options": options})
+    # Add layer date context
+    if object.model == "layer" and context["type"] == "dates":
+        context.update({"datingoptions": DatingMethod.objects.all(), "origin": "form"})
+    return context
+
+
+# this is for the modals
+# return the rendered html for the requested modal
+def get_modal(request):
+    object = get_instance_from_string(request.GET.get("object"))
+    context = {"object": object, "type": request.GET.get("type", "")}
+    model = object.model
+    context = get_modal_context(context)
+    # get additional context
+    return render(request, f"main/modals/{model}_modal.html", context)
+
+
 # belongs into site, layer or profile tools
 def fill_modal(request):
     choice = request.GET.get("type", False)
     object = get_instance_from_string(request.GET.get("instance"))
-
-    if choice == "layer_edit":
-        options = Layer.objects.filter(Q(site=object.site)).exclude(id=object.pk)
-        if object.parent:
-            options = options.exclude(id=object.parent.pk)
-        html = render(request, "main/layer/layer-edit-modal.html", {"object": object, "parent_options": options})
-    if choice == "layer_properties":
-        html = render(request, "main/layer/layer-properties-modal.html", {"object": object, "origin": "layer"})
-    if choice == "dating":
+    if choice == "culture":
         html = render(
             request,
-            "main/dating/dating-modal-content.html",
-            {"datingoptions": DatingMethod.objects.all(), "origin": "form"},
+            "main/culture/culture-parent-modal.html",
+            {"object": object, "origin": "culture"},
         )
-    if choice == "culture":
-        html = render(request, "main/culture/culture-parent-modal.html", {"object": object, "origin": "culture"})
-    if choice == "site_contact":
-        html = render(request, "main/site/site-contact-modal.html", {"object": object, "origin": "site"})
     if choice == "date-list":
-        html = render(request, "main/dating/dating-list-modal.html", {"object": object, "origin": "layer"})
+        html = render(
+            request,
+            "main/dating/dating-list-modal.html",
+            {"object": object, "origin": "layer"},
+        )
     return html
 
 
@@ -79,7 +96,7 @@ def upload_image(request):
         file = request.FILES.get("image")
     except:
         file = request.FILES.get("file")
-    if gal:= request.POST.get('instance_x', False):
+    if gal := request.POST.get("instance_x", False):
         gallery = get_instance_from_string(gal)
     else:
         description = Description.objects.get(pk=int(request.GET.get("id")))
@@ -132,3 +149,8 @@ def search_loc(request):
     kw = data["keyword"]
     q = Location.objects.filter(Q(name__contains=kw))
     return JsonResponse({x.pk: x.name for x in q})
+
+
+urlpatterns = [
+    path("modal", get_modal, name="main_modal_get"),
+]

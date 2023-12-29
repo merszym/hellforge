@@ -21,7 +21,7 @@
         {% endif %}
     {% endfor %}
 {% endfor %}
-
+<span id="get_location_data" data-url="{% url 'main_site_geo' %}?object={{object.pk}}"></span>
 <form method="POST" enctype="multipart/form-data">
 {% csrf_token %}
     <div class="container">
@@ -73,7 +73,4 @@
     </div>
 </form>
 <script src="{% static 'js/location.js' %}"></script>
-{% if object.loc.first.geo %}
-<script> drawJson({{object.loc.first.geo | safe }}); fitBounds() </script>
-{% endif %}
 {% endblock %}
