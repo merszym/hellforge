@@ -17,7 +17,7 @@
         <div class="content my-2">
             <div>
                 <div id="modal-form">
-                    <h6>Update Layer</h6>
+                    <h6>Sample {{object}}</h6>
                     <div class="input-group">
                         <span class="input-group-addon">Layer of Origin</span>
                         <form>
@@ -34,7 +34,7 @@
                             <span
                                 hx-post="{% url 'sample-layer-update' %}"
                                 hx-target="#sample-batch-tab_{{object.batch.pk}}"
-                                class="btn btn-primary input-group-btn"
+                                class="btn btn-primary input-group-btn close_after_submit"
                             >OK</span>
                         </form>
                     </div>
