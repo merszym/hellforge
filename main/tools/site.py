@@ -315,12 +315,23 @@ def get_site_sample_tab(request):
                     sample_layers[batch] = ["All", layer]
     context.update(
         {
-            "samplebatch_form": SampleBatchForm,
             "samples": samples,
             "sample_layers": sample_layers,
         }
     )
     return render(request, "main/site/site-sample-content.html", context)
+
+
+## MODAL UPDATES
+
+
+@login_required
+def samplebatch_create(request):
+    if request.method == "POST":
+        obj = SampleBatchForm(request.POST)
+        obj.save()
+        return get_site_sample_tab(request)
+    return get_site_sample_tab(request)
 
 
 urlpatterns = [
@@ -332,4 +343,5 @@ urlpatterns = [
     path("element", get_site_element, name="main_site_element"),
     path("geodata", get_site_geo, name="main_site_geo"),
     path("sample-tab", get_site_sample_tab, name="main_site_sample_tab"),
+    path("create-batch", samplebatch_create, name="main_samplebatch_create"),
 ]

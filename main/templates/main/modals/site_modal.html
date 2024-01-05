@@ -4,32 +4,73 @@
 <a href="#close" class="modal-overlay" aria-label="Close"></a>
 <div class="modal-container">
     <div class="modal-header">
-        <a id="modal-close" class="btn btn-clear float-right" href="#" aria-label="Close"></a>
+        <a id="modal-close" class="btn btn-clear float-right" style="cursor: pointer;" aria-label="Close"></a>
         <div class="modal-title h5">Site Modal</div>
     </div>
-    <div class="modal-body">
-        <div class="content  my-2">
-            <div id="modal-form">
-                <h6 class="m-2">Contacts</h6>
-                {% include 'main/contact/contact-chip-display.html' %}
-                {% include 'main/contact/contact-searchinput.html' with object=object %}
-                <h6 class="m-2">Parent Site</h6>
-                {% if object.parent %}
-                <div class="tile tile-centered">
-                    <div class="tile-icon">
-                        <div class="example-tile-icon">
-                            <button class="btn generic_unsetfk" data-x="{{object.model}}_{{object.pk}}" data-y="site" data-click="reload">
-                                <i class="icon icon-delete"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="tile-content">
-                        <div class="tile-title">{{object.parent}}</div>
-                    </div>
+
+
+        {% if type == "add_samplebatch" %}
+
+        {# -------------------- #}
+        {#  BATCH CREATE MODAL  #}
+        {# -------------------- #}
+
+        <div class="modal-body">
+            <div class="content">
+                <form id='samplebatch-form' method="POST">
+                {% csrf_token %}
+                {% for field in samplebatch_form %}
+                {% if field.name != 'site' %}
+                <div class="form-group">
+                    <label class="form-label" for="{{field.name}}_id">{{field.name|title}}</label>
+                    <input class="form-input" id="{{field.name}}_id" name="{{field.name}}" placeholder="{{field.name}}" required>
+                </div>
+                {% else %}
+                <div class="form-group" style="display:none;">
+                    <input class="form-input" type="text" id="{{field.name}}_id" name="{{field.name}}" value="{{object.pk}}" required>
                 </div>
                 {% endif %}
-                {% include 'main/site/site-searchinput.html' %}
+                {% endfor %}
+                <span class="btn btn-primary"
+                    hx-target="#site_sample_content"
+                    hx-post="{% url 'main_samplebatch_create' %}?object={{object.pk}}">Add</span>
+                </form>
+                <br>
             </div>
         </div>
-    </div>
+
+        {% elif type == "add_contact" %}
+
+        {#  --------------------  #}
+        {#  CONTACT CREATE MODAL  #}
+        {#  --------------------  #}
+
+        <div class="modal-body">
+            <div class="content  my-2">
+                <div id="modal-form">
+                    <h6 class="m-2">Contacts</h6>
+                    {% include 'main/contact/contact-chip-display.html' %}
+                    {% include 'main/contact/contact-searchinput.html' with object=object %}
+                    <h6 class="m-2">Parent Site</h6>
+                    {% if object.parent %}
+                    <div class="tile tile-centered">
+                        <div class="tile-icon">
+                            <div class="example-tile-icon">
+                                <button class="btn generic_unsetfk" data-x="{{object.model}}_{{object.pk}}" data-y="site" data-click="reload">
+                                    <i class="icon icon-delete"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="tile-content">
+                            <div class="tile-title">{{object.parent}}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% include 'main/site/site-searchinput.html' %}
+                </div>
+            </div>
+        </div>
+
+        {% endif %}
+
 </div>

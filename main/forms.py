@@ -1,11 +1,21 @@
 from django import forms
-from .models import Reference, Site, Profile, Culture, Date, Epoch, Person, Synonym, SampleBatch
+from .models import (
+    Reference,
+    Site,
+    Profile,
+    Culture,
+    Date,
+    Epoch,
+    Person,
+    Synonym,
+    SampleBatch,
+)
 
 
 class SampleBatchForm(forms.ModelForm):
     class Meta:
         model = SampleBatch
-        fields = "__all__"
+        fields = ["site", "name", "sampled_by", "year_of_arrival"]
 
 
 class SynonymForm(forms.ModelForm):
@@ -25,7 +35,18 @@ class DateForm(forms.ModelForm):
 
     class Meta:
         model = Date
-        fields = ["estimate", "plusminus", "oxa", "curve", "upper", "lower", "method", "description", "ref", "info"]
+        fields = [
+            "estimate",
+            "plusminus",
+            "oxa",
+            "curve",
+            "upper",
+            "lower",
+            "method",
+            "description",
+            "ref",
+            "info",
+        ]
 
 
 class ReferenceForm(forms.ModelForm):

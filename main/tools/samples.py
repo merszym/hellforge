@@ -145,15 +145,6 @@ def save_verified(request):
     return JsonResponse({"status": True})
 
 
-@login_required
-def samplebatch_create(request):
-    if request.method == "POST":
-        obj = SampleBatchForm(request.POST)
-        obj.save()
-        return get_site_sample_tab(request)
-    return get_site_sample_tab(request)
-
-
 # UPDATE MODALS
 
 
@@ -176,6 +167,5 @@ def update_layer(request):
 urlpatterns = [
     path("upload", sample_upload, name="main_sample_upload"),
     path("save", save_verified, name="ajax_save_verified_samples"),
-    path("create-batch", samplebatch_create, name="main_samplebatch_create"),
     path("update-layer", update_layer, name="sample-layer-update"),
 ]

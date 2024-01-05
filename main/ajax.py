@@ -1,4 +1,4 @@
-from .forms import ReferenceForm, DateForm, ContactForm
+from .forms import ReferenceForm, DateForm, ContactForm, SampleBatchForm
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from .models import (
@@ -45,6 +45,15 @@ def get_modal_context(context):
     # Add layer date context
     if object.model == "layer" and context["type"] == "dates":
         context.update({"datingoptions": DatingMethod.objects.all(), "origin": "form"})
+
+    # For adding sample-batches
+    if object.model == "site" and context["type"] == "add_samplebatch":
+        context.update(
+            {
+                "samplebatch_form": SampleBatchForm,
+            }
+        )
+
     return context
 
 

@@ -1,5 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="EN">
+<meta name="keywords" content="Archaeological Database, Sediment DNA, MPI EVA" />
+<meta name="description" content="Helpfully labeled layers for geneticists" />
+
 <head>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/spectre-exp.css' %}">
@@ -24,7 +27,7 @@
         }
     </style>
     <section>
-        <div class='panel-header bg-primary' style='margin-top:-4px; padding: 20px;'>
+        <div class="panel-header bg-primary" style="margin-top:-4px; padding: 20px;">
             <div style="display: flex; justify-content: space-between;">
                 <h1>{% block headline %}{% endblock %}</h1>
                 <div hx-get="{% url 'main_project_status' %}" hx-trigger="load"></div>
@@ -33,7 +36,7 @@
             {% block breadcrumps %}{% endblock %}
         </div>
         {% block paddingless %}{% endblock %}
-        <div style='padding:1%'>
+        <div style="padding:1%">
                 {% block body %}{% endblock %}
         </div>
     </section>
