@@ -19,7 +19,7 @@
     </div>
     <h4>Gallery</h4>
     <div id="gallery_{{object.gallery.pk}}" style="display: flex; gap:5px; overflow: scroll;">
-    {% for image in object.gallery.image.all %}
+        {% for image in object.gallery.image.all %}
         <!-- Show the image container -->
         <div id="image_container_{{image.pk}}" style="position: relative">
             <img src="{{image.image.url}}" style="height: 300px;"  class="modal_open" data-open="modal_image_{{image.pk}}"
@@ -40,17 +40,44 @@
                 <i class="icon icon-delete"></i>
             </span>
         </div>
-
-
-    {% endfor %}
+        {% endfor %}
         <div class="empty" style="min-height:200px; min-width:200px;">
             <div class="empty-icon">
-            <i class="icon icon-photo"></i>
+                <i class="icon icon-photo"></i>
             </div>
             <div class="empty-action">
                 <button class="btn btn-primary add_samplebatch_image" data-x="gallery_{{object.gallery.pk}}"
                     data-url="{% url 'upload' %}">Add Image</button>
             </div>
         </div>
+    </div>
+    <!-- Display the samples -->
+    <ul class="tab">
+        {% for layer in layers %}
+        {% if layer != 'unknown' %}
+        <li class="tab-item toggle_samples {% if forloop.counter == 1%} active {% endif %}"
+            data-show="{{object.classname}}-layer-tab_{{layer.pk}}"
+            data-group="{{object.classname}}-layer-tab" style="cursor: pointer;">
+            <a class="badge"
+            data-badge="{{layers|lookup:layer}}">{% if layer.name%}{{layer.name}}{%else%}All{% endif %}</a>
+        </li>
+        {% endif %}
+        {% endfor %}
+    </ul>
+    <div class="my-2">
+        <h4>Samples</h4>
+        {% if request.user.is_authenticated %}
+        {% csrf_token %}
+        <input class="fill_modal" type="file" id="sample-batch-input" data-url="{% url 'main_sample_upload' %}?batch={{samplebatch}}">
+        <span id='fauna-batch-header' data-url="{% url 'download_header' %}?model=sample" class="btn tooltip tooltip-right get-batch-header" data-tooltip="Get Sample Upload Template"><i class="icon icon-download"></i></span>
+        <br>
+        {% endif %}
+        {% for layer in layers %}
+            {% if layer != 'unknown' %}
+                {% include 'main/samples/sample-table.html' with object_list=data|lookup:'samples'|lookup:layer counter=forloop.counter batch=object site=object.site %}
+            {% endif %}
+        {% empty %}
+            {% include 'main/samples/sample-table.html' with object_list="empty" counter=forloop.counter site=object.site %}
+        {% endfor %}
     </div>
 </div>

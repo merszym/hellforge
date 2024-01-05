@@ -8,8 +8,8 @@
     </div>
 {% else %}
 
-<div class="sample_table panel p-2 tab-panel" data-group="samples-{{batch.classname}}"
-    id="{{batch.classname}}-samples_layer_{{layer.pk}}" style="{% if counter != 1 %} display: none;{% endif %} max-height:500px; overflow:scroll;">
+<div class="sample_table panel tab-panel" data-group="{{object.classname}}-layer-tab"
+    id="{{object.classname}}-layer-tab_{{layer.pk}}" style="{% if counter != 1 %} display: none;{% endif %} max-height:500px; overflow:scroll;">
 <style>
     .unassigned{
         background-color: rgb(201, 115, 115) !important;

@@ -306,7 +306,48 @@ def samplebatch_create(request):
 
 
 def get_site_samplebatch_tab(request):
-    context = {"object": get_instance_from_string(request.GET.get("object"))}
+    batch = get_instance_from_string(request.GET.get("object"))
+    nested_dict = lambda: defaultdict(nested_dict)
+
+    data = nested_dict()
+    layers = nested_dict()
+
+    # TODO: move to signals
+    # Create a Gallery for each Batch
+    if not batch.gallery:
+        tmp = Gallery(title=batch.name)
+        tmp.save()
+        batch.gallery = tmp
+        batch.save()
+
+    batch_samples = Sample.objects.filter(batch=batch)
+
+    layers["All"] = 0
+    for layer in sorted(
+        list(set([x.layer for x in batch_samples])),
+        key=lambda x: getattr(x, "pos", 0),
+    ):
+        # get the samples
+        layer_samples = batch_samples.filter(layer=layer)
+        layer_libraries = AnalyzedSample.objects.filter(sample__in=layer_samples)
+        # and add them to the dict
+        if len(layer_samples) > 0:
+            if layer == None:
+                layer = "unknown"
+            # create All placeholders
+            if not "All" in data["samples"]:
+                data["samples"]["All"] = []
+                data["libraries"]["All"] = []
+            data["samples"]["All"].extend(layer_samples)
+            data["libraries"]["All"].extend(layer_libraries)
+            data["samples"][layer] = layer_samples
+            data["libraries"][layer] = layer_libraries
+            # add the layer to the layer-list
+
+            layers[layer] = len(layer_samples)
+            layers["All"] = layers["All"] + len(layer_samples)
+
+    context = {"object": batch, "layers": layers, "data": data}
     return render(request, "main/samples/sample-batch-tab.html", context)
 
 
