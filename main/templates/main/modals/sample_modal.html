@@ -33,7 +33,7 @@
                             </select>
                             <span
                                 hx-post="{% url 'sample-layer-update' %}"
-                                hx-target="#modal-blank"
+                                hx-target="#sample-batch-tab_{{object.batch.pk}}"
                                 class="btn btn-primary input-group-btn"
                             >OK</span>
                         </form>

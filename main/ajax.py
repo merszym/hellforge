@@ -14,6 +14,7 @@ from .models import (
     DatingMethod,
     Description,
     Date,
+    SampleBatch,
 )
 from django.db.models import Q
 from django.urls import reverse, path
@@ -34,8 +35,9 @@ def download_header(request):
     return download_csv(df)
 
 
-def get_modal_context(context):
-    object = context["object"]
+def get_modal_context(object, request):
+    context = {"object": object, "type": request.GET.get("type", "")}
+
     # Add layer edit context
     if object.model == "layer" and context["type"] == "edit":
         options = Layer.objects.filter(Q(site=object.site)).exclude(id=object.pk)
@@ -53,7 +55,6 @@ def get_modal_context(context):
                 "samplebatch_form": SampleBatchForm,
             }
         )
-
     return context
 
 
@@ -61,9 +62,8 @@ def get_modal_context(context):
 # return the rendered html for the requested modal
 def get_modal(request):
     object = get_instance_from_string(request.GET.get("object"))
-    context = {"object": object, "type": request.GET.get("type", "")}
     model = object.model
-    context = get_modal_context(context)
+    context = get_modal_context(object, request)
     # get additional context
     return render(request, f"main/modals/{model}_modal.html", context)
 

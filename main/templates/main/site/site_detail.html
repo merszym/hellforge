@@ -146,7 +146,7 @@
                     <a style="cursor: pointer;" class="select-block-content" data-select="site_samples"
                         hx-get="{% url 'main_site_sample_tab' %}?object={{object.pk}}"
                         hx-target="#site_samples"
-                        hx-trigger="click once">
+                        hx-trigger="load once">
                         <h4>Samples</h4>
                     </a>
                 </li>

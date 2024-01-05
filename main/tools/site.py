@@ -305,10 +305,13 @@ def samplebatch_create(request):
 ## Samplebatch-TAB
 
 
-def get_site_samplebatch_tab(request):
-    batch = get_instance_from_string(request.GET.get("object"))
-    nested_dict = lambda: defaultdict(nested_dict)
+def get_site_samplebatch_tab(request, object=False):
+    if not object:
+        batch = get_instance_from_string(request.GET.get("object"))
+    else:
+        batch = object
 
+    nested_dict = lambda: defaultdict(nested_dict)
     data = nested_dict()
     layers = nested_dict()
 

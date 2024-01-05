@@ -13,6 +13,7 @@ import json
 from django.contrib.auth.decorators import (
     login_required,
 )  # this is for now, make smarter later
+from main.tools.site import get_site_samplebatch_tab
 
 
 def sample_upload(request):
@@ -158,9 +159,7 @@ def update_layer(request):
             sample.layer = None
         sample.save()
     # return updated html
-    return render(
-        request, "main/modals/sample_modal.html", {"object": sample, "type": "edit"}
-    )
+    return get_site_samplebatch_tab(request, object=sample.batch)
 
 
 urlpatterns = [

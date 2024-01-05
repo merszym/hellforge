@@ -57,7 +57,7 @@
                         style="cursor: pointer;"
                         data-tooltip="Update Layer"
                         hx-get="{% url 'main_modal_get' %}"
-                        hx-vals='{"object":"sample_{{object.pk}}", "type":"edit"}'
+                        hx-vals='{"object":"sample_{{object.pk}}", "type":"edit" }'
                         hx-target="#modal-blank"
                     {% endif %}>
                         {% if object.layer %}{{object.layer.name}}{% else %}Unassigned{% endif %}
