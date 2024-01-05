@@ -86,6 +86,10 @@ class Image(models.Model):
     title = models.CharField("title", max_length=200, blank=True)
     alt = models.TextField("alt", null=True, blank=True)
 
+    @property
+    def model(self):
+        return "image"
+
 
 class Gallery(models.Model):
     title = models.CharField("title", max_length=200, blank=True, null=True)

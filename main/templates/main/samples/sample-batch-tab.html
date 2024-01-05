@@ -22,7 +22,11 @@
     {% for image in object.gallery.image.all %}
         <!-- Show the image container -->
         <div id="image_container_{{image.pk}}" style="position: relative">
-            <img src="{{image.image.url}}" style="height: 300px;"  class="modal_open" data-open="modal_image_{{image.pk}}" />
+            <img src="{{image.image.url}}" style="height: 300px;"  class="modal_open" data-open="modal_image_{{image.pk}}"
+                hx-get="{% url 'main_modal_get' %}"
+                hx-vals='{"object":"image_{{image.pk}}", "type":"display"}'
+                hx-target="#modal-blank"/>
+            <!-- And the delete button -->
             <span class="btn tooltip tooltip-left generic_delete"
                 hx-post="{% url 'main_generic_delete' %}"
                 hx-vals='{
@@ -38,13 +42,6 @@
         </div>
 
 
-        <div id="modal_image_{{image.pk}}" class="modal modal-lg" style="z-index: 1000">
-            <a style="cursor:pointer;" class="modal-overlay modal_close" aria-label="Close"></a>
-            <div class="modal-container" style="overflow: scroll;" >
-                <img class="modal_close" src="{{image.image.url}}" style="width:900px; cursor:pointer;" />
-                <input type="text" value="{{image.alt}}" style="width:900px;" />
-            </div>
-          </div>
     {% endfor %}
         <div class="empty" style="min-height:200px; min-width:200px;">
             <div class="empty-icon">

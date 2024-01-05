@@ -1,0 +1,18 @@
+{% load static %}
+
+{% if type == "display" %}
+
+{# ----------------- #}
+{#   DISPLAY MODAL   #}
+{# ----------------- #}
+
+<div id="modal_image_{{object.pk}}" class="modal modal-lg active" style="z-index: 1000">
+    <a style="cursor:pointer;" class="modal-overlay modal_close" aria-label="Close"></a>
+    <div class="modal-container" style="overflow: scroll;">
+        <img class="modal_close" src="{{object.image.url}}" style="width:900px; cursor:pointer;" />
+        <input type="text" value="{{object.alt}}" style="width:900px;" />
+    </div>
+</div>
+
+
+{% endif %}

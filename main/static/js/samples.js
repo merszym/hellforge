@@ -57,7 +57,7 @@ $('body').on('click','.add_samplebatch_image',function(){
                 data: form_data
                 }).done(function(){
                     //#TODO: update the gallery...
-                    reloadElement(instance_x)
+                    location.reload()
                 });
         }
     });
