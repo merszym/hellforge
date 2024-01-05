@@ -1,29 +1,43 @@
-<div class="tab-panel panel p-2 my-2" data-group="sample-batch" id="sample-batch_{{samplebatch.pk}}" style="{% if forloop.counter != 1 %} display: none;{% endif %}">
+{% load format %}
+
+<div class="tab-panel panel p-2 my-2">
     <div style="position: relative;">
-        <h3 style="margin-bottom:0px;">Batch: {{samplebatch}}</h3>
-        <span class="text-gray form-input-hint" style="margin-bottom: 14px;">From: {{samplebatch.sampled_by}} ({{samplebatch.year_of_arrival}})</span>
-        {% if not samplebatch.sample.first %}
+        <h3 style="margin-bottom:0px;">Batch: {{object}}</h3>
+        <span class="text-gray form-input-hint" style="margin-bottom: 14px;">From: {{object.sampled_by}} ({{object.year_of_arrival}})</span>
+        {% if not object.sample.first %}
         <span class="btn btn-primary generic_delete"
             hx-post="{% url 'main_generic_delete' %}"
             hx-vals='{
-                "instance_x":"samplebatch_{{samplebatch.pk}}"
+                "instance_x":"samplebatch_{{object.pk}}"
             }'
             hx-swap="none"
             hx-confirm="Delete the Batch?"
-            data-hide="sample-batch_{{samplebatch.pk}},samplebatch-tab_{{samplebatch.pk}}">
+            data-hide="sample-batch_{{object.pk}},samplebatch-tab_{{object.pk}}">
             <i class="icon icon-delete"></i>
         </span>
         {% endif %}
     </div>
-    {% if samplebatch.gallery.image.first %}
     <h4>Gallery</h4>
-    {% endif %}
-    <div id="gallery_{{samplebatch.gallery.pk}}" style="display: flex; gap:5px; overflow: scroll;">
-    {% for image in samplebatch.gallery.image.all %}
-        <div style="position: relative">
+    <div id="gallery_{{object.gallery.pk}}" style="display: flex; gap:5px; overflow: scroll;">
+    {% for image in object.gallery.image.all %}
+        <!-- Show the image container -->
+        <div id="image_container_{{image.pk}}" style="position: relative">
             <img src="{{image.image.url}}" style="height: 300px;"  class="modal_open" data-open="modal_image_{{image.pk}}" />
-            <span class="btn generic_delete tooltip tooltip-left" data-reload="gallery_{{samplebatch.gallery.pk}}" data-tooltip="Delete Image" data-x="image_{{image.pk}}" style="position: absolute; top:5px; right:5px"><i class="icon icon-delete"></i></span>
+            <span class="btn tooltip tooltip-left generic_delete"
+                hx-post="{% url 'main_generic_delete' %}"
+                hx-vals='{
+                    "instance_x": "image_{{image.pk}}"
+                }'
+                hx-swap="none"
+                hx-confirm="Are you sure?"
+                data-hide="image_container_{{image.pk}}"
+                data-tooltip="Remove Image from Gallery"
+                style="position: absolute; top:5px; right:5px">
+                <i class="icon icon-delete"></i>
+            </span>
         </div>
+
+
         <div id="modal_image_{{image.pk}}" class="modal modal-lg" style="z-index: 1000">
             <a style="cursor:pointer;" class="modal-overlay modal_close" aria-label="Close"></a>
             <div class="modal-container" style="overflow: scroll;" >
@@ -37,50 +51,9 @@
             <i class="icon icon-photo"></i>
             </div>
             <div class="empty-action">
-                <button class="btn btn-primary add_samplebatch_image" data-x="gallery_{{samplebatch.gallery.pk}}"
+                <button class="btn btn-primary add_samplebatch_image" data-x="gallery_{{object.gallery.pk}}"
                     data-url="{% url 'upload' %}">Add Image</button>
             </div>
         </div>
-
-    </div>
-    <!--Add an image to the gallery-->
-    <!-- Display the samples -->
-    <ul class="tab">
-        {% for layer in sample_layers|lookup:samplebatch %}
-        {% if layer != 'unknown' %}
-        <li class="tab-item toggle_samples {% if forloop.counter == 1%} active {% endif %}" data-show="{{samplebatch.classname}}-samples_layer_{{layer.pk}}" data-group="samples-{{samplebatch.classname}}" style="cursor: pointer;">
-            <a class="badge" data-badge="{{samples|lookup:samplebatch|lookup:'samples'|lookup:layer|length}}">{% if layer.name%}{{layer.name}}{%else%}All{% endif %}</a>
-        </li>
-        {% endif %}
-        {% endfor %}
-    </ul>
-    <div class="my-2">
-    <h4>Samples</h4>
-    {% if request.user.is_authenticated %}
-    {% csrf_token %}
-    <input class="fill_modal" type="file" id="sample-batch-input" data-url="{% url 'main_sample_upload' %}?batch={{samplebatch}}">
-    <span id='fauna-batch-header' data-url="{% url 'download_header' %}?model=sample" class="btn tooltip tooltip-right get-batch-header" data-tooltip="Get Sample Upload Template"><i class="icon icon-download"></i></span>
-    <br>
-    {% endif %}
-    {% for layer in sample_layers|lookup:samplebatch %}
-        {% if layer != 'unknown' %}
-            {% include 'main/samples/sample-table.html' with object_list=samples|lookup:samplebatch|lookup:'samples'|lookup:layer counter=forloop.counter batch=samplebatch site=object %}
-        {% endif %}
-    {% empty %}
-        {% include 'main/samples/sample-table.html' with object_list="empty" counter=forloop.counter site=object %}
-    {% endfor %}
-    </div>
-    <div class="my-2">
-    <h4>Libraries</h4>
-    {% if request.user.is_authenticated %}
-    {% csrf_token %}
-    <input class="fill_modal" type="file" id="sample-batch-input" data-url="{% url 'main_analyzedsample_upload' %}">
-    <span id='fauna-batch-header' data-url="{% url 'download_header' %}?model=analyzedsample" class="btn tooltip tooltip-right get-batch-header" data-tooltip="Get Library Upload Template"><i class="icon icon-download"></i></span>
-    {% endif %}
-    {% for layer in sample_layers|lookup:samplebatch %}
-        {% if layer != 'unknown' %}
-            {% include 'main/analyzed_samples/analyzedsample_table.html' with object_list=samples|lookup:samplebatch|lookup:'libraries'|lookup:layer counter=forloop.counter batch=samplebatch site=object%}
-        {% endif %}
-    {% endfor %}
     </div>
 </div>

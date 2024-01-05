@@ -29,7 +29,11 @@ from django.contrib.auth.decorators import (
 from collections import defaultdict
 from django.shortcuts import get_object_or_404
 from main.views import ProjectAwareListView, ProjectAwareDetailView
-from main.tools.generic import add_x_to_y_m2m, remove_x_from_y_m2m
+from main.tools.generic import (
+    add_x_to_y_m2m,
+    remove_x_from_y_m2m,
+    get_instance_from_string,
+)
 from main.tools.projects import get_project
 
 
@@ -192,7 +196,6 @@ def add_profile(request, site_id):
     return JsonResponse({"status": False})
 
 
-# Sites ##
 @login_required
 def site_create_update(request, pk=None):
     object = Site.objects.get(pk=pk) if pk else None
@@ -250,11 +253,14 @@ def get_site_geo(request):
     return JsonResponse(locations, safe=False)
 
 
-def get_site_sample_tab(request):
-    nested_dict = lambda: defaultdict(nested_dict)
+# Site Sample Tab
+## Main sample-content
+
+
+def get_site_sample_content(request):
     try:
         object = Site.objects.get(pk=int(request.GET.get("object")))
-    except TypeError:  # object is in POST
+    except TypeError:  # object is in POST not GET
         object = Site.objects.get(pk=int(request.POST.get("object")))
     context = {"object": object}
     # load the samples and batches
@@ -264,22 +270,12 @@ def get_site_sample_tab(request):
     for sample in nobatch:
         sample.batch = tmp
         sample.save()
-    # then load the samples into a nested dict
-    samples = nested_dict()
-    sample_layers = nested_dict()
+    # The get the number of samples per batch for display in the site-sample-tab
 
-    # iterate over the batches
-    sample_query = Sample.objects.filter(Q(site=object))
-    analyzed_samples = AnalyzedSample.objects.filter(sample__in=sample_query)
-    batches = object.sample_batch.all()
+    batches = list(SampleBatch.objects.filter(site=object))
+    batch_samples = defaultdict(int)
 
     for batch in batches:
-        if not batch.gallery:
-            # TODO: move to signals
-            tmp = Gallery(title=batch.name)
-            tmp.save()
-            batch.gallery = tmp
-            batch.save()
         # hide Undefinied batch if empty and other ones exist
         if (
             (len(batches) > 1)
@@ -288,41 +284,13 @@ def get_site_sample_tab(request):
         ):
             continue
         # create All placeholders
-        if not "All" in samples[batch]["samples"]:
-            samples[batch]["samples"]["All"] = []
-            samples[batch]["libraries"]["All"] = []
-        batch_samples = sample_query.filter(batch=batch)
-        # iterate over the layers
-        for layer in sorted(
-            list(set([x.layer for x in batch_samples])),
-            key=lambda x: getattr(x, "pos", 0),
-        ):
-            # get the samples
-            qs = batch_samples.filter(layer=layer)
-            libs = analyzed_samples.filter(sample__in=qs)
-            # and add them to the dict
-            if len(qs) > 0:
-                if layer == None:
-                    layer = "unknown"
-                samples[batch]["samples"]["All"].extend(qs)
-                samples[batch]["libraries"]["All"].extend(libs)
-                samples[batch]["samples"][layer] = qs
-                samples[batch]["libraries"][layer] = libs
-                # add the layer to the layer-list
-                try:
-                    sample_layers[batch].append(layer)
-                except:
-                    sample_layers[batch] = ["All", layer]
-    context.update(
-        {
-            "samples": samples,
-            "sample_layers": sample_layers,
-        }
-    )
+        batch_samples[batch] = len(batch.sample.all())
+
+    context.update({"sample": object.sample.first(), "batches": batch_samples})
     return render(request, "main/site/site-sample-content.html", context)
 
 
-## MODAL UPDATES
+### create sample-batch
 
 
 @login_required
@@ -330,8 +298,16 @@ def samplebatch_create(request):
     if request.method == "POST":
         obj = SampleBatchForm(request.POST)
         obj.save()
-        return get_site_sample_tab(request)
-    return get_site_sample_tab(request)
+        return get_site_sample_content(request)
+    return get_site_sample_content(request)
+
+
+## Samplebatch-TAB
+
+
+def get_site_samplebatch_tab(request):
+    context = {"object": get_instance_from_string(request.GET.get("object"))}
+    return render(request, "main/samples/sample-batch-tab.html", context)
 
 
 urlpatterns = [
@@ -342,6 +318,7 @@ urlpatterns = [
     path("<int:pk>", SiteDetailView.as_view(), name="site_detail"),
     path("element", get_site_element, name="main_site_element"),
     path("geodata", get_site_geo, name="main_site_geo"),
-    path("sample-tab", get_site_sample_tab, name="main_site_sample_tab"),
+    path("sample-tab", get_site_sample_content, name="main_site_sample_tab"),
     path("create-batch", samplebatch_create, name="main_samplebatch_create"),
+    path("get-samplebatch", get_site_samplebatch_tab, name="main_samplebatch_get"),
 ]

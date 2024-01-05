@@ -13,7 +13,6 @@ import json
 from django.contrib.auth.decorators import (
     login_required,
 )  # this is for now, make smarter later
-from main.tools.site import get_site_sample_tab
 
 
 def sample_upload(request):
@@ -158,7 +157,7 @@ def update_layer(request):
         except ValueError:  # no layer pk given
             sample.layer = None
         sample.save()
-    # return modal html
+    # return updated html
     return render(
         request, "main/modals/sample_modal.html", {"object": sample, "type": "edit"}
     )

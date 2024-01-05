@@ -1,7 +1,7 @@
 {% load format %}
 
 <div class="my-2" id="site_sample_content">
-    {% if samples %}
+    {% if sample %}
     <div class="my-2" style="display:flex;">
         <span><strong>Download Samples:</strong></span>
         <a class="mx-2" target="_blank" href="{% url 'get_dataset' %}?from=site_{{object.pk}}&unique=library&include=samplebatch,sample,layer&extend=sample">
@@ -10,11 +10,11 @@
     <section>
         <!-- List the sample batches -->
         <ul class="tab" id="samplebatch-list">
-            {% for samplebatch in samples %}
-            <li id="samplebatch-tab_{{samplebatch.pk}}" class="tab-item {% if forloop.counter == 1 %}active{% endif %} batch"
+            {% for batch in batches %}
+            <li id="samplebatch-tab_{{batch.pk}}" class="tab-item {% if forloop.counter == 1 %}active{% endif %} batch"
                 data-group="sample-batch"
-                data-show="sample-batch_{{samplebatch.pk}}">
-                <a class="badge" data-badge="{{samples|lookup:samplebatch|lookup:'samples'|lookup:'All'|length}}" style="cursor:pointer;">{{samplebatch}}</a>
+                data-show="sample-batch-tab_{{batch.pk}}">
+                <a class="badge" data-badge="{{batches|lookup:batch}}" style="cursor:pointer;">{{batch.name}}</a>
             </li>
             {% endfor %}
             {% if request.user.is_authenticated %}
@@ -29,9 +29,14 @@
             {% endif %}
         </ul>
         <!-- Now render each batch individually! -->
-        {% for samplebatch in samples %}
-            <section id="sample-batch-tab_{{samplebatch.pk}}">
-            </section>
+        {% for batch in batches %}
+            <div class="tab-panel" id="sample-batch-tab_{{batch.pk}}" data-group="sample-batch"
+                {% if forloop.counter != 1 %}
+                style="display: none;"
+                {% endif %}
+                hx-get="{% url 'main_samplebatch_get' %}?object=samplebatch_{{batch.pk}}"
+                hx-trigger="load">
+            </div>
         {% endfor %}
     </section>
     {% else %}
