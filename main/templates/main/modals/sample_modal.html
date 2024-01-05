@@ -1,0 +1,49 @@
+{% load static %}
+
+<a href="#close" class="modal-overlay" aria-label="Close"></a>
+<div class="modal-container">
+    <div class="modal-header">
+        <a id="modal-close" class="btn btn-clear float-right" aria-label="Close" style="cursor: pointer;"></a>
+        <div class="modal-title h5">Sample Modal</div>
+    </div>
+
+    {% if type == "edit" %}
+
+    {# -------------------- #}
+    {#   LAYER EDIT MODAL   #}
+    {# -------------------- #}
+
+    <div class="modal-body">
+        <div class="content my-2">
+            <div>
+                <div id="modal-form">
+                    <h6>Update Layer</h6>
+                    <div class="input-group">
+                        <span class="input-group-addon">Layer of Origin</span>
+                        <form>
+                            <input style="display: none;" name="object" value="{{object.pk}}"></input>
+                            <select class="form-select" name="layer">
+                                {% if object.layer %}
+                                <option value="{{object.layer.pk}}" selected>{{object.layer}}</option>
+                                {% endif %}
+                                <option value="">---</option>
+                                {% for option in object.site.layer.all %}
+                                <option value="{{option.pk}}">{{option}}</option>
+                                {% endfor %}
+                            </select>
+                            <span
+                                hx-post="{% url 'sample-layer-update' %}"
+                                hx-target="#modal-blank"
+                                class="btn btn-primary input-group-btn"
+                            >OK</span>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% endif %}
+
+</div>
+

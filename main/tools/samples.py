@@ -1,5 +1,6 @@
 from main.models import models
 from main.models import Reference, Sample, Synonym, Site, Layer, Project, SampleBatch
+from main.ajax import get_modal
 from main.forms import SampleBatchForm
 from django.http import JsonResponse
 from django.urls import path
@@ -9,7 +10,9 @@ import main.tools as tools
 from django.db.models import Q
 import pandas as pd
 import json
-from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
+from django.contrib.auth.decorators import (
+    login_required,
+)  # this is for now, make smarter later
 from main.tools.site import get_site_sample_tab
 
 
@@ -35,9 +38,14 @@ def sample_upload(request):
         if "Not Found" in set(df["Reference"]):
             issues.append("Reference was not found (see Table)")
 
-    layer_wrong = df[(df["Sample Layer"].isin(all_layers) == False) & (df["Sample Layer"] == df["Sample Layer"])].copy()
+    layer_wrong = df[
+        (df["Sample Layer"].isin(all_layers) == False)
+        & (df["Sample Layer"] == df["Sample Layer"])
+    ].copy()
     if len(layer_wrong) > 0:
-        issues.append(f"Removed non-existing Layers: {','.join(set(layer_wrong['Sample Layer']))}")
+        issues.append(
+            f"Removed non-existing Layers: {','.join(set(layer_wrong['Sample Layer']))}"
+        )
         df.drop(layer_wrong.index, inplace=True)
 
     # add the sample batch
@@ -47,7 +55,9 @@ def sample_upload(request):
         request,
         "main/samples/sample-batch-confirm.html",
         {
-            "dataframe": df.fillna("").to_html(index=False, classes="table table-striped col-12"),
+            "dataframe": df.fillna("").to_html(
+                index=False, classes="table table-striped col-12"
+            ),
             "issues": issues,
             "json": df.to_json(),
             "site": site,
@@ -68,7 +78,14 @@ def save_verified(request):
         else:
             l = Layer.objects.filter(site=site, name=layer).first()
 
-        for batch, sample, synonyms, type, yoc, provenience, in zip(
+        for (
+            batch,
+            sample,
+            synonyms,
+            type,
+            yoc,
+            provenience,
+        ) in zip(
             dat["SampleBatch"],
             dat["Sample Name"],
             dat["Sample Synonyms"],
@@ -137,8 +154,28 @@ def samplebatch_create(request):
     return get_site_sample_tab(request)
 
 
+# UPDATE MODALS
+
+
+@login_required
+def update_layer(request):
+    if request.method == "POST":
+        sample = Sample.objects.get(pk=int(request.POST.get("object")))
+        try:
+            layer = Layer.objects.get(pk=int(request.POST.get("layer")))
+            sample.layer = layer
+        except ValueError:  # no layer pk given
+            sample.layer = None
+        sample.save()
+    # return modal html
+    return render(
+        request, "main/modals/sample_modal.html", {"object": sample, "type": "edit"}
+    )
+
+
 urlpatterns = [
     path("upload", sample_upload, name="main_sample_upload"),
     path("save", save_verified, name="ajax_save_verified_samples"),
     path("create-batch", samplebatch_create, name="main_samplebatch_create"),
+    path("update-layer", update_layer, name="sample-layer-update"),
 ]
