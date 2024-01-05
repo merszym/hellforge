@@ -80,4 +80,18 @@
             {% include 'main/samples/sample-table.html' with object_list="empty" counter=forloop.counter site=object.site %}
         {% endfor %}
     </div>
+    <!-- And the Libraries -->
+    <div class="my-2">
+        <h4>Libraries</h4>
+        {% if request.user.is_authenticated %}
+        {% csrf_token %}
+        <input class="fill_modal" type="file" id="sample-batch-input" data-url="{% url 'main_analyzedsample_upload' %}">
+        <span id='fauna-batch-header' data-url="{% url 'download_header' %}?model=analyzedsample" class="btn tooltip tooltip-right get-batch-header" data-tooltip="Get Library Upload Template"><i class="icon icon-download"></i></span>
+        {% endif %}
+        {% for layer in layers %}
+            {% if layer != 'unknown' %}
+                {% include 'main/analyzed_samples/analyzedsample_table.html' with object_list=data|lookup:'libraries'|lookup:layer counter=forloop.counter batch=object site=object.site%}
+            {% endif %}
+        {% endfor %}
+    </div>
 </div>
