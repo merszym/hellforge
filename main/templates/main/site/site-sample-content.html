@@ -1,7 +1,6 @@
 {% load format %}
 
 <div class="my-2" id="site_sample_content">
-    {% if sample %}
     <div class="my-2" style="display:flex;">
         <span><strong>Download Samples:</strong></span>
         <a class="mx-2" target="_blank" href="{% url 'get_dataset' %}?from=site_{{object.pk}}&unique=library&include=samplebatch,sample,layer&extend=sample">
@@ -39,7 +38,7 @@
             </div>
         {% endfor %}
     </section>
-    {% else %}
+    {% if not sample %}
     <div class="empty">
         <div class="empty-icon">
           <i class="icon icon-flag"></i>
