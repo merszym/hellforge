@@ -80,6 +80,13 @@
             {% empty %}
                 {% include 'main/samples/sample-table.html' with object_list="empty" counter=forloop.counter site=object.site %}
             {% endfor %}
+        {% else %}
+        <div class="empty">
+            <div class="empty-icon">
+            <i class="icon icon-flag"></i>
+            </div>
+            <p class="empty-title h5">No Sample Data imported</p>
+        </div>
         {% endif %}
     </div>
     <!-- And the Libraries -->
@@ -96,6 +103,13 @@
                     {% include 'main/analyzed_samples/analyzedsample_table.html' with object_list=data|lookup:'libraries'|lookup:layer counter=forloop.counter batch=object site=object.site%}
                 {% endif %}
             {% endfor %}
+        {% else %}
+        <div class="empty">
+            <div class="empty-icon">
+            <i class="icon icon-flag"></i>
+            </div>
+            <p class="empty-title h5">No Library Data imported</p>
+        </div>
         {% endif %}
     </div>
 </div>
