@@ -93,9 +93,6 @@ $('body').on('click','.modal_open', function(){
 $('body').on('click','.modal_close', function(){
     $('.modal.active').removeClass('active')
 });
-$('body').on('click','.close_after_submit', function(){
-    $('.modal.active').removeClass('active')
-})
 
 //
 // GENERIC ADD, REMOVE, DELETE

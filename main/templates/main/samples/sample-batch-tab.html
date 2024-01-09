@@ -94,7 +94,7 @@
         <h4>Libraries</h4>
         {% if request.user.is_authenticated %}
         {% csrf_token %}
-        <input class="fill_modal" type="file" id="sample-batch-input" data-url="{% url 'main_analyzedsample_upload' %}">
+        <input class="modal_open" type="file" id="sample-batch-input" data-url="{% url 'main_analyzedsample_upload' %}">
         <span id='fauna-batch-header' data-url="{% url 'download_header' %}?model=analyzedsample" class="btn tooltip tooltip-right get-batch-header" data-tooltip="Get Library Upload Template"><i class="icon icon-download"></i></span>
         {% endif %}
         {% if layers|lookup:'All' != 0 %}
