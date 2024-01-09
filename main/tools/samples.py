@@ -1,6 +1,5 @@
 from main.models import models
 from main.models import Reference, Sample, Synonym, Site, Layer, Project, SampleBatch
-from main.ajax import get_modal
 from main.forms import SampleBatchForm
 from django.http import JsonResponse
 from django.urls import path
@@ -14,6 +13,39 @@ from django.contrib.auth.decorators import (
     login_required,
 )  # this is for now, make smarter later
 from main.tools.site import get_site_samplebatch_tab
+
+
+def handle_galleryimage_upload(request, file):
+    """
+    This is to add images to a gallery and return the expected JSON that editorJS needs to
+    display a freshly uploaded file.
+    """
+    from main.models import Image
+
+    print(file)
+
+    # 1. get the gallery, it should exist at this point!
+    gallery = get_instance_from_string(f"gallery_{request.GET.get('gallery')}")
+
+    # 2. create a new image
+    image = Image(image=file, gallery=gallery)
+    image.save()
+    image.refresh_from_db()
+
+    if image.pk:
+        success = 1
+        url = image.image.url
+    else:
+        success = 0
+        url = ""
+
+    res = {
+        "success": success,
+        "file": {
+            "url": url,
+        },
+    }
+    return JsonResponse(res)
 
 
 def sample_upload(request):

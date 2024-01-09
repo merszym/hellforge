@@ -40,8 +40,8 @@
     </div>
   </div>
 
-<div id="guide" data-url="{% url 'upload' %}?id={{description.pk}}"> <!--guide is used for image upload, to save the file to the right place-->
-<div id="guideurl" data-url="{% url 'upload_url' %}"> <!--guide is used for image upload, to save the file to the right place-->
+<div id="guide" data-url="{% url 'main_upload' %}?type=galleryimage&gallery={{description.gallery.pk}}"> <!--guide is used for image upload, to save the file to the right place-->
+<div id="guideurl" data-url="{% url 'main_upload' %}?type=url"> <!--guide is used for image upload, to save the file to the right place-->
 
 
     <div id="editorjs" data-url="{% url 'ajax_description_get' %}?id={{description.pk}}&model={{model}}"></div>

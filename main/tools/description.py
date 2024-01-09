@@ -1,4 +1,4 @@
-from main.models import Person, Author, Description, Reference
+from main.models import Person, Author, Description, Reference, Gallery
 from main.tools.generic import get_instance_from_string, delete_x
 from django.http import JsonResponse
 from django.urls import path
@@ -6,8 +6,12 @@ from django.views.generic import UpdateView
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.urls import reverse
-from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
-from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, make smarter later
+from django.contrib.auth.decorators import (
+    login_required,
+)  # this is for now, make smarter later
+from django.contrib.auth.mixins import (
+    LoginRequiredMixin,
+)  # this is for now, make smarter later
 from main.tools.generic import get_instance_from_string
 from django.shortcuts import render
 
@@ -15,8 +19,14 @@ from django.shortcuts import render
 # Get description json for detail views in editor.js
 def get_description_content(request):
     description = Description.objects.get(pk=int(request.GET.get("id")))
+    if hasattr(description, "gallery") == False:
+        # TODO: move to signals, each description should have a Gallery by default
+        tmp = Gallery(description=description)
+        tmp.save()
     return JsonResponse(
-        json.loads(description.content) if description.content else {"empty": True, "model": request.GET.get("model")}
+        json.loads(description.content)
+        if description.content
+        else {"empty": True, "model": request.GET.get("model")}
     )
 
 
@@ -47,11 +57,17 @@ def save_description(request):
     else:
         model = "site"
 
-    goto = {"site": "site_detail", "project": "main_project_detail", "culture": "culture_detail"}
+    goto = {
+        "site": "site_detail",
+        "project": "main_project_detail",
+        "culture": "culture_detail",
+    }
     model_kwargs = {
         "site": {"pk": description.content_object.id},
         "culture": {"pk": description.content_object.id},
-        "project": {"namespace": getattr(description.content_object, "namespace", None)},
+        "project": {
+            "namespace": getattr(description.content_object, "namespace", None)
+        },
     }
 
     return JsonResponse(
@@ -83,7 +99,11 @@ def create_and_add_author(request):
 
     # For the author first get or create a Person
     person, created = Person.objects.get_or_create(name=request.POST.get("person"))
-    author = Author(person=person, description=description, position=int(request.POST.get("position")))
+    author = Author(
+        person=person,
+        description=description,
+        position=int(request.POST.get("position")),
+    )
     author.save()
 
     return JsonResponse({"status": True})
@@ -95,7 +115,12 @@ def render_description(request, pk):
     return render(
         request,
         "main/description/description_render.html",
-        {"description": description, "model": "site", "origin": origin, "object": description},
+        {
+            "description": description,
+            "model": "site",
+            "origin": origin,
+            "object": description,
+        },
     )
 
 
@@ -104,5 +129,9 @@ urlpatterns = [
     path("add-author", create_and_add_author, name="main_description_author_add"),
     path("save", save_description, name="ajax_description_save"),
     path("get-content", get_description_content, name="ajax_description_get"),
-    path("render_description/<int:pk>", render_description, name="main_render_description"),
+    path(
+        "render_description/<int:pk>",
+        render_description,
+        name="main_render_description",
+    ),
 ]

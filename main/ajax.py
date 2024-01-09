@@ -2,19 +2,13 @@ from .forms import ReferenceForm, DateForm, ContactForm, SampleBatchForm
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from .models import (
-    Reference,
     Location,
-    Site,
-    Profile,
     Layer,
-    Culture,
     Person,
     Image,
     Gallery,
     DatingMethod,
     Description,
-    Date,
-    SampleBatch,
 )
 from django.db.models import Q
 from django.urls import reverse, path
@@ -87,52 +81,41 @@ def fill_modal(request):
     return html
 
 
-@csrf_exempt
-def upload_url(request):
-    url = json.loads(request.body).get("url")
-    res = {
-        "success": 1,
-        "file": {
-            "url": url,
-        },
-    }
-    return JsonResponse(res)
+#
+#
+## Handle Uploads to the Page
+#
+#
 
 
 @csrf_exempt
-def upload_image(request):
-    try:
-        file = request.FILES.get("image")
-    except:
-        file = request.FILES.get("file")
-    if gal := request.POST.get("instance_x", False):
-        gallery = get_instance_from_string(gal)
-    else:
-        description = Description.objects.get(pk=int(request.GET.get("id")))
-        try:
-            gallery = description.gallery
-        except:  # gallery doesnt exist yet
-            gallery = Gallery(description=description)
-            gallery.save()
+def upload(request):
+    """
+    Main upload entry point, should be called with 'file' or 'image' in request.FILES and
+    'type' in request.GET. additional specific information is handled in request.POST or request.GET.
+    """
+    type = request.GET.get("type", None)
 
-    image = Image(image=file, gallery=gallery)
-    image.save()
-    image.refresh_from_db()
+    # Edge-case, NO file, upload url...this is only required by editorJS
+    if type == "url":
+        url = json.loads(request.body).get("url")
+        response = {
+            "success": 1,
+            "file": {
+                "url": url,
+            },
+        }
+        return JsonResponse(response)
 
-    if image.pk:
-        success = 1
-        url = image.image.url
-    else:
-        success = 0
-        url = ""
+    # now get the file
+    image = request.FILES.get("image")
+    file = request.FILES.get("file")
 
-    res = {
-        "success": success,
-        "file": {
-            "url": url,
-        },
-    }
-    return JsonResponse(res)
+    # and handle how it is processed
+    if type == "galleryimage":
+        from main.tools.samples import handle_galleryimage_upload
+
+        return handle_galleryimage_upload(request, image)
 
 
 def save_contact(request):
@@ -162,4 +145,5 @@ def search_loc(request):
 
 urlpatterns = [
     path("modal", get_modal, name="main_modal_get"),
+    path("upload", upload, name="main_upload"),
 ]
