@@ -14,6 +14,10 @@ from django.contrib.auth.decorators import (
 )  # this is for now, make smarter later
 from main.tools.site import get_site_samplebatch_tab
 
+#
+# #TODO: This function here doesnt make really sense... it should go into a gallery.py or something...
+#
+
 
 def handle_galleryimage_upload(request, file):
     """
@@ -21,8 +25,6 @@ def handle_galleryimage_upload(request, file):
     display a freshly uploaded file.
     """
     from main.models import Image
-
-    print(file)
 
     # 1. get the gallery, it should exist at this point!
     gallery = get_instance_from_string(f"gallery_{request.GET.get('gallery')}")
@@ -48,13 +50,13 @@ def handle_galleryimage_upload(request, file):
     return JsonResponse(res)
 
 
-def sample_upload(request):
-    df = pd.read_csv(request.FILES["file"], sep=",")
+def handle_samplebatch_file(request, file):
+    df = pd.read_csv(file, sep=",")
     df.drop_duplicates(inplace=True)
 
-    batch = request.GET.get("batch", None)
+    batch = SampleBatch.objects.get(pk=int(request.GET.get("batch", None)))
+    site = batch.site
 
-    site = get_instance_from_string(request.POST.get("instance_x"))
     all_layers = [x.name for x in site.layer.all()]
 
     # filter for expected/unexpected columns
@@ -81,17 +83,19 @@ def sample_upload(request):
         df.drop(layer_wrong.index, inplace=True)
 
     # add the sample batch
-    df.insert(0, "SampleBatch", batch)
+    df.insert(0, "Sample Batch", batch.name)
 
     return render(
         request,
-        "main/samples/sample-batch-confirm.html",
+        "main/modals/site_modal.html",
         {
+            "type": "samplebatch_upload_confirm",
             "dataframe": df.fillna("").to_html(
                 index=False, classes="table table-striped col-12"
             ),
             "issues": issues,
             "json": df.to_json(),
+            "batch": batch,
             "site": site,
         },
     )
@@ -118,7 +122,7 @@ def save_verified(request):
             yoc,
             provenience,
         ) in zip(
-            dat["SampleBatch"],
+            dat["Sample Batch"],
             dat["Sample Name"],
             dat["Sample Synonyms"],
             dat["Sample Type"],
@@ -174,7 +178,9 @@ def save_verified(request):
             s.provenience = json.dumps(prov)
             s.save()
 
-    return JsonResponse({"status": True})
+    from main.tools.site import get_site_samplebatch_tab
+
+    return get_site_samplebatch_tab(request, object=batch)
 
 
 # UPDATE MODALS
@@ -195,7 +201,6 @@ def update_layer(request):
 
 
 urlpatterns = [
-    path("upload", sample_upload, name="main_sample_upload"),
     path("save", save_verified, name="ajax_save_verified_samples"),
     path("update-layer", update_layer, name="sample-layer-update"),
 ]

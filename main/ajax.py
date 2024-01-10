@@ -117,6 +117,11 @@ def upload(request):
 
         return handle_galleryimage_upload(request, image)
 
+    if type == "samplebatch":
+        from main.tools.samples import handle_samplebatch_file
+
+        return handle_samplebatch_file(request, file)
+
 
 def save_contact(request):
     form = ContactForm(request.POST)

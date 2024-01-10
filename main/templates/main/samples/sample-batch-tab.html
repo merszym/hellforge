@@ -46,8 +46,8 @@
                 <i class="icon icon-photo"></i>
             </div>
             <div class="empty-action">
-                <button class="btn btn-primary add_samplebatch_image" data-x="gallery_{{object.gallery.pk}}"
-                    data-url="{% url 'upload' %}">Add Image</button>
+                <button class="btn btn-primary add_samplebatch_image"
+                    data-url="{% url 'main_upload' %}?type=galleryimage&gallery={{object.gallery.pk}}">Add Image</button>
             </div>
         </div>
     </div>
@@ -68,7 +68,16 @@
         <h4>Samples</h4>
         {% if request.user.is_authenticated %}
         {% csrf_token %}
-        <input class="fill_modal" type="file" id="sample-batch-input" data-url="{% url 'main_sample_upload' %}?batch={{samplebatch}}">
+        <form
+            hx-encoding='multipart/form-data'
+            hx-post="{% url 'main_upload' %}?type=samplebatch&batch={{object.pk}}"
+            hx-trigger="change from:#samplebatch-fileinput"
+            hx-target="#modal-blank"
+        >
+            {% csrf_token %}
+            <input class="modal_open" id="samplebatch-fileinput" type="file" name="file">
+        </form>
+
         <span id='fauna-batch-header' data-url="{% url 'download_header' %}?model=sample" class="btn tooltip tooltip-right get-batch-header" data-tooltip="Get Sample Upload Template"><i class="icon icon-download"></i></span>
         <br>
         {% endif %}

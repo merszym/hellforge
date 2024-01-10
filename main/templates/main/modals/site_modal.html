@@ -39,6 +39,33 @@
             </div>
         </div>
 
+        {% elif type == "samplebatch_upload_confirm" %}
+
+        {#   --------------------  #}
+        {#  UPLOAD CONFIRM MODAL   #}
+        {#   --------------------  #}
+
+        <div class="modal-body">
+            <div class="content">
+                <strong>Verify Batch Upload</strong><br>
+                {% for issue in issues %}
+                <div class="toast toast-warning">{{issue}}</div>
+                {% endfor %}
+                {{dataframe|safe}}
+                <form
+                    hx-post="{% url 'ajax_save_verified_samples' %}"
+                    hx-target="#sample-batch-tab_{{batch.pk}}"
+                >
+                    {% csrf_token %}
+                    <textarea name="batch-data" type="text" style="display:none;">{{json}}</textarea>
+                    <input name="site" value="{{site.pk}}" style="display:none;">
+
+                <br>
+                <button class="btn modal_close">Confirm</button>
+            </form>
+            </div>
+        </div>
+
         {% elif type == "add_contact" %}
 
         {#  --------------------  #}
