@@ -122,6 +122,11 @@ def upload(request):
 
         return handle_samplebatch_file(request, file)
 
+    if type == "libraries":
+        from main.tools.analyzed_samples import handle_library_file
+
+        return handle_library_file(request, file)
+
 
 def save_contact(request):
     form = ContactForm(request.POST)

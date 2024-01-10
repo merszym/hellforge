@@ -1,5 +1,5 @@
 from main.models import models
-from main.models import AnalyzedSample, Sample, Project
+from main.models import AnalyzedSample, Sample, Project, SampleBatch
 from django.http import JsonResponse
 from django.urls import path
 from django.shortcuts import render
@@ -13,10 +13,11 @@ from django.contrib.auth.decorators import (
 )  # this is for now, make smarter later
 
 
-def sample_upload(request):
-    df = pd.read_csv(request.FILES["file"], sep=",")
+def handle_library_file(request, file):
+    df = pd.read_csv(file, sep=",")
     df.drop_duplicates(inplace=True)
 
+    batch = SampleBatch.objects.get(pk=int(request.GET.get("batch")))
     # filter for expected/unexpected columns
     expected = AnalyzedSample.table_columns()
     issues = []
@@ -35,13 +36,15 @@ def sample_upload(request):
 
     return render(
         request,
-        "main/analyzed_samples/analyzedsample-batch-confirm.html",
+        "main/modals/sample_modal.html",
         {
+            "type": "libraries_confirm",
             "dataframe": df.fillna("").to_html(
                 index=False, classes="table table-striped col-12"
             ),
             "issues": issues,
             "json": df.to_json(),
+            "batch": batch,
         },
     )
 
@@ -49,6 +52,8 @@ def sample_upload(request):
 def save_verified(request):
     df = pd.read_json(request.POST.get("batch-data"))
     df.convert_dtypes()
+
+    batch = SampleBatch.objects.get(pk=int(request.GET.get("batch")))
 
     # go through the layers
     for i, row in df.iterrows():
@@ -74,10 +79,11 @@ def save_verified(request):
         object.probes = row["Capture Probe"]
         object.save()
 
-    return JsonResponse({"status": True})
+    from main.tools.site import get_site_samplebatch_tab
+
+    return get_site_samplebatch_tab(request, object=batch)
 
 
 urlpatterns = [
-    path("upload", sample_upload, name="main_analyzedsample_upload"),
     path("save", save_verified, name="ajax_save_verified_analyzedsamples"),
 ]

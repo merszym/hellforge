@@ -42,6 +42,34 @@
             </div>
         </div>
     </div>
+
+    {% elif type == "libraries_confirm" %}
+
+    {# --------------------   #}
+    {# CONFIRM LIBRARY UPLOAD #}
+    {# --------------------   #}
+
+    <div class="modal-body">
+        <div class="content my-2">
+            <div>
+                <strong>Verify Upload</strong><br>
+                {% for issue in issues %}
+                    <div class="toast toast-warning">{{issue}}</div>
+                {% endfor %}
+                {{dataframe|safe}}
+                <form id='sample-batch-verify-form'
+                    hx-post="{% url 'ajax_save_verified_analyzedsamples' %}?batch={{batch.pk}}"
+                    hx-target="#sample-batch-tab_{{batch.pk}}"
+                    >
+                    {% csrf_token %}
+                    <textarea name="batch-data" type="text" style="display:none;">{{json}}</textarea>
+                    <button class="btn modal_close">Confirm</button>
+                </form>
+                <br>
+            </div>
+        </div>
+    </div>
+
     {% endif %}
 
 </div>
