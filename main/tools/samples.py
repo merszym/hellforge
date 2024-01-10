@@ -187,7 +187,7 @@ def save_verified(request):
 
 
 @login_required
-def update_layer(request):
+def update_samplelayer(request):
     if request.method == "POST":
         sample = Sample.objects.get(pk=int(request.POST.get("object")))
         try:
@@ -202,5 +202,5 @@ def update_layer(request):
 
 urlpatterns = [
     path("save", save_verified, name="ajax_save_verified_samples"),
-    path("update-layer", update_layer, name="sample-layer-update"),
+    path("update-layer", update_samplelayer, name="sample-layer-update"),
 ]
