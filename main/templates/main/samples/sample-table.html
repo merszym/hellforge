@@ -57,7 +57,7 @@
                         style="cursor: pointer;"
                         data-tooltip="Update Layer"
                         hx-get="{% url 'main_modal_get' %}"
-                        hx-vals='{"object":"sample_{{object.pk}}", "type":"edit" }'
+                        hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_layer" }'
                         hx-target="#modal-blank"
                     {% endif %}>
                         {% if object.layer %}{{object.layer.name}}{% else %}Unassigned{% endif %}
@@ -88,7 +88,16 @@
             </td>
             <td>{{object.layer.age_summary}}</td>
             <td>{% if object.year_of_collection%}{{object.year_of_collection}}{% endif%}</td>
-            <td>
+            <td
+            {% if request.user.is_authenticated %}
+                style="cursor: pointer;"
+                class="modal_open"
+                data-tooltip="Update Layer"
+                hx-get="{% url 'main_modal_get' %}"
+                hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_provenience" }'
+                hx-target="#modal-blank"
+            {% endif %}
+            >
                 {% for k,v in object.get_provenience %}
                 <span class="text-gray small">{{k}}: {{v}},</span>
                 {% endfor %}

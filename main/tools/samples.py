@@ -200,7 +200,38 @@ def update_samplelayer(request):
     return get_site_samplebatch_tab(request, object=sample.batch)
 
 
+@login_required
+def sample_provenience_edit(request):
+    sample = Sample.objects.get(pk=int(request.POST.get("object")))
+    type = request.GET.get("type", False)
+
+    try:
+        provenience = json.loads(sample.provenience)
+    except TypeError:
+        # empty provenience array so far
+        provenience = {}
+
+    key = request.POST.get("key", False)
+    val = request.POST.get("value", False)
+
+    if type == "add" and key and val:
+        provenience[key] = val
+
+    if type == "remove" and key:
+        del provenience[key]
+
+    sample.provenience = json.dumps(provenience)
+    sample.save()
+
+    return render(
+        request,
+        "main/modals/sample_modal.html",
+        {"object": sample, "type": "edit_provenience", "provenience": provenience},
+    )
+
+
 urlpatterns = [
     path("save", save_verified, name="ajax_save_verified_samples"),
     path("update-layer", update_samplelayer, name="sample-layer-update"),
+    path("edit-provenience", sample_provenience_edit, name="sample-provenience-edit"),
 ]

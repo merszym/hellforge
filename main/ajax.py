@@ -33,22 +33,35 @@ def get_modal_context(object, request):
     context = {"object": object, "type": request.GET.get("type", "")}
 
     # Add layer edit context
-    if object.model == "layer" and context["type"] == "edit":
-        options = Layer.objects.filter(Q(site=object.site)).exclude(id=object.pk)
-        if object.parent:
-            options = options.exclude(id=object.parent.pk)
-        context.update({"parent_options": options})
-    # Add layer date context
-    if object.model == "layer" and context["type"] == "dates":
-        context.update({"datingoptions": DatingMethod.objects.all(), "origin": "form"})
+    if object.model == "layer":
+        if context["type"] == "edit":
+            # basic edit modal
+            options = Layer.objects.filter(Q(site=object.site)).exclude(id=object.pk)
+            if object.parent:
+                options = options.exclude(id=object.parent.pk)
+            context.update({"parent_options": options})
+        if context["type"] == "dates":
+            # Add a date to the layer
+            context.update(
+                {"datingoptions": DatingMethod.objects.all(), "origin": "form"}
+            )
+    if object.model == "site":
+        if context["type"] == "add_samplebatch":
+            # Adding sample-batches to the site
+            context.update(
+                {
+                    "samplebatch_form": SampleBatchForm,
+                }
+            )
+    if object.model == "sample":
+        if context["type"] == "edit_provenience":
+            try:
+                provenience = json.loads(object.provenience)
+            except TypeError:
+                # empty provenience array so far
+                provenience = {}
+            context.update({"provenience": provenience})
 
-    # For adding sample-batches
-    if object.model == "site" and context["type"] == "add_samplebatch":
-        context.update(
-            {
-                "samplebatch_form": SampleBatchForm,
-            }
-        )
     return context
 
 
@@ -63,6 +76,7 @@ def get_modal(request):
 
 
 # belongs into site, layer or profile tools
+# TODO: remove once everything is converted to htmx
 def fill_modal(request):
     choice = request.GET.get("type", False)
     object = get_instance_from_string(request.GET.get("instance"))

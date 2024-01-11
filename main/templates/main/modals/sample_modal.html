@@ -1,5 +1,5 @@
 {% load static %}
-
+{% load format %}
 <a href="#close" class="modal-overlay" aria-label="Close"></a>
 <div class="modal-container">
     <div class="modal-header">
@@ -7,7 +7,7 @@
         <div class="modal-title h5">Sample Modal</div>
     </div>
 
-    {% if type == "edit" %}
+    {% if type == "edit_layer" %}
 
     {# -------------------- #}
     {#   LAYER EDIT MODAL   #}
@@ -42,6 +42,69 @@
             </div>
         </div>
     </div>
+
+    {% elif type == "edit_provenience" %}
+
+    {# -------------------------- #}
+    {#   PROVENIENCE EDIT MODAL   #}
+    {# -------------------------- #}
+
+    <div class="modal-body">
+        <div class="content my-2">
+            <div>
+                <div id="modal-form">
+                    <h6>Update Provenience</h6>
+                    {% for entry in provenience %}
+                    <div class="tile tile-centered">
+                        <form>
+                        <div class="tile-icon">
+                          <span class="btn tooltip tooltip-right provenience-update-remove" data-tooltip="Delete Field"
+                            hx-post="{% url 'sample-provenience-edit' %}?type=remove"
+                            hx-target="#modal-blank"
+                            hx-trigger="click"
+                            >
+                            <input style="display: none;" name="key" value="{{entry}}"/>
+                            <input style="display: none;" name="object" value="{{object.pk}}"/>
+                            <i class="icon icon-delete" centered></i>
+                          </span>
+                        </div>
+                        </form>
+                        <div class="tile-content">
+                            <small class="tile-subtitle text-gray">{{entry}}</small>
+                            <div class="tile-title">{{provenience|lookup:entry}}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <form>
+                        <div class="input-group">
+                            <span class="input-group-addon">Key</span>
+                            <input style="display: none;" name="object" value="{{object.pk}}"></input>
+                            <select class="form-select" name="key">
+                                <option selected value="">---</option>
+                                    <option value="Area">Area</option>
+                                    <option value="Profile">Profile</option>
+                                    <option value="Square">Square</option>
+                                    <option value="Context">Context</option>
+                                    <option value="Notes">Notes</option>
+                            </select>
+                            <span class="input-group-addon">Value</span>
+                            <input class="form-input" type="text" name="value">
+                            <span id="provenience-update-trigger"
+                                hx-post="{% url 'sample-provenience-edit' %}?type=add"
+                                hx-target="#modal-blank"
+                                class="btn btn-primary input-group-btn"
+                                >OK
+                            </span>
+                            <div hx-get="{% url 'main_samplebatch_get' %}?object=samplebatch_{{object.batch.pk}}"
+                                hx-target="#sample-batch-tab_{{object.batch.pk}}"
+                                hx-trigger="click from:#provenience-update-trigger, click from:.provenience-update-remove"></div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     {% elif type == "libraries_confirm" %}
 
