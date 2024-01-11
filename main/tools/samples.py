@@ -14,6 +14,8 @@ from django.contrib.auth.decorators import (
 )  # this is for now, make smarter later
 from main.tools.site import get_site_samplebatch_tab
 
+# functions related to the site-view and the samplebatches
+
 #
 # #TODO: This function here doesnt make really sense... it should go into a gallery.py or something...
 #
@@ -201,7 +203,24 @@ def update_samplelayer(request):
 
 
 @login_required
-def sample_provenience_edit(request):
+def update_samplebase(request):
+    if request.method == "POST":
+        sample = Sample.objects.get(pk=int(request.POST.get("object")))
+
+        sample.type = request.POST.get("type", None)
+        sample.year_of_collection = request.POST.get("year_of_collection", None)
+
+        sample.save()
+    # return updated html
+    return render(
+        request,
+        "main/modals/sample_modal.html",
+        {"object": sample, "type": "edit_base"},
+    )
+
+
+@login_required
+def update_sample_provenience(request):
     sample = Sample.objects.get(pk=int(request.POST.get("object")))
     type = request.GET.get("type", False)
 
@@ -232,6 +251,7 @@ def sample_provenience_edit(request):
 
 urlpatterns = [
     path("save", save_verified, name="ajax_save_verified_samples"),
+    path("update-base", update_samplebase, name="sample-edit"),
     path("update-layer", update_samplelayer, name="sample-layer-update"),
-    path("edit-provenience", sample_provenience_edit, name="sample-provenience-edit"),
+    path("edit-provenience", update_sample_provenience, name="sample-provenience-edit"),
 ]

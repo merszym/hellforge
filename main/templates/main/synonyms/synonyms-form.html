@@ -2,10 +2,10 @@
 {% csrf_token %}
 <div class="input-group">
     <span class="input-group-addon">Add Synonym</span>
+    <input type="text" name="synonym-type" class="form-input" placeholder="Tag/Type">
     <input type="text" name="synonym" class="form-input" placeholder="Name">
-    <input type="text" name="synonym-type" class="form-input" placeholder="Tag">
     <input type="text" style="display:none" name="model" class="form-input" value="{{object.model}}">
     <input type="text" style="display:none" name="pk" class="form-input" value="{{object.pk}}">
     <span id="synonym-add" data-url="{% url 'main_synonym_add' %}" class="btn btn-primary input-group-btn">Add</span>
 </div>
-<p class="form-input-hint">Use synonyms to attach different/older namings to the model. Tag it to remember the origin of the synonym</p>
+<p class="form-input-hint">Use synonyms to attach different/older names to the model. Tag it to remember the type of synonym</p>

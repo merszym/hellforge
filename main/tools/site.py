@@ -16,6 +16,7 @@ from main.models import (
     SampleBatch,
     AnalyzedSample,
     Gallery,
+    Synonym,
 )
 from copy import copy
 import json
@@ -325,6 +326,14 @@ def get_site_samplebatch_tab(request, object=False):
 
     batch_samples = Sample.objects.filter(batch=batch)
 
+    # make a list of id-synonym keys that are necessary for the sample-table
+    sample_synonyms = list(
+        Synonym.objects.filter(sample__in=batch_samples)
+        .values_list("type", flat=True)
+        .distinct()
+    )
+    print(sample_synonyms)
+
     layers["All"] = 0
     for layer in sorted(
         list(set([x.layer for x in batch_samples])),
@@ -332,6 +341,7 @@ def get_site_samplebatch_tab(request, object=False):
     ):
         # get the samples
         layer_samples = batch_samples.filter(layer=layer)
+
         layer_libraries = AnalyzedSample.objects.filter(sample__in=layer_samples)
         # and add them to the dict
         if len(layer_samples) > 0:
@@ -350,7 +360,12 @@ def get_site_samplebatch_tab(request, object=False):
             layers[layer] = len(layer_samples)
             layers["All"] = layers["All"] + len(layer_samples)
 
-    context = {"object": batch, "layers": layers, "data": data}
+    context = {
+        "object": batch,
+        "layers": layers,
+        "data": data,
+        "sample_synonyms": sample_synonyms,
+    }
     return render(request, "main/samples/sample-batch-tab.html", context)
 
 
