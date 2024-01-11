@@ -37,7 +37,7 @@
         {% for object in object_list %}
         <tr>
             {% if site.id in project_sites %}
-            <td style="width:30px;">
+            <td nowrap style="width:30px;">
             {% with projectsamples=project.sample.all %}
                 {% if project and not object in projectsamples %}
                 <span class="tooltip tooltip-right generic_addm2m" data-tooltip="Add Sample to Project"
@@ -53,20 +53,20 @@
             {% endwith %}
             </td>
             {% endif %}
-            <td class="{{object.layer|yesno:'assigned,unassigned'}}">
-
-                <span class="modal_open tooltip tooltip-right"
-                    {% if request.user.is_authenticated %}
-                        style="cursor: pointer;"
-                        data-tooltip="Update Layer"
-                        hx-get="{% url 'main_modal_get' %}"
-                        hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_layer" }'
-                        hx-target="#modal-blank"
-                    {% endif %}>
-                        {% if object.layer %}{{object.layer.name}}{% else %}Unassigned{% endif %}
-                </span>
+            <td nowrap
+                {% if request.user.is_authenticated %}
+                    style="cursor: pointer;"
+                    class="{{object.layer|yesno:'assigned,unassigned'}} modal_open tooltip tooltip-right"
+                    data-tooltip="Update Layer"
+                    hx-get="{% url 'main_modal_get' %}"
+                    hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_layer" }'
+                    hx-target="#modal-blank"
+                {% else %}
+                    class="{{object.layer|yesno:'assigned,unassigned'}}"
+                {% endif %}>
+                {% if object.layer %}{{object.layer.name}}{% else %}Unassigned{% endif %}
             </td>
-            <td
+            <td nowrap
             {% if request.user.is_authenticated %}
                 style="cursor: pointer;"
                 class="tooltip tooltip-top modal_open"
@@ -77,10 +77,10 @@
             {% endif %}>
                 {{object.type}}
             </td>
-            <td>{{object.name}}</td>
+            <td nowrap>{{object.name}}</td>
             {% with synonyms=object.synonyms.all %}
             {% for type in sample_synonyms %}
-            <td
+            <td nowrap
             {% if request.user.is_authenticated %}
                 style="cursor: pointer;"
                 class="tooltip tooltip-top modal_open"
@@ -98,10 +98,10 @@
             </td>
             {% endfor %}
             {% endwith %}
-            <td class="generic_filter text-primary" style="cursor:pointer;" data-term="{{object}}" data-search=".{{batch.classname}}_libtr">{{object.analyzed_sample.all | length}}
+            <td nowrap class="generic_filter text-primary" style="cursor:pointer;" data-term="{{object}}" data-search=".{{batch.classname}}_libtr">{{object.analyzed_sample.all | length}}
             </td>
-            <td>{{object.layer.age_summary}}</td>
-            <td
+            <td nowrap>{{object.layer.age_summary}}</td>
+            <td nowrap
             {% if request.user.is_authenticated %}
                 style="cursor: pointer;"
                 class="tooltip tooltip-top modal_open"
@@ -112,7 +112,7 @@
             {% endif %}>
                 {% if object.year_of_collection%}{{object.year_of_collection}}{% endif%}
             </td>
-            <td
+            <td nowrap
             {% if request.user.is_authenticated %}
                 style="cursor: pointer;"
                 class="modal_open"

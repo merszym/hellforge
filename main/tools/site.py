@@ -332,7 +332,6 @@ def get_site_samplebatch_tab(request, object=False):
         .values_list("type", flat=True)
         .distinct()
     )
-    print(sample_synonyms)
 
     layers["All"] = 0
     for layer in sorted(
