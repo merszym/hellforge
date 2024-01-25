@@ -1,19 +1,3 @@
-$("body").on("click", '.addDate', function(){
-    $.ajax({
-        type: "POST",
-        url: $('#ajax_add_date').attr('data-url'),
-        data: $("#modal-form").serialize(),
-        }).done(function(data){
-            if(data['status']){
-                location.reload();
-            } else {
-                ele = $('#info')
-                $('#modal-blank').html(data)
-                $('#modal-form').append(ele)
-            }
-        });
-});
-
 // Validate the dating form
 // what happens if uncal 14C is selected...
 // show the required fields, hide the rest

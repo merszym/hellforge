@@ -154,6 +154,9 @@ def add(request):
     from main.forms import DateForm
     from main.models import DatingMethod, Date
 
+    # get the layer the date needs to be added to
+    object = get_instance_from_string(request.POST.get("object"))
+
     form = DateForm(request.POST)
     if form.is_valid():  # is always valid because nothing is required
         # create a tmp-date, dont save
@@ -165,7 +168,7 @@ def add(request):
                 obj = Date.objects.get(oxa=oxa)
             except Date.DoesNotExist:
                 pass
-        # validate that dates exist in the form... is relevant if the date doesnt exist yet
+        # Check of obj is now a real entry
         if not obj.pk:
             if any(
                 [
@@ -179,22 +182,19 @@ def add(request):
                 obj.refresh_from_db()
             else:
                 form.add_error(None, "Please provide a Date")
-                return render(
-                    request,
-                    "main/dating/dating-modal-content.html",
-                    {"datingoptions": DatingMethod.objects.all(), "form": form},
-                )
-        # if we have an associated model (e.g. Layer)
-        if info := form.cleaned_data.get("info", False):
-            layer = get_instance_from_string(info)
-            layer.date.add(obj)
-            layer.save()  # not needed for adding, but for post-save signal in layer
-        return JsonResponse({"status": True})
-        # error validation
+        # if we _now_ have a real date entry, add to associated model (e.g. Layer)
+        if obj.pk:
+            object.date.add(obj)
+            object.save()  # not needed for adding, but for post-save signal in layer
+    # finally, return the modal
     return render(
         request,
-        "main/dating/dating-modal-content.html",
-        {"datingoptions": DatingMethod.objects.all(), "form": form},
+        "main/modals/layer_modal.html",
+        {
+            "datingoptions": DatingMethod.objects.all(),
+            "form": form if not obj.pk else DateForm(),
+            "type": "dates",
+        },
     )
 
 

@@ -89,13 +89,19 @@
     {# ------------------------ #}
 
     <div class="modal-body">
+        <!--#TODO: Hack around: reload the profile overview as soon as this appears--->
         <div class="content">
             <div id="dating-content">
                 <form id="modal-form" method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     {% include 'main/dating/dating-fields.html' %}
                     <br>
-                    <span id="jax_add_date" class="btn btn-primary addDate" data-url="{% url 'ajax_date_add' %}">Save</span>
+                    <span
+                        id="ajax_add_date" class="btn btn-primary"
+                        hx-post="{% url 'ajax_date_add' %}"
+                        hx-vals='{"object":"layer_{{object.pk}}"}'
+                        hx-target="#modal-blank"
+                        >Save</span>
                 </form>
             </div>
         </div>
