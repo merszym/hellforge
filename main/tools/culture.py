@@ -1,8 +1,24 @@
-from django.views.generic import CreateView, ListView, UpdateView, DetailView, DeleteView
+from django.views.generic import (
+    CreateView,
+    ListView,
+    UpdateView,
+    DetailView,
+    DeleteView,
+)
 from django.urls import reverse
 from django.http import JsonResponse
 from django.shortcuts import render
-from main.models import Layer, Culture, Date, Epoch, DatingMethod, get_classname, Project, Description, Site
+from main.models import (
+    Layer,
+    Culture,
+    Date,
+    Epoch,
+    DatingMethod,
+    get_classname,
+    Project,
+    Description,
+    Site,
+)
 from main.forms import (
     ReferenceForm,
     CultureForm,
@@ -13,7 +29,9 @@ import json
 import seaborn as sns
 from django.db.models import Q
 from collections import defaultdict
-from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, make smarter later
+from django.contrib.auth.mixins import (
+    LoginRequiredMixin,
+)  # this is for now, make smarter later
 from django.urls import path
 from main.views import ProjectAwareDetailView, ProjectAwareListView
 
@@ -37,20 +55,36 @@ class CultureDetailView(ProjectAwareDetailView):
         groupdata_tmp = {}
         geo = {"type": "FeatureCollection", "features": []}
         nochildren = self.request.GET.get("nochildren", False)
-        query = sorted(self.object.all_cultures(nochildren=nochildren), key=lambda x: x.upper * -1)
+        query = sorted(
+            self.object.all_cultures(nochildren=nochildren),
+            key=lambda x: x.upper * -1 if x.upper else 0,
+        )
         # get the colors right
         ordered_sites = sorted(
             self.object.all_sites(nochildren=nochildren),
-            key=lambda x: (x[0].upper, x[1].lowest_date(cult=self.object, nochildren=nochildren)),
+            key=lambda x: (
+                x[0].upper,
+                x[1].lowest_date(cult=self.object, nochildren=nochildren),
+            ),
         )
         all_sites = []
-        [all_sites.append(site.name) for (cult, site) in ordered_sites if site.name not in all_sites]
+        [
+            all_sites.append(site.name)
+            for (cult, site) in ordered_sites
+            if site.name not in all_sites
+        ]
 
         site_color_dict = {
-            site.lower(): f"{col}" for site, col in zip(all_sites, sns.color_palette("husl", len(all_sites)).as_hex())
+            site.lower(): f"{col}"
+            for site, col in zip(
+                all_sites, sns.color_palette("husl", len(all_sites)).as_hex()
+            )
         }
-        for cult in sorted(query, key=lambda x: int(x.upper)):
-            ordered_sites = sorted(cult.all_sites(nochildren=True), key=lambda x: x[1].lowest_date(cult=cult) * -1)
+        for cult in sorted(query, key=lambda x: int(x.upper) if x.upper else 0):
+            ordered_sites = sorted(
+                cult.all_sites(nochildren=True),
+                key=lambda x: x[1].lowest_date(cult=cult) * -1,
+            )
             sites = []
             [sites.append(site) for (cult, site) in ordered_sites if site not in sites]
             if len(sites) == 0:
@@ -59,9 +93,13 @@ class CultureDetailView(ProjectAwareDetailView):
                 {
                     "id": cult.name.lower(),
                     "treeLevel": 2,
-                    "content": f"{cult.name} | {cult.upper} - {cult.lower} ya",
-                    "order": int(cult.upper),
-                    "nestedGroups": [f"{cult.name.lower()}-{site.name.lower()}" for site in sites],
+                    "content": f"{cult.name} | {cult.upper} - {cult.lower} ya"
+                    if cult.upper
+                    else f"{cult.name} | Undated",
+                    "order": int(cult.upper) if cult.upper else 0,
+                    "nestedGroups": [
+                        f"{cult.name.lower()}-{site.name.lower()}" for site in sites
+                    ],
                 }
             )
             site_date_dict = {}
@@ -95,7 +133,8 @@ class CultureDetailView(ProjectAwareDetailView):
                 try:
                     maxv = max(v)
                     culturedata = {
-                        "start": max(v) * -31556952 - (1970 * 31556952000),  # 1/1000 year in ms, start with year 0
+                        "start": max(v) * -31556952
+                        - (1970 * 31556952000),  # 1/1000 year in ms, start with year 0
                         "content": f"{k} | {max(v):,} ya",
                         "group": f"{cult.name.lower()}-{k.lower()}",
                         "type": "point",
@@ -126,6 +165,7 @@ class CultureDetailView(ProjectAwareDetailView):
         context["groups"] = json.dumps(groupdata)
         context["geo"] = geo
         return context
+
 
 class CultureUpdateView(LoginRequiredMixin, UpdateView):
     model = Culture
@@ -178,7 +218,10 @@ class CultureListView(ProjectAwareListView):
                     "id": cult.name.lower(),
                     "content": f"<a class='btn-link' href={reverse('culture_detail', kwargs={'pk':cult.pk})}>{cult.name}</a> | {cult.upper} - {cult.lower} ya",
                     "treeLevel": 2,
-                    "nestedGroups": [int(f"{n}{m}") for m, subcult in enumerate(cult.all_cultures(noself=True))],
+                    "nestedGroups": [
+                        int(f"{n}{m}")
+                        for m, subcult in enumerate(cult.all_cultures(noself=True))
+                    ],
                 }
             )
             for m, subcult in enumerate(cult.all_cultures(noself=True)):
@@ -203,17 +246,20 @@ class CultureListView(ProjectAwareListView):
         context["timelinedata"] = groupdata
         return context
 
+
 def get_culture_overview(request):
-    object = Culture.objects.get(pk=int(request.GET.get('object')))
-    return render(request,"main/culture/culture_overview.html",{"object":object})
+    object = Culture.objects.get(pk=int(request.GET.get("object")))
+    return render(request, "main/culture/culture_overview.html", {"object": object})
+
 
 def get_culture_geodata(request):
     object = Culture.objects.get(pk=int(request.GET.get("object")))
     locations = []
     for site in Site.objects.filter(layer__culture=object).all():
         locations.append(site.get_location_features())
-    locations = [x for x in locations if x != {} ]
+    locations = [x for x in locations if x != {}]
     return JsonResponse(locations, safe=False)
+
 
 urlpatterns = [
     path("<int:pk>/edit", CultureUpdateView.as_view(), name="culture_update"),
@@ -221,5 +267,5 @@ urlpatterns = [
     path("list", CultureListView.as_view(), name="culture_list"),
     path("<int:pk>", CultureDetailView.as_view(), name="culture_detail"),
     path("overview", get_culture_overview, name="main_culture_overview"),
-    path("geodata", get_culture_geodata, name="main_culture_geodata")
+    path("geodata", get_culture_geodata, name="main_culture_geodata"),
 ]

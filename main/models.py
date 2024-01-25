@@ -439,7 +439,9 @@ class Culture(models.Model):
 
     @property
     def age_summary(self):
-        return f"{self.upper:,} - {self.lower:,} ya"
+        if self.upper and self.lower:
+            return f"{self.upper:,} - {self.lower:,} ya"
+        return "-"
 
     @property
     def children(self):
