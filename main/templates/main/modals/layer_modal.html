@@ -9,7 +9,7 @@
     </div>
 
     <!--Whenever the layer-modal appears, I assume something in the profile was updated. So reload the profile in the background
-        Works currently only for "edit", make sure to forward the urlparams all of the time
+        Works currently only for "edit" and "properties", make sure to forward the urlparams all of the time
     -->
     <div
         hx-get="{% url 'main_profile_get' %}?{{request.GET|getstring}}"
@@ -86,14 +86,83 @@
     {# ------------------------ #}
 
     <div class="modal-body">
-        <div class="content  my-2">
+        <div class="content my-2">
             <div id="modal-form">
                 <h6>Culture</h6>
-                {% include 'main/culture/culture-chip-display.html' %}
-                {% include 'main/culture/culture-searchinput.html' with object=object %}
+                {% if object.culture %}
+                    <div class="tile tile-centered">
+                        <div class="tile-icon">
+                            <div class="example-tile-icon">
+                                <form>
+                                    {% csrf_token %}
+                                    <button class="btn"
+                                        hx-post="{% url 'main_generic_unsetfk' %}?{{request.GET|getstring}}&next=modal_properties"
+                                        hx-vars="{'instance_x':'layer_{{object.pk}}', 'field':'culture'}"
+                                        hx-target="#modal-blank">
+                                        <i class="icon icon-delete"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="tile-content">
+                            <div class="tile-title">{{object.culture}}</div>
+                        </div>
+                    </div>
+                {% endif %}
+                <form>
+                    <input name="instance_x" value="layer_{{object.pk}}" style="display: none;"/>
+                    <div class="input-group">
+                        <select class="form-select" name="culture">
+                            <option selected>----</option>
+                            {% for option in cultures %}
+                            <option value="{{option.pk}}">{{option}}</option>
+                            {% endfor %}
+                        </select>
+                        <span
+                            hx-post="{% url 'layer-culture-update' %}"
+                            hx-target="#modal-blank"
+                            class="btn btn-primary input-group-btn"
+                        >OK</span>
+                    </div>
+                </form>
+                <br>
                 <h6>Epoch</h6>
-                {% include 'main/epoch/epoch-chip-display.html' %}
-                {% include 'main/epoch/epoch-searchinput.html' %}
+                {% if object.epoch %}
+                    <div class="tile tile-centered">
+                        <div class="tile-icon">
+                            <div class="example-tile-icon">
+                                <form>
+                                    {% csrf_token %}
+                                    <button class="btn"
+                                        hx-post="{% url 'main_generic_unsetfk' %}?{{request.GET|getstring}}&next=modal_properties"
+                                        hx-vars="{'instance_x':'layer_{{object.pk}}', 'field':'epoch'}"
+                                        hx-target="#modal-blank">
+                                        <i class="icon icon-delete"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="tile-content">
+                            <div class="tile-title">{{object.epoch}}</div>
+                        </div>
+                    </div>
+                {% endif %}
+                <form>
+                    <input name="instance_x" value="layer_{{object.pk}}" style="display: none;"/>
+                    <div class="input-group">
+                        <select class="form-select" name="epoch">
+                            <option selected>----</option>
+                            {% for option in epochs %}
+                            <option value="{{option.pk}}">{{option}}</option>
+                            {% endfor %}
+                        </select>
+                        <span
+                            hx-post="{% url 'layer-epoch-update' %}"
+                            hx-target="#modal-blank"
+                            class="btn btn-primary input-group-btn"
+                        >OK</span>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

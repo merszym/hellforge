@@ -3,11 +3,14 @@ from main.queries import queries
 from django.http import JsonResponse, HttpResponse
 from django.urls import path, reverse
 from django.shortcuts import render
-from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
+from django.contrib.auth.decorators import (
+    login_required,
+)  # this is for now, make smarter later
 from datetime import datetime
 import json
 import pandas as pd
 import numpy as np
+
 
 def get_dataset_df(qs, start, include):
     # iterate over the m:1 frame, collect information from models
@@ -18,12 +21,13 @@ def get_dataset_df(qs, start, include):
             try:
                 data.update(getattr(entry, incl, False).get_data())
             except AttributeError:
-                empty = {k:None for k in models[incl].table_columns()}
+                empty = {k: None for k in models[incl].table_columns()}
                 data.update(empty)
         data.update(entry.get_data())
         records.append(data)
     df = pd.DataFrame.from_records(records)
     return df
+
 
 def get_dataset(request):
     """
@@ -41,14 +45,14 @@ def get_dataset(request):
     """
     # for now, only site works
     # define the starting point, its the classical model_pk syntax
-    start = get_instance_from_string(request.GET.get('from'))
+    start = get_instance_from_string(request.GET.get("from"))
     column = start.model
-    unique = request.GET.get('unique')
-    include = request.GET.get('include',0).split(',')
-    extend = request.GET.get('extend',0)
+    unique = request.GET.get("unique")
+    include = request.GET.get("include", 0).split(",")
+    extend = request.GET.get("extend", 0)
 
-    #now set up the query
-    filter = {queries(column,unique):start}
+    # now set up the query
+    filter = {queries(column, unique): start}
 
     qs = models[unique].objects.filter(**filter)
 
@@ -61,21 +65,25 @@ def get_dataset(request):
         # now some of the entries are a subset of the first query
         # so lets filter them out
         excl = qs.values(extend)
-        eqs = models[extend].objects.filter(**{queries(column,extend):start}).exclude(pk__in=excl)
+        eqs = (
+            models[extend]
+            .objects.filter(**{queries(column, extend): start})
+            .exclude(pk__in=excl)
+        )
 
         # and get the dataset
         df2 = get_dataset_df(eqs, start, include)
         df2 = df2[[x for x in df2.columns if x in df.columns]].copy()
-        df = pd.concat([df,df2], ignore_index=True)
+        df = pd.concat([df, df2], ignore_index=True)
 
-        #remove some weird error message
+        # remove some weird error message
         for col in df.columns:
             df[col] = df[col].fillna("").apply(lambda x: str(x))
 
-        #sort the data again
+        # sort the data again
         df = df.sort_values(by=list(df2.columns))
 
-    #download the data
+    # download the data
     return download_csv(df, name=f"{start}_{unique}_m_1.csv")
 
 
@@ -85,7 +93,11 @@ def search(request):
     origin = request.POST.get("origin")
     model = request.POST.get("model")
     q = models[model].filter(kw)
-    return render(request, f"main/{model}/{model}-searchresults.html", context={"object_list": q, "origin": origin})
+    return render(
+        request,
+        f"main/{model}/{model}-searchresults.html",
+        context={"object_list": q, "origin": origin},
+    )
 
 
 def get_instance_from_string(string):
@@ -106,6 +118,19 @@ def unset_fk(request, field=None, response=True):
     if x:
         setattr(x, field, None)
         x.save()
+
+    # return html if the request came from a modal...
+    if next := request.GET.get("next", False):
+        _, type = next.split("_")
+
+        request.GET._mutable = True
+        request.GET.update({"object": request.POST.get("instance_x"), "type": type})
+
+        from main.ajax import get_modal
+
+        return get_modal(request)
+
+    if x:
         return JsonResponse({"status": True}) if response else (True, x)
     return JsonResponse({"status": False}) if reponse else False
 
@@ -189,5 +214,5 @@ urlpatterns = [
     path("addm2m/<str:field>", add_x_to_y_m2m, name="main_generic_addm2m"),
     path("addm2m", add_x_to_y_m2m, name="main_generic_addm2m"),
     path("deletex", delete_x, name="main_generic_delete"),
-    path("get-dataset", get_dataset, name="get_dataset")
+    path("get-dataset", get_dataset, name="get_dataset"),
 ]

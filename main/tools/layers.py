@@ -3,7 +3,7 @@ from django.urls import path, reverse
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DeleteView, UpdateView
-from main.models import Layer, Profile, Site, Culture, models
+from main.models import Layer, Profile, Site, Culture, models, Epoch
 from main.forms import ReferenceForm
 from django.contrib.auth.decorators import (
     login_required,
@@ -80,9 +80,40 @@ def set_bounds(request):
     return JsonResponse({"status": True})
 
 
+@login_required
+def set_culture(request):
+    object = get_instance_from_string(request.POST.get("instance_x"))
+    object.culture = Culture.objects.get(pk=int(request.POST.get("culture")))
+    object.save()
+
+    request.GET._mutable = True
+    request.GET.update({"object": f"layer_{object.pk}", "type": "properties"})
+
+    from main.ajax import get_modal
+
+    return get_modal(request)
+
+
+@login_required
+def set_epoch(request):
+    print(request.POST)
+    object = get_instance_from_string(request.POST.get("instance_x"))
+    object.epoch = Epoch.objects.get(pk=int(request.POST.get("epoch")))
+    object.save()
+
+    request.GET._mutable = True
+    request.GET.update({"object": f"layer_{object.pk}", "type": "properties"})
+
+    from main.ajax import get_modal
+
+    return get_modal(request)
+
+
 # and the respective urlpatterns
 urlpatterns = [
     path("set-name", set_name, name="main_layer_setname"),
+    path("set-culture", set_culture, name="layer-culture-update"),
+    path("set-epoch", set_epoch, name="layer-epoch-update"),
     path("set-bounds", set_bounds, name="main_layer_setbounds"),
     path("clone/<int:pk>", clone, name="main_layer_clone"),
     path("positions/<int:site_id>", update_positions, name="main_layer_positionupdate"),

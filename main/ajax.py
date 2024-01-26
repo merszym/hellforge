@@ -9,6 +9,8 @@ from .models import (
     Gallery,
     DatingMethod,
     Description,
+    Culture,
+    Epoch,
 )
 from django.db.models import Q
 from django.urls import reverse, path
@@ -44,6 +46,13 @@ def get_modal_context(object, request):
             # Add a date to the layer
             context.update(
                 {"datingoptions": DatingMethod.objects.all(), "origin": "form"}
+            )
+        if context["type"] == "properties":
+            context.update(
+                {
+                    "cultures": Culture.objects.all().order_by("name"),
+                    "epochs": Epoch.objects.all().order_by("name"),
+                }
             )
     if object.model == "site":
         if context["type"] == "add_samplebatch":
