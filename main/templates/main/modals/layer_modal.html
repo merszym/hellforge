@@ -1,10 +1,21 @@
 {% load static %}
+{% load format %}
 
 <a href="#close" class="modal-overlay" aria-label="Close"></a>
 <div class="modal-container">
     <div class="modal-header">
-        <a id="modal-close" class="btn btn-clear float-right" href="#" aria-label="Close"></a>
-        <div class="modal-title h5">Edit Layer</div>
+        <a id="modal-close" class="btn btn-clear float-right modal_close" href="#" aria-label="Close"></a>
+        <div class="modal-title h5 ">Edit Layer</div>
+    </div>
+
+    <!--Whenever the layer-modal appears, I assume something in the profile was updated. So reload the profile in the background
+        Works currently only for "edit", make sure to forward the urlparams all of the time
+    -->
+    <div
+        hx-get="{% url 'main_profile_get' %}?{{request.GET|getstring}}"
+        hx-trigger="load"
+        hx-vars="{'site':'site_{{object.site.pk}}'}"
+        hx-target="#site_layer">
     </div>
 
     {% if type == "edit" %}
@@ -18,12 +29,17 @@
             <div id="reldate-content">
                 <div id="modal-form">
                     <h6>Edit Layer information</h6>
-                    <div class="input-group">
-                        <span class="input-group-addon">Layer Name</span>
-                        <input type="text" class="form-input" name="layer-name" value="{{object.name}}">
-                        <span id="layer-setname" class="btn btn-primary input-group-btn" data-x="layer_{{object.pk}}" data-url="{% url 'main_layer_setname' %}">OK</span>
-                    </div>
-                    <p class="form-input-hint">Update the Layer name. Provide a "Unit" to group multiple Layers</p>
+                    <form>
+                        <div class="input-group">
+                            <span class="input-group-addon">Layer Name</span>
+                            <input type="text" class="form-input" name="layer-name" value="{{object.name}}">
+                            <span class="btn btn-primary input-group-btn"
+                                hx-vars='{"instance_x":"layer_{{object.pk}}"}'
+                                hx-post="{% url 'main_layer_setname' %}?{{request.GET|getstring}}"
+                                hx-target="#modal-blank">OK</span>
+                        </div>
+                        <p class="form-input-hint">Update the Layer name</p>
+                    </form>
                     <h6>Add Additional Information</h6>
                     {% include 'main/synonyms/synonyms-chip-display.html' %}
                     {% include 'main/synonyms/synonyms-form.html' %}

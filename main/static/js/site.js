@@ -125,14 +125,6 @@ $('body').on('click', '.timeline-filter', function(){
 });
 
 
-
-$('body').on('click', '.refresh_profile', function(){
-    reloadElement('site_layer')
-    reloadTimeline()
-})
-
-
-
 // switch between main tabs on the site level
 $('body').on('click', '.select-block-content', function(){
     $('.block-content').hide();

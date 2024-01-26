@@ -3,11 +3,6 @@ $('.RefModal').on('click', function(){
     $('#reference-modal').addClass('active')
 });
 
-$('#modal-close').on('click', function(){
-    $('#reference-modal').addClass('inactive')
-    $('#reference-modal').removeClass('active')
-});
-
 $(".addReference").on("click", function(){
     $.ajax({
         type: "POST",

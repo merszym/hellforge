@@ -1,4 +1,5 @@
 {% load static %}
+{% load format %}
 <section class="m-2 show_profile" style="padding-top: 20px;{% if profile != selected_profile%}display:none;{% endif %}" id="show_profile_{{object.pk}}">
     <div style="position: relative;">
       <h3>{{object.name}}</h3>
@@ -70,7 +71,7 @@
                       <div class="divider"></div>
 
                       <span class="btn modal_open tooltip tooltip-top" data-tooltip="Edit Layer"
-                        hx-get="{% url 'main_modal_get' %}"
+                        hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
                         hx-vals='{"object":"layer_{{layer.pk}}", "type":"edit"}'
                         hx-target="#modal-blank">
                         <i class="icon icon-edit"></i>

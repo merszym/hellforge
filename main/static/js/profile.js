@@ -53,7 +53,3 @@ function fillModal(ele){
 $('body').on('click','.fill_modal', function(){
     fillModal($(this))
 })
-
-$('body').on('click','#modal-close', function(){
-    $('#modal-blank').removeClass('active')
-})

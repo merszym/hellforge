@@ -5,10 +5,15 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DeleteView, UpdateView
 from main.models import Layer, Profile, Site, Culture, models
 from main.forms import ReferenceForm
-from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
-from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, make smarter later
+from django.contrib.auth.decorators import (
+    login_required,
+)  # this is for now, make smarter later
+from django.contrib.auth.mixins import (
+    LoginRequiredMixin,
+)  # this is for now, make smarter later
 from main.tools.generic import add_x_to_y_m2m, get_instance_from_string, set_x_fk_to_y
 import copy
+from django.shortcuts import render
 
 
 @login_required
@@ -17,7 +22,10 @@ def clone(request, pk):
     layer = Layer.objects.get(pk=pk)
     new_layer.pk = None
     # find the last postion:
-    layers = [x.pos for x in Layer.objects.filter(site__id=Layer.objects.get(pk=pk).site.pk).all()]
+    layers = [
+        x.pos
+        for x in Layer.objects.filter(site__id=Layer.objects.get(pk=pk).site.pk).all()
+    ]
     new_layer.pos = max(layers) + 1
     new_layer.save()
     for profile in layer.profile.all():
@@ -31,7 +39,9 @@ def clone(request, pk):
 def update_positions(request, site_id):
     site = Site.objects.get(pk=site_id)
     ids = request.POST.get("ids").split(",")
-    positions = request.POST.get("positions").split(",")  # these are the old positions, but in new order
+    positions = request.POST.get("positions").split(
+        ","
+    )  # these are the old positions, but in new order
     for pk, pos in zip(ids, sorted(positions, key=lambda x: int(x))):
         layer = site.layer.get(pk=int(pk))
         if layer.pos == int(pos):
@@ -44,10 +54,15 @@ def update_positions(request, site_id):
 @login_required
 def set_name(request):
     object = get_instance_from_string(request.POST.get("instance_x"))
-    object.name = request.POST.get("name")
-    object.unit = request.POST.get("unit", None)
+    object.name = request.POST.get("layer-name")
     object.save()
-    return JsonResponse({"status": True})
+
+    request.GET._mutable = True
+    request.GET.update({"object": f"layer_{object.pk}", "type": "edit"})
+
+    from main.ajax import get_modal
+
+    return get_modal(request)
 
 
 @login_required
