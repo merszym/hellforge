@@ -256,3 +256,19 @@ $('body').on('click', '.generic_unsetfk', function(){
         }
     });
 });
+
+// add URL params
+
+function add_url_params(kwargs) {
+    let url = new URL(location.href);
+    Object.entries(kwargs).forEach((entry) => {
+        url.searchParams.set(entry[0], entry[1]);
+    });
+    window.history.pushState({}, "", url);
+}
+
+function delete_url_params(entry) {
+    let url = new URL(location.href);
+    url.searchParams.delete(entry);
+    window.history.pushState({}, "", url);
+}

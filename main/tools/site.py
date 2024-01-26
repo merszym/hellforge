@@ -45,10 +45,8 @@ class SiteDetailView(ProjectAwareDetailView):
 
     def get_context_data(self, **kwargs):
         context = super(SiteDetailView, self).get_context_data(**kwargs)
-        tab = self.request.GET.get("tab", "layers")
+        tab = self.request.GET.get("tab", "site_layer")
         object = self.get_object()
-        # get the first profile
-        profile = object.profile.first()
 
         # get the project description
         try:
@@ -75,11 +73,10 @@ class SiteDetailView(ProjectAwareDetailView):
 
         context.update(
             {
-                "profile_form": ProfileForm,
                 "taxa": taxa,
                 "taxa_references": set(taxrefs),
                 "project_description": project_description,
-                "profile": profile,
+                "tab": tab,
             }
         )
 
@@ -184,6 +181,9 @@ def get_timeline_data(site_id, hidden=False, curves=False, request=False):
     return data
 
 
+## Profiles
+
+
 @login_required
 def add_profile(request, site_id):
     """
@@ -195,6 +195,22 @@ def add_profile(request, site_id):
         obj.site = Site.objects.get(pk=site_id)
         obj.save()
     return JsonResponse({"status": False})
+
+
+def get_site_profile_tab(request):
+    object = get_instance_from_string(request.GET.get("site"))
+    if selected_profile := request.GET.get("profile", False):
+        selected_profile = get_instance_from_string(selected_profile)
+    else:
+        selected_profile = object.profile.first()
+
+    context = {
+        "object": object,
+        "selected_profile": selected_profile,
+        "profile_form": ProfileForm,
+    }
+
+    return render(request, "main/site/site-profile-content.html", context)
 
 
 @login_required
@@ -260,7 +276,7 @@ def get_site_geo(request):
 
 def get_site_sample_content(request):
     try:
-        object = Site.objects.get(pk=int(request.GET.get("object")))
+        object = get_instance_from_string(request.GET.get("object"))
     except TypeError:  # object is in POST not GET
         object = Site.objects.get(pk=int(request.POST.get("object")))
     context = {"object": object}
@@ -287,7 +303,19 @@ def get_site_sample_content(request):
         # create All placeholders
         batch_samples[batch] = len(batch.sample.all())
 
-    context.update({"sample": object.sample.first(), "batches": batch_samples})
+    # check if a batch is selected already
+    if selected_batch := request.GET.get("samplebatch", False):
+        selected_batch = get_instance_from_string(selected_batch)
+    else:
+        selected_batch = batches[0]
+
+    context.update(
+        {
+            "sample": object.sample.first(),
+            "batches": batch_samples,
+            "selected_batch": selected_batch,
+        }
+    )
     return render(request, "main/site/site-sample-content.html", context)
 
 
@@ -306,11 +334,8 @@ def samplebatch_create(request):
 ## Samplebatch-TAB
 
 
-def get_site_samplebatch_tab(request, object=False):
-    if not object:
-        batch = get_instance_from_string(request.GET.get("object"))
-    else:
-        batch = object
+def get_site_samplebatch_tab(request, pk):
+    batch = SampleBatch.objects.get(pk=pk)
 
     nested_dict = lambda: defaultdict(nested_dict)
     data = nested_dict()
@@ -370,6 +395,7 @@ def get_site_samplebatch_tab(request, object=False):
 
 urlpatterns = [
     path("add-profile/<int:site_id>", add_profile, name="main_site_profile_create"),
+    path("get-profile", get_site_profile_tab, name="main_profile_get"),
     path("create", site_create_update, name="main_site_add"),
     path("edit/<int:pk>", site_create_update, name="main_site_update"),
     path("list", SiteListView.as_view(), name="site_list"),
@@ -378,5 +404,9 @@ urlpatterns = [
     path("geodata", get_site_geo, name="main_site_geo"),
     path("sample-tab", get_site_sample_content, name="main_site_sample_tab"),
     path("create-batch", samplebatch_create, name="main_samplebatch_create"),
-    path("get-samplebatch", get_site_samplebatch_tab, name="main_samplebatch_get"),
+    path(
+        "get-samplebatch/<int:pk>",
+        get_site_samplebatch_tab,
+        name="main_samplebatch_get",
+    ),
 ]

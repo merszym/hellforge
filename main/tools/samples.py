@@ -182,7 +182,7 @@ def save_verified(request):
 
     from main.tools.site import get_site_samplebatch_tab
 
-    return get_site_samplebatch_tab(request, object=batch)
+    return get_site_samplebatch_tab(request, batch.pk)
 
 
 # UPDATE MODALS
@@ -199,7 +199,7 @@ def update_samplelayer(request):
             sample.layer = None
         sample.save()
     # return updated html
-    return get_site_samplebatch_tab(request, object=sample.batch)
+    return get_site_samplebatch_tab(request, sample.batch.pk)
 
 
 @login_required

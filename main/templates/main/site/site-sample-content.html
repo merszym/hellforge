@@ -10,16 +10,24 @@
         <!-- List the sample batches -->
         <ul class="tab" id="samplebatch-list">
             {% for batch in batches %}
-            <li id="samplebatch-tab_{{batch.pk}}" class="tab-item {% if forloop.counter == 1 %}active{% endif %} batch"
+            <li id="samplebatch-tab_{{batch.pk}}" class="tab-item {% if batch == selected_batch %} active {% endif %} batch"
                 data-group="sample-batch"
-                data-show="sample-batch-tab_{{batch.pk}}">
+                data-show="sample-batch-tab_{{batch.pk}}"
+                data-object="samplebatch_{{batch.pk}}">
                 <a class="badge" data-badge="{{batches|lookup:batch}}" style="cursor:pointer;">{{batch.name}}</a>
             </li>
             {% endfor %}
+            <script>
+            $('body').on('click','.batch', function(){
+                add_url_params({
+                    'samplebatch':$(this).attr("data-object")
+                })
+            })
+            </script>
             {% if request.user.is_authenticated %}
             <li id="before-profile-add">
                 <span style="margin-bottom:5px;" class="btn btn-primary modal_open"
-                        hx-get="{% url 'main_modal_get' %}"
+                        hx-get="{% url 'main_modal_get' %}?"
                         hx-vals='{"object":"site_{{object.pk}}", "type":"add_samplebatch"}'
                         hx-target="#modal-blank">
                         Add Batch
@@ -30,11 +38,11 @@
         <!-- Now render each batch individually! -->
         {% for batch in batches %}
             <div class="tab-panel" id="sample-batch-tab_{{batch.pk}}" data-group="sample-batch"
-                {% if forloop.counter != 1 %}
+                {% if batch != selected_batch %}
                 style="display: none;"
                 {% endif %}
-                hx-get="{% url 'main_samplebatch_get' %}?object=samplebatch_{{batch.pk}}"
-                hx-trigger="load">
+                hx-get="{% url 'main_samplebatch_get' batch.pk %}"
+                hx-trigger="load once">
             </div>
         {% endfor %}
     </section>

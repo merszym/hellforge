@@ -1,4 +1,5 @@
 {% extends 'main/base.html' %}
+{% load format %}
 {% block head %}
 {% load static %}
 <title>Hellforge: {{object.name}}</title>
@@ -135,32 +136,39 @@
             {% else %}
             <!-- Site is a real site -->
             <ul class="tab tab-block">
-                <li class="tab-item main active" data-group="main">
+                <li class="tab-item main {% if tab == 'site_layer' %} active {% endif %}" data-group="main">
                     <a style="cursor: pointer;" class="select-block-content" data-select="site_layer"><h4>Profiles and Layers</h4></a>
                 </li>
-                <li class="tab-item" data-group="main">
+                <li class="tab-item {% if tab == 'site_fauna' %} active {% endif %}" data-group="main">
                     <a style="cursor: pointer;" class="select-block-content" data-select="site_fauna"><h4>Fauna</h4></a>
                 </li>
                 {% if object.id in project_sites %}
-                <li class="tab-item" data-group="main">
-                    <a style="cursor: pointer;" class="select-block-content" data-select="site_samples"
-                        hx-get="{% url 'main_site_sample_tab' %}?object={{object.pk}}"
-                        hx-target="#site_samples"
-                        hx-trigger="load once">
-                        <h4>Samples</h4>
-                    </a>
+                <li class="tab-item {% if tab == 'site_samples' %} active {% endif %}" data-group="main">
+                    <a style="cursor: pointer;" class="select-block-content" data-select="site_samples"><h4>Samples</h4></a>
                 </li>
                 {% endif %}
             </ul>
+            <script>
+                $('body').on('click', '.select-block-content', function(){
+                    add_url_params({
+                        'tab':$(this).attr('data-select')
+                    })
+                })
+            </script>
 
-            <div class="block-content" id="site_layer">
-                {% include 'main/site/site-profile-content.html' %}
+            <div class="block-content" id="site_layer" style="{% if tab != 'site_layer' %} display:none {% endif %}"
+                hx-get="{% url 'main_profile_get' %}?{{request.GET|getstring}}"
+                hx-trigger="load once"
+                hx-vars="{'site':'site_{{object.pk}}'}">
             </div>
-            <div class="block-content" id="site_fauna" style="display: none;">
+            <div class="block-content" id="site_fauna" style="{% if tab != 'site_fauna' %} display:none {% endif %}">
                 {% include 'main/site/site-fauna-content.html' %}
             </div>
             {% if object.id in project_sites %}
-            <div class="block-content" id="site_samples" style="display: none;">
+            <div class="block-content" id="site_samples" style="{% if tab != 'site_samples' %} display:none {% endif %}"
+                hx-get="{% url 'main_site_sample_tab' %}?{{request.GET|getstring}}"
+                hx-trigger="load once"
+                hx-vars="{'object':'site_{{object.pk}}'}">
             </div>
             {% endif %}
             {% endif %}

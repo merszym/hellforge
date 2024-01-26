@@ -31,9 +31,9 @@
                 </div>
                 {% endif %}
                 {% endfor %}
-                <span class="btn btn-primary"
+                <span class="btn btn-primary modal_close"
                     hx-target="#site_sample_content"
-                    hx-post="{% url 'main_samplebatch_create' %}?object={{object.pk}}">Add</span>
+                    hx-post="{% url 'main_samplebatch_create' %}?object=site_{{object.pk}}">Add</span>
                 </form>
                 <br>
             </div>

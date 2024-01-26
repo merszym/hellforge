@@ -1,5 +1,5 @@
 {% load static %}
-<section class="m-2 show_profile" style="padding-top: 20px;{% if counter != 1%}display:none;{% endif %}" id="show_profile_{{object.pk}}">
+<section class="m-2 show_profile" style="padding-top: 20px;{% if profile != selected_profile%}display:none;{% endif %}" id="show_profile_{{object.pk}}">
     <div style="position: relative;">
       <h3>{{object.name}}</h3>
       {% if request.user.is_authenticated %}

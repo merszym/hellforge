@@ -97,7 +97,7 @@
                                 class="btn btn-primary input-group-btn"
                                 >OK
                             </span>
-                            <div hx-get="{% url 'main_samplebatch_get' %}?object=samplebatch_{{object.batch.pk}}"
+                            <div hx-get="{% url 'main_samplebatch_get' object.batch.pk %}"
                                 hx-target="#sample-batch-tab_{{object.batch.pk}}"
                                 hx-trigger="click from:#provenience-update-trigger, click from:.provenience-update-remove"></div>
                         </div>
@@ -135,7 +135,7 @@
                                 hx-target="#modal-blank">OK
                         </button>
                     </form>
-                    <div hx-get="{% url 'main_samplebatch_get' %}?object=samplebatch_{{object.batch.pk}}"
+                    <div hx-get="{% url 'main_samplebatch_get' object.batch.pk %}"
                             hx-target="#sample-batch-tab_{{object.batch.pk}}"
                             hx-trigger="click from:#sample-update-trigger">
                     </div>
@@ -157,7 +157,7 @@
                     <h6>Update Sample Synonyms</h6>
                     {% include 'main/synonyms/synonyms-chip-display.html' %}
                     {% include 'main/synonyms/synonyms-form.html' %}
-                    <div hx-get="{% url 'main_samplebatch_get' %}?object=samplebatch_{{object.batch.pk}}"
+                    <div hx-get="{% url 'main_samplebatch_get' object.batch.pk %}"
                             hx-target="#sample-batch-tab_{{object.batch.pk}}"
                             hx-trigger="click from:.synonym_delete delay:100ms, click from:#synonym-add delay:100ms">
                     </div>

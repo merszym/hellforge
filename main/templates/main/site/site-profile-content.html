@@ -1,3 +1,4 @@
+{% load format %}
 <div id="site_profile_content">
     <div class="modal" id="modal-profile">
         <a href="#close" class="modal-overlay" aria-label="Close"></a>
@@ -25,10 +26,15 @@
     </div>
     <ul class="tab tab-block" id="profile-list">
         {% for profile in object.profile.all %}
-        <li id="profile-tab_{{profile.pk}}" class="tab-item switch_profile {% if forloop.counter == 1 %}active{% endif %}" data-group="profile" data-show="profile_{{profile.pk}}">
+        <li id="profile-tab_{{profile.pk}}" class="tab-item switch_profile {% if selected_profile == profile %}active{% endif %}" data-group="profile" data-show="profile_{{profile.pk}}">
             <a style="cursor:pointer;">{{profile.name}}</a>
         </li>
         {% endfor %}
+        <script>
+            $('body').on('click', '.switch_profile', function(){
+                add_url_params({'profile':$(this).attr('data-show')})
+            })
+        </script>
         {% if request.user.is_authenticated %}
         <li id="before-profile-add">
             <span style="margin:5px;" data-tooltip="Add a Profile" class="btn btn-primary tooltip tooltip-left" id="profile-add" data-url="{% url 'main_site_profile_create' object.pk %}"> Add Profile </span>
@@ -36,7 +42,7 @@
         {% endif %}
     </ul>
     {% for profile in object.profile.all %}
-    {% include 'main/profile/profile-detail.html' with object=profile counter=forloop.counter %}
+    {% include 'main/profile/profile-detail.html' with object=profile selected_profile=selected_profile %}
     {% empty %}
     <div class="empty">
         <div class="empty-icon">
