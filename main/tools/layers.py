@@ -96,7 +96,6 @@ def set_culture(request):
 
 @login_required
 def set_epoch(request):
-    print(request.POST)
     object = get_instance_from_string(request.POST.get("instance_x"))
     object.epoch = Epoch.objects.get(pk=int(request.POST.get("epoch")))
     object.save()

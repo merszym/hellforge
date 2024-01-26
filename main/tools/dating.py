@@ -186,16 +186,14 @@ def add(request):
         if obj.pk:
             object.date.add(obj)
             object.save()  # not needed for adding, but for post-save signal in layer
+
     # finally, return the modal
-    return render(
-        request,
-        "main/modals/layer_modal.html",
-        {
-            "datingoptions": DatingMethod.objects.all(),
-            "form": form if not obj.pk else DateForm(),
-            "type": "dates",
-        },
-    )
+    request.GET._mutable = True
+    request.GET.update({"object": f"layer_{object.pk}", "type": "dates"})
+
+    from main.ajax import get_modal
+
+    return get_modal(request)
 
 
 @login_required
