@@ -1,3 +1,4 @@
+{% load format %}
 <td class="{% if layer.culture %}{{layer.culture.classname}}{% else %}sterile{% endif%}" style="{% if layer.parent %} border-left:solid 3px black; {% endif %}">
     {% if layer.parent %}
     <span style="font-size:10pt;">{{layer.parent.name}}</span><br>
@@ -17,7 +18,13 @@
 {# endfor #}
 -->
 <td>
-    <span class='text-primary c-hand fill_modal tooltip tooltip-right' data-size="modal-lg" data-info="layer_{{layer.pk}}" data-tooltip="Manage Dates" data-url="{% url 'ajax_fill_modal' %}?type=date-list">{{layer.age_summary}}</span>
+    <span
+        class='text-primary c-hand tooltip tooltip-right modal_open'
+        data-tooltip="Manage Dates"
+        hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
+        hx-vals='{"object":"layer_{{layer.pk}}","type":"dates_list"}'
+        hx-target="#modal-blank">{{layer.age_summary}}
+    </span>
     <br><span class="text-gray" style="font-size:11pt;">({{layer.date.all|length}} Dates)</span>
 </td>
 <td>{% if layer.culture %}

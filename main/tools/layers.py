@@ -77,7 +77,13 @@ def set_bounds(request):
     except ValueError:
         object.set_lower = None
     object.save()
-    return JsonResponse({"status": True})
+
+    request.GET._mutable = True
+    request.GET.update({"object": f"layer_{object.pk}", "type": "dates_list"})
+
+    from main.ajax import get_modal
+
+    return get_modal(request)
 
 
 @login_required

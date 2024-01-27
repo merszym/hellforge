@@ -83,13 +83,6 @@
                         hx-target="#modal-blank">
                         Prop
                       </span>
-                      <div class="divider"></div>
-                      <span class="btn modal_open tooltip tooltip-top" data-tooltip="Add Dating"
-                        hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
-                        hx-vals='{"object":"layer_{{layer.pk}}","type":"dates"}'
-                        hx-target="#modal-blank">
-                        <i class="icon icon-time"></i>
-                      </span>
                     </div>
                   </div>
                 </div>

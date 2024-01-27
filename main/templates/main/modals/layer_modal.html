@@ -5,7 +5,27 @@
 <div class="modal-container">
     <div class="modal-header">
         <a id="modal-close" class="btn btn-clear float-right modal_close" href="#" aria-label="Close"></a>
+        {% if type == 'dates_list' %}
+        <div class="modal-title h5 ">Manage Dates</div>
+        <span class="btn modal_open tooltip tooltip-top" data-tooltip="Add Dating"
+            hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
+            hx-vals='{"object":"layer_{{object.pk}}","type":"dates"}'
+            hx-target="#modal-blank">
+        <i class="icon icon-plus"></i>
+        </span>
+        {% elif type == 'dates' %}
+        <div class="modal-title h5 ">Add Date(s)</div>
+        <span
+            class='btn modal_open tooltip tooltip-top'
+            data-tooltip="Back to Date Overview"
+            hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
+            hx-vals='{"object":"layer_{{object.pk}}","type":"dates_list"}'
+            hx-target="#modal-blank">
+            <i class="icon icon-back"></i>
+        </span>
+        {% else %}
         <div class="modal-title h5 ">Edit Layer</div>
+        {% endif %}
     </div>
 
     <!--Whenever the layer-modal appears, I assume something in the profile was updated. So reload the profile in the background
@@ -173,7 +193,6 @@
     {# ------------------------ #}
 
     <div class="modal-body">
-        {{request}}
         <div class="content">
             <div id="dating-content">
                 <form id="modal-form" method="post" enctype="multipart/form-data">
@@ -187,6 +206,48 @@
                         hx-target="#modal-blank"
                         >Save</span>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    {% elif type == "dates_list" %}
+
+    {% load static %}
+    {% load format %}
+    <!-- Modal content for Date -->
+    <div class="modal-body">
+        <div class="content my-2">
+            <h6>{% if request.user.is_authenticated%}Set {% endif %}Layer Boundaries:</h6>
+            <form>
+                {% csrf_token %}
+                <div class="input-group">
+                    <input type="text" name="instance_x" value="layer_{{object.pk}}" style="display: none;">
+                    <span class="input-group-addon">Upper Bound</span>
+                    <input type="text" class="form-input" name="upper" placeholder="upper"
+                        value="{%if object.set_upper %}{{object.set_upper}}{%endif%}">
+                    <span class="input-group-addon">Lower Bound</span>
+                    <input type="text" class="form-input" name="lower" placeholder="lower"
+                    value="{%if object.set_lower %}{{object.set_lower}}{%endif%}"
+                    >
+                    {% if request.user.is_authenticated %}
+                    <span id="set_layer_bounds" class="btn btn-primary input-group-btn"
+                        hx-post="{% url 'main_layer_setbounds' %}"
+                        hx-target="#modal-blank">Set
+                    </span>
+                    {% endif %}
+                </div>
+            </form>
+            <div id="modal-form">
+                {% include 'main/dating/dating-table.html' with date_list=object.date.all mode='visible' title='Used Dates' %}
+                <br><br>
+                {% include 'main/dating/dating-table.html' with date_list=object.hidden_dates mode='hidden' title='Hidden Dates' %}
+                <br>
+                <h6>References</h6>
+                <table class="table">
+                {% for ref in object.date_references %}
+                    {% include 'main/reference/reference-tablerow.html' with display=True %}
+                {% endfor %}
+                </table>
             </div>
         </div>
     </div>

@@ -95,12 +95,6 @@ def fill_modal(request):
             "main/culture/culture-parent-modal.html",
             {"object": object, "origin": "culture"},
         )
-    if choice == "date-list":
-        html = render(
-            request,
-            "main/dating/dating-list-modal.html",
-            {"object": object, "origin": "layer"},
-        )
     return html
 
 

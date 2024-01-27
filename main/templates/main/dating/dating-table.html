@@ -23,13 +23,7 @@
             <tr>
                 <td>
                 {% if request.user.is_authenticated %}
-                <span class="btn tooltip tooltip-right date_toggle" data-tooltip="Toggle Usage of Date" id="date_{{date.pk}}" data-url="{% url 'ajax_date_toggle'%}">
-                    {% if mode == 'visible' %}
-                    <i class="icon icon-downward"></i>
-                    {% else %}
-                    <i class="icon icon-upward"></i>
-                    {% endif %}
-                </span>
+
                 {% endif %}
                 </td>
                 <td>{{date.method}}</td>
@@ -74,6 +68,13 @@
                             data-url="{% url 'ajax_date_unlink'%}"
                             data-click="reload">
                         <i class="icon icon-delete"></i>
+                    </span>
+                    <span class="btn tooltip tooltip-left date_toggle" data-tooltip="Toggle Usage of Date" id="date_{{date.pk}}" data-url="{% url 'ajax_date_toggle'%}">
+                        {% if mode == 'visible' %}
+                        <i class="icon icon-downward"></i>
+                        {% else %}
+                        <i class="icon icon-upward"></i>
+                        {% endif %}
                     </span>
                     {% endif %}
                 </td>
