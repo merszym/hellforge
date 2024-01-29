@@ -201,16 +201,30 @@ def delete(request):
     status, date, layer = remove_x_from_y_m2m(request, "date", response=False)
     # If dates are not linked to any model, remove
     if len(date.model.all()) == 0:
-        return delete_x(request)
-    return JsonResponse({"status": True})
+        deleted = delete_x(request, response=False)
+
+    request.GET._mutable = True
+    request.GET.update({"object": f"layer_{layer.pk}", "type": "dates_list"})
+
+    from main.ajax import get_modal
+
+    return get_modal(request)
 
 
 @login_required
 def toggle_use(request):
     date = get_instance_from_string(request.POST.get("instance_x"))
+    object = get_instance_from_string(request.POST.get("object"))
     date.hidden = date.hidden == False
     date.save(update_fields=["hidden"])
-    return JsonResponse({"status": True})
+
+    # finally, return the modal
+    request.GET._mutable = True
+    request.GET.update({"object": f"layer_{object.pk}", "type": "dates_list"})
+
+    from main.ajax import get_modal
+
+    return get_modal(request)
 
 
 urlpatterns = [

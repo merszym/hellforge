@@ -62,20 +62,30 @@
                 <td>{{date.ref.first.short}}</td>
                 <td>
                     {% if request.user.is_authenticated %}
-                    <span class="btn generic_xy tooltip tooltip-left" data-tooltip="Delete Date!"
-                            data-x="date_{{date.pk}}"
-                            data-y="layer_{{object.pk}}"
-                            data-url="{% url 'ajax_date_unlink'%}"
-                            data-click="reload">
+                    <form>
+                    {% csrf_token %}
+                    <input name="instance_x" value="date_{{date.pk}}" style="display: none;">
+                    <input name="instance_y" value="layer_{{object.pk}}" style="display: none;">
+                    <span class="btn tooltip tooltip-left" data-tooltip="Delete Date!"
+                            hx-post="{% url 'ajax_date_unlink'%}"
+                            hx-target="#modal-blank">
                         <i class="icon icon-delete"></i>
                     </span>
-                    <span class="btn tooltip tooltip-left date_toggle" data-tooltip="Toggle Usage of Date" id="date_{{date.pk}}" data-url="{% url 'ajax_date_toggle'%}">
+                    </form>
+                    <form>
+                    {% csrf_token %}
+                    <input name="instance_x" value="date_{{date.pk}}" style="display: none;">
+                    <input name="object" value="layer_{{object.pk}}" style="display: none;">
+                    <span class="btn tooltip tooltip-left" data-tooltip="Toggle Usage of Date"
+                        hx-post="{% url 'ajax_date_toggle'%}"
+                        hx-target="#modal-blank">
                         {% if mode == 'visible' %}
                         <i class="icon icon-downward"></i>
                         {% else %}
                         <i class="icon icon-upward"></i>
                         {% endif %}
                     </span>
+                    </form>
                     {% endif %}
                 </td>
                 </tr>
