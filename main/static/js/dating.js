@@ -116,40 +116,6 @@ $('body').on('click', '#dating-table-confirm', function(){
         });
 })
 
-$('body').on('click', '.date_toggle', function(){
-    var form_data = new FormData();
-    form_data.append('instance_x',`${$(this).attr('id')}`);
-    form_data.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
-    $.ajax({
-        type: "POST",
-        url: $(this).attr('data-url'),
-        processData: false,
-        contentType: false,
-        data: form_data
-        }).done(function(){
-            $('#reload').click()
-        });
-})
-
-//set layer upper and lower bounds
-// should belong to site, I guess... But restructureing is later
-$('body').on('click','#set_layer_bounds', function(){
-    var form_data = new FormData();
-    form_data.append('instance_x',`${$(this).attr('data-x')}`);
-    form_data.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
-    form_data.append('upper',$('[name=set_upper]').val())
-    form_data.append('lower',$('[name=set_lower]').val())
-    $.ajax({
-        type: "POST",
-        url: $(this).attr('data-url'),
-        processData: false,
-        contentType: false,
-        data: form_data
-        }).done(function(){
-            $('#reload').click()
-        });
-});
-
 //recalibrate
 $('body').on('change','.14c-curve-select', function(){
     var form_data = new FormData();
