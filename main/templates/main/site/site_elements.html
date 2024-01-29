@@ -75,6 +75,7 @@
     {% for connection in object.connections.all %}
     <div id="connection_card_{{connection.pk}}" class="card my-1">
         <div class="card-header" style="position: relative;">
+            {% if request.user.is_authenticated %}
             <form style="position: absolute; top: 5px; right: 5px;">
                 {% csrf_token %}
                 <button class="btn generic_delete"
@@ -88,6 +89,7 @@
                     Delete
                 </button>
             </form>
+            {% endif %}
             <div class="card-title h5">{{connection.name}}</div>
             <div class="card-subtitle text-gray">{{connection.short_description}}</div>
         </div>
