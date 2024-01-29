@@ -88,7 +88,7 @@
                   </div>
                   <div class="form-group">
                     <label class="form-label" for="orcid_{{person.pk}}">ORCID ID</label>
-                    <input class="form-input" name="orcid_id" type="text" id="orcid_{{person.pk}}" placeholder="ORCID ID" value="{{person.orcid_id}}">
+                    <input class="form-input" name="orcid_id" type="text" id="orcid_{{person.pk}}" placeholder="ORCID ID" value="{{person.orcid}}">
                   </div>
                   <span class="btn update_person" data-x="person_{{person.pk}}" data-url="{% url 'main_person_update' %}">Save</span>
                 </form>
