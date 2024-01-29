@@ -6,7 +6,7 @@
     </div>
     <div class="tile-content">
       <div style="display: flex; gap:5px">
-        <div class="tile-title">{{contact.name}}</div>
+        <div class="tile-title">{% if contact.orcid %}<a href="https://orcid.org/{{contact.orcid}}">{{contact.name}}</a>{% else %}{{contact.name}}{% endif %}</div>
         {% if contact.tags %}
           <div class="text-gray">({{contact.tags}})</div>
         {% endif %}

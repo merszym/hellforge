@@ -3,69 +3,114 @@
 {# ------------------ #}
 
 {% if element == "overview" %}
-<table class="table" style="margin-bottom:20px;">
-    <thead>
-    <tr>
-        <th>Name</th>
-        {% if object.parent %}
-        <th>Parent</th>
-        {% endif %}
-        {% if object.child.all %}
-        <th>Children</th>
-        {% endif %}
-        {% if object.country %}
-        <th>Country</th>
-        {% endif %}
-        <th>Type</th>
-        {% if object.elevation %}
-        <th>Elevation</th>
-        {% endif %}
-        <th></th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr>
-        <td>{{object.name}} ({{object.coredb_id}})</td>
-        {% if object.parent %}
-        <td><a href="{% url 'site_detail' pk=object.parent.pk %}">{{object.parent}}</a></td>
-        {% endif %}
-        {% if object.child.first %}
-        <td>
-            {% for child in object.child.all %}
-            <a href="{% url 'site_detail' pk=child.pk %}">{{child.name}}</a><br>
-            {% endfor %}
-        </td>
-        {% endif %}
-        {% if object.country %}
-        <td>{{object.country}}</td>
-        {% endif %}
-        <td>{{object.type}}</td>
-        {% if object.elevation %}
-        <td>{{object.elevation}} m</td>
-        {% endif %}
-        <td>
-            {% if request.user.is_authenticated %}
-            <div class="popover popover-left">
-                <span
-                    class="btn tooltip tooltip-top modal_open"
-                    data-tooltip="Edit Site Properties"
-                    hx-get="{% url 'main_modal_get' %}"
-                    hx-vals='{ "object":"site_{{object.pk}}" }'
-                    hx-target="#modal-blank"
-                    ><i class="icon icon-edit"></i>
-                </span>
-            </div>
+    <table class="table" style="margin-bottom:20px;">
+        <thead>
+        <tr>
+            <th>Name</th>
+            {% if object.parent %}
+            <th>Parent</th>
             {% endif %}
-        </td>
-    </tr>
-    </tbody>
-</table>
-{% if object.contact.first %}
-<h5>Collaborators</h5>
-{% for contact in object.contact.all %}
-    {% include 'main/contact/contact-tile.html' %}
-{% endfor %}
-<br>
-{% endif %}
-<div style="height: 480px;" id="map"></div>
+            {% if object.child.all %}
+            <th>Children</th>
+            {% endif %}
+            {% if object.country %}
+            <th>Country</th>
+            {% endif %}
+            <th>Type</th>
+            {% if object.elevation %}
+            <th>Elevation</th>
+            {% endif %}
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>{{object.name}} ({{object.coredb_id}})</td>
+            {% if object.parent %}
+            <td><a href="{% url 'site_detail' pk=object.parent.pk %}">{{object.parent}}</a></td>
+            {% endif %}
+            {% if object.child.first %}
+            <td>
+                {% for child in object.child.all %}
+                <a href="{% url 'site_detail' pk=child.pk %}">{{child.name}}</a><br>
+                {% endfor %}
+            </td>
+            {% endif %}
+            {% if object.country %}
+            <td>{{object.country}}</td>
+            {% endif %}
+            <td>{{object.type}}</td>
+            {% if object.elevation %}
+            <td>{{object.elevation}} m</td>
+            {% endif %}
+            <td>
+                {% if request.user.is_authenticated %}
+                <div class="popover popover-left">
+                    <span
+                        class="btn tooltip tooltip-top modal_open"
+                        data-tooltip="Edit Site Properties"
+                        hx-get="{% url 'main_modal_get' %}"
+                        hx-vals='{ "object":"site_{{object.pk}}" }'
+                        hx-target="#modal-blank"
+                        ><i class="icon icon-edit"></i>
+                    </span>
+                </div>
+                {% endif %}
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    {% if object.contact.first %}
+    <h5>Collaborators</h5>
+    {% for contact in object.contact.all %}
+        {% include 'main/contact/contact-tile.html' %}
+    {% endfor %}
+    <br>
+    {% endif %}
+    <div class="my-2" style="height: 480px;" id="map"></div>
+
+    {% if object.connections.all %}
+    <h4>External Links</h4>
+
+    {% for connection in object.connections.all %}
+    <div id="connection_card_{{connection.pk}}" class="card my-1">
+        <div class="card-header" style="position: relative;">
+            <form style="position: absolute; top: 5px; right: 5px;">
+                {% csrf_token %}
+                <button class="btn generic_delete"
+                    hx-post="{% url 'main_generic_delete' %}"
+                    hx-vals='{
+                        "instance_x":"connection_{{connection.pk}}"
+                    }'
+                    hx-swap="none"
+                    hx-confirm="Delete the Link?"
+                    data-hide="connection_card_{{connection.pk}}">
+                    Delete
+                </button>
+            </form>
+            <div class="card-title h5">{{connection.name}}</div>
+            <div class="card-subtitle text-gray">{{connection.short_description}}</div>
+        </div>
+        <div class="card-footer">
+            <a href="{{connection.link}}" target="_blank"><button class="btn btn-primary">Go</button></a>
+            {% if request.user.is_authenticated %}
+            <button class="btn modal_open"
+                hx-get="{% url 'main_modal_get' %}"
+                hx-target="#modal-blank"
+                hx-vars="{'object':'site_{{object.pk}}', 'type':'connection_form', 'fill':'connection_{{connection.pk}}' }"
+            >Edit</button>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    {% if request.user.is_authenticated %}
+    <button class="btn modal_open"
+        hx-get="{% url 'main_modal_get' %}"
+        hx-target="#modal-blank"
+        hx-vars="{'object':'site_{{object.pk}}', 'type':'connection_form', 'fill':'connection_{{connection.pk}}' }"
+    >Add External Link</button>
+    {% endif %}
+
 {% endif %}

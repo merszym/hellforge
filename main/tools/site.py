@@ -17,6 +17,7 @@ from main.models import (
     AnalyzedSample,
     Gallery,
     Synonym,
+    Connection,
 )
 from copy import copy
 import json
@@ -393,6 +394,42 @@ def get_site_samplebatch_tab(request, pk):
     return render(request, "main/samples/sample-batch-tab.html", context)
 
 
+## Add connections
+
+
+@login_required
+def update_connection(request):
+    # check if a connection exists already
+    try:
+        connection = get_instance_from_string(request.POST.get("connection"))
+    except:
+        connection = Connection()
+
+    # get the data from the form
+    connection.name = request.POST.get("name")
+    connection.link = request.POST.get("link")
+    connection.short_description = request.POST.get("short_description")
+
+    connection.save()
+    connection.refresh_from_db()
+
+    site = get_instance_from_string(request.POST.get("object"))
+    site.connections.add(connection)
+
+    request.GET._mutable = True
+    request.GET.update(
+        {
+            "object": f"site_{site.pk}",
+            "type": "connection_form",
+            "fill": f"connection_{connection.pk}",
+        }
+    )
+
+    from main.ajax import get_modal
+
+    return get_modal(request)
+
+
 urlpatterns = [
     path("add-profile/<int:site_id>", add_profile, name="main_site_profile_create"),
     path("get-profile", get_site_profile_tab, name="main_profile_get"),
@@ -409,4 +446,5 @@ urlpatterns = [
         get_site_samplebatch_tab,
         name="main_samplebatch_get",
     ),
+    path("connection-form", update_connection, name="main_site_addconnection"),
 ]

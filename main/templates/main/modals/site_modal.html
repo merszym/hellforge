@@ -8,6 +8,13 @@
         <div class="modal-title h5">Site Modal</div>
     </div>
 
+    <!-- Define what to reload upon modal load -->
+    <div
+        hx-get="{% url 'main_site_element' %}"
+        hx-vals='{ "object": "{{ object.pk }}", "element":"overview" }'
+        hx-target="#site-panel-1"
+        hx-trigger="load">
+    </div>
 
         {% if type == "add_samplebatch" %}
 
@@ -98,6 +105,37 @@
             </div>
         </div>
 
+        {% elif type == "connection_form" %}
+
+        {#  --------------------     #}
+        {#  CONNECTION CREATE MODAL  #}
+        {#  --------------------     #}
+
+        <div class="modal-body">
+            <div class="content  my-2">
+                <div id="modal-form">
+                    <form>
+                        {% csrf_token %}
+                        <input type="text" name="object" value="site_{{object.pk}}" style="display: none;" />
+                        <input type="text" name="connection" value="connection_{{connection.pk}}" style="display: none;" />
+                        <div class="form-group">
+                            <label class="form-label" for="link_input">Link</label>
+                            <input id="link_input" class="form-input" type="text" name="link" value="{{connection.link}}" placeholder="Link to external site" required />
+
+                            <label class="form-label" for="name_input">Name</label>
+                            <input id="name_input" class="form-input" type="text" name="name" value="{{connection.name}}" placeholder="Label the Link" required />
+
+                            <label class="form-label" for="descr_input">Short Description</label>
+                            <textarea id="descr_input" class="form-input" name="short_description" placeholder="Label the Link" required>{{connection.short_description}}</textarea>
+                        </div>
+                        <button class="btn btn-primary"
+                            hx-post="{% url 'main_site_addconnection' %}"
+                            hx-target="#modal-blank"
+                        >Save</button>
+                    </form>
+                </div>
+            </div>
+        </div>
         {% endif %}
 
 </div>

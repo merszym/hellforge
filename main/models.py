@@ -156,6 +156,12 @@ class Description(models.Model):
         return authors
 
 
+class Connection(models.Model):
+    link = models.CharField("link", max_length=300)
+    name = models.CharField("name", max_length=500, null=True, blank=True)
+    short_description = models.TextField("short_description", blank=True)
+
+
 #
 # / Description
 #
@@ -199,6 +205,7 @@ class Person(models.Model):
     affiliation = models.ManyToManyField(
         "Affiliation", blank=True, related_name="person", verbose_name="affiliation"
     )
+    orcid = models.CharField("orcid_id", max_length=300, blank=True, null=True)
     tags = models.CharField("tags", max_length=300, blank=True, null=True)
 
     def __str__(self):
@@ -213,6 +220,7 @@ class Person(models.Model):
             Q(name__contains=kw)
             | Q(email__contains=kw)
             | Q(tags__contains=kw)
+            | Q(orcid__contains=kw)
             | Q(affiliation__name__contains=kw)
         )
 
@@ -536,6 +544,7 @@ class Site(models.Model):
     elevation = models.IntegerField("elevation", blank=True, null=True)
     description = GenericRelation(Description, related_query_name="site")
     project = models.ManyToManyField("Project", related_name="site", blank=True)
+    connections = models.ManyToManyField("Connection", related_name="site", blank=True)
 
     class Meta:
         ordering = ["name"]
@@ -1058,4 +1067,5 @@ models = {
     "library": AnalyzedSample,
     "gallery": Gallery,
     "image": Image,
+    "connection": Connection,
 }

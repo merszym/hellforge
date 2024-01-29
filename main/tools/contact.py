@@ -3,9 +3,18 @@ from django.urls import path
 from main.models import Person, Affiliation
 from django.http import JsonResponse
 import copy
-from main.tools.generic import add_x_to_y_m2m, remove_x_from_y_m2m, get_instance_from_string, delete_x
-from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
-from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, make smarter later
+from main.tools.generic import (
+    add_x_to_y_m2m,
+    remove_x_from_y_m2m,
+    get_instance_from_string,
+    delete_x,
+)
+from django.contrib.auth.decorators import (
+    login_required,
+)  # this is for now, make smarter later
+from django.contrib.auth.mixins import (
+    LoginRequiredMixin,
+)  # this is for now, make smarter later
 
 
 class PersonListView(LoginRequiredMixin, ListView):
@@ -14,7 +23,9 @@ class PersonListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super(PersonListView, self).get_context_data(**kwargs)
-        extra_context = {"available_affiliations": [x.name for x in Affiliation.objects.all()]}
+        extra_context = {
+            "available_affiliations": [x.name for x in Affiliation.objects.all()]
+        }
         context.update(extra_context)
         return context
 
@@ -34,7 +45,9 @@ def create_and_add_affiliation(request):
     get or create an affiliation and add it to an instance_y in the request
     """
     person = request.POST.get("instance_y")
-    affiliation, created = Affiliation.objects.get_or_create(name=request.POST.get("affiliation"))
+    affiliation, created = Affiliation.objects.get_or_create(
+        name=request.POST.get("affiliation")
+    )
 
     # Use the generic add_to_m2m function
     post = request.POST.copy()
@@ -60,6 +73,7 @@ def update_person(request):
     person = get_instance_from_string(request.POST.get("instance_x"))
     person.name = request.POST.get("name")
     person.email = request.POST.get("email")
+    person.orcid = request.POST.get("orcid_id")
     person.save()
     return JsonResponse({"status": True})
 
@@ -67,7 +81,13 @@ def update_person(request):
 urlpatterns = [
     path("list", PersonListView.as_view(), name="main_person_list"),
     path("create", create_from_string, name="main_person_create"),
-    path("affiliation_add", create_and_add_affiliation, name="main_contact_affiliation_add"),
-    path("affiliation_remove", remove_affiliation, name="main_contact_affiliation_remove"),
+    path(
+        "affiliation_add",
+        create_and_add_affiliation,
+        name="main_contact_affiliation_add",
+    ),
+    path(
+        "affiliation_remove", remove_affiliation, name="main_contact_affiliation_remove"
+    ),
     path("update", update_person, name="main_person_update"),
 ]

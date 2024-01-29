@@ -62,6 +62,13 @@ def get_modal_context(object, request):
                     "samplebatch_form": SampleBatchForm,
                 }
             )
+        if context["type"] == "connection_form":
+            # Adding sample-batches to the site
+            try:
+                connection = get_instance_from_string(request.GET.get("fill"))
+            except ValueError:
+                connection = None
+            context.update({"connection": connection})
     if object.model == "sample":
         if context["type"] == "edit_provenience":
             try:
