@@ -50,7 +50,7 @@
                         class="btn tooltip tooltip-top modal_open"
                         data-tooltip="Edit Site Properties"
                         hx-get="{% url 'main_modal_get' %}"
-                        hx-vals='{ "object":"site_{{object.pk}}" }'
+                        hx-vals='{ "object":"site_{{object.pk}}", "type":"add_contact" }'
                         hx-target="#modal-blank"
                         ><i class="icon icon-edit"></i>
                     </span>

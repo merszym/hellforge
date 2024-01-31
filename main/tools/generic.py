@@ -121,7 +121,7 @@ def unset_fk(request, field=None, response=True):
 
     # return html if the request came from a modal...
     if next := request.GET.get("next", False):
-        _, type = next.split("_")
+        _, type = next.split("_", 1)
 
         request.GET._mutable = True
         request.GET.update({"object": request.POST.get("instance_x"), "type": type})
@@ -176,8 +176,21 @@ def remove_x_from_y_m2m(request, field=None, response=True):
         field = request.POST.get("instance_x").split("_")[0]
     if x and y:
         getattr(y, field).remove(x)
-        return JsonResponse({"status": True}) if response else (True, x, y)
-    return JsonResponse({"status": False}) if response else False
+
+    # return html if the request came from a modal...
+    if next := request.GET.get("next", False):
+        _, type = next.split("_", 1)
+
+        request.GET._mutable = True
+        request.GET.update({"object": request.POST.get("instance_y"), "type": type})
+
+        from main.ajax import get_modal
+
+        return get_modal(request)
+
+    if x:
+        return JsonResponse({"status": True}) if response else (True, x)
+    return JsonResponse({"status": False}) if reponse else False
 
 
 @login_required

@@ -1,5 +1,6 @@
 <!-- Modal for Site properties -->
 {% load static %}
+{% load format %}
 
 <a href="#close" class="modal-overlay" aria-label="Close"></a>
 <div class="modal-container">
@@ -90,9 +91,15 @@
                     <div class="tile tile-centered">
                         <div class="tile-icon">
                             <div class="example-tile-icon">
-                                <button class="btn generic_unsetfk" data-x="{{object.model}}_{{object.pk}}" data-y="site" data-click="reload">
-                                    <i class="icon icon-delete"></i>
-                                </button>
+                                <form>
+                                    {% csrf_token %}
+                                    <button class="btn"
+                                        hx-post="{% url 'main_generic_unsetfk' 'site' %}?{{request.GET|getstring}}&next=site_add_contact"
+                                        hx-vars="{'instance_x':'site_{{object.pk}}'}"
+                                        hx-target="#modal-blank">
+                                        <i class="icon icon-delete"></i>
+                                    </button>
+                                </form>
                             </div>
                         </div>
                         <div class="tile-content">

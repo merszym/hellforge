@@ -1,11 +1,19 @@
+{% load format %}
 {% if object.contact %}
 {% for contact in object.contact.all %}
     <div class="tile tile-centered">
         <div class="tile-icon">
             <div class="example-tile-icon">
-            <button class="btn generic_rmm2m" data-x="contact_{{contact.pk}}" data-y="{{object.model}}_{{object.pk}}" data-click="reload">
-                <i class="icon icon-delete"></i>
-            </button>
+                <form>
+                    {% csrf_token %}
+                    <input name="instance_y" value="site_{{object.pk}}" style="display: none;"/>
+                    <input name="instance_x" value="contact_{{contact.pk}}" style="display: none;"/>
+                    <button class="btn"
+                        hx-post="{% url 'main_generic_rmm2m' 'contact' %}?{{request.GET|getstring}}&next=site_add_contact"
+                        hx-target="#modal-blank">
+                        <i class="icon icon-delete"></i>
+                    </button>
+                </form>
             </div>
         </div>
         <div class="tile-content">
