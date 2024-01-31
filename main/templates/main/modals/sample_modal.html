@@ -156,17 +156,13 @@
                 <div id="modal-form">
                     <h6>Update Sample Synonyms</h6>
                     {% include 'main/synonyms/synonyms-chip-display.html' %}
+                    <form>
+                        <input type="text" style="display:none" name="object" class="form-input" value="{{object.model}}_{{object.pk}}">
                     {% include 'main/synonyms/synonyms-form.html' %}
+                    </form>
                     <div hx-get="{% url 'main_samplebatch_get' object.batch.pk %}"
                             hx-target="#sample-batch-tab_{{object.batch.pk}}"
-                            hx-trigger="click from:.synonym_delete delay:100ms, click from:#synonym-add delay:100ms">
-                    </div>
-                    <div
-                        hx-get="{% url 'main_modal_get' %}"
-                        hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_synonyms" }'
-                        hx-target="#modal-blank"
-                        hx-trigger="click from:#synonym-add delay:100ms, click from:.synonym_delete delay:100ms"
-                    >
+                            hx-trigger="click from:.synonym_delete delay:100ms">
                     </div>
                 </div>
             </div>

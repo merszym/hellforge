@@ -1,27 +1,40 @@
-from main.forms import SynonymForm
-from main.tools.generic import add_x_to_y_m2m, delete_x
+from main.tools.generic import add_x_to_y_m2m, delete_x, get_instance_from_string
+from main.models import Synonym
 from django.urls import path
 import copy
 
+
 def create_and_add(request):
     """
-    create a synonym and add it to a instance_y in the request
+    create a synonym and add it to the object in the request
     """
-    form = SynonymForm(request.POST)
-    if form.is_valid():
-        obj = form.save()
-        #Use the generic add_to_m2m function
-        post = request.POST.copy()
-        post['instance_x'] = f'synonym_{obj.pk}'
+    object = get_instance_from_string(request.POST.get("object"))
 
-        # Create a mutable copy of the request object
-        # set the POST parameter
-        new_request = copy.copy(request)
-        new_request.POST = post
-        return add_x_to_y_m2m(new_request, 'synonyms')
+    name = request.POST.get("name")
+    type = request.POST.get("type")
+
+    synonym = Synonym(name=name, type=type)
+    synonym.save()
+    synonym.refresh_from_db()
+
+    object.synonyms.add(synonym)
+
+    # now return the right modal
+    request.GET._mutable = True
+
+    if object.model == "layer":
+        type = "edit"
+    elif object.model == "sample":
+        type = "edit_synonyms"
+
+    request.GET.update({"object": f"{object.model}_{object.pk}", "type": type})
+
+    from main.ajax import get_modal
+
+    return get_modal(request)
 
 
 urlpatterns = [
-    path('add',    create_and_add, name='main_synonym_add'),
-    path('delete', delete_x,       name='main_synonym_delete'),
+    path("add", create_and_add, name="main_synonym_add"),
+    path("delete", delete_x, name="main_synonym_delete"),
 ]

@@ -18,12 +18,6 @@ class SampleBatchForm(forms.ModelForm):
         fields = ["site", "name", "sampled_by", "year_of_arrival"]
 
 
-class SynonymForm(forms.ModelForm):
-    class Meta:
-        model = Synonym
-        fields = "__all__"
-
-
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile

@@ -61,7 +61,10 @@
                     </form>
                     <h6>Add Additional Information</h6>
                     {% include 'main/synonyms/synonyms-chip-display.html' %}
+                    <form>
+                        <input type="text" style="display:none" name="object" class="form-input" value="{{object.model}}_{{object.pk}}">
                     {% include 'main/synonyms/synonyms-form.html' %}
+                    </form>
                     <div class="divider text-center" data-content="Parent"></div>
                     {% if object.parent %}
                     <div class="tile tile-centered">
