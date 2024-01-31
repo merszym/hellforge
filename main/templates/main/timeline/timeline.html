@@ -30,6 +30,7 @@
 }
 .vis-item-content{
     width: 100% !important ;
+    margin-right: 200px; /* This is to enforce stacking */
 }
 .vis-item.vis-background{
     background-color: rgba(148, 131, 131, 0.2);;
@@ -51,7 +52,7 @@
         var container = document.getElementById('visualization');
         var options = {
             'margin':2,
-            'stack':false,
+            'stack':true,
             'width': '100%',
             'zoomMax': 9.4670778000002E+15,
             'zoomMin': 31556926001,
