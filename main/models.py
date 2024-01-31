@@ -562,10 +562,13 @@ class Site(models.Model):
 
     @property
     def geometry(self):
-        try:
-            return json.loads(self.loc.first().geo)["features"][0]["geometry"]
-        except:
-            return self.loc.first().geo["features"][0]["geometry"]
+        if self.loc.first().geo:
+            try:
+                return json.loads(self.loc.first().geo)["features"][0]["geometry"]
+            except:
+                return self.loc.first().geo["features"][0]["geometry"]
+        else:
+            return None
 
     def lowest_date(self, cult=None, nochildren=False):
         try:
