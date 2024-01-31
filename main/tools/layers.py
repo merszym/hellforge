@@ -22,17 +22,28 @@ def clone(request, pk):
     layer = Layer.objects.get(pk=pk)
     new_layer.pk = None
     # find the last postion:
-    layers = [
-        x.pos
-        for x in Layer.objects.filter(site__id=Layer.objects.get(pk=pk).site.pk).all()
-    ]
-    new_layer.pos = max(layers) + 1
+    new_layer.pos = max([x.pos for x in Layer.objects.filter(site=layer.site)]) + 1
     new_layer.save()
+
     for profile in layer.profile.all():
         new_layer.profile.add(profile)
+
     for ref in layer.ref.all():
         new_layer.ref.add(ref)
-    return JsonResponse({"pk": new_layer.pk})
+
+    from main.tools.site import get_site_profile_tab
+
+    context = {"site": f"site_{layer.site.pk}"}
+
+    # check if selected profile exists
+    if prof := request.GET.get("profile", False):
+        profile = get_instance_from_string(prof)
+        context.update({"profile": f"profile_{profile.pk}"})
+
+    request.GET._mutable = True
+    request.GET.update(context)
+
+    return get_site_profile_tab(request)
 
 
 @login_required

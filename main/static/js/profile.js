@@ -1,13 +1,3 @@
-$('body').on('click', '.clone_layer', function(){
-    pk = $('[name=profile_id]').val()
-    $.ajax({
-        type: "GET",
-        url: $(this).attr('data-url'),
-        }).done(function(){
-            reloadElement('site_layer')
-        });
-});
-
 //#TODO: remove as soon as all the modals are updated
 function fillModal(ele){
     const instance = ele.attr('data-info')
