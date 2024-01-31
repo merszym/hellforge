@@ -57,7 +57,16 @@
                   <div class="card">
                     <div class="card-body">
                       <button class="btn clone_layer tooltip tooltip-top" data-tooltip="Clone Layer" id="clone_layer_{{layer.pk}}" data-url="{% url 'main_layer_clone' layer.pk %}"><i class="icon icon-plus"></i></button>
-                      <button class="btn tooltip tooltip-top generic_rmm2m" data-x="layer_{{layer.pk}}" data-y="profile_{{object.pk}}" data-reload="show_profile_{{object.pk}}" data-tooltip="Remove Layer from Profile"><i class="icon icon-downward"></i></button>
+
+
+                        <span class="btn tooltip tooltip-left"
+                          data-tooltip="Remove Layer from Profile"
+                          hx-post="{% url 'main_profile_layer_remove' layer.pk object.pk %}"
+                          hx-target="#site_layer">
+                          <i class="icon icon-downward"></i>
+                        </span>
+
+
                       <a class="btn tooltip tooltip-top"
                         hx-post="{% url 'main_generic_delete' %}"
                         hx-vals='{
@@ -99,7 +108,7 @@
             {% csrf_token %}
             <input name="instance_y" value="profile_{{object.pk}}" style="display: none;">
             <span class="btn btn-primary tooltip tooltip-right"
-                hx-post="{% url 'main_profile_layer_add' %}"
+                hx-post="{% url 'main_profile_layer_create' %}"
                 hx-target="#site_layer"
                 data-tooltip="Add a new Layer">
                 <i class="icon icon-plus"></i>
@@ -121,7 +130,7 @@
             {% csrf_token %}
             <input name="instance_y" value="profile_{{object.pk}}" style="display: none;">
             <span class="btn btn-primary tooltip tooltip-right"
-                hx-post="{% url 'main_profile_layer_add' %}"
+                hx-post="{% url 'main_profile_layer_create' %}"
                 hx-target="#site_layer"
                 data-tooltip="Add a new Layer">
                 <i class="icon icon-plus"></i>
@@ -151,7 +160,16 @@
           <tr>
             <td>{{layer.in_profile}}</td>
             {% include 'main/profile/layer-tablecells.html' %}
-            <td><span class="btn generic_addm2m" data-x="layer_{{layer.pk}}" data-y="profile_{{object.pk}}" data-reload="show_profile_{{object.pk}}"><i class="icon icon-upward"></span></td>
+            <td>
+              <form>
+                {% csrf_token %}
+                <span class="btn"
+                  hx-post="{% url 'main_profile_layer_add' layer.pk object.pk %}"
+                  hx-target="#site_layer">
+                  <i class="icon icon-upward"></i>
+                </span>
+              </form>
+            </td>
           </tr>
         {% endfor %}
         </tbody>

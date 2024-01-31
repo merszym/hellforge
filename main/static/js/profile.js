@@ -8,8 +8,7 @@ $('body').on('click', '.clone_layer', function(){
         });
 });
 
-//Fill blank modal with dating html
-//Add info-field for the dating
+//#TODO: remove as soon as all the modals are updated
 function fillModal(ele){
     const instance = ele.attr('data-info')
     $('#modal-blank').removeClass('modal-lg')
