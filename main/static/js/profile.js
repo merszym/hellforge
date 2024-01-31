@@ -1,21 +1,3 @@
-// Add a new layer to the profile
-$('body').on('click', '.add_new_layer', function(){
-    var formdata = new FormData()
-    var reload = $(this).attr('data-reload')
-    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
-    formdata.append('instance_y', $(this).attr('data-y'));
-    $.ajax({
-        type: "POST",
-        processData: false,
-        contentType: false,
-        data: formdata,
-        url: $(this).attr('data-url'),
-        success: function() {
-            reloadElement(reload)
-        }
-    });
-});
-
 $('body').on('click', '.clone_layer', function(){
     pk = $('[name=profile_id]').val()
     $.ajax({

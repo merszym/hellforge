@@ -2,7 +2,9 @@ from django.http import JsonResponse
 from django.urls import path
 from main.models import Layer
 from main.tools.generic import add_x_to_y_m2m, get_instance_from_string
-from django.contrib.auth.decorators import login_required  # this is for now, make smarter later
+from django.contrib.auth.decorators import (
+    login_required,
+)  # this is for now, make smarter later
 import copy
 
 
@@ -19,15 +21,18 @@ def create_layer(request):
     layer = Layer(name=f"Layer {last+1}", pos=last + 1, site=profile.site)
     layer.save()
 
-    # now alter the request to use the generic add_x_to_y_m2m function
-    post = request.POST.copy()
-    post["instance_x"] = f"layer_{layer.pk}"
+    # Add layer to the profile
+    getattr(profile, "layer").add(layer)
 
-    # Create a mutable copy of the request object
-    # set the POST parameter
-    new_request = copy.copy(request)
-    new_request.POST = post
-    return add_x_to_y_m2m(new_request)
+    # render the updated profile
+    from main.tools.site import get_site_profile_tab
+
+    request.GET._mutable = True
+    request.GET.update(
+        {"site": f"site_{profile.site.pk}", "profile": f"profile_{profile.pk}"}
+    )
+
+    return get_site_profile_tab(request)
 
 
 # and add the urls

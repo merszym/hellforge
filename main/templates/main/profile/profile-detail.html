@@ -95,13 +95,16 @@
         </table>
         {% if request.user.is_authenticated %}
         <div class="panel-footer">
-          <span class="btn btn-primary add_new_layer tooltip tooltip-right"
-              data-tooltip="Add a new Layer"
-              data-y="profile_{{object.pk}}"
-              data-url="{% url 'main_profile_layer_add' %}"
-              data-reload="profiledetail_{{object.pk}}">
-              <i class="icon icon-plus"></i>
-          </span>
+          <form>
+            {% csrf_token %}
+            <input name="instance_y" value="profile_{{object.pk}}" style="display: none;">
+            <span class="btn btn-primary tooltip tooltip-right"
+                hx-post="{% url 'main_profile_layer_add' %}"
+                hx-target="#site_layer"
+                data-tooltip="Add a new Layer">
+                <i class="icon icon-plus"></i>
+            </span>
+          </form>
         </div>
         {%endif %}
       <br>
@@ -114,12 +117,16 @@
         {% if request.user.is_authenticated %}
         <p class="empty-subtitle">Click the button to add a new Layer.</p>
         <div class="empty-action">
-          <button class="btn btn-primary add_new_layer"
-              data-y="profile_{{object.pk}}"
-              data-url="{% url 'main_profile_layer_add' %}"
-              data-reload="profiledetail_{{object.pk}}">
-              Add layer
-          </button>
+          <form>
+            {% csrf_token %}
+            <input name="instance_y" value="profile_{{object.pk}}" style="display: none;">
+            <span class="btn btn-primary tooltip tooltip-right"
+                hx-post="{% url 'main_profile_layer_add' %}"
+                hx-target="#site_layer"
+                data-tooltip="Add a new Layer">
+                <i class="icon icon-plus"></i>
+            </span>
+          </form>
         </div>
         {% endif %}
       </div>
