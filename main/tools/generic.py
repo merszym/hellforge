@@ -12,6 +12,18 @@ import pandas as pd
 import numpy as np
 
 
+def return_next(request, next):
+    # return html if the request came from a modal...
+    _, type = next.split("_", 1)
+
+    request.GET._mutable = True
+    request.GET.update({"object": request.POST.get("instance_x"), "type": type})
+
+    from main.ajax import get_modal
+
+    return get_modal(request)
+
+
 def get_dataset_df(qs, start, include):
     # iterate over the m:1 frame, collect information from models
     records = []
@@ -121,14 +133,7 @@ def unset_fk(request, field=None, response=True):
 
     # return html if the request came from a modal...
     if next := request.GET.get("next", False):
-        _, type = next.split("_", 1)
-
-        request.GET._mutable = True
-        request.GET.update({"object": request.POST.get("instance_x"), "type": type})
-
-        from main.ajax import get_modal
-
-        return get_modal(request)
+        return return_next(request, next)
 
     if x:
         return JsonResponse({"status": True}) if response else (True, x)
@@ -152,8 +157,12 @@ def set_x_fk_to_y(request, field=None, response=True):
     if x and y:
         setattr(x, field, y)
         x.save()
-        return JsonResponse({"status": True}) if response else (True, x, y)
-    return JsonResponse({"status": False}) if reponse else False
+
+    # return html if the request came from a modal...
+    if next := request.GET.get("next", False):
+        return return_next(request, next)
+
+    return JsonResponse({"status": True}) if response else (True, x, y)
 
 
 @login_required
@@ -179,14 +188,7 @@ def remove_x_from_y_m2m(request, field=None, response=True):
 
     # return html if the request came from a modal...
     if next := request.GET.get("next", False):
-        _, type = next.split("_", 1)
-
-        request.GET._mutable = True
-        request.GET.update({"object": request.POST.get("instance_y"), "type": type})
-
-        from main.ajax import get_modal
-
-        return get_modal(request)
+        return return_next(request, next)
 
     if x:
         return JsonResponse({"status": True}) if response else (True, x)
@@ -200,6 +202,10 @@ def delete_x(request, response=True):
     """
     x = get_instance_from_string(request.POST.get("instance_x"))
     x.delete()
+
+    # return html if the request came from a modal...
+    if next := request.GET.get("next", False):
+        return return_next(request, next)
 
     return JsonResponse({"status": True}) if response else True
 

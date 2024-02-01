@@ -4,7 +4,7 @@
 <a href="#close" class="modal-overlay" aria-label="Close"></a>
 <div class="modal-container">
     <div class="modal-header">
-        <a id="modal-close" class="btn btn-clear float-right modal_close" href="#" aria-label="Close"></a>
+        <a id="modal-close" class="btn btn-clear float-right modal_close" style="cursor: pointer;" aria-label="Close"></a>
         {% if type == 'dates_list' %}
         <div class="modal-title h5 ">Manage Dates</div>
         <span class="btn modal_open tooltip tooltip-top" data-tooltip="Add Dating"
@@ -68,34 +68,48 @@
                     <div class="divider text-center" data-content="Parent"></div>
                     {% if object.parent %}
                     <div class="tile tile-centered">
-                        <div class="tile-icon my-1">
-                            <span class="btn tooltip tooltip-right generic_unsetfk" data-tooltip="Remove" data-x="layer_{{object.pk}}" data-y="layer" data-click="reload">
-                                <i class="icon icon-delete" centered></i>
-                            </span>
-                        </div>
+                        <form>
+                            {% csrf_token %}
+                            <input name="instance_x" value="layer_{{object.pk}}" style="display: none;">
+                            <input name="field" value="layer" style="display: none;">
+
+                            <div class="tile-icon my-1">
+                                <span class="btn tooltip tooltip-right"
+                                    data-tooltip="Remove"
+                                    hx-target="#modal-blank"
+                                    hx-post="{% url 'main_generic_unsetfk' %}?next=modal_edit"
+                                    >
+                                    <i class="icon icon-delete" centered></i>
+                                </span>
+                            </div>
+                        </form>
                         <div class="tile-content">
                             <div class="tile-title">{{object.parent.name}}</div>
                         </div>
                     </div>
                     {% endif %}
-                    <div class="input-group">
-                        <span class="input-group-addon">Parent</span>
-                        <select class="form-select" name="parent">
-                            {% if object.parent %}
-                            <option value="layer_{{object.parent.pk}}" selected>{{object.parent}}</option>
-                            {% else %}
-                            <option value="">---</option>
-                            {% endif %}
-                            {% for option in parent_options %}
-                            <option value="layer_{{option.pk}}">{{option}}</option>
-                            {% endfor %}
-                        </select>
-                        <span class="btn btn-primary input-group-btn generic_setfk"
-                            data-x="layer_{{object.pk}}"
-                            data-y-select="parent"
-                            data-click="reload"
-                            >OK</span>
-                    </div>
+                    <form>
+                        {% csrf_token %}
+                        <div class="input-group">
+                            <span class="input-group-addon">Parent</span>
+                            <select class="form-select" name="instance_y">
+                                {% if object.parent %}
+                                <option value="layer_{{object.parent.pk}}" selected>{{object.parent}}</option>
+                                {% else %}
+                                <option value="">---</option>
+                                {% endif %}
+                                {% for option in parent_options %}
+                                <option value="layer_{{option.pk}}">{{option}}</option>
+                                {% endfor %}
+                            </select>
+                            <input name="instance_x" value="layer_{{object.pk}}" style="display: none;"/>
+                            <span class="btn btn-primary input-group-btn"
+                                hx-post="{% url 'main_generic_setfk' %}?{{request.GET|getstring}}&next=modal_edit"
+                                hx-target="#modal-blank"
+                                hx-vals="{'field':'parent'}">OK
+                            </span>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
