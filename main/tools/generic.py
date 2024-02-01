@@ -191,8 +191,8 @@ def remove_x_from_y_m2m(request, field=None, response=True):
         return return_next(request, next)
 
     if x:
-        return JsonResponse({"status": True}) if response else (True, x)
-    return JsonResponse({"status": False}) if reponse else False
+        return JsonResponse({"status": True}) if response else (True, x, y)
+    return JsonResponse({"status": False}) if reponse else (False, x, y)
 
 
 @login_required
