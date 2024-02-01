@@ -169,6 +169,12 @@ def get_timeline_data(site_id, hidden=False, curves=False, request=False):
             # if range instead of point
             if upper != lower:
                 layerdata.update({"end": lower, "type": "range"})
+
+            # if date has only lower (beyond radiocarbon) -> to_ms() returns False, False
+            if not any([upper, lower]):
+                upper, lower = Date(lower=date.lower, upper=date.lower).to_ms()
+                layerdata.update({"start": lower, "end": lower, "type": "point"})
+
             dates.append(layerdata)
     data["groups"] = json.dumps(groups)
     data["itemdata"] = json.dumps(dates)

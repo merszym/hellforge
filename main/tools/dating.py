@@ -154,7 +154,7 @@ def add(request):
     from main.forms import DateForm
     from main.models import DatingMethod, Date
 
-    # get the layer the date needs to be added to
+    # get the layer/object the date needs to be added to
     object = get_instance_from_string(request.POST.get("object"))
 
     form = DateForm(request.POST)

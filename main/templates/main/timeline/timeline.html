@@ -78,12 +78,14 @@
             }, // templates are based on the timelinedata properties set in site views (get_timeline_data)
             'template': function(item, element, data){
                 if (data.usesvg == false){
-                    return `${data.method}: ${data.content}`
+                    if(! data.oxa){
+                        return `${data.method}: ${data.content}`
+                    }
                 }
                 $(element).addClass('nopadding')
                 var div = document.createElement('div');
                 $(div).css({'width':'100%','height':'35px'})
-                if(data.oxa){
+                if(data.oxa && data.usesvg){
                     $(div).html(`
                     <div style="width:200%; height:100%; overflow:visible; display:block; white-space: nowrap">
                         <svg viewBox="0 0 100 100" preserveAspectRatio="none" style="width:50%; height:100%; display: inline-block">
@@ -100,12 +102,11 @@
                     $(div).html(`<span class="text-gray px-2 text-small">${data.content}</span>`)
                 }
                 else {
+                    /* this is beyond radiocarbon */
                     $(div).html(`
-                    <div style="width:200%; height:100%; overflow:visible; display:block; white-space: nowrap">
-                        <svg viewBox="0 0 100 100" preserveAspectRatio="none" style="width:50%; height:100%; display: inline-block">
-                            <polygon class="${data.className}" points="${data.polygon}" />
-                        </svg>
+                    <div class="px-1" style="width:200%; height:100%; overflow:visible; display:block; white-space: nowrap">
                         <div style="display: inline-block; line-height:1;">
+                            <span class="text-small text-gray">14C: ${data.oxa}</span><br>
                             <span>${data.content}</span>
                         </div>
                     </div>

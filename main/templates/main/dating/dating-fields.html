@@ -12,6 +12,7 @@
 <span id='date-batch-header' data-url="{% url 'download_header' %}?model=date" class="btn tooltip tooltip-right get-batch-header" data-tooltip="Get Upload Template"><i class="icon icon-download"></i></span>
 <p class="form-input-hint">Upload multiple Dates via CSV</p>
 <div class="divider text-center" data-content="OR"></div>
+<strong>Add single Date</strong><br>
 <!--Method-->
 <div class="form-group">
     <label class="form-label" for="method">Method</label>
@@ -35,9 +36,13 @@
 
     if not 14C: provide either estimate +- value OR range upper-lower
     if 14C: only provide uncalibrated -> get calibrated range via ajax
+            also allow minimum-age for beyond radio carbon
 -->
+<!-- This is the label -->
 <label class="14c_group">Radiocarbon Measurement</label>
 <label class="14c_hide" style="display:none;">Point Estimate</label>
+
+<!-- This is the first form field -->
 <div class="input-group">
     <input type="number" class="form-input estimate_range" id='estimate' name="estimate" placeholder="50000"
     {% if form.estimate %} value="{{form.estimate.value}}" {% endif %}>
@@ -45,28 +50,25 @@
     <input type="number" class="form-input estimate_range" id="plusminus" name="plusminus" placeholder="3000"
     {% if form.plusminus %} value="{{form.plusminus.value}}" {% else %} value="0" {% endif %}>
 </div>
-<p class="form-input-hint 14c_group">Please enter the <strong>uncalibrated 14C Date</strong></p>
+<p class="form-input-hint 14c_group">Please enter the <strong>uncalibrated 14C Date</strong>. Calibration is done in the backend</p>
+
+<!-- Second Form field -->
 <div id="range_group">
-    <div class="divider text-center 14c_hide" style="display:none;" data-content="OR"></div>
-    <label class="14c_group">Calibrate!!</label>
+    <div class="divider text-center" data-content="OR"></div>
+    <!-- The Label -->
+    <label class="14c_group">Beyond Radiocarbon Limit?</label>
     <label class="14c_hide" style="display:none;">Range</label>
+    <!-- The form -->
     <div class="input-group">
-        <span class="btn tooltip tooltip-right 14c_group input-group-btn" id="calibrate" data-url="{% url 'ajax_date_cal' %}" data-tooltip='Calibrate'><i class="icon icon-refresh"></i></span>
-        <!--calibration curve for c14 -->
-        <input class="form-input 14c_group" type="text" id="curve" name="curve" placeholder="Calibration curve" readonly
-        {% if form.curve %} value="{{form.curve.value}}" {% endif %}>
-        <span class="input-group-addon 14c_group">95%</span>
-        <!--ranges-->
-        <input class="form-input date_range" type="number" id="upper" name="upper" placeholder="53000" readonly
+        <!--minimum age for c14 or range -->
+        <span class="input-group-addon 14c_group">></span>
+        <input class="14c_hide form-input date_range" style="display:none;" type="number" name="upper" placeholder="53000"
         {% if form.upper %} value="{{form.upper.value}}" {% endif %}>
-        <span class="input-group-addon">-</span>
-        <input class="form-input date_range" type="number" id="lower" name="lower" placeholder="47000" readonly
+        <span class="input-group-addon 14c_hide" style="display:none;">-</span>
+        <input class="form-input date_range" type="number" id="lower" name="lower" placeholder="47000"
         {% if form.lower %} value="{{form.lower.value}}" {% endif %}>
-        <span class="input-group-addon"><span class="14c_group">CalBP</span><span class="14c_hide" style="display:none;">BP</span></span>
     </div>
-    <p class="form-input-hint 14c_group">Calibration is done in the backend, in case you dont do it here!</p>
-    <p class="form-input-hint 14c_hide" style="display:none;">Please enter the date range in the format <strong>older - younger</strong>.
-        Entering only <strong>one</strong> value: <strong>x - 47000</strong> is interpreted as >47000</p>
+    <p class="form-input-hint 14c_hide" style="display:none;">Please enter the date range in the format <strong>older - younger</strong>.</p>
 </div>
 <div class="form-group">
     <label class="form-label" for="description">Notes</label>

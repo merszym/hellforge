@@ -13,12 +13,21 @@ def calculate_layer_dates(layer):
     if layer.date.first():
         all_upper = [x.upper for x in layer.date.all() if x.upper]
         all_lower = [x.lower for x in layer.date.all() if x.lower]
+
+        # for dates that have only the lower value reported (>40000), add the date to the upper array as well
+        all_upper.extend([x.lower for x in layer.date.all() if x.upper == None])
+
         if len(all_upper) > 0:
             upper = statistics.mean(all_upper)
         if len(all_lower) > 0:
             lower = statistics.mean(all_lower)
+    # make sure lower is older than upper
+    # with dates beyond radiocarbon, this might happen (because only lower is reported)
+    if lower > upper:
+        upper = lower
     layer.mean_lower = lower
     layer.mean_upper = upper
+
     layer.save()
     return layer
 
@@ -34,7 +43,9 @@ def update_dates(sender, instance, **kwargs):
 def fill_date(sender, instance, **kwargs):
     if instance.method == "14C":
         if not instance.upper or not instance.raw:  # uncalibrated date
-            if instance.estimate and instance.plusminus:  # some legacy dates dont have that?
+            if (
+                instance.estimate and instance.plusminus
+            ):  # some legacy dates dont have that?
                 est = int(instance.estimate)
                 pm = int(instance.plusminus)
                 raw, upper, lower, curve = dating.calibrate(est, pm)

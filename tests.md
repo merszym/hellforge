@@ -46,3 +46,11 @@ This document lists all the features the site has. It is used to test everything
 ### Fauna
 
 ### Samples
+
+### Dates
+
+- add 14C date with estimate/plusminus
+- add 14C date with only lower (beyond radiocarbon)
+- add other date with point estimate
+- add other date with range
+- make sure references work

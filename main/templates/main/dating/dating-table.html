@@ -29,9 +29,16 @@
                 <td>{{date.method}}</td>
                 {% if date.method == '14C' %}
                 <td>
+                    {% if date.lower and not date.upper %}
+                    <span class="text-gray" style="font-size:11pt;">Beyond 14C</span><br>
+                    >{{date.lower|format:"{:,}"}} ya<br>
+                    <span class="text-gray" style="font-size:11pt;">{{date.oxa}}</span>
+                    {% else %}
                 <span class="text-gray" style="font-size:11pt;">{{date.curve}} ({{date.estimate|format:"{:,}"}}±{{date.plusminus|format:"{:,}"}})</span><br>
                 {{date.upper|format:"{:,}"}} - {{date.lower|format:"{:,}"}} BP (95%)<br>
                 <span class="text-gray" style="font-size:11pt;">{{date.oxa}}</span>
+
+                    {% endif %}
                 </td>
                 {% else %}
                 <td>{{date}}
@@ -42,7 +49,7 @@
                 {% endif %}
                 <td>
                 {% if date.method == '14C' %}
-                    {% if request.user.is_authenticated %}
+                    {% if request.user.is_authenticated and date.upper %}
                     <div class="form-group">
                         <select class="form-select 14c-curve-select" id="date_{{date.pk}}" data-url="{% url 'ajax_date_recalibrate' %}">
                             <option value="{{date.curve|lower}}"selected>{{date.curve}}</option>

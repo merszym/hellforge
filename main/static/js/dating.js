@@ -1,6 +1,7 @@
 // Validate the dating form
 // what happens if uncal 14C is selected...
 // show the required fields, hide the rest
+// #TODO: get fresh from backend on change...
 $('body').on('change','#method',function(){
     //Reset the form
     $('.date_range').val('')
@@ -10,15 +11,9 @@ $('body').on('change','#method',function(){
     if( this.value === '14C' ){
         $('.14c_group').show()
         $('.14c_hide').hide()
-        $('#upper').prop('readonly', true);
-        $('#lower').prop('readonly', true);
-        $('#curve').prop('readonly', true);
     } else {
         $('.14c_group').hide()
         $('.14c_hide').show()
-        $('#upper').prop('readonly', false);
-        $('#lower').prop('readonly', false);
-        $('#curve').prop('readonly', false);
     }
 });
 
