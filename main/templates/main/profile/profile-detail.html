@@ -42,11 +42,34 @@
             {% endif %}
           </tr>
         </thead>
-        <tbody data-url="{% url 'main_layer_positionupdate' object.site.pk %}">
+        <tbody>
           {% for layer in object.layer.all %}
           <tr class="table_row" id="layer_{{layer.pk}}" data-pos="{{layer.pos}}" style="padding:2px;">
             {% if request.user.is_authenticated %}
-            <td class="sort_handle" style="cursor:move;"><i class="icon icon-resize-vert"></i></td>
+            <td>
+              <form style="width: 2px;">
+              {% csrf_token %}
+              <input name="object" value="layer_{{layer.pk}}" style="display: none;">
+              <span
+                class="tooltip tooltip-right"
+                data-tooltip="Move Layer up"
+                hx-post="{% url 'main_layer_positionupdate' %}"
+                hx-target="#site_layer"
+                hx-vars="{'direction':'up'}"
+              >
+                <i class="icon icon-upward text-gray"></i>
+              </span>
+              <span
+                class="tooltip tooltip-right"
+                data-tooltip="Move Layer down"
+                hx-post="{% url 'main_layer_positionupdate' %}"
+                hx-target="#site_layer"
+                hx-vars="{'direction':'down'}"
+                >
+                <i class="icon icon-downward text-gray"></i>
+              </span>
+              </form>
+            </td>
             {% endif %}
             {% include 'main/profile/layer-tablecells.html' with site=object.site %}
             {% if request.user.is_authenticated %}

@@ -47,19 +47,48 @@ def clone(request, pk):
 
 
 @login_required
-def update_positions(request, site_id):
-    site = Site.objects.get(pk=site_id)
-    ids = request.POST.get("ids").split(",")
-    positions = request.POST.get("positions").split(
-        ","
-    )  # these are the old positions, but in new order
-    for pk, pos in zip(ids, sorted(positions, key=lambda x: int(x))):
-        layer = site.layer.get(pk=int(pk))
-        if layer.pos == int(pos):
-            continue  # skip the ones that are already in the right position
-        layer.pos = int(pos)
+def update_positions(request):
+    layer = get_instance_from_string(request.POST.get("object"))
+    direction = request.POST.get("direction")
+
+    all_layers = list(layer.site.layer.all())
+    positions = [x.pos for x in all_layers]
+
+    layer_index = positions.index(layer.pos)
+    layer_pos = layer.pos
+
+    print(layer_index, direction)
+
+    # do some basic checking: already at top or aleady at bottom
+    check1 = all([layer_index == 0, direction == "up"])
+    check2 = all([layer_index == len(positions) - 1, direction == "down"])
+    if not any([check1, check2]):
+        # now get the index of the layer to switch positions with
+        n = layer_index - 1 if direction == "up" else layer_index + 1
+        swap_layer = all_layers[n]
+        swap_pos = swap_layer.pos
+
+        # and swap positions
+        layer.pos = swap_pos
+        swap_layer.pos = layer_pos
+
+        # and save
         layer.save()
-    return JsonResponse({"data": True})
+        swap_layer.save()
+
+    from main.tools.site import get_site_profile_tab
+
+    context = {"site": f"site_{layer.site.pk}"}
+
+    # check if selected profile exists
+    if prof := request.GET.get("profile", False):
+        profile = get_instance_from_string(prof)
+        context.update({"profile": f"profile_{profile.pk}"})
+
+    request.GET._mutable = True
+    request.GET.update(context)
+
+    return get_site_profile_tab(request)
 
 
 @login_required
@@ -132,5 +161,5 @@ urlpatterns = [
     path("set-epoch", set_epoch, name="layer-epoch-update"),
     path("set-bounds", set_bounds, name="main_layer_setbounds"),
     path("clone/<int:pk>", clone, name="main_layer_clone"),
-    path("positions/<int:site_id>", update_positions, name="main_layer_positionupdate"),
+    path("positions", update_positions, name="main_layer_positionupdate"),
 ]
