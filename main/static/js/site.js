@@ -15,7 +15,6 @@ function reloadTimeline(){
 
 $( document ).ready(function(){
     reloadTimeline()
-    makeSortable()
 });
 
 // switch between profiles

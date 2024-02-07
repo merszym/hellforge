@@ -307,6 +307,10 @@ class Date(models.Model):
         default_manager_name = "visible_objects"
         ordering = ["upper"]
 
+    @property
+    def model(self):
+        return "date"
+
     @classmethod
     def table_columns(self):
         # human readable representation of the dates

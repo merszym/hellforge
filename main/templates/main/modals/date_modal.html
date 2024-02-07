@@ -1,0 +1,49 @@
+{% load static %}
+{% load format %}
+
+<a href="#close" class="modal-overlay" aria-label="Close"></a>
+<div class="modal-container">
+    <div class="modal-header">
+        <a id="modal-close" class="btn btn-clear float-right modal_close" style="cursor: pointer;" aria-label="Close"></a>
+        <div class="modal-title h5 ">Manage Dates</div>
+        <span
+            class='btn modal_open tooltip tooltip-top'
+            data-tooltip="Back to Date Overview"
+            hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
+            hx-vals='{"object":"layer_{{object.pk}}","type":"dates_list"}'
+            hx-target="#modal-blank">
+            <i class="icon icon-back"></i>
+        </span>
+    </div>
+
+    {% if type == "edit" %}
+
+    {# -------------------- #}
+    {#   DATE EDIT MODAL   #}
+    {# -------------------- #}
+
+    <div class="modal-body">
+        <div class="content  my-2">
+            <div id="reldate-content">
+                <div id="modal-form">
+                    <h6>Edit Date information</h6>
+                    <form>
+                        <div class="input-group">
+                            <span class="input-group-addon">Layer Name</span>
+                            <input type="text" class="form-input" name="layer-name" value="{{object.name}}">
+                            <span class="btn btn-primary input-group-btn"
+                                hx-vars='{"instance_x":"layer_{{object.pk}}"}'
+                                hx-post="{% url 'main_layer_setname' %}?{{request.GET|getstring}}"
+                                hx-target="#modal-blank">OK</span>
+                        </div>
+                        <p class="form-input-hint">Update the Layer name</p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% endif %}
+
+</div>
+

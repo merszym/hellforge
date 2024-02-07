@@ -74,7 +74,5 @@
     <label class="form-label" for="description">Notes</label>
     <textarea class="form-input" name="description" id="description" placeholder="Notes" rows="3">{% if form.description %}{{form.description.value}}{% endif %}</textarea>
 </div>
-<!-- select a reference -->
-{% include 'main/reference/reference-formfield.html'%}
-{% include 'main/reference/reference-display.html'%}
-{% include 'main/reference/reference-searchinput.html'%}
+<p class="form-input-hint">To add references please use the upload sheet or add them after creation of the date</p>
+

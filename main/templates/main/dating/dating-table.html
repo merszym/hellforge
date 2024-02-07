@@ -66,7 +66,18 @@
                 {% endif %}
                 </td>
                 <td>{{date.description}}</td>
-                <td>{{date.ref.first.short}}</td>
+                <td>
+                    <span class="modal_open tooltip tooltip-left" data-tooltip="Edit Date"
+                        hx-get="{% url 'main_modal_get' %}"
+                        hx-vals='{"object":"date_{{date.pk}}","type":"edit"}'
+                        hx-target="#modal-blank">
+                        {% if date.ref.first %}
+                        {{date.ref.first.short}}
+                        {% else %}
+                        Add reference
+                        {% endif %}
+                    </span>
+                </td>
                 <td>
                     {% if request.user.is_authenticated %}
                     <form>

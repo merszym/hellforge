@@ -12,12 +12,12 @@ import pandas as pd
 import numpy as np
 
 
-def return_next(request, next):
+def return_next(request, next, object="instance_x"):
     # return html if the request came from a modal...
     _, type = next.split("_", 1)
 
     request.GET._mutable = True
-    request.GET.update({"object": request.POST.get("instance_x"), "type": type})
+    request.GET.update({"object": request.POST.get(object), "type": type})
 
     from main.ajax import get_modal
 
@@ -173,8 +173,12 @@ def add_x_to_y_m2m(request, field=None, response=True):
         field = request.POST.get("instance_x").split("_")[0]
     if x and y:
         getattr(y, field).add(x)
-        return JsonResponse({"status": True}) if response else (True, x, y)
-    return JsonResponse({"status": False}) if response else (False, x, y)
+
+    # return html if the request came from a modal...
+    if next := request.GET.get("next", False):
+        return return_next(request, next, object="instance_y")
+
+    return JsonResponse({"status": False}) if response else (True, x, y)
 
 
 @login_required
@@ -188,7 +192,7 @@ def remove_x_from_y_m2m(request, field=None, response=True):
 
     # return html if the request came from a modal...
     if next := request.GET.get("next", False):
-        return return_next(request, next)
+        return return_next(request, next, object="instance_y")
 
     if x:
         return JsonResponse({"status": True}) if response else (True, x, y)
