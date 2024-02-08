@@ -155,6 +155,10 @@ class Description(models.Model):
             authors.append((author, ",".join(aff_string)))
         return authors
 
+    @property
+    def model(self):
+        return "description"
+
 
 class Connection(models.Model):
     link = models.CharField("link", max_length=300)
@@ -785,9 +789,9 @@ class Layer(models.Model):
             "Layer Name": self.name,
             "Layer Age": self.age_summary(export=True),
             "Layer Culture": self.culture.name if self.culture else None,
-            "Layer Umbrella Culture": self.culture.get_highest().name
-            if self.culture
-            else None,
+            "Layer Umbrella Culture": (
+                self.culture.get_highest().name if self.culture else None
+            ),
             "Layer Epoch": self.epoch.name if self.epoch else None,
         }
         return data
