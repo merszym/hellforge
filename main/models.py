@@ -510,37 +510,21 @@ class Culture(models.Model):
 
 class Epoch(models.Model):
     name = models.CharField("name", max_length=200)
-    description = models.TextField("description", blank=True)
-    date = models.ManyToManyField(Date, verbose_name="date")
-    parent = models.ForeignKey(
-        "self",
-        verbose_name="parent",
-        related_name="child",
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-    )
-    ref = models.ManyToManyField(Reference, verbose_name="reference", blank=True)
+    upper = models.IntegerField("upper", blank=True, null=True)
+    lower = models.IntegerField("lower", blank=True, null=True)
 
     class Meta:
-        ordering = ["date__upper"]
-
-    @classmethod
-    def filter(self, kw):
-        return Epoch.objects.filter(Q(name__contains=kw) | Q(description__contains=kw))
+        ordering = ["upper"]
 
     @property
     def age_summary(self):
-        ## Todo: Make a real summary...
-        if self.date.first():
-            return self.date.first()
-        return "Date Unset"
+        return f"{self.upper} - {self.lower}"
 
     def __str__(self):
         return self.name
 
     def get_absolute_url(self):
-        return reverse("epoch_list")
+        return reverse("landing")
 
 
 class Site(models.Model):
