@@ -52,12 +52,20 @@
                     <input class="form-input" type="text" id="culture-hominin_group" name="hominin_group" placeholder="Associated Hominin Group" required
                     value={% if object.hominin_group %} "{{object.hominin_group}}" {% endif %} >
                 </div>
-                {% else %}
-                <select id="epoch-input" name="parent" style="display:none;">
-                    <option value={% if object.parent %} {{object.parent.pk}} {% endif %}></option>
-                </select>
+                <div class="form-group">
+                    <label class="form-label" for="culture-parent">Parent</label>
+                    <select class="form-select" id="culture-parent" name="culture">
+                        {% if object.culture %}
+                        <option value={{object.culture.pk}} selected>{{object.culture}}</option>
+                        {% endif %}
+                        <option value="">---</option>
+                        {% for option in cultures %}
+                            <option value="{{option.pk}}">{{option}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
                 {% endif %}
-                <br>
+                <br><br>
                 <button class='btn btn-primary' type="submit">Save {{type}}</button>
             </form>
         </div>

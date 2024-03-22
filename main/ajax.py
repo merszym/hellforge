@@ -91,20 +91,6 @@ def get_modal(request):
     return render(request, f"main/modals/{model}_modal.html", context)
 
 
-# belongs into site, layer or profile tools
-# TODO: remove once everything is converted to htmx
-def fill_modal(request):
-    choice = request.GET.get("type", False)
-    object = get_instance_from_string(request.GET.get("instance"))
-    if choice == "culture":
-        html = render(
-            request,
-            "main/culture/culture-parent-modal.html",
-            {"object": object, "origin": "culture"},
-        )
-    return html
-
-
 #
 #
 ## Handle Uploads to the Page

@@ -32,19 +32,19 @@
 </span>
 
 <p id="reference-popup-get" data-url="{% url 'ajax_ref_popup_get' %}" style="display:none;"></p>
-<div id="guide" data-url="{% url 'main_upload' %}?type=galleryimage&gallery={{description.gallery.pk}}"> <!--guide is used for image upload, to save the file to the right place-->
-<div id="guideurl" data-url="{% url 'main_upload' %}?type=url"> <!--guide is used for image upload, to save the file to the right place-->
+<div id="guide" data-url="{% url 'main_upload' %}?type=galleryimage&gallery={{description.gallery.pk}}"></div> <!--guide is used for image upload, to save the file to the right place-->
+<div id="guideurl" data-url="{% url 'main_upload' %}?type=url"></div> <!--guide is used for image upload, to save the file to the right place-->
 
 
-    <div id="editorjs" data-url="{% url 'ajax_description_get' %}?id={{description.pk}}&model={{model}}"></div>
-    <p id="readonly" style="display:none;">{{readonly}}</p>
+<div id="editorjs" data-url="{% url 'ajax_description_get' %}?id={{description.pk}}&model={{model}}"></div>
+<p id="readonly" style="display:none;">{{readonly}}</p>
 
-    {% if readonly == False %}
-    <div style="display:flex; justify-content: center;" id="saveButton">
-        <span id="description-save" class="btn btn-primary" data-url="{% url 'ajax_description_save' %}?id={{description.pk}}">Save</span>
-    </div>
-    {% endif %}
+{% if readonly == False %}
+<div style="display:flex; justify-content: center;" id="saveButton">
+    <span id="description-save" class="btn btn-primary" data-url="{% url 'ajax_description_save' %}?id={{description.pk}}">Save</span>
 </div>
+{% endif %}
+
 <div id="description-references" style="display:none;">
   <h5>References</h5>
   <table class="table table-striped my-2">

@@ -30,7 +30,6 @@ urlpatterns = [
     path("contact/add", ajax.save_contact, name="ajax_contact_add"),
     path("contact/search", ajax.search_contact, name="ajax_contact_search"),
     path("locs/search", ajax.search_loc, name="ajax_loc_search"),
-    path("fillmodal", ajax.fill_modal, name="ajax_fill_modal"),
     path("download-header", ajax.download_header, name="download_header"),
     path(
         "favicon.ico",

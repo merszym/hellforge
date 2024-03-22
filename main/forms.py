@@ -85,10 +85,10 @@ class EpochForm(forms.ModelForm):
 
     class Meta:
         model = Epoch
-        fields = ["name", "description", "parent", "ref", "upper", "lower"]
+        fields = ["name", "upper", "lower"]
 
 
 class CultureForm(forms.ModelForm):
     class Meta:
         model = Culture
-        fields = ["name", "hominin_group"]
+        fields = ["name", "hominin_group", "culture"]

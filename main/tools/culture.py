@@ -19,11 +19,7 @@ from main.models import (
     Description,
     Site,
 )
-from main.forms import (
-    ReferenceForm,
-    CultureForm,
-    DateForm,
-)
+from main.forms import CultureForm
 from pathlib import Path
 import json
 import seaborn as sns
@@ -93,9 +89,11 @@ class CultureDetailView(ProjectAwareDetailView):
                 {
                     "id": cult.name.lower(),
                     "treeLevel": 2,
-                    "content": f"{cult.name} | {cult.upper} - {cult.lower} ya"
-                    if cult.upper
-                    else f"{cult.name} | Undated",
+                    "content": (
+                        f"{cult.name} | {cult.upper} - {cult.lower} ya"
+                        if cult.upper
+                        else f"{cult.name} | Undated"
+                    ),
                     "order": int(cult.upper) if cult.upper else 0,
                     "nestedGroups": [
                         f"{cult.name.lower()}-{site.name.lower()}" for site in sites
@@ -170,12 +168,7 @@ class CultureDetailView(ProjectAwareDetailView):
 class CultureUpdateView(LoginRequiredMixin, UpdateView):
     model = Culture
     form_class = CultureForm
-    extra_context = {
-        "reference_form": ReferenceForm,
-        "dating_form": DateForm,
-        "type": "Culture",
-        "datingoptions": DatingMethod.objects.all(),
-    }
+    extra_context = {"type": "Culture", "cultures": Culture.objects.all()}
     template_name = "main/culture/culture_form.html"
 
     def get_context_data(self, **kwargs):
@@ -187,12 +180,8 @@ class CultureUpdateView(LoginRequiredMixin, UpdateView):
 class CultureCreateView(LoginRequiredMixin, CreateView):
     model = Culture
     form_class = CultureForm
-    extra_context = {
-        "reference_form": ReferenceForm,
-        "dating_form": DateForm,
-        "type": "Culture",
-        "datingoptions": DatingMethod.objects.all(),
-    }
+    extra_context = {"type": "Culture", "cultures": Culture.objects.all()}
+
     template_name = "main/culture/culture_form.html"
 
     def get_context_data(self, **kwargs):
