@@ -1,4 +1,18 @@
 <h4>Project Overview</h4>
+<h5>Exports</h5>
+<div>
+    <span class="btn tooltip tooltip-right" data-tooltip="Export samples and libraries">
+        <a target="_blank" href="{% url 'get_dataset' %}?from=project_{{object.pk}}&unique=library&include=site,layer,samplebatch,sample&extend=sample">
+            <i class="icon icon-download"></i>
+        </a>
+    </span>
+    <span class="btn tooltip tooltip-right" data-tooltip="Export Collaborators">
+        <a target="_blank" href="{% url 'get_dataset' %}?from=project_{{object.pk}}&unique=contact&include=site">
+            <i class="icon icon-people"></i>
+        </a>
+    </span>
+</div>
+
 <table class="table">
     <thead>
         <tr>
@@ -7,7 +21,6 @@
             <th>Analyzed</th>
             <th>Libraries</th>
             <th>Project Visibility</th>
-            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -17,7 +30,6 @@
             <td>{{analyzedsample_count}}</td>
             <td>{{library_count}}</td>
             <td>{{object.published|yesno:"Published,Private,NA"}}</td>
-            <td><a target="_blank" href="{% url 'get_dataset' %}?from=project_{{object.pk}}&unique=library&include=site,layer,samplebatch,sample&extend=sample"><i class="icon icon-download"></i></a></td>
         </tr>
     </tbody>
 </table>

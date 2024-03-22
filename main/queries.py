@@ -18,6 +18,7 @@ def queries(many, one):
         ("project", "sample"): "project",
         ("project", "site"): "project",
         ("project", "layer"): "site__project",
+        ("project", "contact"): "site__project",
     }
 
     return dict[(many, one)]

@@ -228,6 +228,16 @@ class Person(models.Model):
             | Q(affiliation__name__contains=kw)
         )
 
+    def get_data(self):
+        # for an entry, return a dict {'col': data} that is used for the export of the data
+        data = {
+            "Contact Name": self.name,
+            "Contact Email": self.email,
+            "Contact Affiliations": ";".join([x.name for x in self.affiliation.all()]),
+            "Contact ORCID": self.orcid,
+        }
+        return data
+
     class Meta:
         ordering = ["name"]
 
@@ -624,6 +634,24 @@ class Site(models.Model):
             "Site Id": self.coredb_id,
             "Site Country": self.country,
             "Site Coordinates": f"{self.coordinates[0]},{self.coordinates[1]}",
+        }
+        return data
+
+    @classmethod
+    def table_columns(self):
+        return ["Site Name", "Site Id", "Site Country", "Site Coordinates"]
+
+    @classmethod
+    def squash_data(self, queryset):
+        data = {
+            "Site Name": ";".join([x.name for x in queryset]),
+            "Site Id": ";".join(
+                [x.coredb_id if x.coredb_id else "N/A" for x in queryset]
+            ),
+            "Site Country": ";".join([x.country for x in queryset]),
+            "Site Coordinates": ";".join(
+                [f"{x.coordinates[0]},{x.coordinates[1]}" for x in queryset]
+            ),
         }
         return data
 

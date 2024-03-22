@@ -28,13 +28,24 @@ def get_dataset_df(qs, start, include):
     # iterate over the m:1 frame, collect information from models
     records = []
     for entry in qs:
+        # start is the "1", e.g. project
         data = start.get_data()
         for incl in include:
+            # check if there are _multiple entries_ for the incl
+            # these need to be squashed into one line
+            # example person can be contact for multiple sites
             try:
-                data.update(getattr(entry, incl, False).get_data())
+                incl_entries = getattr(entry, incl, False).all()
+                data.update(models[incl].squash_data(incl_entries))
             except AttributeError:
-                empty = {k: None for k in models[incl].table_columns()}
-                data.update(empty)
+                # if there is a foreign-key relationship .all() fails
+                # in this case, try if an entry exists
+                try:
+                    data.update(getattr(entry, incl, False).get_data())
+                except AttributeError:
+                    # if that fails, add empty lines...
+                    empty = {k: None for k in models[incl].table_columns()}
+                    data.update(empty)
         data.update(entry.get_data())
         records.append(data)
     df = pd.DataFrame.from_records(records)
@@ -60,13 +71,13 @@ def get_dataset(request):
     start = get_instance_from_string(request.GET.get("from"))
     column = start.model
     unique = request.GET.get("unique")
-    include = request.GET.get("include", 0).split(",")
+    include = request.GET.get("include", "null").split(",")
     extend = request.GET.get("extend", 0)
 
     # now set up the query
     filter = {queries(column, unique): start}
 
-    qs = models[unique].objects.filter(**filter)
+    qs = models[unique].objects.filter(**filter).distinct()
 
     # and get the dataframe
     df = get_dataset_df(qs, start, include)
