@@ -8,9 +8,7 @@
     <link rel="stylesheet" href="{% static 'css/spectre-exp.css' %}">
     <link rel="stylesheet" href="{% static 'css/spectre.css' %}">
     <link rel="stylesheet" href="{% static 'css/spectre-icons.css' %}">
-    <link rel="stylesheet" href="{% static 'css/jquery-ui.min.css' %}">
-    <script  src="https://code.jquery.com/jquery-3.6.1.js" integrity="sha256-3zlB5s2uwoUzrXK3BT7AX3FyvojsraNFxCc2vC/7pNI="
-         crossorigin="anonymous"></script>
+    <script  src="{% static 'js/packages/jquery-3.7.1.min.js' %}"></script>
     <script src="{% static 'js/packages/htmx-min.js' %}"></script>
     {% block head %}{% endblock %}
 </head>
@@ -45,7 +43,6 @@
 
     <script src="{% static 'js/reference.js' %}"></script>
     <script src="{% static 'js/generic.js' %}"></script>
-    <script src="{% static 'js/packages/jquery-ui.min.js' %}"></script>
     <script>
         document.body.addEventListener('htmx:configRequest', (event) => {
             event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';

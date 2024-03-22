@@ -20,9 +20,6 @@ $.getJSON({
             holder: 'editorjs',
             minHeight : 30,
             tools: {
-                footnotes: {
-                    class: FootnotesTune,
-                },
                 header: {
                     class: Header,
                     inlineToolbar: true,
@@ -52,13 +49,11 @@ $.getJSON({
                 reference: {
                     class: Reference
                 },
-                linkTool: LinkTool,
                 table: {
                     class: Table,
                     inlineToolbar: true,
                 },
             },
-            tunes: ['footnotes'],
             data: response,
             onReady: () => {
                 //load popups from references

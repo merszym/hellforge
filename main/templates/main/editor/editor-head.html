@@ -1,12 +1,10 @@
 {% load static %}
-<script src="https://cdn.jsdelivr.net/npm/@editorjs/header@latest"></script><!-- Header -->
-<script src="https://cdn.jsdelivr.net/npm/@editorjs/image@2.6.2"></script><!-- Image -->
-<script src="https://cdn.jsdelivr.net/npm/@editorjs/list@latest"></script><!-- List -->
-<script src="https://cdn.jsdelivr.net/npm/@editorjs/table@latest"></script><!-- Table -->
-<script src="https://cdn.jsdelivr.net/npm/@editorjs/link@latest"></script><!-- Link -->
-<script src="https://cdn.jsdelivr.net/npm/@editorjs/footnotes@latest"></script> <!-- Footnotes -->
-<script src="https://cdn.jsdelivr.net/npm/@editorjs/marker@latest"></script><!-- Marker -->
-<script src="{% static 'js/packages/editorjs-superscript.js' %}"></script><!-- Super -->
-<script src="{% static 'js/packages/editorjs-reference.js' %}"></script><!-- Reference -->
+<script src="{% static 'js/packages/editor_plugins/editorjs-header.2.0.min.js' %}"></script><!-- Header -->
+<script src="{% static 'js/packages/editor_plugins/editorjs-image.2.6.2.min.js' %}"></script><!-- Image -->
+<script src="{% static 'js/packages/editor_plugins/editorjs-list.latest.min.js' %}"></script><!-- List -->
+<script src="{% static 'js/packages/editor_plugins/editorjs-table.XX.min.js' %}"></script><!-- Table -->
+<script src="{% static 'js/packages/editor_plugins/editorjs-marker.XX.min.js' %}"></script><!-- Marker -->
+<script src="{% static 'js/packages/editor_plugins/editorjs-superscript.js' %}"></script><!-- Super -->
+<script src="{% static 'js/packages/editor_plugins/editorjs-reference.js' %}"></script><!-- Reference -->
 <!-- Load Editor.js's Core -->
-<script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
+<script src="{% static 'js/packages/editorjs-core.1.0.5.min.js' %}"></script>
