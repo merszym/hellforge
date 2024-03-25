@@ -25,6 +25,11 @@ def lookup(dictionary, key):
     return dictionary.get(key, None)
 
 
+@register.filter
+def isin(key, collection):
+    return key in collection
+
+
 @register.filter(name="getstring")
 def getstring(dict):
     return "&".join([f"{k}={v}" for k, v in dict.items()])

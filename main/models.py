@@ -961,6 +961,10 @@ class Sample(models.Model):
         }
         return data
 
+    @property
+    def project_namespaces(self):
+        return [x.namespace for x in self.project.all()]
+
 
 ### The analyzed Sample section
 

@@ -1,3 +1,4 @@
+{% load format %}
 {% if object_list == "empty" %}
     <div class="empty">
         <div class="empty-icon">
@@ -18,9 +19,7 @@
 <table class="table table-striped">
     <thead style="position: sticky; top:0; background-color: white; z-index: 100;">
         <tr>
-            {% if site.id in project_sites %}
             <th>Project</th>
-            {% endif %}
             <th>Layer</th>
             <th>Type</th>
             <th>Sample</th>
@@ -34,25 +33,19 @@
         </tr>
     </thead>
     <tbody>
+        {% with project=request.session.session_project %}
         {% for object in object_list %}
         <tr>
-            {% if site.id in project_sites %}
             <td nowrap style="width:30px;">
-            {% with projectsamples=project.sample.all %}
-                {% if project and not object in projectsamples %}
-                <span class="tooltip tooltip-right generic_addm2m" data-tooltip="Add Sample to Project"
-                    data-x="sample_{{object.pk}}" data-y="project_{{project.pk}}" data-reload="{{batch.classname}}-samples_layer_{{layer.pk}}"
-                    style="color:red; cursor: pointer;">No
+                {% if project|isin:object.project_namespaces %}
+                <span style="color:green; cursor: pointer;">
+                    Yes
                 </span>
-                {% elif project and object in projectsamples %}
-                <span class="tooltip tooltip-right generic_rmm2m" data-tooltip="Remove Sample from Project"
-                    data-x="sample_{{object.pk}}" data-y="project_{{project.pk}}" data-reload="{{batch.classname}}-samples_layer_{{layer.pk}}"
-                    style="color:green; cursor: pointer;">Yes
+                {% else %}
+                <span style="color:red; cursor: pointer;">No
                 </span>
                 {% endif %}
-            {% endwith %}
             </td>
-            {% endif %}
             <td nowrap
                 {% if request.user.is_authenticated %}
                     style="cursor: pointer;"
@@ -128,6 +121,7 @@
             </td>
         </tr>
         {% endfor %}
+        {% endwith %}
     </tbody>
 
 
