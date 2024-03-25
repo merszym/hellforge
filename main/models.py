@@ -317,13 +317,17 @@ class Date(models.Model):
     objects = models.Manager()
     visible_objects = VisibleObjectManager()
 
-    class Meta:
-        default_manager_name = "visible_objects"
-        ordering = ["upper"]
-
     @property
     def model(self):
         return "date"
+
+    @property
+    def test(self):
+        return "date"
+
+    class Meta:
+        default_manager_name = "visible_objects"
+        ordering = ["upper"]
 
     @classmethod
     def table_columns(self):
@@ -719,7 +723,7 @@ class Layer(models.Model):
         null=True,
     )
     date = models.ManyToManyField(
-        Date, verbose_name="date", blank=True, related_name="model"
+        Date, verbose_name="date", blank=True, related_name="origin_model"
     )
     mean_upper = models.IntegerField(blank=True, default=1000000)
     mean_lower = models.IntegerField(blank=True, default=0)
@@ -751,12 +755,12 @@ class Layer(models.Model):
 
     @property
     def hidden_dates(self):
-        return Date.objects.filter(Q(hidden=True) & Q(model=self))
+        return Date.objects.filter(Q(hidden=True) & Q(origin_model=self))
 
     @property
     def date_references(self):
         return Reference.objects.filter(
-            date__in=Date.objects.filter(model=self)
+            date__in=Date.objects.filter(origin_model=self)
         ).distinct()
 
     @property

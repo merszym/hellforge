@@ -200,7 +200,7 @@ def add(request):
 def delete(request):
     status, date, layer = remove_x_from_y_m2m(request, "date", response=False)
     # If dates are not linked to any model, remove
-    if len(date.model.all()) == 0:
+    if len(date.origin_model.all()) == 0:
         deleted = delete_x(request, response=False)
 
     request.GET._mutable = True

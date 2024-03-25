@@ -1,6 +1,18 @@
 {% load format %}
 {% if date_list %}
-<div class="panel" style="max-height:400px;{% if mode == 'hidden' %}color:grey; border: solid 1px salmon {%endif%}">
+<style>
+    .text11pt{
+        font-size:11pt;
+    }
+    .mode_hidden{
+        color:grey;
+        border: solid 1px salmon
+    }
+    .max400{
+        max-height: 400px;
+    }
+</style>
+<div class="panel mode_{{mode}} max400">
     <div class="panel-header">
         <div class="panel-title"><h6>{{title}}</h6></div>
     </div>
@@ -30,20 +42,20 @@
                 {% if date.method == '14C' %}
                 <td>
                     {% if date.lower and not date.upper %}
-                    <span class="text-gray" style="font-size:11pt;">Beyond 14C</span><br>
+                    <span class="text-gray text11pt">Beyond 14C</span><br>
                     >{{date.lower|format:"{:,}"}} ya<br>
-                    <span class="text-gray" style="font-size:11pt;">{{date.oxa}}</span>
+                    <span class="text-gray text11pt">{{date.oxa}}</span>
                     {% else %}
-                <span class="text-gray" style="font-size:11pt;">{{date.curve}} ({{date.estimate|format:"{:,}"}}±{{date.plusminus|format:"{:,}"}})</span><br>
+                <span class="text-gray text11pt">{{date.curve}} ({{date.estimate|format:"{:,}"}}±{{date.plusminus|format:"{:,}"}})</span><br>
                 {{date.upper|format:"{:,}"}} - {{date.lower|format:"{:,}"}} BP (95%)<br>
-                <span class="text-gray" style="font-size:11pt;">{{date.oxa}}</span>
+                <span class="text-gray text11pt">{{date.oxa}}</span>
 
                     {% endif %}
                 </td>
                 {% else %}
                 <td>{{date}}
                 {% if date.oxa %}
-                    <br><span class="text-gray" style="font-size:11pt;">{{date.oxa}}</span>
+                    <br><span class="text-gray text11pt">{{date.oxa}}</span>
                 {% endif %}
                 </td>
                 {% endif %}
@@ -69,7 +81,7 @@
                 <td>
                     <span class="modal_open tooltip tooltip-left" data-tooltip="Edit Date"
                         hx-get="{% url 'main_modal_get' %}"
-                        hx-vals='{"object":"date_{{date.pk}}","type":"edit"}'
+                        hx-vals='{"object":"date_{{date.pk}}","type":"edit", "origin":"layer_{{object.pk}}"}'
                         hx-target="#modal-blank">
                         {% if date.ref.first %}
                         {{date.ref.first.short}}
@@ -82,8 +94,8 @@
                     {% if request.user.is_authenticated %}
                     <form>
                     {% csrf_token %}
-                    <input name="instance_x" value="date_{{date.pk}}" style="display: none;">
-                    <input name="instance_y" value="layer_{{object.pk}}" style="display: none;">
+                    <input name="instance_x" value="date_{{date.pk}}" type="hidden">
+                    <input name="instance_y" value="layer_{{object.pk}}" type="hidden">
                     <span class="btn tooltip tooltip-left" data-tooltip="Delete Date!"
                             hx-post="{% url 'ajax_date_unlink'%}"
                             hx-target="#modal-blank">
@@ -92,8 +104,8 @@
                     </form>
                     <form>
                     {% csrf_token %}
-                    <input name="instance_x" value="date_{{date.pk}}" style="display: none;">
-                    <input name="object" value="layer_{{object.pk}}" style="display: none;">
+                    <input name="instance_x" value="date_{{date.pk}}" type="hidden">
+                    <input name="object" value="layer_{{object.pk}}" type="hidden">
                     <span class="btn tooltip tooltip-left" data-tooltip="Toggle Usage of Date"
                         hx-post="{% url 'ajax_date_toggle'%}"
                         hx-target="#modal-blank">

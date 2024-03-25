@@ -14,7 +14,7 @@
     >
     <a href="{% url 'ref_add' %}" target="_blank" class="btn btn-primary input-group-btn tooltip tooltip-left" data-tooltip="Add new Reference"><i class="icon icon-plus"></i></a>
 </div>
-<input name="origin" value="{{object.model}}_{{object.pk}}" style="display: none;"/>
-<input name="model" value="reference" style="display: none;"/>
+<input name="origin" value="{{object.model}}_{{object.pk}}" type="hidden"/>
+<input name="model" value="reference" type="hidden"/>
 </form>
 <div id="reference-search-appear"></div>

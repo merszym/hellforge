@@ -32,7 +32,11 @@ def download_header(request):
 
 
 def get_modal_context(object, request):
-    context = {"object": object, "type": request.GET.get("type", "")}
+    context = {
+        "object": object,
+        "type": request.GET.get("type", ""),
+        "origin": request.GET.get("origin", ""),
+    }
 
     # Add layer edit context
     if object.model == "layer":
@@ -86,7 +90,8 @@ def get_modal_context(object, request):
 # this is for the modals
 # return the rendered html for the requested modal
 def get_modal(request):
-    object = get_instance_from_string(request.GET.get("object"))
+    obj_string = request.GET.get("object")
+    object = get_instance_from_string(obj_string)
     model = object.model
     context = get_modal_context(object, request)
     # get additional context

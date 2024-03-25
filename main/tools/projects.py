@@ -2,9 +2,17 @@ from django.views.generic import ListView, DetailView, UpdateView
 from django.urls import path, reverse
 from main.models import Project, Description, Site, Sample, AnalyzedSample
 from django.http import JsonResponse
-from main.tools.generic import add_x_to_y_m2m, remove_x_from_y_m2m, get_instance_from_string, delete_x, download_csv
+from main.tools.generic import (
+    add_x_to_y_m2m,
+    remove_x_from_y_m2m,
+    get_instance_from_string,
+    delete_x,
+    download_csv,
+)
 from django.shortcuts import redirect, render
-from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, make smarter later
+from django.contrib.auth.mixins import (
+    LoginRequiredMixin,
+)  # this is for now, make smarter later
 import hashlib
 from collections import defaultdict
 import pandas as pd
@@ -44,7 +52,11 @@ def close_project(request):
 
 
 def get_project_status_tile(request):
-    return render(request, "main/project/project_status_tile.html", {"project": get_project(request)})
+    return render(
+        request,
+        "main/project/project_status_tile.html",
+        {"project": get_project(request)},
+    )
 
 
 class ProjectListView(ListView):
@@ -57,7 +69,9 @@ class ProjectListView(ListView):
         public_project = queryset.filter(published=True)
         private_projects = queryset.filter(published=False)
 
-        context.update({"public_projects": public_project, "private_projects": private_projects})
+        context.update(
+            {"public_projects": public_project, "private_projects": private_projects}
+        )
         return context
 
 
@@ -81,7 +95,9 @@ class ProjectDetailView(DetailView):
             tmp = Description(content_object=project)
             tmp.save()
         # display the project sites
-        object_list = sorted(Site.objects.filter(project=project, child=None), key=lambda x: x.country)
+        object_list = sorted(
+            Site.objects.filter(project=project, child=None), key=lambda x: x.country
+        )
         context["object_list"] = object_list
         # get the related samples
         sample_dict = defaultdict(int)
@@ -90,11 +106,17 @@ class ProjectDetailView(DetailView):
             sample_list = Sample.objects.filter(project=project, site=site)
             sample_dict[site.name] = sample_list
             analyzedsample_dict[site.name] = defaultdict()
-            analyzedsample_dict[site.name]['libraries'] = AnalyzedSample.objects.filter(project=project, sample__in=sample_list)
-            analyzedsample_dict[site.name]['samples'] = set([x.sample for x in analyzedsample_dict[site.name]['libraries']])
+            analyzedsample_dict[site.name]["libraries"] = AnalyzedSample.objects.filter(
+                project=project, sample__in=sample_list
+            )
+            analyzedsample_dict[site.name]["samples"] = set(
+                [x.sample for x in analyzedsample_dict[site.name]["libraries"]]
+            )
         # summary stats
         sample_list = Sample.objects.filter(project=project, site__in=object_list)
-        analyzedsample_list = AnalyzedSample.objects.filter(project=project, sample__in=sample_list)
+        analyzedsample_list = AnalyzedSample.objects.filter(
+            project=project, sample__in=sample_list
+        )
         context["sample_list"] = sample_list
         context["analyzedsample_list"] = analyzedsample_list
         context["analyzedsample_set"] = set([x.sample for x in analyzedsample_list])
@@ -102,37 +124,50 @@ class ProjectDetailView(DetailView):
         context["analyzedsample_dict"] = analyzedsample_dict
         return context
 
+
 def get_project_geo(request):
-    object = Project.objects.get(pk=int(request.GET.get('object')))
+    object = Project.objects.get(pk=int(request.GET.get("object")))
     locations = []
     for site in object.site.all():
-        sgeo = site.loc.first().geo
-        if sgeo:
-            site_view_url = reverse('site_detail', kwargs={"pk":site.pk})
-            sgeo["features"][0]["properties"]["popupContent"] = f"<strong>{site.name}</strong><br><a href={site_view_url} class=btn-link>Details</a>"
-            sgeo["features"][0]["properties"]["id"] = f"{site.pk}"
-            locations.append(sgeo)
+        try:
+            geo = json.loads(site.loc.first().geo)
+        except TypeError:
+            # apparently some objects are not saved as json, but as dict???
+            geo = site.loc.first().geo
+        if geo:
+            site_view_url = reverse("site_detail", kwargs={"pk": site.pk})
+            geo["features"][0]["properties"][
+                "popupContent"
+            ] = f"<strong>{site.name}</strong><br><a href={site_view_url} class=btn-link>Details</a>"
+            geo["features"][0]["properties"]["id"] = f"{site.pk}"
+            locations.append(geo)
     return JsonResponse(locations, safe=False)
 
+
 def get_project_overview(request):
-    object = Project.objects.get(pk=int(request.GET.get('object')))
-    context = {"object":object}
+    object = Project.objects.get(pk=int(request.GET.get("object")))
+    context = {"object": object}
     # get context data
     if object.password:
-            context["public_link_pw"] = hashlib.md5(object.password.encode()).hexdigest()
-    site_count = len(Site.objects.filter(project=object, child=None).values('pk'))
+        context["public_link_pw"] = hashlib.md5(object.password.encode()).hexdigest()
+    site_count = len(Site.objects.filter(project=object, child=None).values("pk"))
     sample_count = len(object.sample.values("pk"))
-    analyzedsample_count = len(set(object.analyzedsample.values_list("sample", flat=True)))
-    library_count = len(object.analyzedsample.values('pk'))
+    analyzedsample_count = len(
+        set(object.analyzedsample.values_list("sample", flat=True))
+    )
+    library_count = len(object.analyzedsample.values("pk"))
 
     context["site_count"] = site_count
     context["sample_count"] = sample_count
     context["analyzedsample_count"] = analyzedsample_count
     context["library_count"] = library_count
-    object_list = sorted(Site.objects.filter(project=object, child=None), key=lambda x: x.country)
+    object_list = sorted(
+        Site.objects.filter(project=object, child=None), key=lambda x: x.country
+    )
     context["object_list"] = object_list
 
     return render(request, "main/project/project_overview.html", context)
+
 
 urlpatterns = [
     path("list", ProjectListView.as_view(), name="main_project_list"),
