@@ -2,12 +2,11 @@
 <div class="column">
     <h5>Location</h5>
     <div class="input-group">
-        <span class="input-group-addon">Set Marker by Coordinates</span>
-        <input class="form-input" type="text" id="coordinates" placeholder="Latitude,Longitude">
-        <span class="btn btn-primary input-group-btn" id="coordinates-span">Set</span>
-    </div>
+        <span class="input-group-addon">Lat</span>
+        <input type="text" name="lat" class="form-input" placeholder="Lat" value="{{object.get_coordinates.1}}">
+        <span class="input-group-addon">Long</span>
+        <input type="text" name="long" class="form-input" placeholder="Long" value="{{object.get_coordinates.0}}">
+    </div><br>
     <div style="height: 480px;" id="map"></div>
-    <label for="geojson">
-    <textarea id='geojson' type="text" name="geo" style="display:none;"></textarea>
 </div>
 {# fill the leaflet map in the view that includes this form! otherwise the centering is off #}

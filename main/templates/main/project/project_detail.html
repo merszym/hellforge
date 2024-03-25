@@ -4,7 +4,6 @@
 {% load format %}
 <title>Project: {{object}}</title>
 {% include 'main/editor/editor-head.html' %}
-{% include 'main/location/location-head.html' %}
 {% endblock %}
 {% block headline %}<a href="{% url 'main_project_list' %}">{{object.name}}</a>{% endblock %}
 

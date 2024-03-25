@@ -67,11 +67,12 @@ class ContactForm(forms.ModelForm):
 
 
 class SiteForm(forms.ModelForm):
-    geo = forms.JSONField(required=False)
+    lat = forms.FloatField(required=False)
+    long = forms.FloatField(required=False)
 
     class Meta:
         model = Site
-        fields = ["name", "coredb_id", "country", "type", "elevation", "geo"]
+        fields = ["name", "coredb_id", "country", "type", "elevation", "lat", "long"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

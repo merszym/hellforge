@@ -160,9 +160,9 @@ def get_timeline_data(site_id, hidden=False, curves=False, request=False):
             if date.hidden:
                 layerdata.update(
                     {
-                        "className": "hidden"
-                        if not (date.raw and curves)
-                        else "hiddenfill"
+                        "className": (
+                            "hidden" if not (date.raw and curves) else "hiddenfill"
+                        )
                     }
                 )
 
@@ -229,19 +229,30 @@ def site_create_update(request, pk=None):
             obj = form.save()
             description = Description(content_object=obj)
             description.save()
-            if not obj.loc.first():
-                loc = Location(
-                    geo=form.cleaned_data.get("geo"), name=f"{obj.name} Location"
-                )
-                loc.save()
-                loc.refresh_from_db()
-                obj.loc.add(loc)
-                return redirect(obj)
-            else:
-                loc = obj.loc.first()
-                loc.geo = form.cleaned_data.get("geo")
-                loc.save()
-                return redirect(obj)
+            # update the location
+            lat = form.cleaned_data.get("lat")
+            long = form.cleaned_data.get("long")
+            if lat and long:
+                geo = {
+                    "type": "FeatureCollection",
+                    "features": [
+                        {
+                            "type": "Feature",
+                            "properties": {},
+                            "geometry": {"type": "Point", "coordinates": [long, lat]},
+                        }
+                    ],
+                }
+                if not obj.loc.first():
+                    loc = Location.objects.create(
+                        geo=json.dumps(geo), name=f"{obj.name} Location"
+                    )
+                    obj.loc.add(loc)
+                else:
+                    loc = obj.loc.first()
+                    loc.geo = json.dumps(geo)
+                    loc.save()
+            return redirect(obj)
         return render(
             request, "main/site/site_form.html", {"object": object, "form": form}
         )

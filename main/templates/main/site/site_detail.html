@@ -3,7 +3,6 @@
 {% block head %}
 {% load static %}
 <title>Hellforge: {{object.name}}</title>
-{% include 'main/location/location-head.html' %}
 {% include 'main/editor/editor-head.html' %}
 {% endblock %}
 {% block headline %} <a style='color:white' href="{% url 'site_list' %}">{{object}}</a>{% endblock %}

@@ -1,8 +1,0 @@
-<table id="location-list">
-    {% for loc in object.loc.all %}
-        <tr>
-            <td><strong>Location:</strong></td>
-            <td id="loc_{{loc.pk}}"><a class="btn-link" target="_blank" href="{% url 'location_update' loc.pk %}">{{loc.name}}</a></td>
-        </tr>
-    {% endfor %}
-</table>
