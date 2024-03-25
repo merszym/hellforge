@@ -90,6 +90,27 @@
             </div>
         </div>
 
+        {% elif type == 'add_profile' %}
+
+        {#  --------------------  #}
+        {#  PROFILE CREATE MODAL  #}
+        {#  --------------------  #}
+
+        <div class="modal-body">
+            <div class="content">
+                <form method="post" action="{% url 'main_site_profile_create' object.pk%}">
+                {% csrf_token %}
+                {% for field in profile_form %}
+                <div class="form-group">
+                    <label class="form-label" for="{{field.name}}_id">{{field.name|title}}</label>
+                    <input class="form-input" type="text" id="{{field.name}}_id" name="{{field.name}}" placeholder="{{field.name}}" required>
+                </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-primary">Add</button>
+                </form>
+            </div>
+        </div>
+
         {% elif type == "connection_form" %}
 
         {#  --------------------     #}

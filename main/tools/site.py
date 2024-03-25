@@ -196,12 +196,13 @@ def add_profile(request, site_id):
     """
     create and add a new profile within a Site
     """
+    site = Site.objects.get(pk=site_id)
     form = ProfileForm(request.POST)
     if form.is_valid():
-        obj = form.save(commit=False)
-        obj.site = Site.objects.get(pk=site_id)
-        obj.save()
-    return JsonResponse({"status": False})
+        profile = form.save(commit=False)
+        profile.site = site
+        profile.save()
+    return redirect(site)
 
 
 def get_site_profile_tab(request):
@@ -214,7 +215,6 @@ def get_site_profile_tab(request):
     context = {
         "object": object,
         "selected_profile": selected_profile,
-        "profile_form": ProfileForm,
     }
 
     return render(request, "main/site/site-profile-content.html", context)

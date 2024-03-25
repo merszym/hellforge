@@ -1,4 +1,4 @@
-from .forms import ReferenceForm, DateForm, ContactForm, SampleBatchForm
+from .forms import ReferenceForm, DateForm, ContactForm, SampleBatchForm, ProfileForm
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from .models import (
@@ -69,6 +69,8 @@ def get_modal_context(object, request):
             except ValueError:
                 connection = None
             context.update({"connection": connection})
+        if context["type"] == "add_profile":
+            context.update({"profile_form": ProfileForm})
     if object.model == "sample":
         if context["type"] == "edit_provenience":
             try:

@@ -1,29 +1,5 @@
 {% load format %}
 <div id="site_profile_content">
-    <div class="modal" id="modal-profile">
-        <a href="#close" class="modal-overlay" aria-label="Close"></a>
-        <div class="modal-container">
-            <div class="modal-header">
-            <span id="modal-profile-close" class="btn btn-clear float-right" aria-label="Close"></span>
-            <div class="modal-title h5">New Profile</div>
-            </div>
-            <div class="modal-body">
-                <div class="content">
-                    <form id='profile-form' method="POST">
-                    {% csrf_token %}
-                    {% for field in profile_form %}
-                    <div class="form-group">
-                        <label class="form-label" for="{{field.name}}_id">{{field.name|title}}</label>
-                        <input class="form-input" type="text" id="{{field.name}}_id" name="{{field.name}}" placeholder="{{field.name}}" required>
-                    </div>
-                    {% endfor %}
-                    <span id='profile-submit' class="btn btn-primary" data-reload="site_layer" data-url="{% url 'main_site_profile_create' object.pk%}">Add</span>
-                    </form>
-                    <br>
-                </div>
-            </div>
-        </div>
-    </div>
     <ul class="tab tab-block" id="profile-list">
         {% for profile in object.profile.all %}
         <li id="profile-tab_{{profile.pk}}" class="tab-item switch_profile {% if selected_profile == profile %}active{% endif %}" data-group="profile" data-show="profile_{{profile.pk}}">
@@ -37,7 +13,12 @@
         </script>
         {% if request.user.is_authenticated %}
         <li id="before-profile-add">
-            <span style="margin:5px;" data-tooltip="Add a Profile" class="btn btn-primary tooltip tooltip-left" id="profile-add" data-url="{% url 'main_site_profile_create' object.pk %}"> Add Profile </span>
+            <span style="margin:5px;" class="btn  btn-primary modal_open tooltip tooltip-left" data-tooltip="Add a Profile"
+                hx-get="{% url 'main_modal_get' %}"
+                hx-vals='{"object":"site_{{object.pk}}", "type":"add_profile"}'
+                hx-target="#modal-blank">
+                Add Profile
+            </span>
         </li>
         {% endif %}
     </ul>

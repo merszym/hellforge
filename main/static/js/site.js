@@ -23,27 +23,6 @@ $('body').on('click','.switch_profile', function(){
     $(`#show_${$(this).attr('data-show')}`).show()
 });
 
-// add profiles
-$('body').on('click','#profile-add', function(){
-    $('#modal-profile').addClass('active')
-});
-
-$('body').on('click', '#modal-profile-close', function(){
-    $('#modal-profile').removeClass('active')
-});
-
-$('body').on('click', '#profile-submit', function(){
-    $('#modal-profile').removeClass('active')
-    var reload = $(this).attr('data-reload')
-    $.ajax({
-        type: "POST",
-        url: $('#profile-submit').attr('data-url'),
-        data: $("#profile-form").serialize()
-        }).done(function(){
-            reloadElement(reload)
-        });
-});
-
 // overview buttons
 $('.overview-toggle').on('click', function(){
     $('.overview-toggle').removeClass('btn-primary')
