@@ -96,7 +96,9 @@ def get_dataset(request):
 
         # and get the dataset
         df2 = get_dataset_df(eqs, start, include)
-        df2 = df2[[x for x in df2.columns if x in df.columns]].copy()
+        # in case the unique call was empty, dont filter columns
+        if len(df.columns) > 0:
+            df2 = df2[[x for x in df2.columns if x in df.columns]].copy()
         df = pd.concat([df, df2], ignore_index=True)
 
         # remove some weird error message
