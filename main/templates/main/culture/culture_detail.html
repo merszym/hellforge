@@ -2,7 +2,6 @@
 {% block head %}
 <title>Hellforge: {{object.name}}</title>
 {% include 'main/location/location-head.html' %}
-{% include 'main/timeline/timeline-head.html' %}
 {% include 'main/editor/editor-head.html' %}
 {% endblock %}
 {% block headline %}<a href="{% url 'culture_list' %}">Culture</a>{% endblock %}
@@ -44,7 +43,7 @@
               <a class="btn" href="{% url 'culture_detail' object.pk %}?nochildren=1">Show without Children</a>
               <a class="btn" href="{% url 'culture_detail' object.pk %}">Show with Children</a>
             </div>
-            {% include 'main/timeline/timeline-body.html' %}
+            {% include 'main/timeline/timeline.html' %}
     </div>
         <script src="{% static 'js/location.js' %}"></script>
         <script src="{% static 'js/site.js' %}"></script>

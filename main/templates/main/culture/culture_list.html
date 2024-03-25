@@ -1,7 +1,6 @@
 {% extends 'main/base.html' %}
 {% load static %}
 {% block head %}
-{% include 'main/timeline/timeline-head.html' %}
 <title>Hellforge: Cultures</title>
 {% endblock %}
 
@@ -18,7 +17,7 @@ Culture List
         <h2>Timeline</h2>
         <div style="display:flex; gap:10px;">
         </div>
-        {% include 'main/timeline/timeline-body.html' %}
+        {% include 'main/timeline/timeline.html' %}
 </div>
     <script>
         var groups = {{timelinedata|safe}}

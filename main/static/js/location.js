@@ -1,5 +1,6 @@
 // Target element ID to observe
 const targetId = 'map';
+const mapsPlaceholder = []
 
 // Create a MutationObserver instance
 const observer = new MutationObserver((mutationsList, observer) => {
@@ -9,6 +10,9 @@ const observer = new MutationObserver((mutationsList, observer) => {
         // If map-div appears and is not already initialized
         if( targetElement.classList.contains("leaflet-container") == false) {
             try{
+                L.Map.addInitHook(function () {
+                    mapsPlaceholder.push(this); // Use whatever global scope variable you like.
+                });
                 var map = L.map('map',{
                     scrollWheelZoom: true
                 }).setView([51.3, 12], 5);
@@ -17,34 +21,11 @@ const observer = new MutationObserver((mutationsList, observer) => {
                     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                 }).addTo(map);
 
+
                 var drawnItems = new L.FeatureGroup();
                 map.addLayer(drawnItems);
 
-                var drawControl = new L.Control.Draw({
-                    draw: {
-                        polyline: false,
-                        circlemarker: false,
-                        circle:false,
-                    },
-                    edit: {
-                        featureGroup: drawnItems,
-                    }
-                });
 
-                map.addControl(drawControl);
-
-                map.on('draw:created', function (e) {
-                    layer = e.layer;
-                    drawnItems.addLayer(layer);
-                });
-
-                function saveLayer(){
-                    if(drawnItems.getLayers().length > 0){
-                        var json = drawnItems.toGeoJSON();
-                        $('#geojson').html(JSON.stringify(json));
-                        console.log($("#geojson").html)
-                    }
-                }
                 function onEachFeature(feature, layer){
                     if (feature.properties && feature.properties.popupContent) {
                         layer.bindPopup(feature.properties.popupContent);
@@ -106,24 +87,3 @@ const observer = new MutationObserver((mutationsList, observer) => {
 
 // Start observing changes in the entire document
 observer.observe(document.body, { childList: true, subtree: true });
-
-// add layer by coordinates
-$('#coordinates-span').on('click', function(){
-    coords = $('#coordinates').val()
-    lat = parseFloat(coords.split(',')[0])
-    long = parseFloat(coords.split(',')[1])
-
-    //geojson uses long-lat order -.-
-    json = {"type": "FeatureCollection",
-        "features": [{
-            "type": "Feature",
-            "properties": {},
-            "geometry": {
-                "type": "Point",
-                "coordinates": [long, lat]
-            }
-        }]
-    }
-    drawJson(json)
-    fitBounds()
-});
