@@ -72,7 +72,16 @@ class SiteForm(forms.ModelForm):
 
     class Meta:
         model = Site
-        fields = ["name", "coredb_id", "country", "type", "elevation", "lat", "long"]
+        fields = [
+            "name",
+            "site",
+            "coredb_id",
+            "country",
+            "type",
+            "elevation",
+            "lat",
+            "long",
+        ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

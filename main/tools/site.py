@@ -259,7 +259,11 @@ def site_create_update(request, pk=None):
     return render(
         request,
         "main/site/site_form.html",
-        {"form": SiteForm(instance=copy(object)), "object": object},
+        {
+            "form": SiteForm(instance=copy(object)),
+            "object": object,
+            "parent_options": Site.objects.all(),
+        },
     )
 
 

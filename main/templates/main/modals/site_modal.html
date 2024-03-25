@@ -86,28 +86,6 @@
                     <h6 class="m-2">Contacts</h6>
                     {% include 'main/contact/contact-chip-display.html' %}
                     {% include 'main/contact/contact-searchinput.html' with object=object %}
-                    <h6 class="m-2">Parent Site</h6>
-                    {% if object.parent %}
-                    <div class="tile tile-centered">
-                        <div class="tile-icon">
-                            <div class="example-tile-icon">
-                                <form>
-                                    {% csrf_token %}
-                                    <button class="btn"
-                                        hx-post="{% url 'main_generic_unsetfk' 'site' %}?{{request.GET|getstring}}&next=site_add_contact"
-                                        hx-vars="{'instance_x':'site_{{object.pk}}'}"
-                                        hx-target="#modal-blank">
-                                        <i class="icon icon-delete"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                        <div class="tile-content">
-                            <div class="tile-title">{{object.parent}}</div>
-                        </div>
-                    </div>
-                    {% endif %}
-                    {% include 'main/site/site-searchinput.html' %}
                 </div>
             </div>
         </div>
