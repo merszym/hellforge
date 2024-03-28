@@ -1033,24 +1033,8 @@ class AnalyzedSample(models.Model):
 #
 
 
-class FaunalResults(models.Model):
-    scientific_name = models.CharField(
-        "scientific name", max_length=400, blank=True, null=True
-    )
-    order = models.CharField("order", max_length=400, blank=True, null=True)
-    family = models.CharField("family", max_length=400, blank=True, null=True)
-    taxid = models.CharField("TaxID", max_length=100, blank=True, null=True)
-    results = models.JSONField("Faunal Results", blank=True, null=True)
-    analysis = models.ForeignKey(
-        "FaunalAnalysis",
-        blank=True,
-        null=True,
-        related_name="faunal_results",
-        on_delete=models.CASCADE,
-    )
-
-
-class FaunalAnalysis(models.Model):
+class LayerAnalysis(models.Model):
+    type = models.CharField("Type", max_length=50, blank=True, null=True)
     method = models.CharField("Method", max_length=100, blank=True, null=True)
     layer = models.ForeignKey(
         Layer,
@@ -1065,12 +1049,37 @@ class FaunalAnalysis(models.Model):
     )
 
     class Meta:
-        unique_together = [["layer", "ref"]]
+        unique_together = [["layer", "ref", "type"]]
 
-    def __str__(self):
-        if self.layer.site:
-            return str(self.layer.site)
-        return self
+
+class FaunalResults(models.Model):
+    order = models.CharField("order", max_length=400, blank=True, null=True)
+    family = models.CharField("family", max_length=400, blank=True, null=True)
+    scientific_name = models.CharField(
+        "scientific name", max_length=400, blank=True, null=True
+    )
+    taxid = models.CharField("TaxID", max_length=100, blank=True, null=True)
+    results = models.JSONField("Faunal Results", blank=True, null=True)
+    analysis = models.ForeignKey(
+        "LayerAnalysis",
+        blank=True,
+        null=True,
+        related_name="faunal_results",
+        on_delete=models.CASCADE,
+    )
+
+    @classmethod
+    def table_columns(self):
+        return [
+            "Site Name",
+            "Layer Name",
+            "Reference",
+            "Method",
+            "Order",
+            "Family",
+            "Scientific Name",
+            "TaxID",
+        ]
 
 
 models = {

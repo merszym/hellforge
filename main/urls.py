@@ -21,7 +21,6 @@ urlpatterns = [
     path("reference/", include("main.tools.references")),
     path("generic/", include("main.tools.generic")),
     path("timeline/", include("main.tools.timeline")),
-    path("fauna/", include("main.tools.fauna")),
     path("description/", include("main.tools.description")),
     path("projects/", include("main.tools.projects")),
     path("samples/", include("main.tools.samples")),

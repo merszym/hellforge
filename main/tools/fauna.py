@@ -1,42 +1,96 @@
 from main.models import models
-from main.models import Reference
+from main.models import Reference, FaunalResults, LayerAnalysis, Layer
 from django.http import JsonResponse
 from django.urls import path
 from django.shortcuts import render
 from main.tools.generic import get_instance_from_string
 import main.tools as tools
 from django.db.models import Q
+import pandas as pd
+import json
 
 
-def fauna_upload(request):
-    import pandas as pd
-
-    # TODO: create taxa upon assemblageUpload
-    df = pd.read_csv(request.FILES["file"], sep=",")
+def handle_faunal_table(request, file):
+    df = pd.read_csv(file, sep=",")
     df.drop_duplicates(inplace=True)
+    proceed = True
+    # All required information is in the table
 
-    site = get_instance_from_string(request.POST.get("instance_x"))
-    all_layers = [x.name for x in site.layer.all()]
+    ## 0. Verify the data-table
+    expected_columns = FaunalResults.table_columns()
+    ## there can be more, but check that all required are in
 
-    # filter for expected/unexpected columns
-    expected = FaunalAssemblage.table_columns()
-    issues = []
-    if dropped := [x for x in df.columns if x not in expected]:
-        issues.append(f"Dropped Table Columns: {','.join(dropped)}")
-    df = df[[x for x in df.columns if x in expected]]
-
-    # hardcode the testing for now
-    if "Reference" in df.columns:
-        df["Reference"] = df.Reference.apply(lambda x: tools.references.find(x))
-        if "Not Found" in set(df["Reference"]):
-            issues.append("Reference was not found (see Table)")
-
-    layer_wrong = df[df.Layer.isin(all_layers) == False].copy()
-    if len(layer_wrong) > 0:
-        issues.append(
-            f"Removed non-existing Layers: {','.join(set(layer_wrong['Layer']))}"
+    if not all(x in df.columns for x in expected_columns):
+        proceed = False
+        missing = [x for x in expected_columns if x not in df.columns]
+        issues = [f"Missing Table Columns: {x}" for x in missing]
+        return render(
+            request,
+            "main/fauna/fauna-batch-confirm.html",
+            {
+                "dataframe": df.fillna("").to_html(
+                    index=False, classes="table table-striped col-12"
+                ),
+                "issues": issues,
+            },
         )
-        df.drop(layer_wrong.index, inplace=True)
+
+    ## 1. Get the unique information to create LayerAnalysis entries
+
+    analyses = df[
+        ["Site Name", "Layer Name", "Reference", "Method"]
+    ].drop_duplicates()  # get the LayerAnalysis fields
+    analyses["pk"] = ""
+
+    ## 2. create LayerAnalysis entries
+
+    for i, data in analyses.iterrows():
+        layer = Layer.objects.get(
+            site__name=data["Site Name"].strip(), name=data["Layer Name"].strip()
+        )
+        reference = tools.references.find(data["Reference"])
+        # TODO: Handle errors!
+        # get or create the LayerAnalysis object
+        ana, created = LayerAnalysis.objects.get_or_create(
+            layer=layer, ref=reference, type="Fauna"
+        )
+        # clear the related faunal results
+        ana.faunal_results.clear()
+        # TODO: delete the now orphan faunal_results
+        # update or set the method
+        ana.method = data["Method"]
+        ana.save()
+        # now add the pk to the analyses df, as we need this to then attach the faunal
+        # analysis
+        analyses.loc[i, "pk"] = ana.pk
+
+    ## 3. Merge the pk of the Analysis entry back into the original df
+
+    df = df.merge(
+        analyses,
+        on=["Site Name", "Layer Name", "Reference", "Method"],
+        validate="m:1",
+        how="left",
+    )
+
+    ## 4. Create a FaunalResults object per line, attach to the LayerAnalysis object
+    ### Find the additional columns
+    res = [x for x in df.columns if x not in expected_columns and x != "pk"]
+
+    for i, data in df.iterrows():
+        # first get all the required information
+        tmp, created = FaunalResults.objects.get_or_create(
+            order=data["Order"],
+            family=data["Family"],
+            scientific_name=data["Scientific Name"],
+            taxid=data["TaxID"],
+            analysis=LayerAnalysis.objects.get(pk=data["pk"]),
+        )
+        # now take the additional table-columns and create/update the results as json
+        tmp.results = json.dumps({x: data[x] for x in res})
+        tmp.save()
+
+    ## TODO: render a summary to the modal
     return render(
         request,
         "main/fauna/fauna-batch-confirm.html",
@@ -44,65 +98,6 @@ def fauna_upload(request):
             "dataframe": df.fillna("").to_html(
                 index=False, classes="table table-striped col-12"
             ),
-            "issues": issues,
-            "json": df.to_json(),
-            "site": site,
+            "issues": [],
         },
     )
-
-
-def save_verified(request):
-    import pandas as pd
-    from main.models import Date, Site, Layer, Reference
-
-    df = pd.read_json(request.POST.get("batch-data"))
-    site = Site.objects.get(pk=int(request.POST.get("site")))
-    df.convert_dtypes()
-
-    # create an assemblage for each layer!
-    for layer, dat in df.groupby(["Layer"]):
-        tmp_layer = Layer.objects.filter(Q(site=site) & Q(name=layer)).first()
-
-        assemblage = FaunalAssemblage.objects.filter(layer=tmp_layer).first()
-        if not assemblage:
-            assemblage = FaunalAssemblage(layer=tmp_layer)
-            assemblage.save()
-            assemblage.refresh_from_db()
-
-        for fam, sp, common, abundance in zip(
-            dat["Family"], dat["Species"], dat["Common Name"], dat["Abundance"]
-        ):
-            try:
-                taxon = Taxon.objects.get(scientific_name=sp, family=fam)
-            except:
-                taxon = Taxon(scientific_name=sp, common_name=common, family=fam)
-                taxon.save()
-                taxon.refresh_from_db()
-            finally:
-                # check if a found taxon is already in...
-                create = True
-                for found_taxon in assemblage.taxa.all():
-                    # if already in: update the abundance
-                    if found_taxon.taxon == taxon:
-                        found_taxon.abundance = abundance
-                        found_taxon.save()
-                        create = False
-                if create:
-                    found_taxon = FoundTaxon(taxon=taxon, abundance=abundance)
-                    found_taxon.save()
-                    found_taxon.refresh_from_db()
-                    assemblage.taxa.add(found_taxon)
-        try:
-            for ref_id in set([x["id"] for x in dat["Reference"]]):
-                reference = Reference.objects.get(id=ref_id)
-                assemblage.ref.add(reference)
-        except TypeError:  # no reference available
-            pass
-
-    return JsonResponse({"status": True})
-
-
-urlpatterns = [
-    path("upload", fauna_upload, name="fauna_upload"),
-    path("save", save_verified, name="ajax_save_verified_fauna"),
-]
