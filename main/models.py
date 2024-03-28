@@ -1024,18 +1024,25 @@ class AnalyzedSample(models.Model):
         return [x.namespace for x in self.project.all()]
 
 
+#
+#
+#
 ### The expected Taxa section
+#
+#
+#
 
 
-class Taxon(models.Model):
+class FaunalResults(models.Model):
     scientific_name = models.CharField(
         "scientific name", max_length=400, blank=True, null=True
     )
+    order = models.CharField("order", max_length=400, blank=True, null=True)
     family = models.CharField("family", max_length=400, blank=True, null=True)
     taxid = models.CharField("TaxID", max_length=100, blank=True, null=True)
     results = models.JSONField("Faunal Results", blank=True, null=True)
     analysis = models.ForeignKey(
-        "FaunalAssemblage",
+        "FaunalAnalysis",
         blank=True,
         null=True,
         related_name="faunal_results",
@@ -1043,48 +1050,22 @@ class Taxon(models.Model):
     )
 
 
-#
-# Remove as soon as the data is migrated
-#
-
-
-class FoundTaxon(models.Model):
-    taxon = models.ForeignKey(
-        Taxon, on_delete=models.CASCADE, related_name="found_taxa"
-    )
-    abundance = models.CharField("abundance", max_length=300)
-
-    class Meta:
-        ordering = ["taxon__family"]
-
-
-class FaunalAssemblage(models.Model):
+class FaunalAnalysis(models.Model):
+    method = models.CharField("Method", max_length=100, blank=True, null=True)
     layer = models.ForeignKey(
         Layer,
         verbose_name="layer",
-        related_name="assemblage",
+        related_name="faunal_analysis",
         blank=True,
         null=True,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
     )
-    taxa = models.ManyToManyField(FoundTaxon)  # TODO: remove once migrated
-    ref = models.ManyToManyField(
-        Reference, verbose_name="reference", blank=True
-    )  # TODO: should be only one!
-    method = models.CharField("Method", max_length=100, blank=True, null=True)
+    ref = models.ForeignKey(
+        Reference, verbose_name="reference", blank=True, on_delete=models.PROTECT
+    )
 
-    @classmethod
-    def table_columns(self):
-        # for the upload of expected taxa
-        columns = [
-            "Layer",
-            "Family",
-            "Species",
-            "Common Name",
-            "Abundance",
-            "Reference",
-        ]
-        return columns
+    class Meta:
+        unique_together = [["layer", "ref"]]
 
     def __str__(self):
         if self.layer.site:
@@ -1104,8 +1085,6 @@ models = {
     "ref": Reference,
     "contact": Person,
     "person": Person,
-    "assemblage": FaunalAssemblage,
-    "taxon": Taxon,
     "affiliation": Affiliation,
     "description": Description,
     "author": Author,

@@ -1,5 +1,5 @@
 from main.models import models
-from main.models import FaunalAssemblage, FoundTaxon, Taxon, Reference
+from main.models import Reference
 from django.http import JsonResponse
 from django.urls import path
 from django.shortcuts import render
@@ -33,13 +33,17 @@ def fauna_upload(request):
 
     layer_wrong = df[df.Layer.isin(all_layers) == False].copy()
     if len(layer_wrong) > 0:
-        issues.append(f"Removed non-existing Layers: {','.join(set(layer_wrong['Layer']))}")
+        issues.append(
+            f"Removed non-existing Layers: {','.join(set(layer_wrong['Layer']))}"
+        )
         df.drop(layer_wrong.index, inplace=True)
     return render(
         request,
         "main/fauna/fauna-batch-confirm.html",
         {
-            "dataframe": df.fillna("").to_html(index=False, classes="table table-striped col-12"),
+            "dataframe": df.fillna("").to_html(
+                index=False, classes="table table-striped col-12"
+            ),
             "issues": issues,
             "json": df.to_json(),
             "site": site,
@@ -65,7 +69,9 @@ def save_verified(request):
             assemblage.save()
             assemblage.refresh_from_db()
 
-        for fam, sp, common, abundance in zip(dat["Family"], dat["Species"], dat["Common Name"], dat["Abundance"]):
+        for fam, sp, common, abundance in zip(
+            dat["Family"], dat["Species"], dat["Common Name"], dat["Abundance"]
+        ):
             try:
                 taxon = Taxon.objects.get(scientific_name=sp, family=fam)
             except:
