@@ -36,7 +36,7 @@
         {% with project=request.session.session_project %}
         {% for object in object_list %}
         <tr>
-            <td nowrap style="width:30px;">
+            <td nowrap>
                 {% if project|isin:object.project_namespaces %}
                 <span style="color:green; cursor: pointer;">
                     Yes

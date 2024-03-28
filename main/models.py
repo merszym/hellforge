@@ -1019,6 +1019,10 @@ class AnalyzedSample(models.Model):
             "Sequencing Run",
         ]
 
+    @property
+    def project_namespaces(self):
+        return [x.namespace for x in self.project.all()]
+
 
 ### The expected Taxa section
 

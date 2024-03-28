@@ -1,3 +1,4 @@
+{% load format %}
 <div class="panel sample_table tab-panel {{batch.classname}}-layer-tab_{{layer.pk}}" data-group="{{batch.classname}}-layer-tab"
     style="{% if counter != 1 %} display: none;{% endif %} max-height:500px; overflow:scroll;">
     {% if object_list|length == 0 %}
@@ -9,9 +10,7 @@
 <table class="table table-striped">
     <thead style="position: sticky; top:0; background-color: white; z-index: 100;">
         <tr>
-            {% if site.id in project_sites %}
             <th>Project</th>
-            {% endif %}
             <th>Layer</th>
             <th>Sample</th>
             <th>Library</th>
@@ -20,25 +19,19 @@
         </tr>
     </thead>
     <tbody>
+        {% with project=request.session.session_project %}
         {% for object in object_list %}
         <tr class="{{batch.classname}}_libtr">
-            {% if site.id in project_sites %}
-            <td style="width:30px;">
-            {% with projectsamples=project.analyzedsample.all %}
-                {% if project and not object in projectsamples %}
-                <span class="tooltip tooltip-right generic_addm2m" data-tooltip="Add Analyzed Sample to Project"
-                    data-x="analyzedsample_{{object.pk}}" data-y="project_{{project.pk}}" data-reload="site_analyses_content"
-                    style="color:red; cursor: pointer;">No
+            <td nowrap>
+                {% if project|isin:object.project_namespaces %}
+                <span style="color:green; cursor: pointer;">
+                    Yes
                 </span>
-                {% elif project and object in projectsamples %}
-                <span class="tooltip tooltip-right generic_rmm2m" data-tooltip="Remove Analyzed Sample from Project"
-                    data-x="analyzedsample_{{object.pk}}" data-y="project_{{project.pk}}" data-reload="site_analyses_content"
-                    style="color:green; cursor: pointer;">Yes
+                {% else %}
+                <span style="color:red; cursor: pointer;">No
                 </span>
                 {% endif %}
-            {% endwith %}
             </td>
-            {% endif %}
             <td class="{{object.sample.layer|yesno:'assigned,unassigned'}}">{% if object.sample.layer %}{{object.sample.layer.name}}{% else %}Unassigned{% endif %}</td>
             <td>{{object.sample}}</td>
             <td>{{object.library}}</td>
@@ -46,6 +39,7 @@
             <td>{{object.seqrun}}</td>
         </tr>
         {% endfor %}
+        {% endwith %}
     </tbody>
 </table>
 {% endif %}
