@@ -1028,17 +1028,24 @@ class AnalyzedSample(models.Model):
 
 
 class Taxon(models.Model):
-    common_name = models.CharField("common name", max_length=400, blank=True, null=True)
     scientific_name = models.CharField(
         "scientific name", max_length=400, blank=True, null=True
     )
     family = models.CharField("family", max_length=400, blank=True, null=True)
+    taxid = models.CharField("TaxID", max_length=100, blank=True, null=True)
+    results = models.JSONField("Faunal Results", blank=True, null=True)
+    analysis = models.ForeignKey(
+        "FaunalAssemblage",
+        blank=True,
+        null=True,
+        related_name="faunal_results",
+        on_delete=models.CASCADE,
+    )
 
-    def __str__(self):
-        return f"{self.family}:{self.scientific_name} ({self.common_name if self.common_name else ''})"
 
-    class Meta:
-        ordering = ["family"]
+#
+# Remove as soon as the data is migrated
+#
 
 
 class FoundTaxon(models.Model):
@@ -1060,8 +1067,11 @@ class FaunalAssemblage(models.Model):
         null=True,
         on_delete=models.CASCADE,
     )
-    taxa = models.ManyToManyField(FoundTaxon)
-    ref = models.ManyToManyField(Reference, verbose_name="reference", blank=True)
+    taxa = models.ManyToManyField(FoundTaxon)  # TODO: remove once migrated
+    ref = models.ManyToManyField(
+        Reference, verbose_name="reference", blank=True
+    )  # TODO: should be only one!
+    method = models.CharField("Method", max_length=100, blank=True, null=True)
 
     @classmethod
     def table_columns(self):
