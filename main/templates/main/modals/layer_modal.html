@@ -23,6 +23,8 @@
             hx-target="#modal-blank">
             <i class="icon icon-back"></i>
         </span>
+        {% elif type == "faunal_tables" %}
+        <div class="modal-title h5 ">Import Fauna</div>
         {% else %}
         <div class="modal-title h5 ">Edit Layer</div>
         {% endif %}
@@ -268,6 +270,22 @@
             </div>
         </div>
     </div>
+
+    {% elif type == "faunal_tables" %}
+
+    {# ------------------------- #}
+    {#   LAYER FAUNA MODAL       #}
+    {# ------------------------- #}
+
+    <!-- Modal content for Date -->
+    <div class="modal-body">
+        <div class="content my-2">
+            <input class="modal_open" type="file" id="fauna-batch-input" data-url="{% url 'main_upload' %}?type=faunaltable">
+            <span id='fauna-batch-header' data-url="{% url 'download_header' %}?model=assemblage" class="btn tooltip tooltip-right get-batch-header" data-tooltip="Get Upload Template"><i class="icon icon-download"></i></span>
+
+        </div>
+    </div>
+
 
     {% endif %}
 

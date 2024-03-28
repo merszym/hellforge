@@ -57,8 +57,6 @@ def update_positions(request):
     layer_index = positions.index(layer.pos)
     layer_pos = layer.pos
 
-    print(layer_index, direction)
-
     # do some basic checking: already at top or aleady at bottom
     check1 = all([layer_index == 0, direction == "up"])
     check2 = all([layer_index == len(positions) - 1, direction == "down"])

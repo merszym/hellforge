@@ -144,6 +144,11 @@ def upload(request):
 
         return handle_library_file(request, file)
 
+    if type == "faunaltable":
+        from main.tools.fauna import handle_faunal_table
+
+        return handle_faunal_table(request, file)
+
 
 def save_contact(request):
     form = ContactForm(request.POST)

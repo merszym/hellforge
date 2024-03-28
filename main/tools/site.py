@@ -57,25 +57,8 @@ class SiteDetailView(ProjectAwareDetailView):
         except:
             project_description = None
 
-        # create jsons for expected taxa:
-        nested_dict = lambda: defaultdict(nested_dict)
-        # Create an instance of the nested defaultdict
-        taxa = nested_dict()
-        taxrefs = []
-
-        for layer in Layer.objects.filter(Q(site=object) & Q(assemblage__isnull=False)):
-            # load the taxa
-            for assemblage in layer.assemblage.all():
-                for ref in assemblage.ref.all():
-                    taxrefs.append(ref)
-                for found_taxon in assemblage.taxa.all():
-                    taxon = found_taxon.taxon
-                    taxa[taxon.family][taxon][layer] = found_taxon.abundance
-
         context.update(
             {
-                "taxa": taxa,
-                "taxa_references": set(taxrefs),
                 "project_description": project_description,
                 "tab": tab,
             }
