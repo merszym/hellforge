@@ -26,8 +26,10 @@ def handle_faunal_table(request, file):
         issues = [f"Missing Table Columns: {x}" for x in missing]
         return render(
             request,
-            "main/fauna/fauna-batch-confirm.html",
+            "main/modals/layer_modal.html",
             {
+                "object": request.GET.get("object"),
+                "type": "faunal_errors",
                 "dataframe": df.fillna("").to_html(
                     index=False, classes="table table-striped col-12"
                 ),
@@ -93,11 +95,12 @@ def handle_faunal_table(request, file):
     ## TODO: render a summary to the modal
     return render(
         request,
-        "main/fauna/fauna-batch-confirm.html",
+        "main/modals/layer_modal.html",
         {
+            "object": request.GET.get("object"),
+            "type": "faunal_errors",
             "dataframe": df.fillna("").to_html(
                 index=False, classes="table table-striped col-12"
             ),
-            "issues": [],
         },
     )

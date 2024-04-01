@@ -287,6 +287,23 @@
     </div>
 
 
+    {% elif type == "faunal_errors" %}
+
+    {# ------------------------- #}
+    {#   LAYER FAUNA MODAL       #}
+    {# ------------------------- #}
+
+    <!-- Modal content for Date -->
+    <div class="modal-body">
+        <div class="content my-2">
+            <strong>Found Issues</strong><br>
+            {% for issue in issues %}
+            <div class="toast toast-warning">{{issue}}</div>
+            {% endfor %}
+            {{dataframe|safe}}
+        </div>
+    </div>
+
     {% endif %}
 
 </div>
