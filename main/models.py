@@ -657,6 +657,10 @@ class Site(models.Model):
         else:
             return {}
 
+    @property
+    def fauna_layers(self):
+        return Layer.objects.filter(Q(site=self) & Q(layer_analysis__isnull=False))
+
 
 class Profile(models.Model):
     name = models.CharField("name", max_length=200)
@@ -1039,7 +1043,7 @@ class LayerAnalysis(models.Model):
     layer = models.ForeignKey(
         Layer,
         verbose_name="layer",
-        related_name="faunal_analysis",
+        related_name="layer_analysis",
         blank=True,
         null=True,
         on_delete=models.SET_NULL,
