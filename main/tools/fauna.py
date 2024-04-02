@@ -173,7 +173,6 @@ def handle_faunal_table(request, file):
                     {k: v for k, v in zip(data.index, data.values)}, index=[0]
                 ),
             )
-
         # get or create the LayerAnalysis object
         ana, created = LayerAnalysis.objects.get_or_create(
             layer=layer, ref=reference, type="Fauna"

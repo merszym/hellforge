@@ -34,7 +34,7 @@
     </div>
     <div class="panel-body p-0">
         {% if families %}
-        <table class="table" style="margin-bottom: 150px;">
+        <table class="table">
             <thead>
                 <!--Header nr.1-->
                 <tr>
@@ -93,6 +93,12 @@
                 {% endfor %}
             </tbody>
         </table>
+        <p style="margin-bottom: 150px;" class="p-2 form-input-hint">Please see the attached publications for details on the faunal analyses. Most common data types are:<br>
+            <strong>NISP:</strong> Number of identified specimen<br>
+            <strong>MNI:</strong> Miminal number of individuals<br>
+            <strong>MNE:</strong> Minimal number of elements<br>
+            <strong>Yes/No:</strong> Presence/Absence data<br>
+        </p>
         {% else %}
         <div class="empty">
             <div class="empty-icon">
