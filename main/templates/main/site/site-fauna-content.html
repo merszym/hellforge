@@ -14,8 +14,8 @@
 </style>
 <div style="height: 40px;"></div>
 <div class="my-2 panel" id="site_taxa_content">
-    {% if request.user.is_authenticated %}
     <div class="panel-head p-2">
+        {% if request.user.is_authenticated %}
         <span
             class='btn tooltip tooltip-right modal_open'
             data-tooltip="Manage Fauna"
@@ -23,8 +23,15 @@
             hx-vals='{"object":"site_{{object.pk}}","type":"faunal_tables"}'
             hx-target="#modal-blank"><i class="icon icon-plus"></i>
         </span>
+        {% endif %}
+        <a
+            class='btn tooltip tooltip-right'
+            data-tooltip="Download Fauna"
+            target="_blank"
+            href="{% url 'download_faunal_table' %}?object=site_{{object.pk}}"
+            ><i class="icon icon-download"></i>
+        </a>
     </div>
-    {% endif %}
     <div class="panel-body p-0">
         {% if families %}
         <table class="table" style="margin-bottom: 150px;">

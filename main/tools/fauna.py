@@ -3,7 +3,7 @@ from main.models import Reference, FaunalResults, LayerAnalysis, Layer
 from django.http import JsonResponse
 from django.urls import path
 from django.shortcuts import render
-from main.tools.generic import get_instance_from_string
+from main.tools.generic import get_instance_from_string, download_csv
 import main.tools as tools
 from django.db.models import Q
 import pandas as pd
@@ -231,6 +231,29 @@ def handle_faunal_table(request, file):
     )
 
 
+def download_faunal_table(request):
+    def to_table(entry):
+        columns = FaunalResults.table_columns()
+        data = entry.data
+        tmp = pd.DataFrame.from_dict({0: data}, columns=columns, orient="index")
+        for var, val in json.loads(entry.results).items():
+            tmp[var] = val
+        # remove nans
+        for col in tmp.columns:
+            tmp[col] = tmp[col].apply(lambda x: None if x == "nan" else x)
+        return tmp
+
+    site = get_instance_from_string(request.GET.get("object"))
+
+    entries = FaunalResults.objects.filter(analysis__layer__site=site)
+    df = pd.DataFrame()
+    for entry in entries:
+        df = pd.concat([df, to_table(entry)], ignore_index=True)
+
+    return download_csv(df, name=f"{site.name.replace(' ','_')}_faunal_overview.csv")
+
+
 urlpatterns = [
     path("get-tab", get_fauna_tab, name="main_site_fauna_get"),
+    path("download", download_faunal_table, name="download_faunal_table"),
 ]

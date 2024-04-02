@@ -1077,6 +1077,19 @@ class FaunalResults(models.Model):
             "TaxID",
         ]
 
+    @property
+    def data(self):
+        return [
+            self.analysis.layer.site.name,
+            self.analysis.layer.name,
+            self.analysis.ref.short,
+            self.analysis.method,
+            self.order,
+            self.family,
+            self.scientific_name,
+            self.taxid,
+        ]
+
 
 models = {
     "site": Site,
