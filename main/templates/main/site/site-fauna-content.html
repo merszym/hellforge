@@ -20,12 +20,13 @@
             class='btn tooltip tooltip-right modal_open'
             data-tooltip="Manage Fauna"
             hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
-            hx-vals='{"object":"layer_{{object.layer.first.pk}}","type":"faunal_tables"}'
+            hx-vals='{"object":"site_{{object.pk}}","type":"faunal_tables"}'
             hx-target="#modal-blank"><i class="icon icon-plus"></i>
         </span>
     </div>
     {% endif %}
     <div class="panel-body p-0">
+        {% if families %}
         <table class="table" style="margin-bottom: 150px;">
             <thead>
                 <!--Header nr.1-->
@@ -81,15 +82,15 @@
                 {% endfor %}
             </tbody>
         </table>
-    </div>
-    {% if not data %}
-    <div class="empty">
-        <div class="empty-icon">
-          <i class="icon icon-flag"></i>
+        {% else %}
+        <div class="empty">
+            <div class="empty-icon">
+              <i class="icon icon-flag"></i>
+            </div>
+            <p class="empty-title h5">No Faunal Data imported</p>
         </div>
-        <p class="empty-title h5">No Faunal Data imported</p>
+        {% endif %}
     </div>
-    {% endif %}
 </div>
 
 <script>

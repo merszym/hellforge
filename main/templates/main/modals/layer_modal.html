@@ -269,63 +269,6 @@
         </div>
     </div>
 
-    {% elif type == "faunal_tables" %}
-
-    {# ------------------------- #}
-    {#   LAYER FAUNA MODAL       #}
-    {# ------------------------- #}
-
-    <!-- Modal content for Faunal Upload -->
-    <div class="modal-body">
-        <div class="content my-2">
-            <form method="post">
-                {% csrf_token %}
-                <input name="file" type="file">
-                <input type="hidden" name="object" value="layer_{{object.pk}}">
-                <button class="btn modal_open"
-                    hx-encoding="multipart/form-data"
-                    hx-post="{% url 'main_upload' %}?type=faunaltable"
-                    hx-target="#modal-blank">OK</button>
-            </form>
-            <span id="fauna-batch-header" data-url="{% url 'download_header' %}?model=assemblage" class="btn tooltip tooltip-right get-batch-header" data-tooltip="Get Upload Template"><i class="icon icon-download"></i></span>
-        </div>
-    </div>
-
-    {% elif type == "faunal_errors" %}
-
-    {# -------------------------  #}
-    {#   LAYER FAUNA ERRORS       #}
-    {# -------------------------  #}
-    <!-- Modal content for Date -->
-    <div class="modal-body">
-        <div class="content my-2">
-            <span
-                class='btn tooltip tooltip-right'
-                data-tooltip="Back"
-                hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
-                hx-vals='{"object":"layer_{{object.pk}}","type":"faunal_tables"}'
-                hx-target="#modal-blank"><i class="icon icon-back"></i>
-            </span>
-            {% for issue in issues %}
-            <div class="toast toast-warning">{{issue}}</div>
-            {% endfor %}
-            {{dataframe|safe}}
-        </div>
-    </div>
-
-    {% elif type == "faunal_success" %}
-
-    {# ------------------------- #}
-    {#   LAYER FAUNA SUMMARY     #}
-    {# ------------------------- #}
-    <!-- Modal content for Date -->
-    <div class="modal-body">
-        <div class="content my-2">
-            <div class="toast toast-success">Successful upload of faunal information</div>
-        </div>
-    </div>
-    <!--#TODO: summary report-->
-
     {% endif %}
 
 </div>

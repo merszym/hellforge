@@ -108,6 +108,8 @@ def get_fauna_tab(request):
 
 def handle_faunal_table(request, file):
 
+    site = get_instance_from_string(request.POST.get("object"))
+
     def return_error(request, issues, df):
         return render(
             request,
@@ -148,11 +150,17 @@ def handle_faunal_table(request, file):
     layer_analyses = []
 
     for i, data in analyses.iterrows():
-        layer = Layer.objects.get(
-            site__name=data["Site Name"].strip(), name=data["Layer Name"].strip()
-        )
+        try:
+            layer = Layer.objects.get(site=site, name=data["Layer Name"].strip())
+        except Layer.DoesNotExist:
+            return return_error(
+                request,
+                [f'Layer: {data["Layer Name"]} doesnt exist'],
+                pd.DataFrame(
+                    {k: v for k, v in zip(data.index, data.values)}, index=[0]
+                ),
+            )
         reference = tools.references.find(data["Reference"])
-        print(reference)
         if reference == "Not Found":
             issues = [f"Reference not in found: {data['Reference']}"]
             return return_error(
@@ -209,7 +217,7 @@ def handle_faunal_table(request, file):
 
     return render(
         request,
-        "main/modals/layer_modal.html",
+        "main/modals/site_modal.html",
         {
             "object": get_instance_from_string(request.POST.get("object")),
             "type": "faunal_success",
