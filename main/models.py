@@ -1041,7 +1041,11 @@ class LayerAnalysis(models.Model):
         on_delete=models.SET_NULL,
     )
     ref = models.ForeignKey(
-        Reference, verbose_name="reference", blank=True, on_delete=models.PROTECT
+        Reference,
+        verbose_name="reference",
+        blank=True,
+        null=True,
+        on_delete=models.PROTECT,
     )
 
     class Meta:
@@ -1082,7 +1086,7 @@ class FaunalResults(models.Model):
         return [
             self.analysis.layer.site.name,
             self.analysis.layer.name,
-            self.analysis.ref.short,
+            self.analysis.ref.short if self.analysis.ref else None,
             self.analysis.method,
             self.order,
             self.family,

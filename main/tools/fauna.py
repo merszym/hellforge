@@ -150,7 +150,6 @@ def handle_faunal_table(request, file):
     analyses["pk"] = ""
 
     ## 2. create LayerAnalysis entries
-
     layer_analyses = []
 
     for i, data in analyses.iterrows():

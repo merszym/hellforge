@@ -73,7 +73,11 @@
                         <strong>{{analysis.layer.name}}</strong>
                     </td>
                     <td class="readme">
+                        {% if analysis.ref %}
                         {% include 'main/reference/reference-popup.html' with ref=analysis.ref pos='right' %}
+                        {% else %}
+                        <i>No Reference</i>
+                        {% endif %}
                     </td>
                     <td class="readme">
                         {{analysis.method}}
