@@ -152,6 +152,7 @@ def handle_faunal_table(request, file):
             site__name=data["Site Name"].strip(), name=data["Layer Name"].strip()
         )
         reference = tools.references.find(data["Reference"])
+        print(reference)
         if reference == "Not Found":
             issues = [f"Reference not in found: {data['Reference']}"]
             return return_error(

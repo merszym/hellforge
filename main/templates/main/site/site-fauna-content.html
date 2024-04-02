@@ -1,5 +1,18 @@
 {% load format %}
+<style>
+    .readme{
+        min-width: 100px;
+        white-space: nowrap;
+    }
+    tr>th:first-child,tr>td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 50;
+    }
+    th{ vertical-align: bottom }
 
+</style>
+<div style="height: 40px;"></div>
 <div class="my-2 panel" id="site_taxa_content">
     {% if request.user.is_authenticated %}
     <div class="panel-head p-2">
@@ -12,9 +25,8 @@
         </span>
     </div>
     {% endif %}
-    <h3 class="p-2">Faunal Analyses</h3>
-    <div class="panel-body p-2">
-        <table class="table">
+    <div class="panel-body p-0">
+        <table class="table" style="margin-bottom: 150px;">
             <thead>
                 <!--Header nr.1-->
                 <tr>
@@ -49,13 +61,13 @@
             <tbody>
                 {% for analysis in analyses %}
                 <tr>
-                    <td class="{{analysis.layer.culture.classname}} p-2" nowrap>
-                        {{analysis.layer.name}}
+                    <td class="{{analysis.layer.culture.classname}} p-2 readme">
+                        <strong>{{analysis.layer.name}}</strong>
                     </td>
-                    <td>
+                    <td class="readme">
                         {% include 'main/reference/reference-popup.html' with ref=analysis.ref pos='right' %}
                     </td>
-                    <td>
+                    <td class="readme">
                         {{analysis.method}}
                     </td>
                     {% for sp in species %}
