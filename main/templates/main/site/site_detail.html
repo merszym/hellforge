@@ -160,8 +160,10 @@
                 hx-trigger="load once"
                 hx-vars="{'site':'site_{{object.pk}}'}">
             </div>
-            <div class="block-content" id="site_fauna" style="{% if tab != 'site_fauna' %} display:none {% endif %}">
-                {% include 'main/site/site-fauna-content.html' %}
+            <div class="block-content" id="site_fauna" style="{% if tab != 'site_fauna' %} display:none {% endif %}"
+                hx-get="{% url 'main_site_fauna_get' %}?{{request.GET|getstring}}"
+                hx-trigger="load once"
+                hx-vars="{'site':'site_{{object.pk}}'}">
             </div>
             {% if object.id in project_sites %}
             <div class="block-content" id="site_samples" style="{% if tab != 'site_samples' %} display:none {% endif %}"
@@ -185,6 +187,5 @@
 <script src="{% static 'js/location.js' %}"></script>
 <script src="{% static 'js/site.js' %}"></script>
 <script src="{% static 'js/dating.js' %}"></script>
-<script src="{% static 'js/fauna.js' %}"></script>
 <script src="{% static 'js/samples.js' %}"></script>
 {% endblock %}

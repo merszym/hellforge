@@ -1,134 +1,126 @@
 {% load format %}
-
 <style>
-
-.High{
-    color:green;
-    background-color: green;
-    font-weight: 800;
-}
-.Medium{
-    color:orange;
-    background-color: orange;
-    font-weight: 500;
-}
-.Low{
-    color: grey;
-    background-color: grey;
-}
-.Yes{
-    background-color: black;
-    color: black;
-}
+    .readme{
+        min-width: 100px;
+        white-space: nowrap;
+    }
+    tr>th:first-child,tr>td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 50;
+    }
+    th{ vertical-align: bottom }
 
 </style>
-
-<div class="my-2" id="site_taxa_content">
-    {% if request.user.is_authenticated %}
-    {% csrf_token %}
-    <input style="display: none;" name="info" value="site_{{object.pk}}">
-    <input class="fill_modal" type="file" id="fauna-batch-input" data-url="{% url 'fauna_upload' %}">
-    <span id='fauna-batch-header' data-url="{% url 'download_header' %}?model=assemblage" class="btn tooltip tooltip-right get-batch-header" data-tooltip="Get Upload Template"><i class="icon icon-download"></i></span>
-    {% endif %}
-    {% if taxa %}
-    <div style="padding-top: 20px;" id='profile-taxa'>
-        <div class="container">
-            <div class="columns" style="flex-wrap: nowrap; overflow: scroll;">
-              <div class="column">
-                    <strong>Layers</strong>
-                    <table class="table">
-                        <thead style="height: 80px;">
-                            <tr>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for layer in object.layer.all %}
-                            <tr>
-                                <td><div style="white-space: nowrap;">{{layer.name}}</div></td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-              </div>
-              {% for fam in taxa %}
-              <div class="column">
-                <strong>{{fam}}</strong>
-                <table class="table">
-                    <thead style="height: 80px;">
-                        <tr>
-                            {% for sp in taxa|lookup:fam %}
-                            <td><div class="tooltip tooltip-top" data-tooltip="{{sp.common_name}}"><i>{{sp.scientific_name}}</i></div></td>
-                            {% endfor %}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for layer in object.layer.all %}
-                        <tr>
-                            {% for sp in taxa|lookup:fam %}
-                            <td class="{{taxa|lookup:fam|lookup:sp|lookup:layer}}"><div>
-                                {% if taxa|lookup:fam|lookup:sp|lookup:layer %}
-                                    <span>
-                                        {{ taxa|lookup:fam|lookup:sp|lookup:layer }}
-                                    </span>
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </div></td>
-                            {% endfor %}
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-              </div>
-              {% endfor %}
-            </div>
-        </div>
+<div style="height: 40px;"></div>
+<div class="my-2 panel" id="site_taxa_content">
+    <div class="panel-head p-2">
+        {% if request.user.is_authenticated %}
+        <span
+            class='btn tooltip tooltip-right modal_open'
+            data-tooltip="Manage Fauna"
+            hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
+            hx-vals='{"object":"site_{{object.pk}}","type":"faunal_tables"}'
+            hx-target="#modal-blank"><i class="icon icon-plus"></i>
+        </span>
+        {% endif %}
+        <a
+            class='btn tooltip tooltip-right'
+            data-tooltip="Download Fauna"
+            target="_blank"
+            href="{% url 'download_faunal_table' %}?object=site_{{object.pk}}"
+            ><i class="icon icon-download"></i>
+        </a>
     </div>
-    {% else %}
-    <div class="empty">
-        <div class="empty-icon">
-          <i class="icon icon-flag"></i>
-        </div>
-        <p class="empty-title h5">No Faunal Data imported</p>
-    </div>
-    {% endif %}
-</div>
-{% if taxa %}
-<div>
-    <p><strong>Warning!</strong>. The species abundance values are highly subjective. Please see the cited papers for more information.
-        The rough approximation is:</p>
+    <div class="panel-body p-0">
+        {% if families %}
         <table class="table">
-            <thead><tr><th>Key</th><th>Notes</th></tr></thead>
+            <thead>
+                <!--Header nr.1-->
+                <tr>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    {% for family in families %}
+                        <th colspan="{{data|lookup:'header'|lookup:family|length}}">{{family}}</th>
+                    {% endfor %}
+                </tr>
+                <!--Header nr.2-->
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    {% for sp in species %}
+                    <td colspan="{{data|lookup:'header'|lookup:sp|length}}"><i>{{sp|species_from_faunastring}}</i></td>
+                    {% endfor %}
+                </tr>
+                <!--Header nr.3-->
+                <tr>
+                    <td><strong>Layer</strong></td>
+                    <td><strong>Reference</strong></td>
+                    <td><strong>Method</strong></td>
+                    {% for sp in species %}
+                        {% for var in data|lookup:'header'|lookup:sp %}
+                            <td>{{var}}</td>
+                        {% endfor %}
+                    {% endfor %}
+                </tr>
+            </thead>
             <tbody>
-                <tr><td class="Yes" style="width: 30px;"><span > Yes</span></td>
-                    <td>Taxon found (Only Presence-Absence data available)</td>
+                {% for analysis in analyses %}
+                <tr>
+                    <td class="{{analysis.layer.culture.classname|default:'sterile'}} p-2 readme">
+                        <strong>{{analysis.layer.name}}</strong>
+                    </td>
+                    <td class="readme">
+                        {% if analysis.ref %}
+                        {% include 'main/reference/reference-popup.html' with ref=analysis.ref pos='right' %}
+                        {% else %}
+                        <i>No Reference</i>
+                        {% endif %}
+                    </td>
+                    <td class="readme">
+                        {{analysis.method}}
+                    </td>
+                    {% for sp in species %}
+                        {% for var in data|lookup:'header'|lookup:sp %}
+                        {% with val=data|lookup:'data'|lookup:analysis|lookup:sp|lookup:var|default:"" %}
+                        <td class="heatmap" data-max="{{data|lookup:'max'|lookup:var}}">{{val}}</td>
+                        {% endwith %}
+                        {% endfor %}
+                    {% endfor %}
                 </tr>
-                <tr><td class="Low" style="width: 30px;"><span > Low</span></td>
-                    <td> <strong>10 or less</strong> bones/fragments (NISP) found.</td>
-                </tr>
-                <tr><td class="Medium" style="width: 30px;"><span > Medium</span></td>
-                    <td><strong>Between 10 and 100</strong> bones/fragments (NISP) found.</td>
-                </tr>
-                <tr><td class="High" style="width: 30px;"><span > High</span></td>
-                    <td><strong>100 or more</strong> bones/fragments (NISP) found.</td>
-                </tr>
+                {% endfor %}
             </tbody>
         </table>
+        <p style="margin-bottom: 150px;" class="p-2 form-input-hint">Please see the attached publications for details on the faunal analyses. Most common data types are:<br>
+            <strong>NISP:</strong> Number of identified specimen<br>
+            <strong>MNI:</strong> Miminal number of individuals<br>
+            <strong>MNE:</strong> Minimal number of elements<br>
+            <strong>Yes/No:</strong> Presence/Absence data<br>
+        </p>
+        {% else %}
+        <div class="empty">
+            <div class="empty-icon">
+              <i class="icon icon-flag"></i>
+            </div>
+            <p class="empty-title h5">No Faunal Data imported</p>
+        </div>
+        {% endif %}
+    </div>
 </div>
-<br>
-<h5>References</h5>
-<table class="table table-striped my-2">
-    <tbody id="description-reference-tbody" style="border-top: 1px solid lightgrey;">
-        {% for ref in taxa_references %}
-        {% include 'main/reference/reference-tablerow.html' with display=True %}
-        {% endfor %}
-    </tbody>
-</table>
-{% endif %}
+
+<script>
+    $(document).ready(function(){
+        $('.heatmap').each(function(){
+            var max = $(this).attr('data-max')
+            var val = $(this).html()
+            var diff = val/max
+            if(val){
+                $(this).css('background', `rgba(51,170,51,${diff})`)
+            }
+        })
+    });
 
 
-
-
-
-
+</script>

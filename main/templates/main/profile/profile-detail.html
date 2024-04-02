@@ -42,9 +42,14 @@
             {% endif %}
           </tr>
         </thead>
+        <style>
+          .eboulis{
+            line-height: 1,2;
+          }
+        </style>
         <tbody>
           {% for layer in object.layer.all %}
-          <tr class="table_row" id="layer_{{layer.pk}}" data-pos="{{layer.pos}}" style="padding:2px;">
+          <tr class="table_row {% if not layer.culture and not layer.set_upper and not layer.date.first %}eboulis{% endif %}" id="layer_{{layer.pk}}" data-pos="{{layer.pos}}" style="padding:2px;">
             {% if request.user.is_authenticated %}
             <td>
               <form style="width: 2px;">
@@ -59,15 +64,6 @@
               >
                 <i class="icon icon-upward text-gray"></i>
               </span>
-              <span
-                class="tooltip tooltip-right"
-                data-tooltip="Move Layer down"
-                hx-post="{% url 'main_layer_positionupdate' %}"
-                hx-target="#site_layer"
-                hx-vars="{'direction':'down'}"
-                >
-                <i class="icon icon-downward text-gray"></i>
-              </span>
               </form>
             </td>
             {% endif %}
@@ -75,7 +71,7 @@
             {% if request.user.is_authenticated %}
             <td>
               <div class="popover popover-left">
-                <button class="btn"><i class="icon icon-menu"></i></button>
+                <a href="#">Edit</a>
                 <div class="popover-container">
                   <div class="card">
                     <div class="card-body">

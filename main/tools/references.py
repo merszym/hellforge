@@ -7,7 +7,9 @@ from django.shortcuts import render
 from django.urls import path
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import CreateView, ListView, UpdateView
-from django.contrib.auth.mixins import LoginRequiredMixin  # this is for now, make smarter later
+from django.contrib.auth.mixins import (
+    LoginRequiredMixin,
+)  # this is for now, make smarter later
 
 
 def find(kw):
@@ -16,11 +18,15 @@ def find(kw):
         if ref := Reference.objects.filter(Q(short=kw) | Q(doi=kw)).first():
             return ref
         return "Not Found"
-    return np.nan
+    return None
 
 
 def get_modal(request):
-    return render(request, "main/reference/reference-searchinput.html", {"origin": "editorjs", "editor": True})
+    return render(
+        request,
+        "main/reference/reference-searchinput.html",
+        {"origin": "editorjs", "editor": True},
+    )
 
 
 def get_popup(request):

@@ -522,7 +522,9 @@ class Epoch(models.Model):
 
     @property
     def age_summary(self):
-        return f"{self.upper} - {self.lower}"
+        if self.upper and self.lower:
+            return f"{self.upper:,} - {self.lower:,}"
+        return ""
 
     def __str__(self):
         return self.name
@@ -762,10 +764,6 @@ class Layer(models.Model):
         return Reference.objects.filter(
             date__in=Date.objects.filter(origin_model=self)
         ).distinct()
-
-    @property
-    def unit_class(self):
-        return get_classname(self.unit)
 
     @property
     def in_profile(self):
@@ -1024,62 +1022,79 @@ class AnalyzedSample(models.Model):
         return [x.namespace for x in self.project.all()]
 
 
+#
+#
+#
 ### The expected Taxa section
+#
+#
+#
 
 
-class Taxon(models.Model):
-    common_name = models.CharField("common name", max_length=400, blank=True, null=True)
-    scientific_name = models.CharField(
-        "scientific name", max_length=400, blank=True, null=True
-    )
-    family = models.CharField("family", max_length=400, blank=True, null=True)
-
-    def __str__(self):
-        return f"{self.family}:{self.scientific_name} ({self.common_name if self.common_name else ''})"
-
-    class Meta:
-        ordering = ["family"]
-
-
-class FoundTaxon(models.Model):
-    taxon = models.ForeignKey(
-        Taxon, on_delete=models.CASCADE, related_name="found_taxa"
-    )
-    abundance = models.CharField("abundance", max_length=300)
-
-    class Meta:
-        ordering = ["taxon__family"]
-
-
-class FaunalAssemblage(models.Model):
+class LayerAnalysis(models.Model):
+    type = models.CharField("Type", max_length=50, blank=True, null=True)
+    method = models.CharField("Method", max_length=100, blank=True, null=True)
     layer = models.ForeignKey(
         Layer,
         verbose_name="layer",
-        related_name="assemblage",
+        related_name="layer_analysis",
         blank=True,
         null=True,
+        on_delete=models.SET_NULL,
+    )
+    ref = models.ForeignKey(
+        Reference,
+        verbose_name="reference",
+        blank=True,
+        null=True,
+        on_delete=models.PROTECT,
+    )
+
+    class Meta:
+        unique_together = [["layer", "ref", "type"]]
+
+
+class FaunalResults(models.Model):
+    order = models.CharField("order", max_length=400, blank=True, null=True)
+    family = models.CharField("family", max_length=400, blank=True, null=True)
+    scientific_name = models.CharField(
+        "scientific name", max_length=400, blank=True, null=True
+    )
+    taxid = models.CharField("TaxID", max_length=100, blank=True, null=True)
+    results = models.JSONField("Faunal Results", blank=True, null=True)
+    analysis = models.ForeignKey(
+        "LayerAnalysis",
+        blank=True,
+        null=True,
+        related_name="faunal_results",
         on_delete=models.CASCADE,
     )
-    taxa = models.ManyToManyField(FoundTaxon)
-    ref = models.ManyToManyField(Reference, verbose_name="reference", blank=True)
 
     @classmethod
     def table_columns(self):
-        # for the upload of expected taxa
-        columns = [
-            "Layer",
-            "Family",
-            "Species",
-            "Common Name",
-            "Abundance",
+        return [
+            "Site Name",
+            "Layer Name",
             "Reference",
+            "Method",
+            "Order",
+            "Family",
+            "Scientific Name",
+            "TaxID",
         ]
-        return columns
 
-    def __str__(self):
-        if self.layer.site:
-            return str(self.layer.site)
-        return self
+    @property
+    def data(self):
+        return [
+            self.analysis.layer.site.name,
+            self.analysis.layer.name,
+            self.analysis.ref.short if self.analysis.ref else None,
+            self.analysis.method,
+            self.order,
+            self.family,
+            self.scientific_name,
+            self.taxid,
+        ]
 
 
 models = {
@@ -1094,8 +1109,6 @@ models = {
     "ref": Reference,
     "contact": Person,
     "person": Person,
-    "assemblage": FaunalAssemblage,
-    "taxon": Taxon,
     "affiliation": Affiliation,
     "description": Description,
     "author": Author,
