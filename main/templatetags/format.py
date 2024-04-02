@@ -35,3 +35,8 @@ def isin(key, collection):
 @register.filter(name="getstring")
 def getstring(dict):
     return "&".join([f"{k}={v}" for k, v in dict.items()])
+
+
+@register.filter(name="species_from_faunastring")
+def species_from_faunastring(string):
+    return string.split("__")[1]

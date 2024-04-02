@@ -68,28 +68,32 @@ def get_fauna_tab(request):
             except:
                 data["header"][entry.family] = [(entry.scientific_name, variable)]
             # now get the species entries
+            spec_key = f"{entry.family}__{entry.scientific_name}"
             try:
-                if not variable in data["header"][entry.scientific_name]:
-                    data["header"][entry.scientific_name].append(variable)
+                if not variable in data["header"][spec_key]:
+                    data["header"][spec_key].append(variable)
             except:
-                data["header"][entry.scientific_name] = [variable]
+                data["header"][spec_key] = [variable]
 
         # then, collect the data
         for k, v in variables.items():
-            data["data"][LayerAnalysis.objects.get(pk=entry.analysis.pk)][
-                entry.scientific_name
-            ][k] = (int(v) if v == v else None)
+            data["data"][LayerAnalysis.objects.get(pk=entry.analysis.pk)][spec_key][
+                k
+            ] = (int(v) if v == v else None)
 
     # get the maximum value for each var
     for k, v in data["max"].items():
         data["max"][k] = max([x for x in v if x != None])
 
     families = entries.values_list("family", flat=True).distinct().order_by("family")
+
+    # make sure to preserve family namespace
     species = (
-        entries.values_list("scientific_name", flat=True)
+        entries.values_list("family", "scientific_name")
         .order_by("family", "scientific_name")
         .distinct()
     )
+    species = [f"{family}__{species}" for family, species in species]
 
     return render(
         request,

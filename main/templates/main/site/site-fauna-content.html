@@ -44,7 +44,7 @@
                     <td></td>
                     <td></td>
                     {% for sp in species %}
-                    <td colspan="{{data|lookup:'header'|lookup:sp|length}}"><i>{{sp}}</i></td>
+                    <td colspan="{{data|lookup:'header'|lookup:sp|length}}"><i>{{sp|species_from_faunastring}}</i></td>
                     {% endfor %}
                 </tr>
                 <!--Header nr.3-->
