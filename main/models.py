@@ -522,7 +522,9 @@ class Epoch(models.Model):
 
     @property
     def age_summary(self):
-        return f"{self.upper} - {self.lower}"
+        if self.upper and self.lower:
+            return f"{self.upper:,} - {self.lower:,}"
+        return ""
 
     def __str__(self):
         return self.name
