@@ -46,11 +46,16 @@ def get_fauna_tab(request):
         variables = json.loads(entry.results)
 
         for variable in variables.keys():
+            val = (
+                int(variables[variable])
+                if variables[variable] == variables[variable]
+                else None
+            )
             # save all variables to later get the maximum (for displaying the heatmap)
             try:
-                data["max"][variable].append(variables[variable])
+                data["max"][variable].append(val)
             except:
-                data["max"][variable] = [variables[variable]]
+                data["max"][variable] = [val]
 
             try:
                 if (
@@ -73,7 +78,11 @@ def get_fauna_tab(request):
         for k, v in variables.items():
             data["data"][LayerAnalysis.objects.get(pk=entry.analysis.pk)][
                 entry.scientific_name
-            ][k] = v
+            ][k] = (int(v) if v == v else None)
+
+    # get the maximum value for each var
+    for k, v in data["max"].items():
+        data["max"][k] = max([x for x in v if x != None])
 
     families = entries.values_list("family", flat=True).distinct().order_by("family")
     species = (
@@ -192,7 +201,8 @@ def handle_faunal_table(request, file):
             analysis=LayerAnalysis.objects.get(pk=data["pk"]),
         )
         # now take the additional table-columns and create/update the results as json
-        tmp.results = json.dumps({x: data[x] for x in res})
+        # make sure not to include 'nan' values
+        tmp.results = json.dumps({x: data[x] for x in res if data[x] == data[x]})
         tmp.save()
         faunal_results.append(tmp)
 

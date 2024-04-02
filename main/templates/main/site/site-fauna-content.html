@@ -2,7 +2,7 @@
 
 <div class="my-2 panel" id="site_taxa_content">
     {% if request.user.is_authenticated %}
-    <div class="panel-head">
+    <div class="panel-head p-2">
         <span
             class='btn tooltip tooltip-right modal_open'
             data-tooltip="Manage Fauna"
@@ -12,8 +12,8 @@
         </span>
     </div>
     {% endif %}
-    <h3>Faunal Information</h3>
-    <div class="panel-body">
+    <h3 class="p-2">Faunal Analyses</h3>
+    <div class="panel-body p-2">
         <table class="table">
             <thead>
                 <!--Header nr.1-->
@@ -60,7 +60,9 @@
                     </td>
                     {% for sp in species %}
                         {% for var in data|lookup:'header'|lookup:sp %}
-                        <td>{{data|lookup:'data'|lookup:analysis|lookup:sp|lookup:var|default:""}}</td>
+                        {% with val=data|lookup:'data'|lookup:analysis|lookup:sp|lookup:var|default:"" %}
+                        <td class="heatmap" data-max="{{data|lookup:'max'|lookup:var}}">{{val}}</td>
+                        {% endwith %}
                         {% endfor %}
                     {% endfor %}
                 </tr>
@@ -77,3 +79,18 @@
     </div>
     {% endif %}
 </div>
+
+<script>
+    $(document).ready(function(){
+        $('.heatmap').each(function(){
+            var max = $(this).attr('data-max')
+            var val = $(this).html()
+            var diff = val/max
+            if(val){
+                $(this).css('background', `rgba(51,170,51,${diff})`)
+            }
+        })
+    });
+
+
+</script>
