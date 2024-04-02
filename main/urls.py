@@ -23,6 +23,7 @@ urlpatterns = [
     path("timeline/", include("main.tools.timeline")),
     path("description/", include("main.tools.description")),
     path("projects/", include("main.tools.projects")),
+    path("fauna/", include("main.tools.fauna")),
     path("samples/", include("main.tools.samples")),
     path("analyzed-samples/", include("main.tools.analyzed_samples")),
     path("ajax/", include("main.ajax")),

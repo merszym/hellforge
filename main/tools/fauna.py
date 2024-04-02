@@ -8,6 +8,87 @@ import main.tools as tools
 from django.db.models import Q
 import pandas as pd
 import json
+from collections import defaultdict
+
+
+def get_fauna_tab(request):
+    site = get_instance_from_string(request.GET.get("site"))
+
+    ## Create the tabe here that is then parsed in the html view
+    # 1. Get all the entries
+    entries = FaunalResults.objects.filter(
+        Q(analysis__layer__site=site) & Q(analysis__type="Fauna")
+    )
+
+    # 2. Get the table columns
+    # Thats now a bit more complicated, as we need the headers as follows
+    #
+    #                      | Bovidae                      | Cervidae                | Suidae     | <-- This is the family
+    #                      | Bos primigenius | Capra ibex | Dama dama  | xxxx       | Sus scrofa | <-- This is the species
+    #                      | MNI | NISP      | MNI | NISP | MNI | NISP | MNI | NISP | MNI | NISP | <-- This is variable
+    # Layer | Ref | Method |
+    # Layer | Ref | Method |
+
+    # 2.1 So first we need to get the header right
+    # Lets iterate over the entries and assemble a dict
+
+    nested_dict = lambda: defaultdict(nested_dict)
+    data = nested_dict()
+
+    for entry in entries:
+        # first, get the header
+        # I put the data like this:
+        #
+        # header:{'Familidae':[('Species', MNI),('Species', NISP)]} --> this fam requires 2 colspan
+        # header:{'Species':[MNI, NISP]}
+        #
+        # To construct a html table from that data
+        variables = json.loads(entry.results)
+        for variable in variables.keys():
+            try:
+                if (
+                    not (entry.scientific_name, variable)
+                    in data["header"][entry.family]
+                ):
+                    data["header"][entry.family].append(
+                        (entry.scientific_name, variable)
+                    )
+            except:
+                data["header"][entry.family] = [(entry.scientific_name, variable)]
+            # now get the species entries
+            try:
+                if not variable in data["header"][entry.scientific_name]:
+                    data["header"][entry.scientific_name].append(variable)
+            except:
+                data["header"][entry.scientific_name] = [variable]
+
+        # then, collect the data
+        for k, v in variables.items():
+            data["data"][LayerAnalysis.objects.get(pk=entry.analysis.pk)][
+                (entry.family, entry.scientific_name, k)
+            ] = v
+
+    families = entries.values_list("family", flat=True).distinct().order_by("family")
+    species = (
+        entries.values_list("scientific_name", flat=True)
+        .order_by("family", "scientific_name")
+        .distinct()
+    )
+
+    return render(
+        request,
+        "main/site/site-fauna-content.html",
+        {
+            "object": site,
+            "data": data,
+            "entries": entries,
+            "families": families,
+            "species": species,
+            "analyses": LayerAnalysis.objects.filter(
+                Q(layer__site=site) & Q(type="Fauna")
+            ).order_by("layer"),
+        },
+    )
 
 
 def handle_faunal_table(request, file):
@@ -119,3 +200,8 @@ def handle_faunal_table(request, file):
             "layer_analyses": layer_analyses,
         },
     )
+
+
+urlpatterns = [
+    path("get-tab", get_fauna_tab, name="main_site_fauna_get"),
+]

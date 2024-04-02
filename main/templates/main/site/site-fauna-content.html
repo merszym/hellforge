@@ -1,25 +1,75 @@
 {% load format %}
 
-<div class="my-2" id="site_taxa_content">
+<div class="my-2 panel" id="site_taxa_content">
     {% if request.user.is_authenticated %}
-    <span
-        class='btn tooltip tooltip-right modal_open'
-        data-tooltip="Manage Fauna"
-        hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
-        hx-vals='{"object":"layer_{{object.layer.first.pk}}","type":"faunal_tables"}'
-        hx-target="#modal-blank"><i class="icon icon-plus"></i>
-    </span>
+    <div class="panel-head">
+        <span
+            class='btn tooltip tooltip-right modal_open'
+            data-tooltip="Manage Fauna"
+            hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
+            hx-vals='{"object":"layer_{{object.layer.first.pk}}","type":"faunal_tables"}'
+            hx-target="#modal-blank"><i class="icon icon-plus"></i>
+        </span>
+    </div>
     {% endif %}
-    {% for layer in object.fauna_layers  %}
+    <h3>Faunal Information</h3>
+    <div class="panel-body">
+        <table class="table">
+            <thead>
+                <!--Header nr.1-->
+                <tr>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    {% for family in families %}
+                        <th colspan="{{data|lookup:'header'|lookup:family|length}}">{{family}}</th>
+                    {% endfor %}
+                </tr>
+                <!--Header nr.2-->
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    {% for sp in species %}
+                    <td colspan="{{data|lookup:'header'|lookup:sp|length}}"><i>{{sp}}</i></td>
+                    {% endfor %}
+                </tr>
+                <!--Header nr.3-->
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    {% for sp in species %}
+                        {% for var in data|lookup:'header'|lookup:sp %}
+                            <td>{{var}}</td>
+                        {% endfor %}
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for analysis in analyses %}
+                <tr>
+                    <td class="{{analysis.layer.culture.classname}} p-2" nowrap>
+                        {{analysis.layer.name}}
+                    </td>
+                    <td>
+                        {% include 'main/reference/reference-popup.html' with ref=analysis.ref pos='right' %}
+                    </td>
+                    <td>
+                        {{analysis.method}}
+                    </td>
 
-    {% include 'main/fauna/fauna_layer.html' with object=layer %}
-
-    {% empty %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if not data %}
     <div class="empty">
         <div class="empty-icon">
           <i class="icon icon-flag"></i>
         </div>
         <p class="empty-title h5">No Faunal Data imported</p>
     </div>
-    {% endfor %}
+    {% endif %}
 </div>

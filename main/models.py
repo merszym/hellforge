@@ -657,10 +657,6 @@ class Site(models.Model):
         else:
             return {}
 
-    @property
-    def fauna_layers(self):
-        return Layer.objects.filter(Q(site=self) & Q(layer_analysis__isnull=False))
-
 
 class Profile(models.Model):
     name = models.CharField("name", max_length=200)
@@ -766,10 +762,6 @@ class Layer(models.Model):
         return Reference.objects.filter(
             date__in=Date.objects.filter(origin_model=self)
         ).distinct()
-
-    @property
-    def unit_class(self):
-        return get_classname(self.unit)
 
     @property
     def in_profile(self):
