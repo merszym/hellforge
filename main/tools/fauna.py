@@ -243,7 +243,9 @@ def download_faunal_table(request):
 
     site = get_instance_from_string(request.GET.get("object"))
 
-    entries = FaunalResults.objects.filter(analysis__layer__site=site)
+    entries = FaunalResults.objects.filter(analysis__layer__site=site).order_by(
+        "analysis__layer"
+    )
     df = pd.DataFrame()
     for entry in entries:
         df = pd.concat([df, to_table(entry)], ignore_index=True)

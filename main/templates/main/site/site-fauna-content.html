@@ -56,9 +56,9 @@
                 </tr>
                 <!--Header nr.3-->
                 <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <td><strong>Layer</strong></td>
+                    <td><strong>Reference</strong></td>
+                    <td><strong>Method</strong></td>
                     {% for sp in species %}
                         {% for var in data|lookup:'header'|lookup:sp %}
                             <td>{{var}}</td>
