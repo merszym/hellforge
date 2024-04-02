@@ -22,7 +22,9 @@ def title(value):
 
 @register.filter
 def lookup(dictionary, key):
-    return dictionary.get(key, None)
+    if dictionary:
+        return dictionary.get(key, None)
+    return None
 
 
 @register.filter

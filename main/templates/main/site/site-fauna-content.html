@@ -58,7 +58,11 @@
                     <td>
                         {{analysis.method}}
                     </td>
-
+                    {% for sp in species %}
+                        {% for var in data|lookup:'header'|lookup:sp %}
+                        <td>{{data|lookup:'data'|lookup:analysis|lookup:sp|lookup:var|default:""}}</td>
+                        {% endfor %}
+                    {% endfor %}
                 </tr>
                 {% endfor %}
             </tbody>

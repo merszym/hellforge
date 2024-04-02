@@ -44,7 +44,14 @@ def get_fauna_tab(request):
         #
         # To construct a html table from that data
         variables = json.loads(entry.results)
+
         for variable in variables.keys():
+            # save all variables to later get the maximum (for displaying the heatmap)
+            try:
+                data["max"][variable].append(variables[variable])
+            except:
+                data["max"][variable] = [variables[variable]]
+
             try:
                 if (
                     not (entry.scientific_name, variable)
@@ -65,8 +72,8 @@ def get_fauna_tab(request):
         # then, collect the data
         for k, v in variables.items():
             data["data"][LayerAnalysis.objects.get(pk=entry.analysis.pk)][
-                (entry.family, entry.scientific_name, k)
-            ] = v
+                entry.scientific_name
+            ][k] = v
 
     families = entries.values_list("family", flat=True).distinct().order_by("family")
     species = (
@@ -81,7 +88,6 @@ def get_fauna_tab(request):
         {
             "object": site,
             "data": data,
-            "entries": entries,
             "families": families,
             "species": species,
             "analyses": LayerAnalysis.objects.filter(
