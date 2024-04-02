@@ -70,7 +70,7 @@
     <div class="my-2" style="height: 480px;" id="map"></div>
 
     {% if object.connections.all %}
-    <h4>External Links</h4>
+    <h4 style="margin-top: 20px;">External Links</h4>
 
     {% for connection in object.connections.all %}
     <div id="connection_card_{{connection.pk}}" class="card my-1">

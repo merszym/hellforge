@@ -79,10 +79,14 @@
                 </td>
                 <td>{{date.description}}</td>
                 <td>
-                    <span class="modal_open tooltip tooltip-left" data-tooltip="Edit Date"
+
+                    <span
+                        {% if request.user.is_authenticated %}
+                        class="modal_open tooltip tooltip-left" data-tooltip="Edit Date"
                         hx-get="{% url 'main_modal_get' %}"
                         hx-vals='{"object":"date_{{date.pk}}","type":"edit", "origin":"layer_{{object.pk}}"}'
-                        hx-target="#modal-blank">
+                        hx-target="#modal-blank"
+                        {% endif %}>
                         {% if date.ref.first %}
                         {{date.ref.first.short}}
                         {% else %}
