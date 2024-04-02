@@ -69,7 +69,7 @@
             <tbody>
                 {% for analysis in analyses %}
                 <tr>
-                    <td class="{{analysis.layer.culture.classname}} p-2 readme">
+                    <td class="{{analysis.layer.culture.classname|default:'sterile'}} p-2 readme">
                         <strong>{{analysis.layer.name}}</strong>
                     </td>
                     <td class="readme">
