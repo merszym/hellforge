@@ -15,6 +15,7 @@
 <div style="height: 40px;"></div>
 <div class="my-2 panel" id="site_taxa_content">
     <div class="panel-head p-2">
+        <h3>Mammalia</h3>
         {% if request.user.is_authenticated %}
         <span
             class='btn tooltip tooltip-right modal_open'
@@ -31,6 +32,11 @@
             href="{% url 'download_faunal_table' %}?object=site_{{object.pk}}"
             ><i class="icon icon-download"></i>
         </a>
+        <h5 style="margin-top: 10px;">Filter</h5>
+        <a class="btn" href="{% url 'site_detail' object.pk %}?tab=site_fauna">All</a>
+        {% for ref in all_refs %}
+        <a class="btn" href="{% url 'site_detail' object.pk %}?tab=site_fauna&reference=reference_{{ref.pk}}">{{ref.short}}</a>
+        {% endfor %}
     </div>
     <div class="panel-body p-0">
         {% if families %}

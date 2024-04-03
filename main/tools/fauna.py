@@ -19,7 +19,19 @@ def get_fauna_tab(request):
     entries = FaunalResults.objects.filter(
         Q(analysis__layer__site=site) & Q(analysis__type="Fauna")
     )
+    analyses = LayerAnalysis.objects.filter(
+        Q(layer__site=site) & Q(type="Fauna")
+    ).order_by("layer")
+    all_refs = [
+        Reference.objects.get(pk=x)
+        for x in analyses.order_by().values_list("ref", flat=True).distinct()
+    ]
 
+    # this is to filter the view based on one reference
+    if ref := request.GET.get("reference", False):
+        ref = get_instance_from_string(ref)
+        entries = entries.filter(analysis__ref=ref)
+        analyses = analyses.filter(ref=ref)
     # 2. Get the table columns
     # Thats now a bit more complicated, as we need the headers as follows
     #
@@ -77,9 +89,9 @@ def get_fauna_tab(request):
 
         # then, collect the data
         for k, v in variables.items():
-            data["data"][LayerAnalysis.objects.get(pk=entry.analysis.pk)][spec_key][
-                k
-            ] = (int(v) if v == v else None)
+            data["data"][analyses.get(pk=entry.analysis.pk)][spec_key][k] = (
+                int(v) if v == v else None
+            )
 
     # get the maximum value for each var
     for k, v in data["max"].items():
@@ -103,9 +115,8 @@ def get_fauna_tab(request):
             "data": data,
             "families": families,
             "species": species,
-            "analyses": LayerAnalysis.objects.filter(
-                Q(layer__site=site) & Q(type="Fauna")
-            ).order_by("layer"),
+            "analyses": analyses,
+            "all_refs": all_refs,
         },
     )
 
