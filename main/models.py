@@ -1053,6 +1053,9 @@ class LayerAnalysis(models.Model):
     class Meta:
         unique_together = [["layer", "ref", "type"]]
 
+    def __str__(self):
+        return f"{self.layer} / {self.ref}"
+
 
 class FaunalResults(models.Model):
     order = models.CharField("order", max_length=400, blank=True, null=True)
