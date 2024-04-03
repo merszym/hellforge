@@ -22,16 +22,23 @@ def get_fauna_tab(request):
     analyses = LayerAnalysis.objects.filter(
         Q(layer__site=site) & Q(type="Fauna")
     ).order_by("layer")
+
+    # this is to filter the table in the view
     all_refs = [
-        Reference.objects.get(pk=x)
+        Reference.objects.get(pk=x) if x else "No reference"
         for x in analyses.order_by().values_list("ref", flat=True).distinct()
     ]
 
-    # this is to filter the view based on one reference
+    # this is to filter the view based on the set reference
     if ref := request.GET.get("reference", False):
-        ref = get_instance_from_string(ref)
-        entries = entries.filter(analysis__ref=ref)
-        analyses = analyses.filter(ref=ref)
+        try:
+            ref = get_instance_from_string(ref)
+            entries = entries.filter(analysis__ref=ref)
+            analyses = analyses.filter(ref=ref)
+        except ValueError:  # the reference is 'No reference'
+            entries = entries.filter(analysis__ref__isnull=True)
+            analyses = analyses.filter(ref__isnull=True)
+
     # 2. Get the table columns
     # Thats now a bit more complicated, as we need the headers as follows
     #

@@ -32,11 +32,13 @@
             href="{% url 'download_faunal_table' %}?object=site_{{object.pk}}"
             ><i class="icon icon-download"></i>
         </a>
+        {% if all_refs|length > 1 %}
         <h5 style="margin-top: 10px;">Filter</h5>
         <a class="btn" href="{% url 'site_detail' object.pk %}?tab=site_fauna">All</a>
         {% for ref in all_refs %}
-        <a class="btn" href="{% url 'site_detail' object.pk %}?tab=site_fauna&reference=reference_{{ref.pk}}">{{ref.short}}</a>
+        <a class="btn" href="{% url 'site_detail' object.pk %}?tab=site_fauna&reference=reference_{{ref.pk}}">{{ref.short|default:'No Reference'}}</a>
         {% endfor %}
+        {% endif %}
     </div>
     <div class="panel-body p-0">
         {% if families %}
