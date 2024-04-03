@@ -1120,4 +1120,5 @@ models = {
     "gallery": Gallery,
     "image": Image,
     "connection": Connection,
+    "faunal_results": FaunalResults,
 }

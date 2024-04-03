@@ -10,7 +10,7 @@
 </td>
 <td>
     <span
-        class='text-primary c-hand tooltip tooltip-right modal_open'
+        class="text-primary c-hand tooltip tooltip-right modal_open"
         data-tooltip="Manage Dates"
         hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
         hx-vals='{"object":"layer_{{layer.pk}}","type":"dates_list"}'

@@ -16,7 +16,7 @@
         {% elif type == 'dates' %}
         <div class="modal-title h5 ">Add Date(s)</div>
         <span
-            class='btn modal_open tooltip tooltip-top'
+            class="btn modal_open tooltip tooltip-top"
             data-tooltip="Back to Date Overview"
             hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
             hx-vals='{"object":"layer_{{object.pk}}","type":"dates_list"}'
