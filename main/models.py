@@ -1042,6 +1042,13 @@ class LayerAnalysis(models.Model):
         null=True,
         on_delete=models.SET_NULL,
     )
+    site = models.ForeignKey(
+        Site,
+        related_name="layer_analysis",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )  # this is for the cases where fauna is connected to a site only...
     ref = models.ForeignKey(
         Reference,
         verbose_name="reference",
@@ -1054,7 +1061,7 @@ class LayerAnalysis(models.Model):
         unique_together = [["layer", "ref", "type"]]
 
     def __str__(self):
-        return f"{self.layer} / {self.ref}"
+        return f"{self.layer if self.layer else self.site} / {self.ref}"
 
 
 class FaunalResults(models.Model):
@@ -1089,8 +1096,12 @@ class FaunalResults(models.Model):
     @property
     def data(self):
         return [
-            self.analysis.layer.site.name,
-            self.analysis.layer.name,
+            (
+                self.analysis.layer.site.name
+                if self.analysis.layer
+                else self.analysis.site.name
+            ),
+            self.analysis.layer.name if self.analysis.layer else None,
             self.analysis.ref.short if self.analysis.ref else None,
             self.analysis.method,
             self.order,

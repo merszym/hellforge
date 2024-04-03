@@ -17,10 +17,11 @@ def get_fauna_tab(request):
     ## Create the tabe here that is then parsed in the html view
     # 1. Get all the entries
     entries = FaunalResults.objects.filter(
-        Q(analysis__layer__site=site) & Q(analysis__type="Fauna")
+        Q(analysis__layer__site=site)
+        | Q(analysis__site=site) & Q(analysis__type="Fauna")
     )
     analyses = LayerAnalysis.objects.filter(
-        Q(layer__site=site) & Q(type="Fauna")
+        Q(layer__site=site) | Q(site=site) & Q(type="Fauna")
     ).order_by("layer")
 
     # this is to filter the table in the view
@@ -171,16 +172,19 @@ def handle_faunal_table(request, file):
     layer_analyses = []
 
     for i, data in analyses.iterrows():
-        try:
-            layer = Layer.objects.get(site=site, name=data["Layer Name"].strip())
-        except Layer.DoesNotExist:
-            return return_error(
-                request,
-                [f'Layer: {data["Layer Name"]} doesnt exist'],
-                pd.DataFrame(
-                    {k: v for k, v in zip(data.index, data.values)}, index=[0]
-                ),
-            )
+        # sometimes a faunal analaysis is linked to the site directly...
+        layer = False
+        if data["Layer Name"] == data["Layer Name"]:
+            try:
+                layer = Layer.objects.get(site=site, name=data["Layer Name"].strip())
+            except Layer.DoesNotExist:
+                return return_error(
+                    request,
+                    [f'Layer: {data["Layer Name"]} doesnt exist'],
+                    pd.DataFrame(
+                        {k: v for k, v in zip(data.index, data.values)}, index=[0]
+                    ),
+                )
         reference = tools.references.find(data["Reference"])
         if reference == "Not Found":
             issues = [f"Reference not in found: {data['Reference']}"]
@@ -192,9 +196,14 @@ def handle_faunal_table(request, file):
                 ),
             )
         # get or create the LayerAnalysis object
-        ana, created = LayerAnalysis.objects.get_or_create(
-            layer=layer, ref=reference, type="Fauna"
-        )
+        if layer:
+            ana, created = LayerAnalysis.objects.get_or_create(
+                layer=layer, ref=reference, type="Fauna"
+            )
+        else:
+            ana, created = LayerAnalysis.objects.get_or_create(
+                site=site, ref=reference, type="Fauna"
+            )
         layer_analyses.append(ana)
         # clear the related faunal results
         ana.faunal_results.clear()
@@ -261,9 +270,10 @@ def download_faunal_table(request):
 
     site = get_instance_from_string(request.GET.get("object"))
 
-    entries = FaunalResults.objects.filter(analysis__layer__site=site).order_by(
-        "analysis__layer"
-    )
+    entries = FaunalResults.objects.filter(
+        Q(analysis__layer__site=site)
+        | Q(analysis__site=site) & Q(analysis__type="Fauna")
+    ).order_by("analysis__layer")
     df = pd.DataFrame()
     for entry in entries:
         df = pd.concat([df, to_table(entry)], ignore_index=True)

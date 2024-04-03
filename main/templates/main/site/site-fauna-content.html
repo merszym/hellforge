@@ -10,7 +10,9 @@
     z-index: 50;
     }
     th{ vertical-align: bottom }
-
+    .nocontext{
+        background-color: silver;
+    }
 </style>
 <div style="height: 40px;"></div>
 <div class="my-2 panel" id="site_taxa_content">
@@ -64,7 +66,7 @@
                 </tr>
                 <!--Header nr.3-->
                 <tr>
-                    <td><strong>Layer</strong></td>
+                    <td></td>
                     <td><strong>Reference</strong></td>
                     <td><strong>Method</strong></td>
                     {% for sp in species %}
@@ -77,8 +79,12 @@
             <tbody>
                 {% for analysis in analyses %}
                 <tr>
-                    <td class="{{analysis.layer.culture.classname|default:'sterile'}} p-2 readme">
+                    <td class="{% if analysis.layer %}{{analysis.layer.culture.classname|default:'sterile'}}{% else %}nocontext{% endif %} p-2 readme">
+                        {% if analysis.layer %}
                         <strong>{{analysis.layer.name}}</strong>
+                        {% else %}
+                        <i>No context</i>
+                        {% endif %}
                     </td>
                     <td class="readme">
                         {% if analysis.ref %}
