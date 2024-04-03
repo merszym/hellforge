@@ -61,7 +61,7 @@
                     <td><strong>Method</strong></td>
                     {% for sp in species %}
                         {% for var in data|lookup:'header'|lookup:sp %}
-                            <td>{{var}}</td>
+                            <td nowrap>{{var}}</td>
                         {% endfor %}
                     {% endfor %}
                 </tr>

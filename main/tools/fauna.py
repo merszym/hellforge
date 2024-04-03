@@ -117,7 +117,7 @@ def handle_faunal_table(request, file):
     def return_error(request, issues, df):
         return render(
             request,
-            "main/modals/layer_modal.html",
+            "main/modals/site_modal.html",
             {
                 "object": get_instance_from_string(request.POST.get("object")),
                 "type": "faunal_errors",
