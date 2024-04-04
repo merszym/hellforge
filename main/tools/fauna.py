@@ -71,12 +71,20 @@ def get_fauna_tab(request):
                 if variables[variable] == variables[variable]
                 else None
             )
-            # save all variables to later get the maximum (for displaying the heatmap)
+            # save all variables to later get the maximum (for displaying the heatmap) and for sorting
             try:
                 data["max"][variable].append(val)
             except:
                 data["max"][variable] = [val]
 
+            # this is for sorting
+            try:
+                if val > data["sorting"][entry.family]:
+                    data["sorting"][entry.family] = val
+            except TypeError:
+                data["sorting"][entry.family] = val
+
+            # this is for the table header
             try:
                 if (
                     not (entry.scientific_name, variable)
@@ -105,13 +113,17 @@ def get_fauna_tab(request):
     for k, v in data["max"].items():
         data["max"][k] = max([x for x in v if x != None])
 
-    families = entries.values_list("family", flat=True).distinct().order_by("family")
+    # define the order of families based on the highest assignment
+    sorting = sorted(list(data["sorting"]), key=lambda x: -1 * data["sorting"][x])
+    families = sorted(
+        entries.values_list("family", flat=True).distinct(),
+        key=lambda x: sorting.index(x),
+    )
 
     # make sure to preserve family namespace
-    species = (
-        entries.values_list("family", "scientific_name")
-        .order_by("family", "scientific_name")
-        .distinct()
+    species = sorted(
+        entries.values_list("family", "scientific_name").distinct(),
+        key=lambda x: sorting.index(x[0]),
     )
     # and check if no "empty" headers might cause a shift
     species = [
