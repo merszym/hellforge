@@ -113,7 +113,12 @@ def get_fauna_tab(request):
         .order_by("family", "scientific_name")
         .distinct()
     )
-    species = [f"{family}__{species}" for family, species in species]
+    # and check if no "empty" headers might cause a shift
+    species = [
+        f"{family}__{species}"
+        for family, species in species
+        if len(data["header"][f"{family}__{species}"]) > 0
+    ]
 
     return render(
         request,

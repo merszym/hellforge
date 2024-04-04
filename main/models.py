@@ -1080,6 +1080,9 @@ class FaunalResults(models.Model):
         on_delete=models.CASCADE,
     )
 
+    def __str__(self):
+        return f"{self.analysis}: ({self.family} / {self.scientific_name})"
+
     @classmethod
     def table_columns(self):
         return [
