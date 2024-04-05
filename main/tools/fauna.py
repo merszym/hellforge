@@ -9,6 +9,7 @@ from django.db.models import Q
 import pandas as pd
 import json
 from collections import defaultdict
+import re
 
 
 def get_fauna_tab(request):
@@ -243,7 +244,11 @@ def handle_faunal_table(request, file):
 
     ## 4. Create a FaunalResults object per line, attach to the LayerAnalysis object
     ### Find the additional columns
-    res = [x for x in df.columns if x not in expected_columns and x != "pk"]
+    res = [
+        x
+        for x in df.columns
+        if x not in expected_columns and bool(re.search("^(pk|Unnamed)", x)) == False
+    ]
     faunal_results = []
 
     for i, data in df.iterrows():

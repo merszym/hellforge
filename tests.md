@@ -1,6 +1,6 @@
 # Tests
 
-This document lists all the features the site has. It is used to test everything if something fundamental is changed!
+This document should list all the features the site has. Its used to test the page upon new releases!
 
 ## Site
 
@@ -45,7 +45,19 @@ This document lists all the features the site has. It is used to test everything
 
 ### Fauna
 
+- download fauna header
+- upload faunal table
+  - with reference
+  - without reference
+  - with layer
+  - without layer
+- download the fauna from the site
+- update existing faunal table (via upload)
+- remove LayerAnalysis objects
+
 ### Samples
+
+- Upload samples (not much here yet)
 
 ### Dates
 
@@ -54,3 +66,5 @@ This document lists all the features the site has. It is used to test everything
 - add other date with point estimate
 - add other date with range
 - make sure references work
+
+## Cultures
