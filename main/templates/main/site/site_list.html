@@ -2,23 +2,22 @@
 {% block head %}
 <title>Hellforge: Sites</title>
 {% endblock %}
-{% block headline %}Site List{% endblock %}
+{% block headline %}Archaeological Sites{% endblock %}
 {% block body %}
 {% load static %}
 
 <div class="container">
     <span id="get_location_data" data-url="{% url 'main_site_geo' %}?all=1"></span>
     <div class='columns'>
-        <div class="column col-6">
+        <div class="column col-6 hide-md">
             <div class="my-2">
-                <div style="height: 480px;" id="map"></div>
+                <div style="height: 80vh;" id="map"></div>
             </div>
         </div>
-        <div class="column col-6">
+        <div class="column col-6 col-md-12">
             <div class="my-2">
-                <div class="panel" style="max-height:480px;">
+                <div class="panel" style="max-height:80vh">
                     <div class="panel-header">
-                        <div class="panel-title"><h3>Site List</h3></div>
                         {% if request.user.is_authenticated %}
                         <a href="{% url 'main_site_add' %}">New Site</a>
                         {% endif %}
