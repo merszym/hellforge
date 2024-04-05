@@ -19,7 +19,14 @@ conda env create -f env.yml
 conda activate hellforge
 ```
 
-And run the django server!
+Then create a `.env` file in the root of the repository, make sure to include the following `secrets`:
+```
+SECRET_KEY="RANDOM-STRING-HERE"
+DEBUG=True
+HOST="localhost 127.0.0.1"
+```
+
+Then run the django server!
 
 ```
 python3 manage.py runserver
