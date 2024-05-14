@@ -40,12 +40,12 @@ def get_dataset_df(qs, start, include):
             except AttributeError:
                 # if there is a foreign-key relationship .all() fails
                 # in this case, try if an entry exists
-                # try:
-                data.update(getattr(entry, incl, False).get_data())
-                # except AttributeError:
-                # if that fails, add empty lines...
-                #    empty = {k: None for k in models[incl].table_columns()}
-                #    data.update(empty)
+                try:
+                    data.update(getattr(entry, incl, False).get_data())
+                except AttributeError:
+                    # if that fails, add empty lines...
+                    empty = {k: None for k in models[incl].table_columns()}
+                    data.update(empty)
         data.update(entry.get_data())
         records.append(data)
     df = pd.DataFrame.from_records(records)
