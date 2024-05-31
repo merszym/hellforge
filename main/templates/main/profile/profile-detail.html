@@ -26,6 +26,7 @@
         td{
           padding-top: 2px !important;
           padding-bottom: 2px !important;
+          line-height: 1.2 !important;
         }
       </style>
       <table class="table table-striped table-hover">
@@ -42,14 +43,9 @@
             {% endif %}
           </tr>
         </thead>
-        <style>
-          .eboulis{
-            line-height: 1,2;
-          }
-        </style>
         <tbody>
           {% for layer in object.layer.all %}
-          <tr class="table_row {% if not layer.culture and not layer.set_upper and not layer.date.first %}eboulis{% endif %}" id="layer_{{layer.pk}}" data-pos="{{layer.pos}}" style="padding:2px;">
+          <tr class="table_row" id="layer_{{layer.pk}}" data-pos="{{layer.pos}}">
             {% if request.user.is_authenticated %}
             <td>
               <form style="width: 2px;">

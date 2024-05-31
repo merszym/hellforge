@@ -1,12 +1,21 @@
 {% load format %}
-<td class="{% if layer.culture %}{{layer.culture.classname}}{% else %}sterile{% endif%}" style="{% if layer.parent %} border-left:solid 3px black; {% endif %}">
+<td class="{% if layer.culture %}{{layer.culture.classname}}{% else %}sterile{% endif%}" style="width: 5px;white-space: nowrap;">
     {% if layer.parent %}
-    <span style="font-size:10pt;">{{layer.parent.name}}</span><br>
+    <span>{{layer.parent.name}}</span><br>
+    {% else %}
+    <strong>{{layer.name}}</strong>
+        {% for syn in layer.synonyms.all %}
+        <br><span style="font-size:11pt;">{{syn.name}} ({{syn.type}})</span>
+        {% endfor %}
     {% endif %}
+</td>
+<td class="{% if layer.culture %}{{layer.culture.classname}}{% else %}sterile{% endif%}" style="width: 5px;white-space: nowrap;">
+    {% if layer.parent %}
     <strong>{{layer.name}}</strong>
     {% for syn in layer.synonyms.all %}
     <br><span style="font-size:11pt;">{{syn.name}} ({{syn.type}})</span>
     {% endfor %}
+    {% endif %}
 </td>
 <td>
     <span
@@ -21,13 +30,11 @@
     {% endif %}
 </td>
 <td>{% if layer.culture %}
-    <a class="btn-link" href="{% url 'culture_detail' pk=layer.culture.pk %}">{{layer.culture}}</a><br>
-    <span class="text-gray" style="font-size:11pt;">{{layer.culture.age_summary}}</span>
+    <a class="btn-link" href="{% url 'culture_detail' pk=layer.culture.pk %}">{{layer.culture}}</a>
+    <!--<span class="text-gray" style="font-size:11pt;">{{layer.culture.age_summary}}</span>-->
     {% endif %}
 </td>
 <td>
-    {{layer.epoch}}<br>
-    {% if layer.set_upper or layer.date.all|length > 0 %}
-    <span class="text-gray" style="font-size:11pt;">{{layer.epoch.age_summary}}</span>
-    {% endif %}
+    {{layer.epoch|default:""}}
+    <br><span class="text-gray" style="font-size:11pt;">{{layer.epoch.age_summary}}</span>
 </td>
