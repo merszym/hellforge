@@ -306,8 +306,8 @@ class Date(models.Model):
     oxa = models.CharField("oxa-code", max_length=300, blank=True, null=True)
     curve = models.CharField("calibration_curve", max_length=300, blank=True, null=True)
     raw = models.JSONField("calibrationcurve_datapoints", null=True, blank=True)
-    # this is the 2 Sigma calibrated date if C14
-    # should be the calender years in 1950BP
+    # this is the 95% CI calibrated date if C14
+    # should be the calender years from 1950 AD
     upper = models.IntegerField("upper bound", blank=True, null=True)
     lower = models.IntegerField("lower bound", blank=True, null=True)
     # additional information
@@ -382,13 +382,21 @@ class Date(models.Model):
     def __str__(self):
         if self.method == "14C":
             if self.upper and self.lower:
-                return f"{self.upper:,} - {self.lower:,} BP"
+                # this is calibrated
+                return f"{self.upper:,} - {self.lower:,} calBP"
 
             if self.lower:
-                return f"> {self.lower:,} ya"
+                # this is infinite age
+                if self.curve:
+                    # calibrated infinite
+                    # currently not possible with iosacal
+                    return f"> {self.lower:,} calBP"
+                return f"> {self.lower:,} BP"
 
             if self.estimate:
-                return f"{self.estimate:,} ± {self.plusminus:,} uncal 14C"
+                # or uncalibrated
+                return f"{self.estimate:,} ± {self.plusminus:,} BP"
+
         else:
             if not self.upper and not self.estimate and not self.lower:
                 return "Unset Date"
