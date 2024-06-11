@@ -14,6 +14,7 @@ def queries(many, one):
     dict = {
         ("site", "library"): "sample__site",
         ("site", "sample"): "site",
+        ("site", "layer"): "site",
         ("project", "library"): "project",
         ("project", "sample"): "project",
         ("project", "site"): "project",

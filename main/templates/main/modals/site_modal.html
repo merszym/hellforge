@@ -208,6 +208,34 @@
             </div>
         </div>
         <!--#TODO: summary report-->
+
+        {% elif type == "stratigraphy" %}
+
+        {# ------------------------- #}
+        {#   LAYER FAUNA MODAL       #}
+        {# ------------------------- #}
+
+        <!-- Modal content for Stratigraphy-up and download -->
+        <div class="modal-body">
+            <div class="content my-2">
+                <h5>Manage Stratigraphy</h5>
+                <span>Download the Layer data</span>
+                <a target="_blank" href="{% url 'get_dataset' %}?from=site_{{object.pk}}&unique=layer">
+                    <i class="icon icon-download"></i>
+                </a><br><br>
+                <h5>Upload Stratigraphy</h5>
+                <span> Only the position of the existing layers will be updated!</span>
+                <form method="post">
+                    {% csrf_token %}
+                    <input name="file" type="file">
+                    <input type="hidden" name="object" value="site_{{object.pk}}">
+                    <button class="btn modal_open"
+                        hx-encoding="multipart/form-data"
+                        hx-post="{% url 'main_upload' %}?type=stratigraphy"
+                        hx-target="#modal-blank">OK</button>
+                </form>
+            </div>
+        </div>
         {% endif %}
 
 </div>

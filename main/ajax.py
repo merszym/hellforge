@@ -149,6 +149,11 @@ def upload(request):
 
         return handle_faunal_table(request, file)
 
+    if type == "stratigraphy":
+        from main.tools.site import handle_stratigraphy
+
+        return handle_stratigraphy(request, file)
+
 
 def save_contact(request):
     form = ContactForm(request.POST)

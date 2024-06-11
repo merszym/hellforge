@@ -4,16 +4,25 @@
     <div style="position: relative;">
       <h3>{{object.name}}</h3>
       {% if request.user.is_authenticated %}
-      <span class="btn btn-primary tooltip tooltip-left generic_delete"
-        hx-post="{% url 'main_generic_delete' %}"
-        hx-vals='{
-          "instance_x": "profile_{{object.pk}}"
-        }'
-        data-hide="show_profile_{{object.pk}},profile-tab_{{object.pk}}"
-        hx-confirm="Delete the profile"
-        data-tooltip="Delete the Profile" style="position:absolute; right:5%; top:10px">
-          <i class="icon icon-delete"></i>
-      </span>
+      <div style="position:absolute; right:5%; top:10px">
+        <span class="btn btn-primary tooltip tooltip-left generic_delete"
+          hx-post="{% url 'main_generic_delete' %}"
+          hx-vals='{
+            "instance_x": "profile_{{object.pk}}"
+          }'
+          data-hide="show_profile_{{object.pk}},profile-tab_{{object.pk}}"
+          hx-confirm="Delete the profile"
+          data-tooltip="Delete the Profile">
+            <i class="icon icon-delete"></i>
+        </span>
+        <span
+            class='btn tooltip tooltip-left modal_open'
+            data-tooltip="Manage Layers"
+            hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
+            hx-vals='{"object":"site_{{object.site.pk}}","type":"stratigraphy"}'
+            hx-target="#modal-blank"><i class="icon icon-plus"></i>
+        </span>
+      </div>
       {% endif %}
     </div>
     <!--show the global profile id for ajax calls-->

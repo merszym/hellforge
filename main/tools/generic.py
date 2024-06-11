@@ -31,6 +31,8 @@ def get_dataset_df(qs, start, include):
         # start is the "1", e.g. project
         data = start.get_data()
         for incl in include:
+            if incl == "null":
+                continue
             # check if there are _multiple entries_ for the incl
             # these need to be squashed into one line
             # example person can be contact for multiple sites

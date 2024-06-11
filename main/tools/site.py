@@ -22,6 +22,7 @@ from main.models import (
 from copy import copy
 import json
 import seaborn as sns
+import pandas as pd
 from django.contrib.auth.mixins import (
     LoginRequiredMixin,
 )  # this is for now, make smarter later
@@ -432,6 +433,63 @@ def update_connection(request):
     from main.ajax import get_modal
 
     return get_modal(request)
+
+
+def handle_stratigraphy(request, file):
+
+    site = get_instance_from_string(request.POST.get("object"))
+
+    def return_error(request, issues, df):
+        return render(
+            request,
+            "main/modals/site_modal.html",
+            {
+                "object": get_instance_from_string(request.POST.get("object")),
+                "type": "faunal_errors",
+                "dataframe": df.fillna("").to_html(
+                    index=False, classes="table table-striped col-12"
+                ),
+                "issues": issues,
+            },
+        )
+
+    df = pd.read_csv(file, sep=",")
+    df.drop_duplicates(inplace=True)
+    # All required information is in the table
+
+    ## 0. Verify the data-table
+    expected_columns = ["Layer Name", "Layer Culture", "Layer Epoch"]
+    ## there can be more, but check that all required are in
+
+    if not all(x in df.columns for x in expected_columns):
+        missing = [x for x in expected_columns if x not in df.columns]
+        issues = [f"Missing Table Columns: {x}" for x in missing]
+
+        return return_error(request, issues, df)
+
+    for n, (i, data) in enumerate(df.iterrows()):
+        try:
+            layer = Layer.objects.get(site=site, name=data["Layer Name"].strip())
+            layer.pos = n
+            layer.save()
+
+        except Layer.DoesNotExist:
+            return return_error(
+                request,
+                [f'Layer: {data["Layer Name"]} doesnt exist'],
+                pd.DataFrame(
+                    {k: v for k, v in zip(data.index, data.values)}, index=[0]
+                ),
+            )
+
+    return render(
+        request,
+        "main/modals/site_modal.html",
+        {
+            "object": get_instance_from_string(request.POST.get("object")),
+            "type": "stratigraphy",
+        },
+    )
 
 
 urlpatterns = [
