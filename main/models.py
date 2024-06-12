@@ -397,20 +397,35 @@ class Date(models.Model):
                 # or uncalibrated
                 return f"{self.estimate:,} ± {self.plusminus:,} BP"
 
-        else:
-            if not self.upper and not self.estimate and not self.lower:
-                return "Unset Date"
+        elif self.method.strip() in [
+            "OSL",
+            "TL",
+            "IRSL",
+            "pIRIR225",
+            "pIRIR",
+            "TT-OSL",
+        ]:
+            # Luminescence dating
+            # by convention reported in ka (from the time of measurement)
             if self.estimate and self.plusminus:
-                return f"{self.estimate:,} ± {self.plusminus:,} ya"
-            if self.estimate:
-                return f"{self.estimate:,} ya"
-            if self.upper and not self.lower:
-                return f"< {self.upper:,} ya"
-            if self.lower and not self.upper:
-                return f"> {self.lower:,} ya"
+                return (
+                    f"{round(self.estimate/1000,2)} ± {round(self.plusminus/1000,2)} ka"
+                )
             if self.upper != self.lower:
-                return f"{self.upper:,} - {self.lower:,} ya"
-            return f"{self.upper:,} ya"
+                return f"{round(self.upper/1000,2)} - {round(self.lower/1000,2)} ka"
+
+        else:
+            if self.estimate and self.plusminus:
+                return f"{self.estimate:,} ± {self.plusminus:,} years"
+            if self.estimate:
+                return f"{self.estimate:,} years"
+            if self.upper and not self.lower:
+                return f"< {self.upper:,} years"
+            if self.lower and not self.upper:
+                return f"> {self.lower:,} years"
+            if self.upper != self.lower:
+                return f"{self.upper:,} - {self.lower:,} years"
+            return f"{self.upper:,} years"
 
 
 class Location(models.Model):

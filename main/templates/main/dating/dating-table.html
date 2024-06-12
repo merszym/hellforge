@@ -42,15 +42,13 @@
                 {% if date.method == '14C' %}
                 <td>
                     {% if date.lower and not date.upper %}
-                    <span class="text-gray text11pt">Beyond 14C</span><br>
-                    >{{date.lower|format:"{:,}"}} ya<br>
-                    <span class="text-gray text11pt">{{date.oxa}}</span>
+                    <span class="text-gray text11pt">Infinite 14C</span><br>
+                    {{date}}<br>
                     {% else %}
-                <span class="text-gray text11pt">{{date.curve}} ({{date.estimate|format:"{:,}"}}±{{date.plusminus|format:"{:,}"}})</span><br>
-                {{date.upper|format:"{:,}"}} - {{date.lower|format:"{:,}"}} BP (95%)<br>
-                <span class="text-gray text11pt">{{date.oxa}}</span>
-
+                    <span class="text-gray text11pt">{{date.curve}} ({{date.estimate|format:"{:,}"}}±{{date.plusminus|format:"{:,}"}})</span><br>
+                    {{date}} (95%)<br>
                     {% endif %}
+                    <span class="text-gray text11pt">{{date.oxa}}</span>
                 </td>
                 {% else %}
                 <td>{{date}}
@@ -77,7 +75,7 @@
                 <span>-</span>
                 {% endif %}
                 </td>
-                <td>{{date.description}}</td>
+                <td>{{date.description|default:""}}</td>
                 <td>
 
                     <span
