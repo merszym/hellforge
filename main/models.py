@@ -414,7 +414,10 @@ class Date(models.Model):
                     f"{round(self.estimate/1000,2)} ± {round(self.plusminus/1000,2)} ka"
                 )
             if self.upper != self.lower:
-                return f"{round(self.upper/1000,2)} - {round(self.lower/1000,2)} ka"
+                try:
+                    return f"{round(self.upper/1000,2)} - {round(self.lower/1000,2)} ka"
+                except TypeError:
+                    return f"{self.upper} - {self.lower} years"  # this is for NoneType date, should not happen in normal cases
 
         else:
             if self.estimate and self.plusminus:
