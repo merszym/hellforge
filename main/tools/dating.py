@@ -66,6 +66,14 @@ def batch_upload(request):
         issues.append(f"Dropped Table Columns: {','.join(dropped)}")
     df = df[[x for x in df.columns if x in expected]]
 
+    # check the sigma/CI values
+    wrong_ci = [
+        str(x) for x in df["Sigma/CI"] if x == x and str(x)[-1] not in ["s", "σ", "%"]
+    ]
+    if len(wrong_ci) > 0:
+        issues.append(
+            f"Invalud Sigma/CI: {','.join(wrong_ci)}. Must end with 's','σ' or '%'"
+        )
     # hardcode the testing for now
     if "Reference" in df.columns:
         df["Reference"] = df.Reference.apply(lambda x: tools.references.find(x))
@@ -123,14 +131,15 @@ def save_verified_batchdata(request):
                 tmp.lower = dat["Lower Bound"]
             if "Notes" in dat:
                 tmp.description = dat["Notes"]
+            if "Sigma/CI" in dat:
+                tmp.sigma = dat["Sigma/CI"]
             tmp.save()
             tmp.refresh_from_db()
+
             if "Curve" in dat:
                 curve = dat["Curve"]
                 # TODO: do something with the curve.
                 # TODO: this is not working yet!
-            if "Sigma/CI" in dat:
-                tmp.sigma = dat["Sigma/CI"]
 
         if "Reference" in dat:
             tmp.ref.add(Reference.objects.get(pk=dat["Reference"]["id"]))

@@ -32,6 +32,7 @@ class DateForm(forms.ModelForm):
         fields = [
             "estimate",
             "plusminus",
+            "sigma",
             "oxa",
             "curve",
             "upper",

@@ -57,11 +57,28 @@ def fill_date(sender, instance, **kwargs):
                     instance.sigma = "95%"
                     instance.save()
     else:
-        if instance.estimate and not instance.upper:  # instance.upper is recursion save
+        try:
+            if instance.sigma.endswith("s"):
+                instance.sigma = instance.sigma.replace(
+                    "s", "σ"
+                )  # replace s with sigma, because this is how I want it to be
+                instance.save()
+        except AttributeError:
+            pass
+        if (instance.estimate and instance.plusminus and not instance.upper) or (
+            instance.sigma == "1σ" and instance.plusminus
+        ):  # instance.upper is recursion save
+            # We want all the non-14C dates to be shown as 2σ values
+            # That means, that we have to *double* the plusminus if only 1σ is provided (we can because sigma means normaly distributed)
+            if instance.sigma == "1σ":
+                if instance.plusminus:
+                    instance.plusminus = instance.plusminus * 2
+                    instance.sigma = "2σ"
+
             if instance.plusminus:
                 instance.upper = instance.estimate + instance.plusminus
                 instance.lower = instance.estimate - instance.plusminus
-                instance.save()
+            instance.save()
 
 
 @receiver(post_save, sender=Layer)

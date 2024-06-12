@@ -49,7 +49,12 @@
     <span class="input-group-addon">±</span>
     <input type="number" class="form-input estimate_range" id="plusminus" name="plusminus" placeholder="3000"
     {% if form.plusminus %} value="{{form.plusminus.value}}" {% else %} value="0" {% endif %}>
+    <span class="input-group-addon 14c_hide" style="display:none;">Sigma/CI</span>
+    <input type="text" class="form-input 14c_hide" style="display:none;" id="sigma" name="sigma" placeholder="2σ/95%" pattern="([12][sσ])|([0-9]+%)$"
+    {% if form.plusminus %} value="{{form.sigma.value}}" {% endif %}>
 </div>
+<p class="form-input-hint 14c_hide" style="display:none;">Please enter the <strong>sigma or confidence interval</strong>. Value must be 1 or 2 s/σ or any %. s will be converted to σ in the backend</p>
+
 <p class="form-input-hint 14c_group">Please enter the <strong>uncalibrated 14C Date</strong>. Calibration is done in the backend</p>
 
 <!-- Second Form field -->
