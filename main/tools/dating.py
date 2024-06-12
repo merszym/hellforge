@@ -34,20 +34,9 @@ def recalibrate_c14(request):
     date.lower = lower
     date.curve = curve
     date.raw = json.dumps(raw)
+    date.sigma = "95%"
     date.save()
     return JsonResponse({"status": True})
-
-
-@login_required
-def calibrate_c14(request):
-    date = request.GET.get("estimate", False)
-    pm = request.GET.get("pm", False)
-    if date and pm and pm != "0":
-        raw, upper, lower, curve = calibrate(date, pm)
-        return JsonResponse(
-            {"status": True, "lower": lower, "upper": upper, "curve": curve}
-        )
-    return JsonResponse({"status": False})
 
 
 @login_required
@@ -140,6 +129,8 @@ def save_verified_batchdata(request):
                 curve = dat["Curve"]
                 # TODO: do something with the curve.
                 # TODO: this is not working yet!
+            if "Sigma/CI" in dat:
+                tmp.sigma = dat["Sigma/CI"]
 
         if "Reference" in dat:
             tmp.ref.add(Reference.objects.get(pk=dat["Reference"]["id"]))
@@ -232,7 +223,6 @@ urlpatterns = [
     path("delete", delete, name="ajax_date_unlink"),
     path("upload", batch_upload, name="ajax_date_batch_upload"),
     path("save-batch", save_verified_batchdata, name="ajax_save_verified_batchdata"),
-    path("calibrate", calibrate_c14, name="ajax_date_cal"),
     path("toggle_use", toggle_use, name="ajax_date_toggle"),
     path("recalibrate", recalibrate_c14, name="ajax_date_recalibrate"),
 ]

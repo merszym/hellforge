@@ -303,11 +303,12 @@ class Date(models.Model):
     # this is uncalibrated if C14, otherwise just easy to enter
     estimate = models.IntegerField("estimate", blank=True, null=True)
     plusminus = models.IntegerField("plusminus", blank=True, null=True)
+    # sigma (luminescence) or CI (radiocarbon/bayesian)
+    sigma = models.CharField("sigma/CI", blank=True, null=True, max_length=100)
     oxa = models.CharField("oxa-code", max_length=300, blank=True, null=True)
     curve = models.CharField("calibration_curve", max_length=300, blank=True, null=True)
     raw = models.JSONField("calibrationcurve_datapoints", null=True, blank=True)
-    # this is the 95% CI calibrated date if C14
-    # should be the calender years from 1950 AD
+    # the upper and lower bounds based on the point estimate + standard-deviations
     upper = models.IntegerField("upper bound", blank=True, null=True)
     lower = models.IntegerField("lower bound", blank=True, null=True)
     # additional information
@@ -338,7 +339,7 @@ class Date(models.Model):
             "Lab Code",
             "Date",
             "Error",
-            "Curve",
+            "Sigma/CI" "Curve",
             "Upper Bound",
             "Lower Bound",
             "Notes",

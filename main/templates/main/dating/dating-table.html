@@ -46,7 +46,7 @@
                     {{date}}<br>
                     {% else %}
                     <span class="text-gray text11pt">{{date.curve}} ({{date.estimate|format:"{:,}"}}±{{date.plusminus|format:"{:,}"}})</span><br>
-                    {{date}} (95%)<br>
+                    {{date}} ({{date.sigma}})<br>
                     {% endif %}
                     <span class="text-gray text11pt">{{date.oxa}}</span>
                 </td>

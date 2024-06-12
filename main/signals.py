@@ -54,6 +54,7 @@ def fill_date(sender, instance, **kwargs):
                     instance.lower = lower
                     instance.curve = curve
                     instance.raw = json.dumps(raw)
+                    instance.sigma = "95%"
                     instance.save()
     else:
         if instance.estimate and not instance.upper:  # instance.upper is recursion save
