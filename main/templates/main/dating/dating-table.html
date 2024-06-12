@@ -23,7 +23,8 @@
             <th></th>
             <th></th>
             <th>Age</th>
-            <th>Calibration</th>
+            <th>CI</th>
+            <th>Curve</th>
             <th>Notes</th>
             <th>Reference</th>
             <th></th>
@@ -46,33 +47,30 @@
                     {{date}}<br>
                     {% else %}
                     <span class="text-gray text11pt">{{date.curve}} ({{date.estimate|format:"{:,}"}}±{{date.plusminus|format:"{:,}"}})</span><br>
-                    {{date}} ({{date.sigma}})<br>
+                    {{date}}<br>
                     {% endif %}
                     <span class="text-gray text11pt">{{date.oxa}}</span>
                 </td>
                 {% else %}
-                <td>{{date}} ({{date.sigma}})
+                <td>{{date}}
                 {% if date.oxa %}
                     <br><span class="text-gray text11pt">{{date.oxa}}</span>
                 {% endif %}
                 </td>
                 {% endif %}
+                <td>{{date.sigma|default:""}}</td>
                 <td>
-                {% if date.method == '14C' %}
-                    {% if request.user.is_authenticated and date.upper %}
-                    <div class="form-group">
-                        <select class="form-select 14c-curve-select" id="date_{{date.pk}}" data-url="{% url 'ajax_date_recalibrate' %}">
-                            <option value="{{date.curve|lower}}"selected>{{date.curve}}</option>
-                            <option value="intcal20">intcal20</option>
-                            <option value="marine20">marine20</option>
-                            <option value="shcal20">shcal20</option>
-                        </select>
-                    </div>
-                    {% else %}
-                    {{date.curve}}
-                    {% endif %}
+                {% if request.user.is_authenticated and date.upper and date.method == '14C' %}
+                <div class="form-group">
+                    <select class="form-select 14c-curve-select" id="date_{{date.pk}}" data-url="{% url 'ajax_date_recalibrate' %}">
+                        <option value="{{date.curve|lower}}"selected>{{date.curve}}</option>
+                        <option value="intcal20">intcal20</option>
+                        <option value="marine20">marine20</option>
+                        <option value="shcal20">shcal20</option>
+                    </select>
+                </div>
                 {% else %}
-                <span>-</span>
+                {{date.curve|default:"-"}}
                 {% endif %}
                 </td>
                 <td>{{date.description|default:""}}</td>
