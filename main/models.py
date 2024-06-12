@@ -326,6 +326,10 @@ class Date(models.Model):
     def test(self):
         return "date"
 
+    @property
+    def layer(self):
+        return self.origin_model.first()
+
     class Meta:
         default_manager_name = "visible_objects"
         ordering = ["upper"]
@@ -346,6 +350,22 @@ class Date(models.Model):
             "Notes",
             "Reference",
         ]
+
+    def get_data(self):
+        # for an entry, return a dict {'col': data} that is used for the export of the data
+        data = {
+            "Method": self.method,
+            "Lab Code": self.oxa,
+            "Date": self.estimate,
+            "Error": self.plusminus,
+            "Sigma/CI": self.sigma,
+            "Curve": self.curve,
+            "Upper Bound": self.upper,
+            "Lower Bound": self.lower,
+            "Notes": self.description,
+            "Reference": self.ref.first(),
+        }
+        return data
 
     def to_ms(self):
         if self.upper and self.lower:

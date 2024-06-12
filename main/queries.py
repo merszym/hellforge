@@ -15,6 +15,10 @@ def queries(many, one):
         ("site", "library"): "sample__site",
         ("site", "sample"): "site",
         ("site", "layer"): "site",
+        (
+            "site",
+            "date",
+        ): "origin_model__site",  # TODO: make sure that dates added to a sample are added to the layer automatically!
         ("project", "library"): "project",
         ("project", "sample"): "project",
         ("project", "site"): "project",

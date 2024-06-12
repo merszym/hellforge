@@ -181,9 +181,13 @@
 </div>
 {% if object.layer.first %}
 <div class="btn-group mx-2">
-    <!--#TODO: make option to hide dates and show only set_dates-->
     <button class="btn timeline-filter" id="timeline-show-hidden">Toggle Hidden</button>
     <button class="btn timeline-filter btn-primary" id="timeline-show-curves">14C Curve</button>
+    <button class="btn tooltip tooltip-right" data-tooltip="Download all dates">
+        <a target="_blank" href="{% url 'get_dataset' %}?from=site_{{object.pk}}&unique=date&include=layer">
+            <i class="icon icon-download"></i>
+        </a>
+    </button>
 </div>
 <div class="m-2 self_reload" id="timeline-content" data-url="{% url 'main_timeline_render' 'site' object.pk %}"></div>
 {% endif %}
