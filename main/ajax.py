@@ -11,6 +11,7 @@ from .models import (
     Description,
     Culture,
     Epoch,
+    Date,
 )
 from django.db.models import Q
 from django.urls import reverse, path
@@ -50,6 +51,15 @@ def get_modal_context(object, request):
             # Add a date to the layer
             context.update(
                 {"datingoptions": DatingMethod.objects.all(), "origin": "form"}
+            )
+        if context["type"] == "dates_list":
+            # Add dates as the layer boundaries
+            context.update(
+                {
+                    "site_dates": Date.objects.filter(
+                        origin_model__site=object.site
+                    ).order_by("origin_model")
+                }
             )
         if context["type"] == "properties":
             context.update(

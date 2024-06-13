@@ -5,8 +5,9 @@
 <div class="modal-container">
     <div class="modal-header">
         <a id="modal-close" class="btn btn-clear float-right modal_close" style="cursor: pointer;" aria-label="Close"></a>
+        <h3>{{object.name}}</h3>
         {% if type == 'dates_list' and request.user.is_authenticated %}
-        <div class="modal-title h5 ">Manage Dates</div>
+        <div class="modal-title h5 ">Layer Age and Dates</div>
         <span class="btn modal_open tooltip tooltip-top" data-tooltip="Add Dating"
             hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
             hx-vals='{"object":"layer_{{object.pk}}","type":"dates"}'
@@ -233,8 +234,12 @@
 
     <!-- Modal content for Date -->
     <div class="modal-body">
+        <h5>Layer Age: {{object.age_summary}} </h5>
+        <br>
         <div class="content my-2">
-            <h6>{% if request.user.is_authenticated%}Set {% endif %}Layer Boundaries:</h6>
+            <h6>1. Hard Layer Boundaries:</h6>
+            <p class="form-input-hint">Hard set upper and lower <b>boundaries</b> for the layer (in <i>years</i> ago).
+                This is independent of any raw dates in the database</p>
             <form>
                 {% csrf_token %}
                 <div class="input-group">
@@ -253,9 +258,56 @@
                     </span>
                     {% endif %}
                 </div>
+            </form><br>
+            <h6>2. Set upper and/or lower Dates</h6>
+            <p class="form-input-hint">Set upper and lower <b>dates</b> from the site as the boundaries of the layer.
+                This includes the confidence intervals. Selecting only <b>one</b> date will be interpreted as being relatively
+                older or younger than the selected date</p>
+            <form>
+                {% csrf_token %}
+                <input name="instance_x" value="layer_{{object.pk}}" style="display: none;"/>
+                <div class="input-group">
+                    <span class="input-group-addon">Upper Date</span>
+                    <select class="form-select" name="upper_date">
+                        {% if object.date_upper %}
+                        <option value="{{object.date_upper.pk}}">{{object.date_upper}} ({{object.date_upper.origin_model.first.name}})</option>
+                        <option>----</option>
+                        {% else %}
+                        <option selected>----</option>
+                        {% endif %}
+                        {% for option in site_dates %}
+                        <option value="{{option.pk}}">{{option}} ({{option.origin_model.first.name}})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="input-group">
+                    <span class="input-group-addon">Lower Date</span>
+                    <select class="form-select" name="lower_date">
+                        {% if object.date_lower %}
+                        <option value="{{object.date_lower.pk}}">{{object.date_lower}} ({{object.date_lower.origin_model.first.name}})</option>
+                        <option>----</option>
+                        {% else %}
+                        <option selected>----</option>
+                        {% endif %}
+                        {% for option in site_dates %}
+                        <option value="{{option.pk}}">{{option}} ({{option.origin_model.first.name}})</option>
+                        {% endfor %}
+                    </select>
+                    <span
+                        hx-post="{% url 'layer-setdate-update' %}?{{request.GET|getstring}}"
+                        hx-target="#modal-blank"
+                        class="btn btn-primary input-group-btn"
+                    >Set</span>
+                </div>
             </form>
+            <br>
+            <h6>3. Associated Dates</h6>
+            <p class="form-input-hint">If no bounds or dates are set for the layer, the boundaries are calculated from the associated dates,
+                by taking the <b>mean</b> of the lower and upper bounds of each date. <i><b>NOTE:</b> This is NOT a verified age, dont use it as is. Raw
+                    dates might be affected by reservoir effects or missing from the database. Infinite dates can (unfortunately) not be taken into account
+                </i></p>
             <div id="modal-form">
-                {% include 'main/dating/dating-table.html' with date_list=object.date.all mode='visible' title='Date list' %}
+                {% include 'main/dating/dating-table.html' with date_list=object.date.all mode='visible' title='List of associated Dates' %}
                 <br><br>
                 {% include 'main/dating/dating-table.html' with date_list=object.hidden_dates mode='hidden' title='Hidden Dates' %}
                 <br>

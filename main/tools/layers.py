@@ -14,6 +14,7 @@ from django.contrib.auth.mixins import (
 from main.tools.generic import add_x_to_y_m2m, get_instance_from_string, set_x_fk_to_y
 import copy
 from django.shortcuts import render
+from main.ajax import get_modal
 
 
 @login_required
@@ -98,8 +99,6 @@ def set_name(request):
     request.GET._mutable = True
     request.GET.update({"object": f"layer_{object.pk}", "type": "edit"})
 
-    from main.ajax import get_modal
-
     return get_modal(request)
 
 
@@ -119,7 +118,37 @@ def set_bounds(request):
     request.GET._mutable = True
     request.GET.update({"object": f"layer_{object.pk}", "type": "dates_list"})
 
-    from main.ajax import get_modal
+    return get_modal(request)
+
+
+@login_required
+def set_date(request):
+    from main.models import Date
+
+    ## RULES ##
+    # 1. If both upper and lower dates are set
+    # - upper can be infinite
+    # - lower cant be infinite
+    #
+    # 2. If only one date is set
+    # - only upper and infinite --> has no meaning, but fine
+    # - only upper --> Younger than that
+    # - only lower --> Older than that (so lower can also be infinite in this case)
+
+    object = get_instance_from_string(request.POST.get("instance_x"))
+
+    try:
+        object.date_upper = Date.objects.get(pk=int(request.POST.get("upper_date")))
+    except ValueError:
+        object.date_upper = None
+    try:
+        object.date_lower = Date.objects.get(pk=int(request.POST.get("lower_date")))
+    except ValueError:
+        object.date_lower = None
+    object.save()
+
+    request.GET._mutable = True
+    request.GET.update({"object": f"layer_{object.pk}", "type": "dates_list"})
 
     return get_modal(request)
 
@@ -133,8 +162,6 @@ def set_culture(request):
     request.GET._mutable = True
     request.GET.update({"object": f"layer_{object.pk}", "type": "properties"})
 
-    from main.ajax import get_modal
-
     return get_modal(request)
 
 
@@ -147,8 +174,6 @@ def set_epoch(request):
     request.GET._mutable = True
     request.GET.update({"object": f"layer_{object.pk}", "type": "properties"})
 
-    from main.ajax import get_modal
-
     return get_modal(request)
 
 
@@ -158,6 +183,7 @@ urlpatterns = [
     path("set-culture", set_culture, name="layer-culture-update"),
     path("set-epoch", set_epoch, name="layer-epoch-update"),
     path("set-bounds", set_bounds, name="main_layer_setbounds"),
+    path("set-date", set_date, name="layer-setdate-update"),
     path("clone/<int:pk>", clone, name="main_layer_clone"),
     path("positions", update_positions, name="main_layer_positionupdate"),
 ]

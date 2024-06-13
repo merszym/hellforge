@@ -367,6 +367,14 @@ class Date(models.Model):
         }
         return data
 
+    def get_upper(self):
+        # is used to get the upper date or return the "infinite" if it doesnt exist
+        return f"{self.upper:,}" if self.upper else f"> {self.lower:,}"
+
+    def get_lower(self):
+        # the lower should always exist
+        return f"{self.lower:,}"
+
     def to_ms(self):
         if self.upper and self.lower:
             upper = self.upper * -31556952 - (1970 * 31556952000)
@@ -855,8 +863,17 @@ class Layer(models.Model):
         return "layer"
 
     def age_summary(self, export=False):
+        # first, see if the bounds are set
         if self.set_upper and self.set_lower:
             return Date(upper=self.set_upper, lower=self.set_lower)
+        ## then, check if there are dates
+        # check if both are true
+        if self.date_upper and self.date_lower:
+            upper = self.date_upper
+            lower = self.date_lower
+
+            return f"{upper.get_upper()} - {lower.get_lower()} years"
+
         if dates := self.date.all():
             if len(dates) == 1:
                 if export:
