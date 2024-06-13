@@ -797,7 +797,7 @@ class Layer(models.Model):
         related_name="layer_upper_date",
         blank=True,
         null=True,
-        on_delete=models.SET_NULL,
+        on_delete=models.PROTECT,
     )
     date_lower = models.ForeignKey(
         Date,
@@ -805,7 +805,7 @@ class Layer(models.Model):
         related_name="layer_lower_date",
         blank=True,
         null=True,
-        on_delete=models.SET_NULL,
+        on_delete=models.PROTECT,
     )
     # Intermediate hierarchy: calculated range from the dates in the layer OR from the upper and lower
     mean_upper = models.IntegerField(blank=True, default=1000000)
