@@ -131,24 +131,47 @@ def set_date(request):
     # - lower cant be infinite
     #
     # 2. If only one date is set
-    # - only upper and infinite --> has no meaning, but fine
+    # - only upper and infinite --> has no meaning, so dont allow
     # - only upper --> Younger than that
     # - only lower --> Older than that (so lower can also be infinite in this case)
 
     object = get_instance_from_string(request.POST.get("instance_x"))
 
     try:
-        object.date_upper = Date.objects.get(pk=int(request.POST.get("upper_date")))
+        date_upper = Date.objects.get(pk=int(request.POST.get("upper_date")))
     except ValueError:
-        object.date_upper = None
+        date_upper = None
+
     try:
-        object.date_lower = Date.objects.get(pk=int(request.POST.get("lower_date")))
+        date_lower = Date.objects.get(pk=int(request.POST.get("lower_date")))
     except ValueError:
-        object.date_lower = None
-    object.save()
+        date_lower = None
+
+    # now check for the rules
+    errors = []
+    if date_upper and date_lower:
+        if date_lower.get_upper().startswith(">"):
+            errors.append(
+                f"No infinite Date ({date_lower}) allowed as lower date, if upper date exists"
+            )
+    elif date_upper and not date_lower and date_upper.get_upper().startswith(">"):
+        errors.append(
+            f"No infinite Date ({date_upper}) allowed as only upper date. Younger than infinite is not meaningful"
+        )
+
+    if len(errors) == 0:
+        object.date_upper = date_upper
+        object.date_lower = date_lower
+        object.save()
 
     request.GET._mutable = True
-    request.GET.update({"object": f"layer_{object.pk}", "type": "dates_list"})
+    request.GET.update(
+        {
+            "object": f"layer_{object.pk}",
+            "type": "dates_list",
+            "errors": errors if len(errors) > 0 else None,
+        }
+    )
 
     return get_modal(request)
 

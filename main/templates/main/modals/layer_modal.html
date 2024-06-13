@@ -6,6 +6,15 @@
     <div class="modal-header">
         <a id="modal-close" class="btn btn-clear float-right modal_close" style="cursor: pointer;" aria-label="Close"></a>
         <h3>{{object.name}}</h3>
+
+        {% if errors != 'None' %}
+        {% for error in errors %}
+        <div class="toast toast-error">
+            Error: {{error}}
+        </div>
+        {% endfor %}
+        {% endif %}
+
         {% if type == 'dates_list' and request.user.is_authenticated %}
         <div class="modal-title h5 ">Layer Age and Dates</div>
         <span class="btn modal_open tooltip tooltip-top" data-tooltip="Add Dating"
@@ -276,7 +285,7 @@
                         <option selected>----</option>
                         {% endif %}
                         {% for option in site_dates %}
-                        <option value="{{option.pk}}">{{option}} ({{option.origin_model.first.name}})</option>
+                        <option value="{{option.pk}}">{{option}} {% if option.estimate %}/ {{option.estimate|default:''}} ± {{option.plusminus|default:''}}{% endif %} ({{option.origin_model.first.name}})</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -290,7 +299,7 @@
                         <option selected>----</option>
                         {% endif %}
                         {% for option in site_dates %}
-                        <option value="{{option.pk}}">{{option}} ({{option.origin_model.first.name}})</option>
+                        <option value="{{option.pk}}">{{option}} {% if option.estimate %}/ {{option.estimate|default:''}} ± {{option.plusminus|default:''}}{% endif %} ({{option.origin_model.first.name}})</option>
                         {% endfor %}
                     </select>
                     <span

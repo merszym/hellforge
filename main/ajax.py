@@ -37,7 +37,10 @@ def get_modal_context(object, request):
         "object": object,
         "type": request.GET.get("type", ""),
         "origin": request.GET.get("origin", ""),
+        "errors": request.GET.get("errors", None),
     }
+    if context["errors"] == "[]":
+        context.update({"errors": None})
 
     # Add layer edit context
     if object.model == "layer":
