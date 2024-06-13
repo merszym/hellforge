@@ -75,6 +75,7 @@ class SiteForm(forms.ModelForm):
         model = Site
         fields = [
             "name",
+            "visible",
             "site",
             "coredb_id",
             "country",

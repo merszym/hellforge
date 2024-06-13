@@ -47,6 +47,12 @@
                             value="{{form.name.value}}">
                         </div>
                         <div class="form-group">
+                            <label class="form-checkbox">
+                              <input type="checkbox" id="site-visible" name="visible" {% if form.visible.value %} checked {% endif %} >
+                              <i class="form-icon"></i> Visible
+                            </label>
+                        </div>
+                        <div class="form-group">
                             <label class="form-label" for="coredb_id">Coredb Id</label>
                             <input class="form-input" type="text" id="coredb_id" name="coredb_id" placeholder="CoreDB Id"
                             value="{{form.coredb_id.value}}">
