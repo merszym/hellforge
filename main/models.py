@@ -775,14 +775,39 @@ class Layer(models.Model):
         blank=True,
         null=True,
     )
+    #
+    ## now this is the dating and age section for layers...
+    #
+    # hierarchy 1. Raw dates
     date = models.ManyToManyField(
         Date, verbose_name="date", blank=True, related_name="origin_model"
     )
+    # hierarchy 2. Define upper and lower Date objects
+    date_upper = models.ForeignKey(
+        Date,
+        verbose_name="upper date",
+        related_name="layer_upper_date",
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
+    date_lower = models.ForeignKey(
+        Date,
+        verbose_name="lower date",
+        related_name="layer_lower_date",
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
+    # Intermediate hierarchy: calculated range from the dates in the layer OR from the upper and lower
     mean_upper = models.IntegerField(blank=True, default=1000000)
     mean_lower = models.IntegerField(blank=True, default=0)
-    # set the date according to the archaeologists
+    # Hierachy 3: Set the Age, overwrite everything else
     set_upper = models.IntegerField(blank=True, null=True)
     set_lower = models.IntegerField(blank=True, null=True)
+    #
+    ## References
+    #
     ref = models.ManyToManyField(
         Reference, verbose_name="reference", blank=True, related_name="layer"
     )
