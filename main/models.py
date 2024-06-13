@@ -590,6 +590,9 @@ class Site(models.Model):
         null=True,
         on_delete=models.SET_NULL,
     )
+    visible = models.BooleanField(
+        "visible", default=True
+    )  # to edit the site without going live...
     coredb_id = models.CharField("coreDB Id", null=True, blank=True, max_length=4)
     contact = models.ManyToManyField(
         Person, blank=True, verbose_name="contact", related_name="site"

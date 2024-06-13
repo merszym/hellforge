@@ -39,14 +39,15 @@
                             </thead>
                             <tbody>
                                 {% for object in object_list %}
+                                {% if object.visible or object.pk in project_sites or request.user.is_authenticated %}
                                     <tr id="site_{{object.pk}}" class="site_done_{{object.site_done}}">
                                         <td>{{object.name}}</td>
                                         <td>{{object.country}}</td>
                                         <td>{{object.type}}</td>
                                         <td>{{object.elevation}} m</td>
                                         <td><a href="{% url 'site_detail'  object.pk %}"><span class="btn">Go</span></a></td>
-
                                     </tr>
+                                {% endif %}
                                 {% endfor %}
                             </tbody>
                         </table>

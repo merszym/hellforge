@@ -261,9 +261,15 @@ def get_site_element(request):
 
 def get_site_geo(request):
     locations = []
+    project = get_project(request)
     if request.GET.get("all", False) == "1":
         for site in Site.objects.all():
-            locations.append(site.get_location_features())
+            if (
+                site.visible
+                or request.user.is_authenticated
+                or (site in Site.objects.filter(project=project) and project == project)
+            ):
+                locations.append(site.get_location_features())
     else:
         object = Site.objects.get(pk=int(request.GET.get("object")))
         if object.child.all():
