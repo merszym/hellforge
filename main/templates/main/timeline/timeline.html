@@ -26,8 +26,15 @@
     margin-right: 200px; /* This is to enforce stacking */
 }
 .vis-item.vis-background{
-    background-color: rgba(148, 131, 131, 0.2);;
+    background-color: rgba(148, 131, 131, 0.2);
 }
+/* For infinite ages, fade away... */
+.vis-item.vis-background.infinite{
+    background-color: rgba(255, 255, 255, 0);
+    background-image: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(148, 131, 131, 0.2), rgba(148, 131, 131, 0.2));
+}
+
+
 {% for cult,color in cultures %}
 .{{cult}}{
     background-color:{{color}};
@@ -94,7 +101,7 @@
                     $(div).html(`
                     <div class="px-1" style="width:200%; height:100%; overflow:visible; display:block; white-space: nowrap">
                         <div style="display: inline-block; line-height:1;">
-                            <span class="text-small text-gray">${data.method}{% if data.oxa %}: ${data.oxa}{% endif %}</span><br>
+                            <span class="text-small">${data.method}: ${data.oxa}</span><br>
                             <span>${data.content}</span>
                         </div>
                     </div>

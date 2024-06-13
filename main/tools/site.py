@@ -82,6 +82,7 @@ def get_timeline_data(site_id, hidden=False, curves=False, request=False):
         project = get_project(request)
     data = {}
     site = Site.objects.get(pk=site_id)
+
     layers = Layer.objects.filter(site=site).prefetch_related("date")
     cultures = {}
     for n, cult in enumerate(
@@ -100,22 +101,63 @@ def get_timeline_data(site_id, hidden=False, curves=False, request=False):
     ]
     dates = []
     for layer in layers:
-        if sup := layer.set_upper:
-            if slo := layer.set_lower:
-                set_date = Date(upper=sup, lower=slo)
-                # convert to ms
-                sup, slo = set_date.to_ms()
-                background = {
+        background = {}
+        upper = None
+        lower = None
+        infinite = False
+
+        # start again with the first hierarchie
+        if layer.set_upper and layer.set_lower:
+            upper = layer.set_upper
+            lower = layer.set_lower
+
+        # now get the background information for the date_upper and date_lower values
+
+        if layer.date_upper and layer.date_lower:
+            lower = layer.date_lower.lower
+            infinite = layer.date_upper.get_upper().startswith(">")
+
+            # if upper is infinite, add 5000 years to "fade out" in the view
+            upper = (
+                layer.date_upper.lower + 5000  # infinite dates dont have an upper value
+                if infinite
+                else layer.date_upper.upper
+            )
+        # if only date_upper is set, it is not infinite
+        if layer.date_upper and not layer.date_lower:
+            lower = 1
+            upper = layer.date_upper.upper
+
+        # if only date_lower is set, add 5000 years for the display
+        if layer.date_lower and not layer.date_upper:
+            lower = layer.date_lower.lower
+            infinite = layer.date_lower.get_upper().startswith(">")
+            upper = (
+                layer.date_lower.lower + 5000
+                if infinite
+                else layer.date_lower.upper + 5000
+            )
+
+        if upper and lower:
+            bg_date = Date(upper=upper, lower=lower)
+            # convert to ms
+            sup, slo = bg_date.to_ms()
+            background.update(
+                {
+                    "hierarchy": "2" if (layer.date_upper or layer.date_lower) else "1",
                     "start": sup,
                     "end": slo,
                     "order": sup * -1,
-                    "content": f"{set_date}",
+                    "content": f"{layer.age_summary()}",
                     "group": layer.name.lower(),
                     "type": "background",
                     "background": True,
+                    "className": "infinite" if infinite else "",
                 }
-                dates.append(background)
+            )
 
+        if len(background) > 0:
+            dates.append(background)
         # now for the dates
         if (project and site in project.site.all()) or (request.user.is_authenticated):
             tmp_dates = list(layer.date.all())
