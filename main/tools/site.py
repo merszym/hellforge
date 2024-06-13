@@ -131,12 +131,13 @@ def get_timeline_data(site_id, hidden=False, curves=False, request=False):
         # if only date_lower is set, add 5000 years for the display
         if layer.date_lower and not layer.date_upper:
             lower = layer.date_lower.lower
-            infinite = True  # is always because its the lower bound...
+            infinite = layer.date_lower.get_upper().startswith(">")
             upper = (
                 layer.date_lower.lower + 5000
                 if infinite
                 else layer.date_lower.upper + 5000
             )
+            infinite = True  # this is now only for display
 
         if upper and lower:
             bg_date = Date(upper=upper, lower=lower)
