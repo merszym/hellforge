@@ -302,11 +302,13 @@
                         <option value="{{option.pk}}">{{option}} {% if option.estimate %}/ {{option.estimate|default:''}} ± {{option.plusminus|default:''}}{% endif %} ({{option.origin_model.first.name}})</option>
                         {% endfor %}
                     </select>
+                    {% if request.user.is_authenticated %}
                     <span
                         hx-post="{% url 'layer-setdate-update' %}?{{request.GET|getstring}}"
                         hx-target="#modal-blank"
                         class="btn btn-primary input-group-btn"
                     >Set</span>
+                    {% endif %}
                 </div>
             </form>
             <br>
