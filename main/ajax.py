@@ -42,6 +42,11 @@ def get_modal_context(object, request):
     if context["errors"] == "[]":
         context.update({"errors": None})
 
+    # Add sample edit context
+    if object.model == "sample":
+        if context["type"] == "dates_list":
+            context.update({"site_dates": object.layer.site.get_dates()})
+
     # Add layer edit context
     if object.model == "layer":
         if context["type"] == "edit":
@@ -57,13 +62,8 @@ def get_modal_context(object, request):
             )
         if context["type"] == "dates_list":
             # Add dates as the layer boundaries
-            context.update(
-                {
-                    "site_dates": Date.objects.filter(
-                        layer_model__site=object.site
-                    ).order_by("layer_model")
-                }
-            )
+            context.update({"site_dates": object.layer.site.get_dates()})
+
         if context["type"] == "properties":
             context.update(
                 {

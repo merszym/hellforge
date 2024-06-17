@@ -1,0 +1,103 @@
+{% load static %}
+{% load format %}
+
+<!-- Modal content for Date -->
+<div class="modal-body">
+    <h5>{{model|title}} Age: {{object.age_summary}} </h5>
+    <br>
+    <div class="content my-2">
+        <h6>1. Hard {{model|title}} Boundaries:</h6>
+        <p class="form-input-hint">Hard set upper and lower <b>boundaries</b> for the {{model}} (in <i>years</i> ago).
+            This is independent of any raw dates in the database</p>
+        <form>
+            {% csrf_token %}
+            <div class="input-group">
+                <input type="text" name="instance_x" value="{{model}}_{{object.pk}}" style="display: none;">
+                <span class="input-group-addon">Upper Bound</span>
+                <input type="text" class="form-input" name="upper" placeholder="upper"
+                    value="{%if object.set_upper %}{{object.set_upper}}{%endif%}">
+                <span class="input-group-addon">Lower Bound</span>
+                <input type="text" class="form-input" name="lower" placeholder="lower"
+                value="{%if object.set_lower %}{{object.set_lower}}{%endif%}"
+                >
+                {% if request.user.is_authenticated %}
+                <span id="set_layer_bounds" class="btn btn-primary input-group-btn"
+                    hx-post="{% url 'main_dateable_setbounds' %}"
+                    hx-target="#modal-blank">Set
+                </span>
+                {% endif %}
+            </div>
+        </form><br>
+        <h6>2. Set upper and/or lower Dates</h6>
+        <p class="form-input-hint">Set upper and lower <b>dates</b> from the site as the boundaries of the {{model}}.
+            This includes the confidence intervals. Selecting only <b>one</b> date will be interpreted as being relatively
+            older or younger than the selected date</p>
+        <form>
+            {% csrf_token %}
+            <input name="instance_x" value="{{model}}_{{object.pk}}" style="display: none;"/>
+            <div class="input-group">
+                <span class="input-group-addon">Upper Date</span>
+                <select class="form-select" name="upper_date">
+                    {% if object.date_upper %}
+                    <option value="{{object.date_upper.pk}}">{{object.date_upper}} ({{object.date_upper.layer.first.name}})</option>
+                    <option>----</option>
+                    {% else %}
+                    <option selected>----</option>
+                    {% endif %}
+                    {% for option in site_dates %}
+                    <option value="{{option.pk}}">{{option}} {% if option.estimate %}/ {{option.estimate|default:''}} ± {{option.plusminus|default:''}}{% endif %} ({{option.layer.first.name}})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="input-group">
+                <span class="input-group-addon">Lower Date</span>
+                <select class="form-select" name="lower_date">
+                    {% if object.date_lower %}
+                    <option value="{{object.date_lower.pk}}">{{object.date_lower}} ({{object.date_lower.layer.first.name}})</option>
+                    <option>----</option>
+                    {% else %}
+                    <option selected>----</option>
+                    {% endif %}
+                    {% for option in site_dates %}
+                    <option value="{{option.pk}}">{{option}} {% if option.estimate %}/ {{option.estimate|default:''}} ± {{option.plusminus|default:''}}{% endif %} ({{option.layer.first.name}})</option>
+                    {% endfor %}
+                </select>
+                {% if request.user.is_authenticated %}
+                <span
+                    hx-post="{% url 'main_dateable_setdate' %}?{{request.GET|getstring}}"
+                    hx-target="#modal-blank"
+                    class="btn btn-primary input-group-btn"
+                >Set</span>
+                {% endif %}
+            </div>
+        </form>
+        <br>
+        <h6>3. Associated Dates</h6>
+        <p class="form-input-hint">If no bounds or dates are set for the {{model}}, the boundaries are calculated from the associated dates,
+            by taking the <b>mean</b> of the lower and upper bounds of each date. <i><b>NOTE:</b> This is NOT a verified age, dont use it as is. Raw
+                dates might be affected by reservoir effects or missing from the database. Infinite dates can (unfortunately) not be taken into account
+            </i></p>
+        {% if object.date.first %}
+
+        <div id="modal-form">
+            {% include 'main/dating/dating-table.html' with date_list=object.date.all mode='visible' title='List of associated Dates' %}
+            <br><br>
+            {% include 'main/dating/dating-table.html' with date_list=object.hidden_dates mode='hidden' title='Hidden Dates' %}
+            <br>
+            <h6>References</h6>
+            <table class="table">
+            {% for ref in object.date_references %}
+                {% include 'main/reference/reference-tablerow.html' with display=True %}
+            {% endfor %}
+            </table>
+        </div>
+        {% else %}
+        (No raw dates related to this layer)
+        {% endif %}
+        {% if model == 'sample' %}
+        <br><br>
+        <h6>4. Context Date</h6>
+        <p class="form-input-hint">If no dates are linked to the sample, take the age of the related <strong>layer</strong></p>
+        {% endif %}
+    </div>
+</div>

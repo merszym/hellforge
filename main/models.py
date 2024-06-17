@@ -501,7 +501,7 @@ class Dateable(models.Model):
         abstract = True
 
     def age_summary(self, export=False):
-        # first, see if the bounds are set
+        ## first, see if the bounds are set
         if self.set_upper and self.set_lower:
             return Date(upper=self.set_upper, lower=self.set_lower)
         ## then, check if there are dates
@@ -520,7 +520,7 @@ class Dateable(models.Model):
         if self.date_lower:
             return f"> {self.date_lower}"
 
-        # else, get from dates
+        ## else, get from dates
         if dates := self.date.all():
             if len(dates) == 1:
                 if export:
@@ -528,10 +528,20 @@ class Dateable(models.Model):
                 return dates.first()
             else:
                 return Date(upper=self.mean_upper, lower=self.mean_lower)
+
+        ## if no dates, look if there is context
+        if self.model == "sample":
+            return self.layer.age_summary()
+
+        ## return "undated"
         else:
             if export:
                 return None
             return "Undated"
+
+    @property
+    def date_references(self):
+        return Reference.objects.filter(date__in=self.date.all()).distinct()
 
 
 class Location(models.Model):
@@ -791,6 +801,18 @@ class Site(models.Model):
         else:
             return {}
 
+    def get_dates(self):
+        site_layers = self.layer.all()
+        site_samples = Sample.objects.filter(layer__in=site_layers)
+        return (
+            Date.objects.filter(
+                Q(hidden=False) & Q(layer_model__in=site_layers)
+                | Q(sample_model__in=site_samples)
+            )
+            .order_by("layer_model")
+            .distinct()
+        )
+
 
 class Profile(models.Model):
     name = models.CharField("name", max_length=200)
@@ -887,12 +909,6 @@ class Layer(Dateable):
     @property
     def hidden_dates(self):
         return Date.objects.filter(Q(hidden=True) & Q(layer_model=self))
-
-    @property
-    def date_references(self):
-        return Reference.objects.filter(
-            date__in=Date.objects.filter(layer_model=self)
-        ).distinct()
 
     @property
     def in_profile(self):

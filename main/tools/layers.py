@@ -103,80 +103,6 @@ def set_name(request):
 
 
 @login_required
-def set_bounds(request):
-    object = get_instance_from_string(request.POST.get("instance_x"))
-    try:
-        object.set_upper = int(request.POST.get("upper"))
-    except ValueError:
-        object.set_upper = None
-    try:
-        object.set_lower = int(request.POST.get("lower"))
-    except ValueError:
-        object.set_lower = None
-    object.save()
-
-    request.GET._mutable = True
-    request.GET.update({"object": f"layer_{object.pk}", "type": "dates_list"})
-
-    return get_modal(request)
-
-
-@login_required
-def set_date(request):
-    from main.models import Date
-
-    ## RULES ##
-    # 1. If both upper and lower dates are set
-    # - upper can be infinite
-    # - lower cant be infinite
-    #
-    # 2. If only one date is set
-    # - only upper and infinite --> has no meaning, so dont allow
-    # - only upper --> Younger than that
-    # - only lower --> Older than that (so lower can also be infinite in this case)
-
-    object = get_instance_from_string(request.POST.get("instance_x"))
-
-    try:
-        date_upper = Date.objects.get(pk=int(request.POST.get("upper_date")))
-    except ValueError:
-        date_upper = None
-
-    try:
-        date_lower = Date.objects.get(pk=int(request.POST.get("lower_date")))
-    except ValueError:
-        date_lower = None
-
-    # now check for the rules
-    errors = []
-    if date_upper and date_lower:
-        if date_lower.get_upper().startswith(">"):
-            errors.append(
-                f"No infinite Date ({date_lower}) allowed as lower date, if upper date exists"
-            )
-    elif date_upper and not date_lower and date_upper.get_upper().startswith(">"):
-        errors.append(
-            f"No infinite Date ({date_upper}) allowed as only upper date. Younger than infinite is not meaningful"
-        )
-
-    if len(errors) == 0:
-        object.date_upper = date_upper
-        object.date_lower = date_lower
-        object.save()
-
-    request.GET._mutable = True
-    request.GET.update(
-        {
-            "object": f"layer_{object.pk}",
-            "type": "dates_list",
-            "errors": errors if len(errors) > 0 else None,
-        }
-    )
-
-    return get_modal(request)
-
-
-@login_required
 def set_culture(request):
     object = get_instance_from_string(request.POST.get("instance_x"))
     object.culture = Culture.objects.get(pk=int(request.POST.get("culture")))
@@ -205,8 +131,6 @@ urlpatterns = [
     path("set-name", set_name, name="main_layer_setname"),
     path("set-culture", set_culture, name="layer-culture-update"),
     path("set-epoch", set_epoch, name="layer-epoch-update"),
-    path("set-bounds", set_bounds, name="main_layer_setbounds"),
-    path("set-date", set_date, name="layer-setdate-update"),
     path("clone/<int:pk>", clone, name="main_layer_clone"),
     path("positions", update_positions, name="main_layer_positionupdate"),
 ]

@@ -6,6 +6,7 @@ from django.urls import path
 from django.db.models import Q
 from main.models import models, Date, Site
 from main.tools.generic import remove_x_from_y_m2m, delete_x, get_instance_from_string
+from main.ajax import get_modal
 from django.contrib.auth.decorators import (
     login_required,
 )  # this is for now, make smarter later
@@ -227,6 +228,80 @@ def toggle_use(request):
     return get_modal(request)
 
 
+@login_required
+def dateable_setbounds(request):
+    object = get_instance_from_string(request.POST.get("instance_x"))
+    try:
+        object.set_upper = int(request.POST.get("upper"))
+    except ValueError:
+        object.set_upper = None
+    try:
+        object.set_lower = int(request.POST.get("lower"))
+    except ValueError:
+        object.set_lower = None
+    object.save()
+
+    request.GET._mutable = True
+    request.GET.update({"object": f"{object.model}_{object.pk}", "type": "dates_list"})
+
+    return get_modal(request)
+
+
+@login_required
+def dateable_setdate(request):
+    from main.models import Date
+
+    ## RULES ##
+    # 1. If both upper and lower dates are set
+    # - upper can be infinite
+    # - lower cant be infinite
+    #
+    # 2. If only one date is set
+    # - only upper and infinite --> has no meaning, so dont allow
+    # - only upper --> Younger than that
+    # - only lower --> Older than that (so lower can also be infinite in this case)
+
+    object = get_instance_from_string(request.POST.get("instance_x"))
+
+    try:
+        date_upper = Date.objects.get(pk=int(request.POST.get("upper_date")))
+    except ValueError:
+        date_upper = None
+
+    try:
+        date_lower = Date.objects.get(pk=int(request.POST.get("lower_date")))
+    except ValueError:
+        date_lower = None
+
+    # now check for the rules
+    errors = []
+    if date_upper and date_lower:
+        if date_lower.get_upper().startswith(">"):
+            errors.append(
+                f"No infinite Date ({date_lower}) allowed as lower date, if upper date exists"
+            )
+    elif date_upper and not date_lower and date_upper.get_upper().startswith(">"):
+        errors.append(
+            f"No infinite Date ({date_upper}) allowed as only upper date. Younger than infinite is not meaningful"
+        )
+
+    if len(errors) == 0:
+        object.date_upper = date_upper
+        object.date_lower = date_lower
+        object.save()
+
+    request.GET._mutable = True
+    request.GET.update(
+        {
+            "object": f"{object.model}_{object.pk}",
+            "type": "dates_list",
+            "errors": errors if len(errors) > 0 else None,
+        }
+    )
+
+    return get_modal(request)
+
+
 urlpatterns = [
     path("add", add, name="ajax_date_add"),
     path("delete", delete, name="ajax_date_unlink"),
@@ -234,4 +309,6 @@ urlpatterns = [
     path("save-batch", save_verified_batchdata, name="ajax_save_verified_batchdata"),
     path("toggle_use", toggle_use, name="ajax_date_toggle"),
     path("recalibrate", recalibrate_c14, name="ajax_date_recalibrate"),
+    path("set-bounds", dateable_setbounds, name="main_dateable_setbounds"),
+    path("set-date", dateable_setdate, name="main_dateable_setdate"),
 ]
