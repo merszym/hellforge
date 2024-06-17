@@ -192,7 +192,7 @@ def add(request):
 
     # finally, return the modal
     request.GET._mutable = True
-    request.GET.update({"object": f"layer_{object.pk}", "type": "dates"})
+    request.GET.update({"object": f"{object.model}_{object.pk}", "type": "dates"})
 
     from main.ajax import get_modal
 
@@ -202,7 +202,7 @@ def add(request):
 @login_required
 def delete(request):
     date = get_instance_from_string(request.POST.get("instance_x"))
-    layer = date.layer
+    object = get_instance_from_string(request.POST.get("instance_y"))
 
     error = None
     if date.is_used_as_limit():
@@ -212,13 +212,13 @@ def delete(request):
             "Cannot delete date that is fixed as upper or lower bound",
         )
     else:
-        status, date, layer = remove_x_from_y_m2m(request, "date", response=False)
+        status, date, object = remove_x_from_y_m2m(request, "date", response=False)
         # If dates are not linked to any model, remove
         if len(date.layer_model.all()) == 0 and len(date.sample_model.all()) == 0:
             deleted = delete_x(request, response=False)
 
     request.GET._mutable = True
-    request.GET.update({"object": f"layer_{layer.pk}", "type": "dates_list"})
+    request.GET.update({"object": f"{object.model}_{object.pk}", "type": "dates_list"})
 
     from main.ajax import get_modal
 

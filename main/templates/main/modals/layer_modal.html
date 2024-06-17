@@ -15,25 +15,7 @@
         {% endfor %}
         {% endif %}
 
-        {% if type == 'dates_list' and request.user.is_authenticated %}
-        <div class="modal-title h5 ">Layer Age and Dates</div>
-        <span class="btn modal_open tooltip tooltip-top" data-tooltip="Add Dating"
-            hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
-            hx-vals='{"object":"layer_{{object.pk}}","type":"dates"}'
-            hx-target="#modal-blank">
-        <i class="icon icon-plus"></i>
-        </span>
-        {% elif type == 'dates' %}
-        <div class="modal-title h5 ">Add Date(s)</div>
-        <span
-            class="btn modal_open tooltip tooltip-top"
-            data-tooltip="Back to Date Overview"
-            hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
-            hx-vals='{"object":"layer_{{object.pk}}","type":"dates_list"}'
-            hx-target="#modal-blank">
-            <i class="icon icon-back"></i>
-        </span>
-        {% elif type == "faunal_tables" %}
+        {% if type == "faunal_tables" %}
         <div class="modal-title h5 ">Import Fauna</div>
         {% else %}
         <div class="modal-title h5 ">Edit Layer</div>
@@ -215,31 +197,12 @@
         </div>
     </div>
 
-    {% elif type == "dates" %}
+    {# ---------------------#}
+    {#   LAYER DATE MODALS  #}
+    {# ---------------------#}
 
-    {# ------------------------ #}
-    {#   LAYER DATE MODAL       #}
-    {# ------------------------ #}
 
-    <div class="modal-body">
-        <div class="content">
-            <div id="dating-content">
-                <form id="modal-form" method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    {% include 'main/dating/dating-fields.html' %}
-                    <br>
-                    <span
-                        id="ajax_add_date" class="btn btn-primary"
-                        hx-post="{% url 'ajax_date_add' %}?{{request.GET|getstring}}"
-                        hx-vals='{"object":"layer_{{object.pk}}"}'
-                        hx-target="#modal-blank"
-                        >Save</span>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    {% elif type == "dates_list" %}
+    {% elif type == "dates" or type == "dates_list" %}
 
     {% include 'main/modals/snippets/datable_form.html' with model='layer' %}
 

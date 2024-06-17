@@ -27,7 +27,8 @@
             <th>{{type}}</th>
             {% endfor %}
             <th>Libraries</th>
-            <th>Sample Age</th>
+            <th>Sample Dating</th>
+            <th>Dating Type</th>
             <th>Year of Collection</th>
             <th>Sample Origin</th>
         </tr>
@@ -105,6 +106,13 @@
             {% endif %}>
             {{object.age_summary}}
                 </a>
+            </td>
+            <td>
+                {% if object.date.first %}
+                Direct
+                {% else %}
+                Context
+                {% endif %}
             </td>
             <td nowrap
             {% if request.user.is_authenticated %}

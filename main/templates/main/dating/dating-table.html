@@ -80,7 +80,7 @@
                         {% if request.user.is_authenticated %}
                         class="modal_open tooltip tooltip-left" data-tooltip="Edit Date"
                         hx-get="{% url 'main_modal_get' %}"
-                        hx-vals='{"object":"date_{{date.pk}}","type":"edit", "origin":"layer_{{object.pk}}"}'
+                        hx-vals='{"object":"date_{{date.pk}}","type":"edit", "origin":"{{object.model}}_{{object.pk}}"}'
                         hx-target="#modal-blank"
                         {% endif %}>
                         {% if date.ref.first %}
@@ -95,7 +95,7 @@
                     <form>
                     {% csrf_token %}
                     <input name="instance_x" value="date_{{date.pk}}" type="hidden">
-                    <input name="instance_y" value="layer_{{object.pk}}" type="hidden">
+                    <input name="instance_y" value="{{object.model}}_{{object.pk}}" type="hidden">
                     <span class="btn tooltip tooltip-left" data-tooltip="Delete Date!"
                             hx-post="{% url 'ajax_date_unlink'%}"
                             hx-target="#modal-blank">
@@ -105,7 +105,7 @@
                     <form>
                     {% csrf_token %}
                     <input name="instance_x" value="date_{{date.pk}}" type="hidden">
-                    <input name="object" value="layer_{{object.pk}}" type="hidden">
+                    <input name="object" value="{{object.model}}_{{object.pk}}" type="hidden">
                     <span class="btn tooltip tooltip-left" data-tooltip="Toggle Usage of Date"
                         hx-post="{% url 'ajax_date_toggle'%}"
                         hx-target="#modal-blank">

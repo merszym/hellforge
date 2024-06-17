@@ -2,7 +2,17 @@
 {% load format %}
 
 <!-- Modal content for Date -->
+{% if type == 'dates_list' %}
+
 <div class="modal-body">
+    {% if request.user.is_authenticated %}
+        <span class="btn modal_open tooltip tooltip-right" data-tooltip="Add Dating"
+            hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
+            hx-vals='{"object":"{{model}}_{{object.pk}}","type":"dates"}'
+            hx-target="#modal-blank">
+        <i class="icon icon-plus"></i>
+        </span>
+    {% endif %}
     <h5>{{model|title}} Age: {{object.age_summary}} </h5>
     <br>
     <div class="content my-2">
@@ -101,3 +111,35 @@
         {% endif %}
     </div>
 </div>
+
+{% elif type == 'dates' %}
+
+<div class="modal-body">
+    {% if request.user.is_authenticated %}
+    <span
+        class="btn modal_open tooltip tooltip-right"
+        data-tooltip="Back to Date Overview"
+        hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
+        hx-vals='{"object":"{{model}}_{{object.pk}}","type":"dates_list"}'
+        hx-target="#modal-blank">
+        <i class="icon icon-back"></i>
+    </span>
+    {% endif %}
+    <div class="content">
+        <div id="dating-content">
+            <form id="modal-form" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% include 'main/dating/dating-fields.html' %}
+                <br>
+                <span
+                    id="ajax_add_date" class="btn btn-primary"
+                    hx-post="{% url 'ajax_date_add' %}?{{request.GET|getstring}}"
+                    hx-vals='{"object":"{{model}}_{{object.pk}}"}'
+                    hx-target="#modal-blank"
+                    >Save</span>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endif %}

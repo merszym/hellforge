@@ -200,8 +200,7 @@
     {# UPDATE SAMPLE DATINGS #}
     {# --------------------  #}
 
-
-    {% elif type == "dates_list" %}
+    {% elif type == "dates_list" or type == 'dates' %}
 
     {% include 'main/modals/snippets/datable_form.html' with model='sample' %}
 
