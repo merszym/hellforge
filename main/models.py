@@ -1063,6 +1063,7 @@ class Sample(Dateable):
             "Sample Type",
             "Sample Year of Collection",
             "Sample Provenience",
+            "Sample Age",
         ]
 
     def __str__(self):
@@ -1079,6 +1080,7 @@ class Sample(Dateable):
             "Sample Provenience": ";".join(
                 [f"{k}:{v}" for k, v in json.loads(self.provenience).items()]
             ),
+            "Sample Age": self.age_summary(),
         }
         return data
 
