@@ -77,7 +77,7 @@ class SiteListView(ProjectAwareListView):
         return queryset.filter(child=None)
 
 
-def get_timeline_data(site_id, hidden=False, curves=False, request=False):
+def get_timeline_data(site_id, curves=False, request=False):
     if request:
         project = get_project(request)
     data = {}
@@ -166,14 +166,27 @@ def get_timeline_data(site_id, hidden=False, curves=False, request=False):
             # if not in project and view-only dont display unpublished dates
             tmp_dates = [x for x in list(layer.date.all()) if len(x.ref.all()) > 0]
 
-        if hidden:
-            tmp_dates.extend(layer.hidden_dates)
+        # now add the dates from the samples that are NOT also in the layers
+        sample_dates = Date.objects.filter(
+            Q(sample_model__in=layer.sample.all()) & Q(layer_model__isnull=True)
+        )
+
+        if not (project and site in project.site.all()) or not (
+            request.user.is_authenticated
+        ):
+            sample_dates = sample_dates.filter(ref__isnull=False)
+
+        tmp_dates.extend(list(sample_dates))
+
         for date in tmp_dates:
+            content = [f"{date}"]
+            if len(date.layer_model.all()) == 0:
+                content.append(f"(sample {date.sample_model.first().name})")
             upper, lower = date.to_ms()
             layerdata = {
                 "start": upper,
-                "order": upper * -1 if not date.hidden else upper * -4,
-                "content": f"{date}",
+                "order": upper * -1,
+                "content": "<br>".join(content),
                 "group": layer.name.lower(),
                 "className": layer.culture.classname if layer.culture else "sterile",
                 "type": "point",
@@ -184,14 +197,6 @@ def get_timeline_data(site_id, hidden=False, curves=False, request=False):
                 "method": date.method,
                 "background": False,
             }
-            if date.hidden:
-                layerdata.update(
-                    {
-                        "className": (
-                            "hidden" if not (date.raw and curves) else "hiddenfill"
-                        )
-                    }
-                )
 
             # if range instead of point
             if upper != lower:

@@ -1,9 +1,6 @@
 function reloadTimeline(){
     var gets = ""
     // check if filters are toggled:
-    if($('#timeline-show-hidden').hasClass('btn-primary')){
-        gets = `hidden=1`
-    }
     if($('#timeline-show-curves').hasClass('btn-primary')){
         gets = `${gets}&curves=1`
     }

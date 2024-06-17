@@ -83,6 +83,7 @@
         </form>
         <br>
         <h6>3. Associated Dates</h6>
+        {% if object.date.first or object.hidden_dates.first %}
         <p class="form-input-hint">If no bounds or dates are set for the {{model}}, the boundaries are calculated from the associated dates,
             by taking the <b>mean</b> of the lower and upper bounds of each date. <i><b>NOTE:</b> This is NOT a verified age, dont use it as is. Raw
                 dates might be affected by reservoir effects or missing from the database. Infinite dates can (unfortunately) not be taken into account
@@ -100,6 +101,9 @@
             {% endfor %}
             </table>
         </div>
+        {% else %}
+        <p class="form-input-hint">No associated dates yet. Please add dates first</p>
+        {% endif %}
 
         {% if model == 'sample' %}
         <br><br>
