@@ -160,37 +160,50 @@ def add(request):
     # get the layer/object the date needs to be added to
     object = get_instance_from_string(request.POST.get("object"))
 
-    form = DateForm(request.POST)
-    if form.is_valid():  # is always valid because nothing is required
-        # create a tmp-date, dont save
-        obj = Date(method="tmp")
-        # check if we have the date already in the database
-        # replace the tmp-date
-        if oxa := form.cleaned_data.get("oxa"):
-            try:
-                obj = Date.objects.get(oxa=oxa)
-            except Date.DoesNotExist:
-                pass
-        # Check of obj is now a real entry
-        if not obj.pk:
-            if any(
-                [
-                    form.cleaned_data.get(x, False)
-                    for x in ["estimate", "upper", "lower"]
-                ]
-            ):
-                obj = (
-                    form.save()
-                )  # post_safe signal fires here to calibrate if not done yet
-                obj.refresh_from_db()
-            else:
-                form.add_error(None, "Please provide a Date")
-        # if we _now_ have a real date entry, add to associated model (e.g. Layer)
-        if obj.pk:
-            object.date.add(obj)
-            object.save()  # not needed for adding, but for post-save signal in layer
+    # first see if there was a simple add
+    if pk := request.POST.get("date", False):
+        obj = Date.objects.get(pk=int(pk))
+        object.date.add(obj)
+        object.save()
+
+    else:
+        form = DateForm(request.POST)
+        if form.is_valid():  # is always valid because nothing is required
+            # create a tmp-date, dont save
+            obj = Date(method="tmp")
+            # check if we have the date already in the database
+            # replace the tmp-date
+            if oxa := form.cleaned_data.get("oxa"):
+                try:
+                    obj = Date.objects.get(oxa=oxa)
+                except Date.DoesNotExist:
+                    pass
+            # Check of obj is now a real entry
+            if not obj.pk:
+                if any(
+                    [
+                        form.cleaned_data.get(x, False)
+                        for x in ["estimate", "upper", "lower"]
+                    ]
+                ):
+                    obj = (
+                        form.save()
+                    )  # post_safe signal fires here to calibrate if not done yet
+                    obj.refresh_from_db()
+                else:
+                    form.add_error(None, "Please provide a Date")
+            # if we _now_ have a real date entry, add to associated model (e.g. Layer)
+            if obj.pk:
+                object.date.add(obj)
+                object.save()  # not needed for adding, but for post-save signal in layer
 
     # finally, return the modal
+    messages.add_message(
+        request,
+        messages.SUCCESS,
+        f"Date added to {object.model}",
+    )
+
     request.GET._mutable = True
     request.GET.update({"object": f"{object.model}_{object.pk}", "type": "dates"})
 
@@ -234,7 +247,7 @@ def toggle_use(request):
 
     # finally, return the modal
     request.GET._mutable = True
-    request.GET.update({"object": f"layer_{object.pk}", "type": "dates_list"})
+    request.GET.update({"object": f"{object.model}_{object.pk}", "type": "dates_list"})
 
     from main.ajax import get_modal
 

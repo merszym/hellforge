@@ -7,6 +7,14 @@
         <div class="modal-title h5">Sample Modal</div>
     </div>
 
+    {% if messages %}
+        {% for message in messages %}
+        <div class="toast toast-{{ message.tags }}">
+            {{message}}
+        </div>
+        {% endfor %}
+    {% endif %}
+
     {% if type == "edit_layer" %}
 
     {# -------------------- #}

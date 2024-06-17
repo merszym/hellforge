@@ -9,6 +9,14 @@
         <div class="modal-title h5">Site Modal</div>
     </div>
 
+    {% if messages %}
+        {% for message in messages %}
+        <div class="toast toast-{{ message.tags }}">
+            {{message}}
+        </div>
+        {% endfor %}
+    {% endif %}
+
     <!-- Define what to reload upon modal load -->
     {% if type == 'faunal_success' %}
     <div

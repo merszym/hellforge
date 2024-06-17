@@ -554,6 +554,12 @@ class Dateable(models.Model):
     def date_references(self):
         return Reference.objects.filter(date__in=self.date.all()).distinct()
 
+    @property
+    def hidden_dates(self):
+        if self.model == "sample":
+            return Date.objects.filter(Q(hidden=True) & Q(sample_model=self))
+        return Date.objects.filter(Q(hidden=True) & Q(layer_model=self))
+
 
 class Location(models.Model):
     name = models.CharField(
@@ -916,10 +922,6 @@ class Layer(Dateable):
             return 1 + max([y.hierarchie for y in self.child.all()])
         except ValueError:
             return 1
-
-    @property
-    def hidden_dates(self):
-        return Date.objects.filter(Q(hidden=True) & Q(layer_model=self))
 
     @property
     def in_profile(self):

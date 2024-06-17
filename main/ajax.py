@@ -48,6 +48,7 @@ def get_modal_context(object, request):
             context.update({"site_dates": object.layer.site.get_dates()})
         if context["type"] == "dates":
             context.update({"datingoptions": DatingMethod.objects.all()})
+            context.update({"site_dates": object.layer.site.get_dates()})
 
     # Add layer edit context
     if object.model == "layer":
