@@ -869,16 +869,18 @@ class Layer(models.Model):
         ## then, check if there are dates
         # check if both are true
         if self.date_upper and self.date_lower:
+            if self.date_upper == self.date_lower:
+                return f"{self.date_upper}"
             # the upper could be infinite, but we dont care at this moment
             return (
                 f"{self.date_upper.get_upper()} - {self.date_lower.get_lower()} years"
             )
         # check if ONE of the dates is set
         if self.date_upper:
-            return f"< {self.date_upper.get_upper()} years"
+            return f"< {self.date_upper}"
 
         if self.date_lower:
-            return f"> {self.date_lower.get_lower()} years"
+            return f"> {self.date_lower}"
 
         # else, get from dates
         if dates := self.date.all():
