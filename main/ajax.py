@@ -60,8 +60,8 @@ def get_modal_context(object, request):
             context.update(
                 {
                     "site_dates": Date.objects.filter(
-                        origin_model__site=object.site
-                    ).order_by("origin_model")
+                        layer_model__site=object.site
+                    ).order_by("layer_model")
                 }
             )
         if context["type"] == "properties":

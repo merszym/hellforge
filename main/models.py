@@ -328,7 +328,10 @@ class Date(models.Model):
 
     @property
     def layer(self):
-        return self.origin_model.first()
+        if self.layer_model:
+            return self.layer_model
+        # if sample not layer
+        return self.sample_model.layer
 
     class Meta:
         default_manager_name = "visible_objects"
@@ -459,6 +462,76 @@ class Date(models.Model):
             if self.upper != self.lower:
                 return f"{self.upper:,} - {self.lower:,} years"
             return f"{self.upper:,} years"
+
+
+class Dateable(models.Model):
+
+    #
+    ## now this is the dating and age section for layers...
+    #
+    # hierarchy 1. Raw dates
+    date = models.ManyToManyField(
+        Date, verbose_name="date", blank=True, related_name="%(class)s_model"
+    )
+    # hierarchy 2. Define upper and lower Date objects
+    date_upper = models.ForeignKey(
+        Date,
+        verbose_name="upper date",
+        related_name="%(class)s_upper_date",
+        blank=True,
+        null=True,
+        on_delete=models.PROTECT,
+    )
+    date_lower = models.ForeignKey(
+        Date,
+        verbose_name="lower date",
+        related_name="%(class)s_lower_date",
+        blank=True,
+        null=True,
+        on_delete=models.PROTECT,
+    )
+    # Intermediate hierarchy: calculated range from the dates in the layer OR from the upper and lower
+    mean_upper = models.IntegerField(blank=True, default=1000000)
+    mean_lower = models.IntegerField(blank=True, default=0)
+    # Hierachy 3: Set the Age, overwrite everything else
+    set_upper = models.IntegerField(blank=True, null=True)
+    set_lower = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        abstract = True
+
+    def age_summary(self, export=False):
+        # first, see if the bounds are set
+        if self.set_upper and self.set_lower:
+            return Date(upper=self.set_upper, lower=self.set_lower)
+        ## then, check if there are dates
+        # check if both are true
+        if self.date_upper and self.date_lower:
+            if self.date_upper == self.date_lower:
+                return f"{self.date_upper}"
+            # the upper could be infinite, but we dont care at this moment
+            return (
+                f"{self.date_upper.get_upper()} - {self.date_lower.get_lower()} years"
+            )
+        # check if ONE of the dates is set
+        if self.date_upper:
+            return f"< {self.date_upper}"
+
+        if self.date_lower:
+            return f"> {self.date_lower}"
+
+        # else, get from dates
+        if dates := self.date.all():
+            if len(dates) == 1:
+                if export:
+                    return Date(upper=dates.first().upper, lower=dates.first().lower)
+                return dates.first()
+            else:
+                return Date(upper=self.mean_upper, lower=self.mean_lower)
+        else:
+            if export:
+                return None
+            return "Undated"
 
 
 class Location(models.Model):
@@ -738,7 +811,7 @@ class Profile(models.Model):
         return Profile.objects.filter(site=self.site).exclude(id=self.pk)
 
 
-class Layer(models.Model):
+class Layer(Dateable):
     name = models.CharField("name", max_length=200)
     synonyms = models.ManyToManyField(
         Synonym, blank=True, verbose_name="synonym", related_name="layer"
@@ -783,39 +856,11 @@ class Layer(models.Model):
         blank=True,
         null=True,
     )
-    #
-    ## now this is the dating and age section for layers...
-    #
-    # hierarchy 1. Raw dates
-    date = models.ManyToManyField(
-        Date, verbose_name="date", blank=True, related_name="origin_model"
-    )
-    # hierarchy 2. Define upper and lower Date objects
-    date_upper = models.ForeignKey(
-        Date,
-        verbose_name="upper date",
-        related_name="layer_upper_date",
-        blank=True,
-        null=True,
-        on_delete=models.PROTECT,
-    )
-    date_lower = models.ForeignKey(
-        Date,
-        verbose_name="lower date",
-        related_name="layer_lower_date",
-        blank=True,
-        null=True,
-        on_delete=models.PROTECT,
-    )
-    # Intermediate hierarchy: calculated range from the dates in the layer OR from the upper and lower
-    mean_upper = models.IntegerField(blank=True, default=1000000)
-    mean_lower = models.IntegerField(blank=True, default=0)
-    # Hierachy 3: Set the Age, overwrite everything else
-    set_upper = models.IntegerField(blank=True, null=True)
-    set_lower = models.IntegerField(blank=True, null=True)
+
     #
     ## References
     #
+
     ref = models.ManyToManyField(
         Reference, verbose_name="reference", blank=True, related_name="layer"
     )
@@ -841,12 +886,12 @@ class Layer(models.Model):
 
     @property
     def hidden_dates(self):
-        return Date.objects.filter(Q(hidden=True) & Q(origin_model=self))
+        return Date.objects.filter(Q(hidden=True) & Q(layer_model=self))
 
     @property
     def date_references(self):
         return Reference.objects.filter(
-            date__in=Date.objects.filter(origin_model=self)
+            date__in=Date.objects.filter(layer_model=self)
         ).distinct()
 
     @property
@@ -861,39 +906,6 @@ class Layer(models.Model):
     @property
     def model(self):
         return "layer"
-
-    def age_summary(self, export=False):
-        # first, see if the bounds are set
-        if self.set_upper and self.set_lower:
-            return Date(upper=self.set_upper, lower=self.set_lower)
-        ## then, check if there are dates
-        # check if both are true
-        if self.date_upper and self.date_lower:
-            if self.date_upper == self.date_lower:
-                return f"{self.date_upper}"
-            # the upper could be infinite, but we dont care at this moment
-            return (
-                f"{self.date_upper.get_upper()} - {self.date_lower.get_lower()} years"
-            )
-        # check if ONE of the dates is set
-        if self.date_upper:
-            return f"< {self.date_upper}"
-
-        if self.date_lower:
-            return f"> {self.date_lower}"
-
-        # else, get from dates
-        if dates := self.date.all():
-            if len(dates) == 1:
-                if export:
-                    return Date(upper=dates.first().upper, lower=dates.first().lower)
-                return dates.first()
-            else:
-                return Date(upper=self.mean_upper, lower=self.mean_lower)
-        else:
-            if export:
-                return None
-            return "Undated"
 
     def get_absolute_url(self):
         return f"{reverse('site_detail', kwargs={'pk':self.site.id})}#profile"
@@ -963,7 +975,7 @@ class SampleBatch(models.Model):
         return ["Sample Batch Name", "Sample Batch Arrival"]
 
 
-class Sample(models.Model):
+class Sample(Dateable):
     type = models.CharField("sample type", max_length=400, null=True, blank=True)
     name = models.CharField("name", max_length=200, null=True, blank=True)
     synonyms = models.ManyToManyField(
@@ -1004,42 +1016,6 @@ class Sample(models.Model):
         null=True,
     )
     provenience = models.JSONField("provenience", blank=True, null=True)
-    #
-    # date related fields
-    #
-    #
-    ## this section is the same as in layers and I assume that it would be
-    # better to make a common Dateable model that extends to both... but I am not
-    # sure I can do that at this point, so keep both models independent for now...
-    #
-    # hierarchy 1. Raw dates
-    date = models.ManyToManyField(
-        Date, verbose_name="date", blank=True, related_name="sample"
-    )
-    # hierarchy 2. Define upper and lower Date objects
-    date_upper = models.ForeignKey(
-        Date,
-        verbose_name="upper date",
-        related_name="sample_upper_date",
-        blank=True,
-        null=True,
-        on_delete=models.PROTECT,
-    )
-    date_lower = models.ForeignKey(
-        Date,
-        verbose_name="lower date",
-        related_name="sample_lower_date",
-        blank=True,
-        null=True,
-        on_delete=models.PROTECT,
-    )
-    # Intermediate hierarchy: calculated range from the dates in the layer OR from the upper and lower
-    mean_upper = models.IntegerField(blank=True, default=1000000)
-    mean_lower = models.IntegerField(blank=True, default=0)
-    # Hierachy 3: Set the Age, overwrite everything else
-    set_upper = models.IntegerField(blank=True, null=True)
-    set_lower = models.IntegerField(blank=True, null=True)
-    # references
     ref = models.ManyToManyField(
         Reference, verbose_name="reference", blank=True, related_name="sample"
     )
