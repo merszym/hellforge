@@ -329,9 +329,9 @@ class Date(models.Model):
     @property
     def layer(self):
         if self.layer_model:
-            return self.layer_model
+            return self.layer_model.first()
         # if sample not layer
-        return self.sample_model.layer
+        return self.sample_model.first().layer
 
     class Meta:
         default_manager_name = "visible_objects"

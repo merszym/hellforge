@@ -79,7 +79,10 @@ def get_dataset(request):
     # now set up the query
     filter = {queries(column, unique): start}
 
-    qs = models[unique].objects.filter(**filter).distinct()
+    if unique == "date" and column == "site":
+        qs = start.get_dates()
+    else:
+        qs = models[unique].objects.filter(**filter).distinct()
 
     # and get the dataframe
     df = get_dataset_df(qs, start, include)
