@@ -39,13 +39,13 @@
                 <span class="input-group-addon">Upper Date</span>
                 <select class="form-select" name="upper_date">
                     {% if object.date_upper %}
-                    <option value="{{object.date_upper.pk}}">{{object.date_upper}} ({{object.date_upper.layer.first.name}})</option>
+                    <option value="{{object.date_upper.pk}}">{{object.date_upper}} ({{object.date_upper.layer.name}})</option>
                     <option>----</option>
                     {% else %}
                     <option selected>----</option>
                     {% endif %}
                     {% for option in site_dates %}
-                    <option value="{{option.pk}}">{{option}} {% if option.estimate %}/ {{option.estimate|default:''}} ± {{option.plusminus|default:''}}{% endif %} ({{option.layer.first.name}})</option>
+                    <option value="{{option.pk}}">{{option}} {% if option.estimate %}/ {{option.estimate|default:''}} ± {{option.plusminus|default:''}}{% endif %} ({{option.layer.name}})</option>
                     {% endfor %}
                 </select>
             </div>
@@ -53,13 +53,13 @@
                 <span class="input-group-addon">Lower Date</span>
                 <select class="form-select" name="lower_date">
                     {% if object.date_lower %}
-                    <option value="{{object.date_lower.pk}}">{{object.date_lower}} ({{object.date_lower.layer.first.name}})</option>
+                    <option value="{{object.date_lower.pk}}">{{object.date_lower}} ({{object.date_lower.layer.name}})</option>
                     <option>----</option>
                     {% else %}
                     <option selected>----</option>
                     {% endif %}
                     {% for option in site_dates %}
-                    <option value="{{option.pk}}">{{option}} {% if option.estimate %}/ {{option.estimate|default:''}} ± {{option.plusminus|default:''}}{% endif %} ({{option.layer.first.name}})</option>
+                    <option value="{{option.pk}}">{{option}} {% if option.estimate %}/ {{option.estimate|default:''}} ± {{option.plusminus|default:''}}{% endif %} ({{option.layer.name}})</option>
                     {% endfor %}
                 </select>
                 {% if request.user.is_authenticated %}

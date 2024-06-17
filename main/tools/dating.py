@@ -10,6 +10,8 @@ from main.ajax import get_modal
 from django.contrib.auth.decorators import (
     login_required,
 )  # this is for now, make smarter later
+from django.db.models import ProtectedError
+from django.contrib import messages
 
 
 def calibrate(estimate, plusminus, curve="intcal20"):
@@ -199,10 +201,21 @@ def add(request):
 
 @login_required
 def delete(request):
-    status, date, layer = remove_x_from_y_m2m(request, "date", response=False)
-    # If dates are not linked to any model, remove
-    if len(date.layer_model.all()) == 0 and len(date.sample_model.all()) == 0:
-        deleted = delete_x(request, response=False)
+    date = get_instance_from_string(request.POST.get("instance_x"))
+    layer = date.layer
+
+    error = None
+    if date.is_used_as_limit():
+        messages.add_message(
+            request,
+            messages.ERROR,
+            "Cannot delete date that is fixed as upper or lower bound",
+        )
+    else:
+        status, date, layer = remove_x_from_y_m2m(request, "date", response=False)
+        # If dates are not linked to any model, remove
+        if len(date.layer_model.all()) == 0 and len(date.sample_model.all()) == 0:
+            deleted = delete_x(request, response=False)
 
     request.GET._mutable = True
     request.GET.update({"object": f"layer_{layer.pk}", "type": "dates_list"})
@@ -274,18 +287,24 @@ def dateable_setdate(request):
         date_lower = None
 
     # now check for the rules
-    errors = []
+    errors = False
     if date_upper and date_lower:
         if date_lower.get_upper().startswith(">"):
-            errors.append(
-                f"No infinite Date ({date_lower}) allowed as lower date, if upper date exists"
+            messages.add_message(
+                request,
+                messages.ERROR,
+                f"No infinite Date ({date_lower}) allowed as lower date, if upper date exists",
             )
+            errors = True
     elif date_upper and not date_lower and date_upper.get_upper().startswith(">"):
-        errors.append(
-            f"No infinite Date ({date_upper}) allowed as only upper date. Younger than infinite is not meaningful"
+        messages.add_message(
+            request,
+            messages.ERROR,
+            f"No infinite Date ({date_upper}) allowed as only upper date. Younger than infinite is not meaningful",
         )
+        errors = True
 
-    if len(errors) == 0:
+    if not errors:
         object.date_upper = date_upper
         object.date_lower = date_lower
         object.save()
@@ -295,7 +314,6 @@ def dateable_setdate(request):
         {
             "object": f"{object.model}_{object.pk}",
             "type": "dates_list",
-            "errors": errors if len(errors) > 0 else None,
         }
     )
 

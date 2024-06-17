@@ -463,6 +463,17 @@ class Date(models.Model):
                 return f"{self.upper:,} - {self.lower:,} years"
             return f"{self.upper:,} years"
 
+    def is_used_as_limit(self):
+        """prevent deletion/unlinking of a date, if it is set as a layer or sample boundary"""
+        return any(
+            [
+                self.sample_upper_date.first(),
+                self.sample_lower_date.first(),
+                self.layer_upper_date.first(),
+                self.layer_lower_date.first(),
+            ]
+        )
+
 
 class Dateable(models.Model):
 
