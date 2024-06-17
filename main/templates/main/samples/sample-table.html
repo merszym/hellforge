@@ -93,7 +93,19 @@
             {% endwith %}
             <td nowrap class="generic_filter text-primary" style="cursor:pointer;" data-term="{{object}}" data-search=".{{batch.classname}}_libtr">{{object.analyzed_sample.all | length}}
             </td>
-            <td nowrap>{{object.layer.age_summary}}</td>
+            <td nowrap>
+                <a href="#"
+            {% if request.user.is_authenticated %}
+                style="cursor: pointer;"
+                class="tooltip tooltip-top modal_open"
+                data-tooltip="Update Sample Dating"
+                hx-get="{% url 'main_modal_get' %}"
+                hx-vals='{"object":"sample_{{object.pk}}", "type":"dates_list" }'
+                hx-target="#modal-blank"
+            {% endif %}>
+            {{object.layer.age_summary}}
+                </a>
+            </td>
             <td nowrap
             {% if request.user.is_authenticated %}
                 style="cursor: pointer;"
