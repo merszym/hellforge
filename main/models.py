@@ -1004,10 +1004,39 @@ class Sample(models.Model):
         null=True,
     )
     provenience = models.JSONField("provenience", blank=True, null=True)
+    #
     # date related fields
-    date = models.ManyToManyField(Date, verbose_name="date", blank=True)
-    mean_upper = models.IntegerField(blank=True, null=True)
-    mean_lower = models.IntegerField(blank=True, null=True)
+    #
+    #
+    ## this section is the same as in layers and I assume that it would be
+    # better to make a common Dateable model that extends to both... but I am not
+    # sure I can do that at this point, so keep both models independent for now...
+    #
+    # hierarchy 1. Raw dates
+    date = models.ManyToManyField(
+        Date, verbose_name="date", blank=True, related_name="sample"
+    )
+    # hierarchy 2. Define upper and lower Date objects
+    date_upper = models.ForeignKey(
+        Date,
+        verbose_name="upper date",
+        related_name="sample_upper_date",
+        blank=True,
+        null=True,
+        on_delete=models.PROTECT,
+    )
+    date_lower = models.ForeignKey(
+        Date,
+        verbose_name="lower date",
+        related_name="sample_lower_date",
+        blank=True,
+        null=True,
+        on_delete=models.PROTECT,
+    )
+    # Intermediate hierarchy: calculated range from the dates in the layer OR from the upper and lower
+    mean_upper = models.IntegerField(blank=True, default=1000000)
+    mean_lower = models.IntegerField(blank=True, default=0)
+    # Hierachy 3: Set the Age, overwrite everything else
     set_upper = models.IntegerField(blank=True, null=True)
     set_lower = models.IntegerField(blank=True, null=True)
     # references
