@@ -32,17 +32,18 @@
             <td>{{library_count}}</td>
             <td>{{object.published|yesno:"Published,Private,NA"}}</td>
             <td>
-                <span class="share_button btn btn-primary tooltip tooltip-right" data-tooltip="Copy Share Link"><i class="icon icon-link"
-                    onclick="copyClipboard(`{{request.scheme}}://{{request.get_host}}{% url 'main_project_checkout' object.namespace %}?pw={{object.public_password}}`)"></i></span>
-                </td>
-                <script>
-                    $('body').on('click', '.share_button', function(){
-                        $(this).addClass('btn-success')
-                    });
-                </script>
+                <span class="share_button btn btn-primary tooltip tooltip-right" onclick="copyClipboard(`{{request.scheme}}://{{request.get_host}}{% url 'main_project_checkout' object.namespace %}?pw={{object.public_password}}`)" data-tooltip="Copy Share Link">
+                    <i class="icon icon-link"></i>
+                </span>
+            </td>
         </tr>
     </tbody>
 </table>
+<script>
+    $('body').on('click', '.share_button', function(){
+        $(this).addClass('btn-success')
+    });
+</script>
 
 <div style="height: 480px;margin-top: 20px;" id="map"></div>
 <a href="{% url 'site_list' %}" style="margin-bottom: 20px;">All Sites</a>
