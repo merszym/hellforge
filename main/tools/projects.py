@@ -28,6 +28,7 @@ def get_project(request):
 def checkout_project(request, namespace):
     # Store the selected project in the session.
     # only set the cookie if project exists
+    tmp = None
     try:
         tmp = Project.objects.get(namespace=namespace)
         if (tmp.password != "") and (request.user.is_authenticated == False):
@@ -38,16 +39,22 @@ def checkout_project(request, namespace):
                 if given == expected:
                     request.session["session_project"] = namespace
                 else:
-                    pass  # TODO: display wrong password message
+                    # dont set cookie, return to project list
+                    return redirect("main_project_list")
         else:
             request.session["session_project"] = namespace
+        # jump to a specific site
+        if goto_site := request.GET.get("goto_site", False):
+            site = Site.objects.get(pk=int(goto_site))
+            return redirect(site)
     except:
-        pass
+        return redirect("main_project_list")
     return redirect(tmp)
 
 
 def close_project(request):
-    del request.session["session_project"]
+    if "session_project" in request.session:
+        del request.session["session_project"]
     return redirect("main_project_list")
 
 
@@ -148,8 +155,6 @@ def get_project_overview(request):
     object = Project.objects.get(pk=int(request.GET.get("object")))
     context = {"object": object}
     # get context data
-    if object.password:
-        context["public_link_pw"] = hashlib.md5(object.password.encode()).hexdigest()
     site_count = len(Site.objects.filter(project=object, child=None).values("pk"))
     sample_count = len(object.sample.values("pk"))
     analyzedsample_count = len(

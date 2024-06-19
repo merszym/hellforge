@@ -21,6 +21,7 @@
             <th>Elevation</th>
             {% endif %}
             <th></th>
+            <th></th>
         </tr>
         </thead>
         <tbody>
@@ -57,6 +58,21 @@
                 </div>
                 {% endif %}
             </td>
+            <td>
+            {% if project %}
+            <span class="share_button btn btn-primary tooltip tooltip-right" data-tooltip="Copy Share Link"><i class="icon icon-link"
+                onclick="copyClipboard(`{{request.scheme}}://{{request.get_host}}{% url 'main_project_checkout' project.namespace %}?pw={{project.public_password}}&goto_site={{object.pk}}`)"></i></span>
+            </td>
+            {% else %}
+            <span class="share_button btn btn-primary tooltip tooltip-right" data-tooltip="Copy Share Link"><i class="icon icon-link"
+                onclick="copyClipboard(`{{request.scheme}}://{{request.get_host}}{% url 'site_detail' object.pk %}`)"></i></span>
+            </td>
+            {% endif %}
+            <script>
+                $('body').on('click', '.share_button', function(){
+                    $(this).addClass('btn-success')
+                });
+            </script>
         </tr>
         </tbody>
     </table>
@@ -68,6 +84,8 @@
     <br>
     {% endif %}
     <div class="my-2" style="height: 480px;" id="map"></div>
+
+
 
     {% if object.connections.all %}
     <h4 style="margin-top: 20px;">External Links</h4>

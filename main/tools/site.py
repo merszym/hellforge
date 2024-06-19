@@ -302,8 +302,11 @@ def site_create_update(request, pk=None):
 def get_site_element(request):
     object = Site.objects.get(pk=int(request.GET.get("object")))
     element = request.GET.get("element")
+    project = get_project(request)
     return render(
-        request, "main/site/site_elements.html", {"object": object, "element": element}
+        request,
+        "main/site/site_elements.html",
+        {"object": object, "element": element, "project": project},
     )
 
 

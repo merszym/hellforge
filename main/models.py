@@ -6,6 +6,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey  # for the desc
 from django.contrib.contenttypes.models import ContentType  # for the description
 from django.contrib.contenttypes.fields import GenericRelation
 import re
+import hashlib
 
 
 # In case models implement the 'hidden' attribute
@@ -57,6 +58,11 @@ class Project(models.Model):
         }
         return data
 
+    @property
+    def public_password(self):
+        if self.password:
+            return hashlib.md5(self.password.encode()).hexdigest()
+        return ""
 
 #
 # Description model

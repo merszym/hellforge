@@ -243,3 +243,8 @@ function delete_url_params(entry) {
     url.searchParams.delete(entry);
     window.history.pushState({}, "", url);
 }
+
+// copy to clipboard
+function copyClipboard(text) {
+    navigator.clipboard.writeText(text);
+}
