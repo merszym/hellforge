@@ -222,6 +222,7 @@ def delete_x(request, response=True):
     """
     A generic function to delete an object
     """
+    print(request.POST)
     x = get_instance_from_string(request.POST.get("instance_x"))
     x.delete()
 

@@ -86,7 +86,9 @@ def get_timeline_data(site_id, curves=False, request=False):
     layers = Layer.objects.filter(site=site).prefetch_related("date")
     cultures = {}
     for n, cult in enumerate(
-        Culture.objects.filter(layer__in=layers).order_by("layer__pos")
+        Culture.objects.filter(
+            Q(layer__in=layers) | Q(layer_analysis__site__layer__in=layers)
+        ).order_by("layer__pos")
     ):
         cultures[cult.classname] = n
 

@@ -1292,4 +1292,5 @@ models = {
     "image": Image,
     "connection": Connection,
     "faunal_results": FaunalResults,
+    "layeranalysis": LayerAnalysis,
 }

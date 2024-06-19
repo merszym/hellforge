@@ -51,12 +51,14 @@
                     <th></th>
                     <th></th>
                     <th></th>
+                    <th></th>
                     {% for family in families %}
                         <th colspan="{{data|lookup:'header'|lookup:family|length}}">{{family}}</th>
                     {% endfor %}
                 </tr>
                 <!--Header nr.2-->
                 <tr>
+                    <td></td>
                     <td></td>
                     <td></td>
                     <td></td>
@@ -69,6 +71,7 @@
                     <td></td>
                     <td><strong>Reference</strong></td>
                     <td><strong>Method</strong></td>
+                    <td></td>
                     {% for sp in species %}
                         {% for var in data|lookup:'header'|lookup:sp %}
                             <td nowrap>{{var}}</td>
@@ -78,7 +81,7 @@
             </thead>
             <tbody>
                 {% for analysis in analyses %}
-                <tr>
+                <tr id="layeranalysis_{{analysis.pk}}">
                     <td class="{% if analysis.layer %}{{analysis.layer.culture.classname|default:'sterile'}}{% elif analysis.culture %}{{analysis.culture.classname|default:'sterile'}}{% else %}nocontext{% endif %} p-2 readme">
                         {% if analysis.layer %}
                         <strong>{{analysis.layer.name}}</strong>
@@ -97,6 +100,19 @@
                     </td>
                     <td class="readme">
                         {{analysis.method}}
+                    </td>
+                    <td>
+                        {% if request.user.is_authenticated %}
+                        <form>
+                            <input type="hidden" name="instance_x" value="layeranalysis_{{analysis.pk}}">
+                            <a class="tooltip tooltip-right"
+                            hx-post="{% url 'main_generic_delete' %}"
+                            hx-confirm="Delete Analysis Entry"
+                            hx-target="#layeranalysis_{{analysis.pk}}"
+                            hx-swap="delete"
+                            data-tooltip="Delete Analysis Entry"><i class="icon icon-delete"></i></a>
+                        </form>
+                        {% endif %}
                     </td>
                     {% for sp in species %}
                         {% for var in data|lookup:'header'|lookup:sp %}
