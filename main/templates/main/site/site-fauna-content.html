@@ -79,9 +79,11 @@
             <tbody>
                 {% for analysis in analyses %}
                 <tr>
-                    <td class="{% if analysis.layer %}{{analysis.layer.culture.classname|default:'sterile'}}{% else %}nocontext{% endif %} p-2 readme">
+                    <td class="{% if analysis.layer %}{{analysis.layer.culture.classname|default:'sterile'}}{% elif analysis.culture %}{{analysis.culture.classname|default:'sterile'}}{% else %}nocontext{% endif %} p-2 readme">
                         {% if analysis.layer %}
                         <strong>{{analysis.layer.name}}</strong>
+                        {% elif analysis.culture %}
+                        <strong>{{analysis.culture.name}}</strong>
                         {% else %}
                         <i>No context</i>
                         {% endif %}
