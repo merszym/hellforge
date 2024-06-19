@@ -64,6 +64,7 @@ class Project(models.Model):
             return hashlib.md5(self.password.encode()).hexdigest()
         return ""
 
+
 #
 # Description model
 #
@@ -1184,15 +1185,22 @@ class LayerAnalysis(models.Model):
         related_name="layer_analysis",
         blank=True,
         null=True,
-        on_delete=models.SET_NULL,
+        on_delete=models.PROTECT,
     )
     site = models.ForeignKey(
         Site,
         related_name="layer_analysis",
         blank=True,
         null=True,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
     )  # this is for the cases where fauna is connected to a site only...
+    culture = models.ForeignKey(
+        Culture,
+        related_name="layer_analysis",
+        blank=True,
+        null=True,
+        on_delete=models.PROTECT,
+    )
     ref = models.ForeignKey(
         Reference,
         verbose_name="reference",
@@ -1232,6 +1240,7 @@ class FaunalResults(models.Model):
         return [
             "Site Name",
             "Layer Name",
+            "Culture Name",
             "Reference",
             "Method",
             "Order",
@@ -1249,6 +1258,7 @@ class FaunalResults(models.Model):
                 else self.analysis.site.name
             ),
             self.analysis.layer.name if self.analysis.layer else None,
+            self.analysis.culture.name if self.analysis.culture else None,
             self.analysis.ref.short if self.analysis.ref else None,
             self.analysis.method,
             self.order,

@@ -1,5 +1,5 @@
 from main.models import models
-from main.models import Reference, FaunalResults, LayerAnalysis, Layer
+from main.models import Reference, FaunalResults, LayerAnalysis, Layer, Culture
 from django.http import JsonResponse
 from django.urls import path
 from django.shortcuts import render
@@ -10,6 +10,7 @@ import pandas as pd
 import json
 from collections import defaultdict
 import re
+from django.contrib import messages
 
 
 def get_fauna_tab(request):
@@ -152,6 +153,9 @@ def handle_faunal_table(request, file):
     site = get_instance_from_string(request.POST.get("object"))
 
     def return_error(request, issues, df):
+
+        messages.add_message(request, messages.WARNING, issues)
+
         return render(
             request,
             "main/modals/site_modal.html",
@@ -161,7 +165,6 @@ def handle_faunal_table(request, file):
                 "dataframe": df.fillna("").to_html(
                     index=False, classes="table table-striped col-12"
                 ),
-                "issues": issues,
             },
         )
 
@@ -182,7 +185,7 @@ def handle_faunal_table(request, file):
     ## 1. Get the unique information to create LayerAnalysis entries
 
     analyses = df[
-        ["Site Name", "Layer Name", "Reference", "Method"]
+        ["Site Name", "Layer Name", "Culture Name", "Reference", "Method"]
     ].drop_duplicates()  # get the LayerAnalysis fields
     analyses["pk"] = ""
 
@@ -192,6 +195,8 @@ def handle_faunal_table(request, file):
     for i, data in analyses.iterrows():
         # sometimes a faunal analaysis is linked to the site directly...
         layer = False
+        culture = False
+
         if data["Layer Name"] == data["Layer Name"]:
             try:
                 layer = Layer.objects.get(site=site, name=data["Layer Name"].strip())
@@ -203,6 +208,19 @@ def handle_faunal_table(request, file):
                         {k: v for k, v in zip(data.index, data.values)}, index=[0]
                     ),
                 )
+        # sometimes its linked to the culture of a site
+        if data["Culture Name"] == data["Culture Name"]:
+            try:
+                culture = Culture.objects.get(name=data["Culture Name"].strip())
+            except Culture.DoesNotExist:
+                return return_error(
+                    request,
+                    [f'Culture: {data["Culture Name"]} doesnt exist in the database'],
+                    pd.DataFrame(
+                        {k: v for k, v in zip(data.index, data.values)}, index=[0]
+                    ),
+                )
+
         reference = tools.references.find(data["Reference"])
         if reference == "Not Found":
             issues = [f"Reference not in found: {data['Reference']}"]
@@ -218,6 +236,10 @@ def handle_faunal_table(request, file):
             ana, created = LayerAnalysis.objects.get_or_create(
                 layer=layer, ref=reference, type="Fauna"
             )
+        elif culture:
+            ana, created = LayerAnalysis.objects.get_or_create(
+                site=site, culture=culture, ref=reference, type="Fauna"
+            )
         else:
             ana, created = LayerAnalysis.objects.get_or_create(
                 site=site, ref=reference, type="Fauna"
@@ -225,8 +247,6 @@ def handle_faunal_table(request, file):
         layer_analyses.append(ana)
         # clear the related faunal results
         ana.faunal_results.clear()
-        # TODO: delete the now orphan faunal_results
-        # update or set the method
         ana.method = data["Method"]
         ana.save()
         # now add the pk to the analyses df, as we need this to then attach the faunal
@@ -237,7 +257,7 @@ def handle_faunal_table(request, file):
 
     df = df.merge(
         analyses,
-        on=["Site Name", "Layer Name", "Reference", "Method"],
+        on=["Site Name", "Layer Name", "Culture Name", "Reference", "Method"],
         validate="m:1",
         how="left",
     )
