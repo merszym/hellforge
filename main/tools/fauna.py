@@ -24,7 +24,7 @@ def get_fauna_tab(request):
     )
     analyses = LayerAnalysis.objects.filter(
         Q(layer__site=site) | Q(site=site) & Q(type="Fauna")
-    ).order_by("layer")
+    ).order_by("layer", "culture__lower")
 
     # this is to filter the table in the view
     all_refs = [
