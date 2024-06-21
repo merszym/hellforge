@@ -104,7 +104,7 @@ def get_culture_timline(query):
                         {
                             "end": minv * -31556952 - (1970 * 31556952000),
                             "content": (
-                                f"{maxv:,} - {minv:,} years"
+                                f"{int(maxv):,} - {int(minv):,} years"
                                 if site not in infinites
                                 else f"> {maxv:,} years"
                             ),

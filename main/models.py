@@ -632,6 +632,11 @@ class Dateable(models.Model):
                 return None
             return "Undated"
 
+    def update_boundaries(self):
+        from main.tools import dating
+
+        dating.recalculate_mean(self)
+
     @property
     def date_references(self):
         return Reference.objects.filter(date__in=self.date.all()).distinct()
