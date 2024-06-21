@@ -11,10 +11,6 @@ import statistics
 def update_dates(sender, instance, **kwargs):
     if kwargs.pop("action", False) in ["post_add", "post_remove"]:
         dating.recalculate_mean(instance)
-        if instance.model == "layer":
-            # recalculate the culture range (see below)
-            if instance.culture:
-                instance.culture.save()
 
 
 # Date validation

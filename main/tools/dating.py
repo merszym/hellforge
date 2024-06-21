@@ -19,6 +19,10 @@ def recalculate_mean(dateable):
     dateable.mean_upper = upper
     dateable.mean_lower = lower
     dateable.save()
+    if dateable.model == "layer":
+        # recalculate the culture range (see below)
+        if dateable.culture:
+            dateable.culture.save()
 
 
 def calibrate(estimate, plusminus, curve="intcal20"):
@@ -273,6 +277,7 @@ def dateable_setbounds(request):
     except ValueError:
         object.set_lower = None
     object.save()
+    recalculate_mean(object)
 
     request.GET._mutable = True
     request.GET.update({"object": f"{object.model}_{object.pk}", "type": "dates_list"})
@@ -328,6 +333,7 @@ def dateable_setdate(request):
         object.date_upper = date_upper
         object.date_lower = date_lower
         object.save()
+        recalculate_mean(object)
 
     request.GET._mutable = True
     request.GET.update(

@@ -978,11 +978,6 @@ class Layer(Dateable):
     class Meta:
         ordering = ["pos"]
 
-    def get_age(self):
-        dates = self.date.all()
-        if len(dates) > 0:
-            return self.mean_upper, self.mean_lower
-
     @property
     def parent(self):
         return self.layer
