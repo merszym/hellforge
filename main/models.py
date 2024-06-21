@@ -726,10 +726,10 @@ class Culture(models.Model):
 
     def all_cultures(self, nochildren=False, noself=False):
         if not noself:
-            cultures = list(Culture.objects.filter(pk=self.id).all())
+            cultures = [self]
         else:
             cultures = []
-        children = list(Culture.objects.filter(culture__id=self.id).all())
+        children = list(Culture.objects.filter(Q(culture=self)).all())
         if len(children) == 0 or nochildren:  # lowest branch
             return cultures
         # else: walk down the branches

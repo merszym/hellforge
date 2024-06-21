@@ -192,36 +192,51 @@ class CultureListView(ProjectAwareListView):
 
         query = Culture.objects.filter(culture__isnull=True)
 
-        for n, cult in enumerate(query):
+        for cult in query:
             groupdata.append(
                 {
-                    "id": cult.name.lower(),
+                    "id": cult.pk,
                     "content": f"<a class='btn-link' href={reverse('culture_detail', kwargs={'pk':cult.pk})}>{cult.name}</a> | {cult.upper} - {cult.lower} ya",
                     "treeLevel": 2,
                     "nestedGroups": [
-                        int(f"{n}{m}")
-                        for m, subcult in enumerate(cult.all_cultures(noself=True))
+                        f"{cult.pk}-{subcult.pk}"
+                        for subcult in cult.all_cultures(noself=True)
                     ],
                 }
             )
-            for m, subcult in enumerate(cult.all_cultures(noself=True)):
+            for subcult in cult.all_cultures(noself=True):
                 groupdata.append(
                     {
-                        "id": int(f"{n}{m}"),
+                        "id": f"{cult.pk}-{subcult.pk}",
                         "content": f"{subcult} <a class='btn-link' href={reverse('culture_detail', kwargs={'pk':subcult.pk})}>view</a>",
-                        "order": int(f"{n}{m}"),
+                        "order": (subcult.upper if subcult.upper else 0) * -1,
                         "treeLevel": 3,
                     }
                 )
-                items.append(
-                    {
-                        "start": int(subcult.upper) * -31556952
-                        - (1970 * 31556952000),  # 1/1000 year in ms, start with year 0
-                        "end": int(subcult.lower) * -31556952 - (1970 * 31556952000),
-                        "content": f"{subcult} | {subcult.upper} - {subcult.lower}",
-                        "group": int(f"{n}{m}"),
-                    }
-                )
+                if subcult.upper:
+                    items.append(
+                        {
+                            "start": int(subcult.upper) * -31556952
+                            - (
+                                1970 * 31556952000
+                            ),  # 1/1000 year in ms, start with year 0
+                            "end": int(subcult.lower) * -31556952
+                            - (1970 * 31556952000),
+                            "content": f"{subcult}",
+                            "group": f"{cult.pk}-{subcult.pk}",
+                            "method": f"{cult.name}",
+                            "oxa": "",
+                        }
+                    )
+                else:
+                    items.append(
+                        {
+                            "content": f"{subcult}",
+                            "group": f"{cult.pk}-{subcult.pk}",
+                            "method": f"{cult.name}",
+                            "oxa": "",
+                        }
+                    )
         context["itemdata"] = items
         context["timelinedata"] = groupdata
         return context
