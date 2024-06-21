@@ -658,17 +658,6 @@ class Culture(models.Model):
                 cultures.extend(cult.all_cultures())
         return cultures
 
-    def all_sites(self, nochildren=False):
-        sites = []
-        for cult in self.all_cultures(nochildren=nochildren):
-            sites.extend(
-                [
-                    (cult, site)
-                    for site in Site.objects.filter(layer__culture__pk=cult.pk).all()
-                ]
-            )
-        return sites
-
     def get_highest(self):
         if not self.culture:
             return self

@@ -1,4 +1,6 @@
 {% extends 'main/base.html' %}
+{% load format %}
+
 {% block head %}
 <title>Hellforge: {{object.name}}</title>
 {% include 'main/editor/editor-head.html' %}
@@ -9,7 +11,7 @@
 {% load static %}
 
 <div class='columns'>
-  <span id="get_location_data" data-url="{% url 'main_culture_geodata' %}?object={{object.pk}}"></span>
+  <span id="get_location_data" data-url="{% url 'main_culture_geodata' %}?object={{object.pk}}&{{request.GET|getstring}}"></span>
     <div id="mobile" class="column col-4" style="position:relative;">
         {% if request.user.is_authenticated %}
         <a class="btn btn-primary" href="{% url 'culture_update' object.pk %}" style="position:absolute; right:5%; top:10px"><i class="icon icon-edit"></i></a>

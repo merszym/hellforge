@@ -46,75 +46,44 @@ class CultureDetailView(ProjectAwareDetailView):
             tmp.save()
 
         context = super(CultureDetailView, self).get_context_data(**kwargs)
+
+        #  prepare the structures for the timeline
+        nochildren = self.request.GET.get("nochildren", False)
+
+        query = object.all_cultures(nochildren=nochildren)
+        sites = Site.objects.filter(layer__culture__in=query)
+
+        cult_color_dict = {
+            cult: f"{col}"
+            for cult, col in zip(query, sns.color_palette("husl", len(query)).as_hex())
+        }
+
         items = []
         groupdata = []
         groupdata_tmp = {}
-        geo = {"type": "FeatureCollection", "features": []}
-        nochildren = self.request.GET.get("nochildren", False)
-        query = sorted(
-            self.object.all_cultures(nochildren=nochildren),
-            key=lambda x: x.upper * -1 if x.upper else 0,
-        )
-        # get the colors right
-        ordered_sites = sorted(
-            self.object.all_sites(nochildren=nochildren),
-            key=lambda x: (
-                x[0].upper,
-                x[1].lowest_date(cult=self.object, nochildren=nochildren),
-            ),
-        )
-        all_sites = []
-        [
-            all_sites.append(site.name)
-            for (cult, site) in ordered_sites
-            if site.name not in all_sites
-        ]
 
-        site_color_dict = {
-            site.lower(): f"{col}"
-            for site, col in zip(
-                all_sites, sns.color_palette("husl", len(all_sites)).as_hex()
+        for cult in query:
+            cult_sites = (
+                sites.filter(Q(layer__culture=cult))
+                .distinct()
+                .order_by("layer__culture__upper")
             )
-        }
-        for cult in sorted(query, key=lambda x: int(x.upper) if x.upper else 0):
-            ordered_sites = sorted(
-                cult.all_sites(nochildren=True),
-                key=lambda x: x[1].lowest_date(cult=cult) * -1,
-            )
-            sites = []
-            [sites.append(site) for (cult, site) in ordered_sites if site not in sites]
-            if len(sites) == 0:
-                continue
             groupdata.append(
                 {
-                    "id": cult.name.lower(),
+                    "id": cult.pk,
                     "treeLevel": 2,
-                    "content": (
-                        f"{cult.name} | {cult.upper} - {cult.lower} ya"
-                        if cult.upper
-                        else f"{cult.name} | Undated"
-                    ),
-                    "order": int(cult.upper) if cult.upper else 0,
-                    "nestedGroups": [
-                        f"{cult.name.lower()}-{site.name.lower()}" for site in sites
-                    ],
+                    "content": (f"{cult.name}"),
+                    "nestedGroups": [f"{cult.pk}-{site.pk}" for site in cult_sites],
                 }
             )
+
             site_date_dict = {}
-            for site in sites:
-                site_date_dict[site.name] = []
-                geo["features"].append(
-                    {
-                        "type": "Feature",
-                        "properties": {
-                            "color": f"{site_color_dict[site.name.lower()]}",
-                            "popupContent": f"<strong>{site.name}</strong><br><a href={reverse('site_detail', kwargs={'pk': site.id})} class=btn-link>Details</a>",
-                        },
-                        "geometry": site.geometry,
-                    }
-                )
-                groupdata_tmp[f"{cult.name.lower()}-{site.name.lower()}"] = {
-                    "id": f"{cult.name.lower()}-{site.name.lower()}",
+            for site in cult_sites:
+
+                site_date_dict[site] = []
+
+                groupdata_tmp[f"{cult.pk}-{site.pk}"] = {
+                    "id": f"{cult.pk}-{site.pk}",
                     "content": f'{site.name}: <a href="{reverse("site_detail", kwargs={"pk":site.pk})}" class="btn-link">view</a>',
                     "treeLevel": 3,
                     # include the order within across sites within culture!
@@ -125,43 +94,42 @@ class CultureDetailView(ProjectAwareDetailView):
                     continue
                 upper = layer.set_upper if layer.set_upper else layer.mean_upper
                 lower = layer.set_lower if layer.set_lower else layer.mean_lower
-                site_date_dict[layer.site.name].extend([int(lower), int(upper)])
+                site_date_dict[layer.site].extend([int(lower), int(upper)])
 
-            for k, v in site_date_dict.items():
+            for site, v in site_date_dict.items():
                 try:
                     maxv = max(v)
                     culturedata = {
                         "start": max(v) * -31556952
                         - (1970 * 31556952000),  # 1/1000 year in ms, start with year 0
-                        "content": f"{k} | {max(v):,} ya",
-                        "group": f"{cult.name.lower()}-{k.lower()}",
+                        "content": f"{site.name}",
+                        "group": f"{cult.pk}-{site.pk}",
                         "type": "point",
                         "usesvg": False,
-                        "method": "Site",
+                        "method": f"{site.name}",
+                        "oxa": "",
                     }
                     if max(v) != min(v):
                         culturedata.update(
                             {
                                 "end": min(v) * -31556952 - (1970 * 31556952000),
-                                "content": f"{k} | {max(v):,} - {min(v):,} ya",
-                                "style": f"background-color: {site_color_dict[k.lower()]};",
+                                "content": f"{max(v):,} - {min(v):,} years",
+                                "style": f"background-color: {cult_color_dict[cult]};",
                                 "type": "range",
                             }
                         )
                     items.append(culturedata)
                     # update the order of the groupdata
-                    tmp = groupdata_tmp[f"{cult.name.lower()}-{k.lower()}"]
-                    tmp["order"] = max(v)
+                    tmp = groupdata_tmp[f"{cult.pk}-{site.pk}"]
                     groupdata.append(tmp)
 
                 except ValueError:  # no date for the site-culture
-                    tmp = groupdata_tmp[f"{cult.name.lower()}-{k.lower()}"]
+                    tmp = groupdata_tmp[f"{cult.pk}-{site.pk}"]
                     groupdata.append(tmp)
                     continue
 
         context["itemdata"] = json.dumps(items)
         context["groups"] = json.dumps(groupdata)
-        context["geo"] = geo
         return context
 
 
@@ -242,12 +210,40 @@ def get_culture_overview(request):
 
 
 def get_culture_geodata(request):
+    # prepare the culture map
     object = Culture.objects.get(pk=int(request.GET.get("object")))
-    locations = []
-    for site in Site.objects.filter(layer__culture=object).all():
-        locations.append(site.get_location_features())
-    locations = [x for x in locations if x != {}]
-    return JsonResponse(locations, safe=False)
+    nochildren = request.GET.get("nochildren", False)
+
+    query = object.all_cultures(nochildren=nochildren)
+    sites = Site.objects.filter(layer__culture__in=query)
+
+    cult_color_dict = {
+        cult: f"{col}"
+        for cult, col in zip(query, sns.color_palette("husl", len(query)).as_hex())
+    }
+
+    geo = {"type": "FeatureCollection", "features": []}
+
+    for cult in query:
+        cult_sites = (
+            sites.filter(Q(layer__culture=cult))
+            .distinct()
+            .order_by("layer__culture__upper")
+        )
+        for site in cult_sites:
+
+            geo["features"].append(
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "color": f"{cult_color_dict[cult]}",
+                        "popupContent": f"<strong>{site.name}</strong><br><a href={reverse('site_detail', kwargs={'pk': site.id})} class=btn-link>Details</a>",
+                    },
+                    "geometry": site.geometry,
+                }
+            )
+
+    return JsonResponse([geo], safe=False)
 
 
 urlpatterns = [
