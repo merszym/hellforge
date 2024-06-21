@@ -30,6 +30,103 @@ from django.contrib.auth.mixins import (
 )  # this is for now, make smarter later
 from django.urls import path
 from main.views import ProjectAwareDetailView, ProjectAwareListView
+from django.db.models import Subquery
+
+
+def get_culture_timline(query):
+    sites = Site.objects.filter(layer__culture__in=query)
+
+    cult_color_dict = {
+        cult: f"{col}"
+        for cult, col in zip(query, sns.color_palette("husl", len(query)).as_hex())
+    }
+
+    items = []
+    groupdata = []
+    groupdata_tmp = {}
+
+    for cult in query:
+        filtered_layers = Layer.objects.filter(culture=cult).order_by("-mean_upper")
+
+        site_date_dict = dict.fromkeys([x.site for x in filtered_layers])
+
+        groupdata.append(
+            {
+                "id": cult.pk,
+                "treeLevel": 2,
+                "content": (f"{cult.name}"),
+                "nestedGroups": [
+                    f"{cult.pk}-{site.pk}" for site in site_date_dict.keys()
+                ],
+            }
+        )
+
+        infinites = []
+
+        for site in site_date_dict.keys():
+            site_date_dict[site] = []
+
+            groupdata_tmp[f"{cult.pk}-{site.pk}"] = {
+                "id": f"{cult.pk}-{site.pk}",
+                "content": f'{site.name}: <a href="{reverse("site_detail", kwargs={"pk":site.pk})}" class="btn-link">view</a>',
+                "treeLevel": 3,
+            }
+
+        for layer in filtered_layers:
+            if layer.undated:
+                continue
+
+            infinite, upper, lower = layer.get_upper_and_lower(calculate_mean=True)
+
+            if infinite:
+                infinites.append(layer.site)
+
+            site_date_dict[layer.site].extend([upper, lower])
+
+        for site, dates in site_date_dict.items():
+            try:
+                maxv = max(dates)
+                minv = min(dates)
+
+                culturedata = {
+                    "start": maxv * -31556952
+                    - (1970 * 31556952000),  # 1/1000 year in ms, start with year 0
+                    "content": f"{site.name}",
+                    "group": f"{cult.pk}-{site.pk}",
+                    "type": "point",
+                    "usesvg": False,
+                    "method": f"{site.name}",
+                    "oxa": "",
+                    "className": "infinite" if site in infinites else "",
+                }
+                if maxv != minv:
+                    culturedata.update(
+                        {
+                            "end": minv * -31556952 - (1970 * 31556952000),
+                            "content": (
+                                f"{maxv:,} - {minv:,} years"
+                                if site not in infinites
+                                else f"> {maxv:,} years"
+                            ),
+                            "style": (
+                                f"background-color: {cult_color_dict[cult]};"
+                                if site not in infinites
+                                else f"background-color: rgba(255, 255, 255, 0); background-image: linear-gradient(to right, rgba(255, 255, 255, 0), {cult_color_dict[cult]}, {cult_color_dict[cult]}"
+                            ),  # this is for fading out into infinite
+                            "type": "range",
+                        }
+                    )
+                items.append(culturedata)
+                # update the order of the groupdata
+                tmp = groupdata_tmp[f"{cult.pk}-{site.pk}"]
+                groupdata.append(tmp)
+
+            except ValueError:  # no date for the site-culture
+                tmp = groupdata_tmp[f"{cult.pk}-{site.pk}"]
+                groupdata.append(tmp)
+                continue
+
+    return json.dumps(items), json.dumps(groupdata)
 
 
 ## Cultures ##
@@ -51,85 +148,11 @@ class CultureDetailView(ProjectAwareDetailView):
         nochildren = self.request.GET.get("nochildren", False)
 
         query = object.all_cultures(nochildren=nochildren)
-        sites = Site.objects.filter(layer__culture__in=query)
 
-        cult_color_dict = {
-            cult: f"{col}"
-            for cult, col in zip(query, sns.color_palette("husl", len(query)).as_hex())
-        }
+        items, groups = get_culture_timline(query)
+        context["itemdata"] = items
+        context["groups"] = groups
 
-        items = []
-        groupdata = []
-        groupdata_tmp = {}
-
-        for cult in query:
-            cult_sites = (
-                sites.filter(Q(layer__culture=cult))
-                .distinct()
-                .order_by("layer__culture__upper")
-            )
-            groupdata.append(
-                {
-                    "id": cult.pk,
-                    "treeLevel": 2,
-                    "content": (f"{cult.name}"),
-                    "nestedGroups": [f"{cult.pk}-{site.pk}" for site in cult_sites],
-                }
-            )
-
-            site_date_dict = {}
-            for site in cult_sites:
-
-                site_date_dict[site] = []
-
-                groupdata_tmp[f"{cult.pk}-{site.pk}"] = {
-                    "id": f"{cult.pk}-{site.pk}",
-                    "content": f'{site.name}: <a href="{reverse("site_detail", kwargs={"pk":site.pk})}" class="btn-link">view</a>',
-                    "treeLevel": 3,
-                    # include the order within across sites within culture!
-                }
-
-            for layer in cult.layer.all():
-                if len(layer.date.all()) == 0 and not layer.set_upper:
-                    continue
-                upper = layer.set_upper if layer.set_upper else layer.mean_upper
-                lower = layer.set_lower if layer.set_lower else layer.mean_lower
-                site_date_dict[layer.site].extend([int(lower), int(upper)])
-
-            for site, v in site_date_dict.items():
-                try:
-                    maxv = max(v)
-                    culturedata = {
-                        "start": max(v) * -31556952
-                        - (1970 * 31556952000),  # 1/1000 year in ms, start with year 0
-                        "content": f"{site.name}",
-                        "group": f"{cult.pk}-{site.pk}",
-                        "type": "point",
-                        "usesvg": False,
-                        "method": f"{site.name}",
-                        "oxa": "",
-                    }
-                    if max(v) != min(v):
-                        culturedata.update(
-                            {
-                                "end": min(v) * -31556952 - (1970 * 31556952000),
-                                "content": f"{max(v):,} - {min(v):,} years",
-                                "style": f"background-color: {cult_color_dict[cult]};",
-                                "type": "range",
-                            }
-                        )
-                    items.append(culturedata)
-                    # update the order of the groupdata
-                    tmp = groupdata_tmp[f"{cult.pk}-{site.pk}"]
-                    groupdata.append(tmp)
-
-                except ValueError:  # no date for the site-culture
-                    tmp = groupdata_tmp[f"{cult.pk}-{site.pk}"]
-                    groupdata.append(tmp)
-                    continue
-
-        context["itemdata"] = json.dumps(items)
-        context["groups"] = json.dumps(groupdata)
         return context
 
 

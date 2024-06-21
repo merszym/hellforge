@@ -7,6 +7,7 @@ from django.contrib.contenttypes.models import ContentType  # for the descriptio
 from django.contrib.contenttypes.fields import GenericRelation
 import re
 import hashlib
+import statistics
 
 
 # In case models implement the 'hidden' attribute
@@ -509,14 +510,88 @@ class Dateable(models.Model):
         on_delete=models.PROTECT,
     )
     # Intermediate hierarchy: calculated range from the dates in the layer OR from the upper and lower
-    mean_upper = models.IntegerField(blank=True, default=1000000)
-    mean_lower = models.IntegerField(blank=True, default=0)
+    mean_upper = models.IntegerField(blank=True, null=True)
+    mean_lower = models.IntegerField(blank=True, null=True)
     # Hierachy 3: Set the Age, overwrite everything else
     set_upper = models.IntegerField(blank=True, null=True)
     set_lower = models.IntegerField(blank=True, null=True)
 
     class Meta:
         abstract = True
+
+    @property
+    def undated(self):
+        return not any(
+            [
+                self.set_upper,
+                self.set_lower,
+                self.date_upper,
+                self.date_lower,
+                self.date.first(),
+            ]
+        )
+
+    def get_upper_and_lower(self, calculate_mean=False):
+        """for a datable class, get the information about inifinite, upper and lower ends. Return computer readable tuple (infinite, upper, lower)"""
+        infinite = False
+        upper = None
+        lower = None
+
+        # start again with the first hierarchie
+        if self.set_upper and self.set_lower:
+            return infinite, self.set_upper, self.set_lower
+
+        # 2. for the date_upper and date_lower values
+
+        if self.date_upper and self.date_lower:
+            lower = self.date_lower.lower
+            infinite = self.date_upper.get_upper().startswith(">")
+
+            # if upper is infinite, get the lower estimate of the inifininte
+            upper = (
+                self.date_upper.lower  # infinite dates dont have an upper value
+                if infinite
+                else self.date_upper.upper
+            )
+            return infinite, upper, lower
+
+        # if only date_upper is set, it is not infinite
+        if self.date_upper and not self.date_lower:
+            lower = 1
+            upper = self.date_upper.upper
+            return infinite, upper, lower
+
+        # if only date_lower is set, its beyond that date (inifinite)
+        if self.date_lower and not self.date_upper:
+            lower = self.date_lower.lower
+            infinite = self.date_lower.get_upper().startswith(
+                ">"
+            )  # check if the DATE is infinite
+            upper = self.date_lower.lower if infinite else self.date_lower.upper
+            infinite = True  # set inifinite because its bigger than the lower date
+            return infinite, upper, lower
+
+        # 3. get the mean of the dates
+        # this is most likely wrong...
+        if calculate_mean:
+            if self.date.first():
+                all_upper = [x.upper for x in self.date.all() if x.upper]
+                all_lower = [x.lower for x in self.date.all() if x.lower]
+
+                # for dates that have only the lower value reported (>40000), add the date to the upper array as well
+                all_upper.extend([x.lower for x in self.date.all() if x.upper == None])
+
+                if len(all_upper) > 0:
+                    upper = statistics.mean(all_upper)
+                if len(all_lower) > 0:
+                    lower = statistics.mean(all_lower)
+                # make sure lower is older than upper
+                # with dates beyond radiocarbon, this might happen (because only lower is reported)
+                if lower > upper:
+                    upper = lower
+            return False, upper, lower
+
+        return infinite, upper, lower
 
     def age_summary(self, export=False):
         ## first, see if the bounds are set

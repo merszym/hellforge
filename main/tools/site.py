@@ -104,42 +104,10 @@ def get_timeline_data(site_id, curves=False, request=False):
     dates = []
     for layer in layers:
         background = {}
-        upper = None
-        lower = None
-        infinite = False
 
-        # start again with the first hierarchie
-        if layer.set_upper and layer.set_lower:
-            upper = layer.set_upper
-            lower = layer.set_lower
-
-        # now get the background information for the date_upper and date_lower values
-
-        if layer.date_upper and layer.date_lower:
-            lower = layer.date_lower.lower
-            infinite = layer.date_upper.get_upper().startswith(">")
-
-            # if upper is infinite, add 5000 years to "fade out" in the view
-            upper = (
-                layer.date_upper.lower + 5000  # infinite dates dont have an upper value
-                if infinite
-                else layer.date_upper.upper
-            )
-        # if only date_upper is set, it is not infinite
-        if layer.date_upper and not layer.date_lower:
-            lower = 1
-            upper = layer.date_upper.upper
-
-        # if only date_lower is set, add 5000 years for the display
-        if layer.date_lower and not layer.date_upper:
-            lower = layer.date_lower.lower
-            infinite = layer.date_lower.get_upper().startswith(">")
-            upper = (
-                layer.date_lower.lower + 5000
-                if infinite
-                else layer.date_lower.upper + 5000
-            )
-            infinite = True  # this is now only for display
+        infinite, upper, lower = layer.get_upper_and_lower()
+        if infinite:
+            upper = upper + 5000  # for display purposes
 
         if upper and lower:
             bg_date = Date(upper=upper, lower=lower)

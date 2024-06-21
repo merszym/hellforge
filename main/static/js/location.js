@@ -39,7 +39,8 @@ const observer = new MutationObserver((mutationsList, observer) => {
                             new L.DivIcon({
                                 html: `
                                     <svg style='z-index:2000' width="40" height="40" viewBox="0 0 512 512" version="1.1" preserveAspectRatio="none"  xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M256,0C167.641,0,96,71.625,96,160c0,24.75,5.625,48.219,15.672,69.125C112.234,230.313,256,512,256,512l142.594-279.375   C409.719,210.844,416,186.156,416,160C416,71.625,344.375,0,256,0z" fill="${feature.properties.color}" stroke="black"></path>
+                                        <path d="M256,0C167.641,0,96,71.625,96,160c0,24.75,5.625,48.219,15.672,69.125C112.234,230.313,256,512,256,512l142.594-279.375   C409.719,210.844,416,186.156,416,160C416,71.625,344.375,0,256,0z" fill="${feature.properties.color}"
+                                        stroke="black" stroke-width="10"></path>
                                     </svg>`,
                                 className: "",
                                 iconSize: [40, 40],

@@ -1,41 +1,20 @@
 from django.db.models.signals import post_save, m2m_changed, post_delete
 from django.dispatch import receiver
-from main.models import Layer, Culture, Site, Date, Project, Description
+from main.models import Layer, Culture, Site, Date, Project, Description, Dateable
 from main.tools import dating
-import statistics
 import json
+import statistics
 
 
-def calculate_layer_dates(layer):
-    """Calculate the layer date for DISPLAY in the overviews, use heuristics if no direct date is set"""
-    upper = layer.mean_upper
-    lower = layer.mean_lower
-    if layer.date.first():
-        all_upper = [x.upper for x in layer.date.all() if x.upper]
-        all_lower = [x.lower for x in layer.date.all() if x.lower]
-
-        # for dates that have only the lower value reported (>40000), add the date to the upper array as well
-        all_upper.extend([x.lower for x in layer.date.all() if x.upper == None])
-
-        if len(all_upper) > 0:
-            upper = statistics.mean(all_upper)
-        if len(all_lower) > 0:
-            lower = statistics.mean(all_lower)
-    # make sure lower is older than upper
-    # with dates beyond radiocarbon, this might happen (because only lower is reported)
-    if lower > upper:
-        upper = lower
-    layer.mean_lower = lower
-    layer.mean_upper = upper
-
-    layer.save()
-    return layer
-
-
-# after deleting or adding a date from the layer - save the layer to update the upper and lower
-@receiver(m2m_changed, sender=Layer.date.through)
+# after deleting or adding a date from a dateable - update the mean_upper and mean_lower
+@receiver(m2m_changed, sender=Dateable.date.through)
 def update_dates(sender, instance, **kwargs):
-    layer = calculate_layer_dates(instance)
+    if kwargs.pop("action", False) in ["post_add", "post_remove"]:
+        dating.recalculate_mean(instance)
+        if instance.model == "layer":
+            # recalculate the culture range (see below)
+            if instance.culture:
+                instance.culture.save()
 
 
 # Date validation
@@ -98,33 +77,34 @@ def calc_culture_range(sender, instance, **kwargs):
     When layers are updated/saved, set the upper and lower bounds of the associated cultures.
     Include the children-cultures!
     """
-    culture = instance
-    if culture:
-        mean_lower = []
-        mean_upper = []
-        for cult in culture.all_cultures():
-            for layer in Layer.objects.filter(culture=cult.pk):
-                if layer.set_upper:
-                    mean_upper.append(layer.set_upper)
-                elif layer.mean_upper:
-                    mean_upper.append(layer.mean_upper)
-                if layer.set_lower:
-                    mean_lower.append(layer.set_lower)
-                elif layer.mean_lower:
-                    mean_lower.append(layer.mean_lower)
+    upper = None
+    lower = None
 
-        if len(mean_lower) >= 1:
-            lower = statistics.median(mean_lower)
-        if len(mean_upper) >= 1:
-            upper = statistics.median(mean_upper)
-        else:
-            upper = None
-            lower = None
-        if culture.upper != upper and culture.lower != lower:
-            # this is for recursion
-            culture.upper = upper
-            culture.lower = lower
-            culture.save()
+    culture = instance
+    query = culture.all_cultures()
+
+    uppers = []
+    lowers = []
+
+    for layer in Layer.objects.filter(culture__in=query):
+        infinite, tmp_upper, tmp_lower = layer.get_upper_and_lower(calculate_mean=True)
+
+        uppers.append(tmp_upper)
+        lowers.append(tmp_lower)
+
+    uppers = [x for x in uppers if x != None]
+    lowers = [x for x in lowers if x != None]
+
+    if len(lowers) >= 1:
+        lower = statistics.mean(lowers)
+    if len(uppers) >= 1:
+        upper = statistics.mean(uppers)
+
+    if culture.upper != upper and culture.lower != lower:
+        # this is for recursion
+        culture.upper = upper
+        culture.lower = lower
+        culture.save()
 
 
 # after adding a site to a project - add a description if it doesnt yet exist

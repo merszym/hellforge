@@ -14,6 +14,13 @@ from django.db.models import ProtectedError
 from django.contrib import messages
 
 
+def recalculate_mean(dateable):
+    infinite, upper, lower = dateable.get_upper_and_lower(calculate_mean=True)
+    dateable.mean_upper = upper
+    dateable.mean_lower = lower
+    dateable.save()
+
+
 def calibrate(estimate, plusminus, curve="intcal20"):
     curve = curve
     r = R(int(estimate), int(plusminus), "tmp")
