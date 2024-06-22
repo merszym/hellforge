@@ -1,15 +1,17 @@
 from django.db.models.signals import post_save, m2m_changed, post_delete
 from django.dispatch import receiver
-from main.models import Layer, Culture, Site, Date, Project, Description, Dateable
+from main.models import Layer, Culture, Site, Date, Project, Description, Sample
 from main.tools import dating
 import json
 import statistics
 
 
 # after deleting or adding a date from a dateable - update the mean_upper and mean_lower
-@receiver(m2m_changed, sender=Dateable.date.through)
+@receiver(m2m_changed, sender=Sample.date.through)
+@receiver(m2m_changed, sender=Layer.date.through)
 def update_dates(sender, instance, **kwargs):
     if kwargs.pop("action", False) in ["post_add", "post_remove"]:
+        print(instance, instance.model)
         dating.recalculate_mean(instance)
 
 

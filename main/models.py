@@ -1230,8 +1230,11 @@ class AnalyzedSample(models.Model):
     def project_namespaces(self):
         return [x.namespace for x in self.project.all()]
 
+    @property
+    def model(self):
+        return "analyzedsample"
 
-#
+
 #
 #
 ### The expected Taxa section
