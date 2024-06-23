@@ -170,6 +170,11 @@ def upload(request):
 
         return handle_stratigraphy(request, file)
 
+    if type == "quicksand":
+        from main.tools.quicksand import handle_quicksand_report
+
+        return handle_quicksand_report(request, file)
+
 
 def save_contact(request):
     form = ContactForm(request.POST)

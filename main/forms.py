@@ -9,6 +9,7 @@ from .models import (
     Person,
     Synonym,
     SampleBatch,
+    QuicksandAnalysis,
 )
 
 

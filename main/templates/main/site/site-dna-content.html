@@ -1,7 +1,30 @@
 {% load format %}
+<div style="height: 40px;"></div>
 
 <div class="my-2" id="site_dna_content">
+    <div class="panel-head p-2">
+        <h3>DNA</h3>
+        {% if request.user.is_authenticated %}
+        <span
+            class='btn tooltip tooltip-right modal_open'
+            data-tooltip="Upload quicksand run"
+            hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
+            hx-vals='{"object":"site_{{object.pk}}","type":"quicksand_upload"}'
+            hx-target="#modal-blank"><i class="icon icon-plus"></i>
+        </span>
+        {% endif %}
+    </div>
+    <div class="panel-body p-0">
+        {% if families %}
 
-    <section>
-    </section>
+        {% else %}
+        <div class="empty">
+            <div class="empty-icon">
+                <i class="icon icon-flag"></i>
+            </div>
+            <p class="empty-title h5">No quicksand run imported yet</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
 </div>

@@ -244,6 +244,38 @@
                 </form>
             </div>
         </div>
+
+
+        {% elif type == "quicksand_upload" %}
+
+        {# ------------------------- #}
+        {#   QUICKSAND MODAL         #}
+        {# ------------------------- #}
+
+        <!-- Modal content for Faunal Upload -->
+        <div class="modal-body">
+            <div class="content my-2">
+                <form
+                    hx-encoding="multipart/form-data"
+                    hx-post="{% url 'main_upload' %}?type=quicksand"
+                    hx-target="#modal-blank"
+                    hx-validate="true">
+                    {% csrf_token %}
+                    <input type="hidden" name="object" value="site_{{object.pk}}">
+                    <div class="form-group">
+                        <label class="form-label" for="sequencing">Sequencing Run</label>
+                        <input class="form-input" type="text" id="sequencing" name="sequencing" placeholder="Run ID" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="version">quicksand version</label>
+                        <input class="form-input" type="text" id="version" name="version" placeholder="v2.1" required="" pattern="v[0-9]+(\.[0-9]+){1-2}?">
+                        <p class="form-input-hint">please follow the pattern v2.1</p>
+                    </div>
+                    <input name="file" type="file" required>
+                    <button class="btn">OK</button>
+                </form>
+            </div>
+        </div>
         {% endif %}
 
 </div>
