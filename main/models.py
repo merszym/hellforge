@@ -623,7 +623,7 @@ class Dateable(models.Model):
                 return Date(upper=self.mean_upper, lower=self.mean_lower)
 
         ## if no dates, look if there is context
-        if self.model == "sample":
+        if self.model == "sample" and self.layer:
             return self.layer.age_summary()
 
         ## return "undated"
