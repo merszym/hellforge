@@ -38,14 +38,24 @@
         {% for object in object_list %}
         <tr>
             <td nowrap>
-                {% if project|isin:object.project_namespaces %}
-                <span style="color:green; cursor: pointer;">
-                    Yes
-                </span>
-                {% else %}
-                <span style="color:red; cursor: pointer;">No
-                </span>
-                {% endif %}
+                <form>
+                    {% csrf_token %}
+                    <input type="hidden" name="instance_x" value="sample_{{object.pk}}">
+                    <div
+                        {% if request.user.is_authenticated %}
+                        hx-post="{% url 'main_project_toggle' %}"
+                        {% endif %}
+                        >
+                        {% if project|isin:object.project_namespaces %}
+                        <span style="color:green; cursor: pointer;">
+                            Yes
+                        </span>
+                        {% else %}
+                        <span style="color:red; cursor: pointer;">No
+                        </span>
+                        {% endif %}
+                    </div>
+                </form>
             </td>
             <td nowrap
                 {% if request.user.is_authenticated %}

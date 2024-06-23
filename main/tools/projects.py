@@ -1,7 +1,7 @@
 from django.views.generic import ListView, DetailView, UpdateView
 from django.urls import path, reverse
 from main.models import Project, Description, Site, Sample, AnalyzedSample
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from main.tools.generic import (
     add_x_to_y_m2m,
     remove_x_from_y_m2m,
@@ -17,6 +17,9 @@ import hashlib
 from collections import defaultdict
 import pandas as pd
 import json
+from django.contrib.auth.decorators import (
+    login_required,
+)
 
 
 def get_project(request):
@@ -151,6 +154,7 @@ def get_project_geo(request):
     return JsonResponse(locations, safe=False)
 
 
+@login_required
 def get_project_overview(request):
     object = Project.objects.get(pk=int(request.GET.get("object")))
     context = {"object": object}
@@ -174,6 +178,23 @@ def get_project_overview(request):
     return render(request, "main/project/project_overview.html", context)
 
 
+def toggle_project(request):
+    project = get_project(request)
+    instance = get_instance_from_string(request.POST.get("instance_x"))
+
+    request.POST._mutable = True
+    request.POST.update({"instance_y": f"project_{project.pk}"})
+
+    if project in instance.project.all():  # needs to get removed
+        removed, instance, project = remove_x_from_y_m2m(request, response=False)
+        # return the 'No' html
+        return HttpResponse("<span style='color:red; cursor:pointer;'>No</span>")
+    else:
+        added, instance, project = add_x_to_y_m2m(request, response=False)
+        # return the 'Yes' html
+        return HttpResponse("<span style='color:green; cursor:pointer;'>Yes</span>")
+
+
 urlpatterns = [
     path("list", ProjectListView.as_view(), name="main_project_list"),
     path("checkout/<str:namespace>", checkout_project, name="main_project_checkout"),
@@ -181,6 +202,7 @@ urlpatterns = [
     path("status", get_project_status_tile, name="main_project_status"),
     path("overview", get_project_overview, name="main_project_overview"),
     path("geodata", get_project_geo, name="main_project_geo"),
+    path("toggle", toggle_project, name="main_project_toggle"),
     path("<str:namespace>", ProjectDetailView.as_view(), name="main_project_detail"),
     path("<int:pk>/edit", ProjectUpdateView.as_view(), name="main_project_update"),
 ]
