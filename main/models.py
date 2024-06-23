@@ -1335,6 +1335,25 @@ class FaunalResults(models.Model):
         ]
 
 
+#
+#
+# quicksand results
+#
+#
+
+class QuicksandAnalysis(models.Model):
+    version = models.CharField("Version", max_length=100, blank=True, null=True)
+    analyzedsample = models.ForeignKey( # [[library, sequencing-run combination]]
+        AnalyzedSample,
+        verbose_name="analyzedsample",
+        related_name="quicksand_analysis",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+    data = models.JSONField("data", blank=True, null=True)
+
+
 models = {
     "site": Site,
     "culture": Culture,

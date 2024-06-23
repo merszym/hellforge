@@ -2,9 +2,11 @@
 
 <div class="my-2" id="site_sample_content">
     <div class="my-2" style="display:flex;">
-        <span><strong>Download Samples:</strong></span>
-        <a class="mx-2" target="_blank" href="{% url 'get_dataset' %}?from=site_{{object.pk}}&unique=library&include=samplebatch,sample,layer&extend=sample">
-            <i class="icon icon-download"></i></a>
+        <button class="btn tooltip tooltip-right" data-tooltip="Download all Samples">
+            <a target="_blank" href="{% url 'get_dataset' %}?from=site_{{object.pk}}&unique=library&include=samplebatch,sample,layer&extend=sample">
+                <i class="icon icon-download"></i>
+            </a>
+        </button>
     </div>
     <section>
         <!-- List the sample batches -->

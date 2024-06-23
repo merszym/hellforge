@@ -84,7 +84,7 @@
                     data-group="site-view-1"
                     hx-get="{% url 'main_render_description' project_description.pk %}"
                     hx-target="#site-panel-1">
-                    Site Description ({{project}})
+                    {{project}}
                 </div>
                 {% endif %}
             </div>
@@ -145,6 +145,9 @@
                 <li class="tab-item {% if tab == 'site_samples' %} active {% endif %}" data-group="main">
                     <a style="cursor: pointer;" class="select-block-content" data-select="site_samples"><h4>Samples</h4></a>
                 </li>
+                <li class="tab-item {% if tab == 'site_dna' %} active {% endif %}" data-group="main">
+                    <a style="cursor: pointer;" class="select-block-content" data-select="site_dna"><h4>DNA</h4></a>
+                </li>
                 {% endif %}
             </ul>
             <script>
@@ -170,6 +173,12 @@
             {% if object.id in project_sites %}
             <div class="block-content" id="site_samples" style="{% if tab != 'site_samples' %} display:none {% endif %}"
                 hx-get="{% url 'main_site_sample_tab' %}?{{request.GET|getstring}}"
+                hx-trigger="load once"
+                hx-vars="{'object':'site_{{object.pk}}'}">
+                <div class="loading loading-lg m-2"></div>
+            </div>
+            <div class="block-content" id="site_dna" style="{% if tab != 'site_samples' %} display:none {% endif %}"
+                hx-get="{% url 'main_site_dna_tab' %}?{{request.GET|getstring}}"
                 hx-trigger="load once"
                 hx-vars="{'object':'site_{{object.pk}}'}">
                 <div class="loading loading-lg m-2"></div>

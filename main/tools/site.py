@@ -352,6 +352,17 @@ def get_site_sample_content(request):
     return render(request, "main/site/site-sample-content.html", context)
 
 
+##
+def get_site_dna_content(request):
+    try:
+        object = get_instance_from_string(request.GET.get("object"))
+    except TypeError:  # object is in POST not GET
+        object = Site.objects.get(pk=int(request.POST.get("object")))
+    context = {"object": object}
+
+    return render(request, "main/site/site-dna-content.html", context)
+
+
 ### create sample-batch
 
 
@@ -529,6 +540,7 @@ urlpatterns = [
     path("element", get_site_element, name="main_site_element"),
     path("geodata", get_site_geo, name="main_site_geo"),
     path("sample-tab", get_site_sample_content, name="main_site_sample_tab"),
+    path("dna-tab", get_site_dna_content, name="main_site_dna_tab"),
     path("create-batch", samplebatch_create, name="main_samplebatch_create"),
     path(
         "get-samplebatch/<int:pk>",
