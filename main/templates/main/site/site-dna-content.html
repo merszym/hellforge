@@ -46,11 +46,11 @@
                 {% for entry in object_list.all %}
                 {% with ana=entry.analyzedsample %}
                 <tr class="dna-tr">
-                    <td nowrap class="{{ana.sample.layer.culture.classname|default:'sterile'}}">{{ana.sample.layer.name}}</td>
+                    <td nowrap class="{{ana.sample.layer.culture.classname|default:'sterile'}}">{{ana.sample.layer.name|default:'unassigned'}}</td>
                     <td nowrap>{{ana.sample.name}}</td>
                     <td nowrap>{{ana.library}}</td>
                     <td nowrap>{{ana.probes}}</td>
-                    <td nowrap>{{ana.seqrun|truncatechars:10}}</td>
+                    <td nowrap>{{ana.seqrun|truncatechars:11}}</td>
                     <td nowrap>{{entry.version}}</td>
                     <td nowrap style="min-width: 500px; display: flex;">
                         {% for family in quicksand_results|lookup:entry %}
