@@ -1,4 +1,14 @@
 {% load format %}
+
+{% for family,color in colors %}
+    <style>
+    .{{family}}{
+        background-color:{{color}};
+    }
+    </style>
+{% endfor %}
+
+
 <div style="height: 40px;"></div>
 
 <div class="my-2 panel" id="site_dna_content">
@@ -13,9 +23,13 @@
             hx-target="#modal-blank"><i class="icon icon-plus"></i>
         </span>
         {% endif %}
+        <div class="has-icon-left">
+            <input class="form-input" id="dna-list-search" type="text" placeholder="Quick Filter" style="width:50%;">
+            <i class="form-icon icon icon-search"></i>
+        </div>
     </div>
     <div class="panel-body p-0">
-        {% if quicksand_results %}
+        {% if object_list %}
         <table class="table table-striped">
             <thead style="position: sticky; top:0; background-color: white; z-index: 100;">
                 <tr>
@@ -24,26 +38,48 @@
                     <th>Library</th>
                     <th>Probe</th>
                     <th>Run ID</th>
-                    <th>quicksand Version</th>
+                    <th>quicksand</th>
                     <th>Results</th>
                 </tr>
             </thead>
             <tbody>
-                {% for entry in quicksand_results.all %}
+                {% for entry in object_list.all %}
                 {% with ana=entry.analyzedsample %}
-                <tr>
+                <tr class="dna-tr">
                     <td nowrap class="{{ana.sample.layer.culture.classname|default:'sterile'}}">{{ana.sample.layer.name}}</td>
                     <td nowrap>{{ana.sample.name}}</td>
                     <td nowrap>{{ana.library}}</td>
                     <td nowrap>{{ana.probes}}</td>
                     <td nowrap>{{ana.seqrun|truncatechars:10}}</td>
                     <td nowrap>{{entry.version}}</td>
-                    <td nowrap>{{entry.data}}</td>
+                    <td nowrap style="min-width: 500px; display: flex;">
+                        {% for family in quicksand_results|lookup:entry %}
+                            <span class="{{family}} p-1" style="width:{{quicksand_results|lookup:entry|lookup:family}}%;">{{quicksand_results|lookup:entry|lookup:family|floatformat:"0"}}%</span>
+                        {% empty %}
+                            <span> - </span>
+                        {% endfor %}
+                    </td>
                 </tr>
                 {% endwith %}
                 {% endfor %}
             </tbody>
         </table>
+        {% if colors %}
+        <div style="display:flex;">
+            {% for family,color in colors %}
+            <div class="p-2" style="display: flex; align-items: center;">
+                <span class="{{family}} p-2" style="width: 10px;height: 10px; display: block;"></span>
+                <span class="p-2" style="display: block;">{{family}}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <p class="p-2 form-input-hint">The results were obtained by running the <a href="https://github.com/mpieva/quicksand">quicksand</a> pipeline with the specified version<br>
+            Filters: <br>
+            - only <strong>ancient</strong> families<br>
+            - minimum <strong>0.5%</strong> of reads per family filter<br>
+            - minimum <strong>0.5</strong> of expected breadth filter
+        </p>
 
         {% else %}
         <div class="empty">
@@ -55,4 +91,16 @@
         {% endif %}
     </div>
 </div>
-</div>
+
+<script>
+    $('#dna-list-search').on("keyup", function() {
+        var value = $("#dna-list-search").val().toLowerCase();
+        $("tr.dna-tr").filter(function() {
+            if($(this).text().toLowerCase().indexOf(value) > -1){
+                $(this).show()
+            } else {
+                $(this).hide()
+            }
+        });
+    });
+</script>

@@ -7,6 +7,7 @@ from main.tools.generic import get_instance_from_string
 from main.models import QuicksandAnalysis, AnalyzedSample
 import re
 import json
+from collections import defaultdict
 
 
 def handle_quicksand_report(request, file):
@@ -93,7 +94,57 @@ def handle_quicksand_report(request, file):
     )
 
 
-def prepare_data(query, column="ReadsDeduped", filter="aa_p0.5_b0.5", mode="relative"):
-    print(query)
+def prepare_data(
+    query,
+    column="ReadsDeduped",
+    ancient=True,
+    mode="relative",
+    percentage=0.5,
+    breadth=0.5,
+):
 
-    return query
+    families = []  # for the colors
+    nested_dict = lambda: defaultdict(nested_dict)
+    results = nested_dict()
+
+    for entry in query:
+        data = json.loads(entry.data)
+        total = 0
+        for family in data.keys():
+            for row in data[family]:
+                # now filters the entries
+                if ancient and "Ancientness" in row.keys():
+                    if not row["Ancientness"] == "++":
+                        continue
+                if percentage > 0 and "FamPercentage" in row.keys():
+                    if not row["FamPercentage"] >= percentage:
+                        continue
+                if breadth > 0 and "ProportionExpectedBreadth" in row.keys():
+                    if not row["ProportionExpectedBreadth"] >= breadth:
+                        continue
+
+                if not entry in results:
+                    results[entry] = {}
+                # TODO: if entries are fixed or rerun, there might be multiple entries here... fix later
+                value = row[column]
+
+                total = total + value
+
+                results[entry][family] = value
+                families.append(family)
+
+        if mode == "relative":
+            for f, v in results[entry].items():
+                results[entry][f] = round(v / total, 4) * 100
+
+    families = set(families)
+
+    colors = [
+        (k, v)
+        for k, v in zip(
+            [x for x in sorted(families)],
+            sns.color_palette("husl", len(families)).as_hex(),
+        )
+    ]
+
+    return results, colors

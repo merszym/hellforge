@@ -372,9 +372,11 @@ def get_site_dna_content(request):
     # mode: relative,absolute
     # filter: ancient, breadth, percentage
 
-    results = prepare_data(query)
+    results, colors = prepare_data(query)
 
-    context.update({"quicksand_results": results})
+    context.update(
+        {"quicksand_results": results, "object_list": query, "colors": colors}
+    )
 
     return render(request, "main/site/site-dna-content.html", context)
 
