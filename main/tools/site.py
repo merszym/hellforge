@@ -18,6 +18,7 @@ from main.models import (
     Gallery,
     Synonym,
     Connection,
+    QuicksandAnalysis,
 )
 from copy import copy
 import json
@@ -38,6 +39,7 @@ from main.tools.generic import (
     get_instance_from_string,
 )
 from main.tools.projects import get_project
+from main.tools.quicksand import prepare_data
 
 
 ## Sites
@@ -355,10 +357,24 @@ def get_site_sample_content(request):
 ##
 def get_site_dna_content(request):
     try:
-        object = get_instance_from_string(request.GET.get("object"))
+        site = get_instance_from_string(request.GET.get("object"))
     except TypeError:  # object is in POST not GET
-        object = Site.objects.get(pk=int(request.POST.get("object")))
-    context = {"object": object}
+        site = Site.objects.get(pk=int(request.POST.get("object")))
+    context = {"object": site}
+
+    # first, get the objects
+    query = QuicksandAnalysis.objects.filter(
+        analyzedsample__sample__site=site
+    ).order_by("analyzedsample__sample__layer")
+
+    # TODO: check the get-requests for the column in the report
+    # column: ReadsDeduped
+    # mode: relative,absolute
+    # filter: ancient, breadth, percentage
+
+    results = prepare_data(query)
+
+    context.update({"quicksand_results": results})
 
     return render(request, "main/site/site-dna-content.html", context)
 

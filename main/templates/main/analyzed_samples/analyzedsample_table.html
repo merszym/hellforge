@@ -16,6 +16,7 @@
             <th>Library</th>
             <th>Capture Probe</th>
             <th>Sequencing Run</th>
+            <th>quicksand</th>
         </tr>
     </thead>
     <tbody>
@@ -47,6 +48,10 @@
             <td>{{object.library}}</td>
             <td>{{object.probes}}</td>
             <td>{{object.seqrun}}</td>
+            <td>{% if object.quicksand_analysis.first %}
+                {{object.quicksand_analysis.first.version}}
+                {% endif %}
+            </td>
         </tr>
         {% endfor %}
         {% endwith %}

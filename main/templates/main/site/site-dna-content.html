@@ -1,9 +1,9 @@
 {% load format %}
 <div style="height: 40px;"></div>
 
-<div class="my-2" id="site_dna_content">
+<div class="my-2 panel" id="site_dna_content">
     <div class="panel-head p-2">
-        <h3>DNA</h3>
+        <h3>Genetic Results</h3>
         {% if request.user.is_authenticated %}
         <span
             class='btn tooltip tooltip-right modal_open'
@@ -15,7 +15,35 @@
         {% endif %}
     </div>
     <div class="panel-body p-0">
-        {% if families %}
+        {% if quicksand_results %}
+        <table class="table table-striped">
+            <thead style="position: sticky; top:0; background-color: white; z-index: 100;">
+                <tr>
+                    <th>Layer</th>
+                    <th>Sample</th>
+                    <th>Library</th>
+                    <th>Probe</th>
+                    <th>Run ID</th>
+                    <th>quicksand Version</th>
+                    <th>Results</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in quicksand_results.all %}
+                {% with ana=entry.analyzedsample %}
+                <tr>
+                    <td nowrap class="{{ana.sample.layer.culture.classname|default:'sterile'}}">{{ana.sample.layer.name}}</td>
+                    <td nowrap>{{ana.sample.name}}</td>
+                    <td nowrap>{{ana.library}}</td>
+                    <td nowrap>{{ana.probes}}</td>
+                    <td nowrap>{{ana.seqrun|truncatechars:10}}</td>
+                    <td nowrap>{{entry.version}}</td>
+                    <td nowrap>{{entry.data}}</td>
+                </tr>
+                {% endwith %}
+                {% endfor %}
+            </tbody>
+        </table>
 
         {% else %}
         <div class="empty">

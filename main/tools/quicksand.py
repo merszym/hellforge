@@ -91,3 +91,9 @@ def handle_quicksand_report(request, file):
             "type": "quicksand_upload",
         },
     )
+
+
+def prepare_data(query, column="ReadsDeduped", filter="aa_p0.5_b0.5", mode="relative"):
+    print(query)
+
+    return query
