@@ -154,7 +154,6 @@ def get_project_geo(request):
     return JsonResponse(locations, safe=False)
 
 
-@login_required
 def get_project_overview(request):
     object = Project.objects.get(pk=int(request.GET.get("object")))
     context = {"object": object}
