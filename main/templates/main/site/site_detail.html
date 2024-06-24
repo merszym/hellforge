@@ -178,7 +178,7 @@
                 <div class="loading loading-lg m-2"></div>
             </div>
             <div class="block-content" id="site_dna" style="{% if tab != 'site_dna' %} display:none {% endif %}"
-                hx-get="{% url 'main_site_dna_tab' %}?{{request.GET|getstring}}"
+                hx-get="{% url 'main_site_dna_tab' object.pk %}?{{request.GET|getstring}}"
                 hx-trigger="load once"
                 hx-vars="{'object':'site_{{object.pk}}'}">
                 <div class="loading loading-lg m-2"></div>

@@ -23,11 +23,56 @@
             hx-target="#modal-blank"><i class="icon icon-plus"></i>
         </span>
         {% endif %}
+        {% if object_list %}
+        <form
+            hx-post="{% url 'main_site_dna_tab' object.pk %}"
+            hx-target="#site_dna"
+            style="width: 80%;"
+        >
+            <input type="hidden" name="object" value="{{object.pk}}">
+            <div class="input-group">
+                <span class="input-group-addon"><strong>General</strong></span>
+                <span class="input-group-addon">Display</span>
+                <select class="form-select" name="mode">
+                    <option value="{{mode}}" selected>{{mode|title}} values</option>
+                    <option value="relative">Relative values</option>
+                    <option value="absolute">Absolute values</option>
+                </select>
+                <span class="input-group-addon">Report Column</span>
+                <select class="form-select" name="column">
+                    <option value="{{column}}" selected>{{column}}</option>
+                    <option value="ReadsDeduped">ReadsDeduped</option>
+                    <option value="ReadsDeam(3term)">ReadsDeam(3term)</option>
+                </select>
+                <span class="input-group-addon">Probeset</span>
+                <select class="form-select" name="probe">
+                    <option value="{{probe}}" selected>{{probe}}</option>
+                    <option value="all">Show All</option>
+                    <option value="AA163">Human mtDNA (AA163)</option>
+                    <option value="AA75">Mammalian mtDNA (AA75)</option>
+                    <option value="Shotgun">Shotgun</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <span class="input-group-addon"><strong>Filter</strong></span>
+                <span class="input-group-addon">Percentage Cutoff</span>
+                <input class="form-input" type="float" name="percentage" value="{{percentage}}">
+                <span class="input-group-addon">Expected Breadth Cutoff</span>
+                <input class="form-input" type="float" name="breadth" value="{{breadth}}">
+                <span class="input-group-addon">Only Ancient</span>
+                <label class="form-switch mx-2">
+                    <input type="checkbox" name="ancient" {% if ancient %}checked{% endif %}><i class="form-icon"></i>
+                </label>
+                <button class="btn btn-primary input-group-btn">Submit</button>
+            </div>
+        </form>
         <div class="has-icon-left">
-            <input class="form-input" id="dna-list-search" type="text" placeholder="Quick Filter" style="width:50%;">
+            <input class="form-input" id="dna-list-search" type="text" placeholder="Type to filter table by content" style="width:50%;">
             <i class="form-icon icon icon-search"></i>
         </div>
+        {% endif %}
     </div>
+
     <div class="panel-body p-0">
         {% if object_list %}
         <table class="table table-striped">
@@ -54,7 +99,7 @@
                     <td nowrap>{{entry.version}}</td>
                     <td nowrap style="min-width: 500px; display: flex;">
                         {% for family in quicksand_results|lookup:entry %}
-                            <span class="{{family}} p-1" style="width:{{quicksand_results|lookup:entry|lookup:family}}%;">{{quicksand_results|lookup:entry|lookup:family|floatformat:"0"}}%</span>
+                            <span class="{{family}} p-1" style="width:{{quicksand_results|lookup:entry|lookup:family|lookup:'display'}}%;">{{quicksand_results|lookup:entry|lookup:family|lookup:'raw'|floatformat:"0"}}{% if mode == 'relative' %}%{% endif %}</span>
                         {% empty %}
                             <span> - </span>
                         {% endfor %}
@@ -65,7 +110,7 @@
             </tbody>
         </table>
         {% if colors %}
-        <div style="display:flex;">
+        <div style="display:flex; max-width: 100%; flex-wrap: wrap;">
             {% for family,color in colors %}
             <div class="p-2" style="display: flex; align-items: center;">
                 <span class="{{family}} p-2" style="width: 10px;height: 10px; display: block;"></span>
@@ -75,10 +120,6 @@
         </div>
         {% endif %}
         <p class="p-2 form-input-hint">The results were obtained by running the <a href="https://github.com/mpieva/quicksand">quicksand</a> pipeline with the specified version<br>
-            Filters: <br>
-            - only <strong>ancient</strong> families<br>
-            - minimum <strong>0.5%</strong> of reads per family filter<br>
-            - minimum <strong>0.5</strong> of expected breadth filter
         </p>
 
         {% else %}

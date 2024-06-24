@@ -98,7 +98,7 @@ def prepare_data(
     query,
     column="ReadsDeduped",
     ancient=True,
-    mode="relative",
+    mode="absolute",
     percentage=0.5,
     breadth=0.5,
 ):
@@ -106,6 +106,8 @@ def prepare_data(
     families = []  # for the colors
     nested_dict = lambda: defaultdict(nested_dict)
     results = nested_dict()
+
+    maximum = 0
 
     for entry in query:
         data = json.loads(entry.data)
@@ -125,17 +127,32 @@ def prepare_data(
 
                 if not entry in results:
                     results[entry] = {}
+
                 # TODO: if entries are fixed or rerun, there might be multiple entries here... fix later
-                value = row[column]
+                try:
+                    value = int(row[column])
+                except:
+                    value = 0
 
+                # calculate for the display
                 total = total + value
+                if value > maximum:
+                    maximum = value
 
-                results[entry][family] = value
+                if not family in results[entry]:
+                    results[entry][family] = {}
+                results[entry][family]["raw"] = value
                 families.append(family)
 
         if mode == "relative":
             for f, v in results[entry].items():
-                results[entry][f] = round(v / total, 4) * 100
+                results[entry][f]["display"] = round(v["raw"] / total, 4) * 100
+                results[entry][f]["raw"] = results[entry][f]["display"]
+
+    if mode == "absolute":
+        for entry in results.keys():
+            for f, v in results[entry].items():
+                results[entry][f]["display"] = round(v["raw"] / maximum, 4) * 100
 
     families = set(families)
 
@@ -147,4 +164,13 @@ def prepare_data(
         )
     ]
 
-    return results, colors
+    return {
+        "quicksand_results": results,
+        "object_list": query,
+        "colors": colors,
+        "mode": mode,
+        "column": column,
+        "percentage": percentage,
+        "breadth": breadth,
+        "ancient": ancient,
+    }

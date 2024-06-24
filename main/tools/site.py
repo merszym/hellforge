@@ -355,11 +355,8 @@ def get_site_sample_content(request):
 
 
 ##
-def get_site_dna_content(request):
-    try:
-        site = get_instance_from_string(request.GET.get("object"))
-    except TypeError:  # object is in POST not GET
-        site = Site.objects.get(pk=int(request.POST.get("object")))
+def get_site_dna_content(request, pk):
+    site = Site.objects.get(pk=int(pk))
     context = {"object": site}
 
     # first, get the objects
@@ -367,16 +364,34 @@ def get_site_dna_content(request):
         analyzedsample__sample__site=site
     ).order_by("analyzedsample__sample__layer")
 
-    # TODO: check the get-requests for the column in the report
-    # column: ReadsDeduped
-    # mode: relative,absolute
-    # filter: ancient, breadth, percentage
+    if request.method == "POST":
+        if prset := request.POST.get("probe", False):
+            if prset != "all":
+                query = query.filter(analyzedsample__probes=prset)
+                context.update({"probe": prset})
 
-    results, colors = prepare_data(query)
+        mode = request.POST.get("mode", "absolute")
+        column = request.POST.get("column", "ReadsDeduped")
+        percentage = float(request.POST.get("percentage", 0.5))
+        breadth = float(request.POST.get("breadth", 0.5))
+        ancient = "on" == request.POST.get("ancient", "")
 
-    context.update(
-        {"quicksand_results": results, "object_list": query, "colors": colors}
-    )
+        # column: ReadsDeduped
+        # mode: relative,absolute
+        # filter: ancient, breadth, percentage
+
+        context.update(
+            prepare_data(
+                query,
+                column=column,
+                percentage=percentage,
+                breadth=breadth,
+                mode=mode,
+                ancient=ancient,
+            )
+        )
+    else:
+        context.update(prepare_data(query))
 
     return render(request, "main/site/site-dna-content.html", context)
 
@@ -558,7 +573,7 @@ urlpatterns = [
     path("element", get_site_element, name="main_site_element"),
     path("geodata", get_site_geo, name="main_site_geo"),
     path("sample-tab", get_site_sample_content, name="main_site_sample_tab"),
-    path("dna-tab", get_site_dna_content, name="main_site_dna_tab"),
+    path("<int:pk>/dna-tab", get_site_dna_content, name="main_site_dna_tab"),
     path("create-batch", samplebatch_create, name="main_samplebatch_create"),
     path(
         "get-samplebatch/<int:pk>",
