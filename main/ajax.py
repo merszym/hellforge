@@ -12,6 +12,7 @@ from .models import (
     Culture,
     Epoch,
     Date,
+    AnalyzedSample,
 )
 from django.db.models import Q
 from django.urls import reverse, path
@@ -75,6 +76,22 @@ def get_modal_context(object, request):
                 }
             )
     if object.model == "site":
+        if context["type"] == "quicksand_upload":
+            context.update(
+                {
+                    "seqruns": sorted(
+                        list(
+                            set(
+                                x.seqrun
+                                for x in AnalyzedSample.objects.filter(
+                                    sample__site=object
+                                )
+                            )
+                        )
+                    )
+                }
+            )
+
         if context["type"] == "add_samplebatch":
             # Adding sample-batches to the site
             context.update(

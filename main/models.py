@@ -1151,7 +1151,7 @@ class Sample(Dateable):
         ]
 
     def __str__(self):
-        return self.name
+        return self.name if self.name != None else self
 
     def get_data(self):
         # for an entry, return a dict {'col': data} that is used for the export of the data
@@ -1341,9 +1341,10 @@ class FaunalResults(models.Model):
 #
 #
 
+
 class QuicksandAnalysis(models.Model):
     version = models.CharField("Version", max_length=100, blank=True, null=True)
-    analyzedsample = models.ForeignKey( # [[library, sequencing-run combination]]
+    analyzedsample = models.ForeignKey(  # [[library, sequencing-run combination]]
         AnalyzedSample,
         verbose_name="analyzedsample",
         related_name="quicksand_analysis",

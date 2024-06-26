@@ -262,10 +262,13 @@
                     hx-validate="true">
                     {% csrf_token %}
                     <input type="hidden" name="object" value="site_{{object.pk}}">
-                    <div class="form-group">
-                        <label class="form-label" for="sequencing">Sequencing Run</label>
-                        <input class="form-input" type="text" id="sequencing" name="sequencing" placeholder="Run ID" required>
-                    </div>
+                    <label class="form-label" for="sequencing">Sequencing Run</label>
+                    <select class="form-select" id="sequencing" name="sequencing">
+                        <option value="">---</option>
+                        {% for option in seqruns %}
+                            <option value="{{option}}">{{option}}</option>
+                        {% endfor %}
+                    </select>
                     <div class="form-group">
                         <label class="form-label" for="version">quicksand version</label>
                         <input class="form-input" type="text" id="version" name="version" placeholder="v2.1" required="" pattern="v[0-9]+(\.[0-9]+){1-2}?">
