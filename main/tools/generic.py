@@ -108,7 +108,7 @@ def get_dataset(request):
 
         # remove some weird error message
         for col in df.columns:
-            df[col] = df[col].fillna("").apply(lambda x: str(x))
+            df[col] = df[col].fillna("").apply(lambda x: str(x) if x != None else "")
 
         # sort the data again
         df = df.sort_values(by=list(df2.columns))

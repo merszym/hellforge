@@ -101,7 +101,7 @@
                         {% for family in quicksand_results|lookup:entry %}
                             <span class="{{family}} p-1" style="width:{{quicksand_results|lookup:entry|lookup:family|lookup:'display'}}%;">{{quicksand_results|lookup:entry|lookup:family|lookup:'raw'|floatformat:"0"}}{% if mode == 'relative' %}%{% endif %}</span>
                         {% empty %}
-                            <span> - </span>
+                            <span class="text-gray">No DNA found</span>
                         {% endfor %}
                     </td>
                 </tr>
