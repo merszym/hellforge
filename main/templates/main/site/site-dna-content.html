@@ -93,7 +93,7 @@
                 {% with ana=entry.analyzedsample %}
                 <tr class="dna-tr">
                     <td nowrap class="{{ana.sample.layer.culture.classname|default:'sterile'}}">{{ana.sample.layer.name|default:'unassigned'}}</td>
-                    <td nowrap class="{{ana.sample.layer.culture.classname|default:'sterile'}}">{{ana.sample.layer.age_summary|default:'unassigned'}}</td>
+                    <td nowrap>{{ana.sample.layer.age_summary|default:'unassigned'}}</td>
                     <td nowrap>{{ana.sample.name}}</td>
                     <td nowrap>{{ana.library}}</td>
                     <td nowrap>{{ana.probes}}</td>
