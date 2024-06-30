@@ -11,7 +11,6 @@ import statistics
 @receiver(m2m_changed, sender=Layer.date.through)
 def update_dates(sender, instance, **kwargs):
     if kwargs.pop("action", False) in ["post_add", "post_remove"]:
-        print(instance, instance.model)
         dating.recalculate_mean(instance)
 
 

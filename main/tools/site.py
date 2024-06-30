@@ -151,7 +151,10 @@ def get_timeline_data(site_id, curves=False, request=False):
         tmp_dates.extend(list(sample_dates))
 
         for date in tmp_dates:
-            content = [f"{date}"]
+            try:
+                content = [f"{date}"]
+            except:
+                content = ["test"]
             if len(date.layer_model.all()) == 0:
                 content.append(f"(sample {date.sample_model.first().name})")
             upper, lower = date.to_ms()
