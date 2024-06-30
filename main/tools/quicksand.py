@@ -122,6 +122,8 @@ def prepare_data(
                     if not row["FamPercentage"] >= percentage:
                         continue
                 if breadth > 0 and "ProportionExpectedBreadth" in row.keys():
+                    if row["ProportionExpectedBreadth"] == None:
+                        continue
                     if not row["ProportionExpectedBreadth"] >= breadth:
                         continue
 
