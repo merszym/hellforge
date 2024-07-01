@@ -110,7 +110,9 @@
                     <td nowrap>{{entry.version}}</td>
                     <td nowrap style="min-width: 500px; display: flex;">
                         {% for family in quicksand_results|lookup:entry %}
-                            <span class="{{family}} p-1" style="width:{{quicksand_results|lookup:entry|lookup:family|lookup:'display'}}%;">{{quicksand_results|lookup:entry|lookup:family|lookup:'raw'|floatformat:"0"}}{% if mode == 'relative' %}%{% endif %}</span>
+                            <span class="{{family}} p-1 tooltip tooltip-left"
+                                data-tooltip='{{family}} ({{quicksand_results|lookup:entry|lookup:family|lookup:"raw"|floatformat:"0"}}{% if mode == "relative" %}%{% endif %})'
+                            style="width:{{quicksand_results|lookup:entry|lookup:family|lookup:'display'}}%;">{{quicksand_results|lookup:entry|lookup:family|lookup:'raw'|floatformat:"0"}}{% if mode == 'relative' %}%{% endif %}</span>
                         {% empty %}
                             <span class="text-gray">No DNA found</span>
                         {% endfor %}
