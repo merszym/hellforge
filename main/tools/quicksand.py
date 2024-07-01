@@ -4,6 +4,7 @@ import seaborn as sns
 from django.contrib import messages
 from django.shortcuts import render
 from main.tools.generic import get_instance_from_string
+from main.tools.projects import get_project
 from main.models import QuicksandAnalysis, AnalyzedSample
 import re
 import json
@@ -95,21 +96,28 @@ def handle_quicksand_report(request, file):
 
 
 def prepare_data(
+    request,
     query,
     column="ReadsDeduped",
     ancient=True,
     mode="absolute",
     percentage=0.5,
     breadth=0.5,
+    positives=False,
+    only_project=True,
 ):
 
     families = []  # for the colors
     nested_dict = lambda: defaultdict(nested_dict)
     results = nested_dict()
-
+    positive_samples = []
+    project = get_project(request)
     maximum = 0
 
     for entry in query:
+        if only_project and (project not in entry.analyzedsample.project.all()):
+            continue
+        any_positives = False
         data = json.loads(entry.data)
         total = 0
         for family in data.keys():
@@ -126,6 +134,8 @@ def prepare_data(
                         continue
                     if not row["ProportionExpectedBreadth"] >= breadth:
                         continue
+
+                any_positives = True
 
                 if not entry in results:
                     results[entry] = {}
@@ -151,6 +161,9 @@ def prepare_data(
                 results[entry][f]["display"] = round(v["raw"] / total, 4) * 100
                 results[entry][f]["raw"] = results[entry][f]["display"]
 
+        if any_positives:
+            positive_samples.append(entry.analyzedsample)
+
     if mode == "absolute":
         for entry in results.keys():
             for f, v in results[entry].items():
@@ -166,6 +179,9 @@ def prepare_data(
         )
     ]
 
+    if positives:
+        query = query.filter(analyzedsample__in=positive_samples)
+
     return {
         "quicksand_results": results,
         "object_list": query,
@@ -175,4 +191,6 @@ def prepare_data(
         "percentage": percentage,
         "breadth": breadth,
         "ancient": ancient,
+        "positives": positives,
+        "only_project": only_project,
     }

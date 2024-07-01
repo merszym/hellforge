@@ -378,6 +378,8 @@ def get_site_dna_content(request, pk):
         percentage = float(request.POST.get("percentage", 0.5))
         breadth = float(request.POST.get("breadth", 0.5))
         ancient = "on" == request.POST.get("ancient", "")
+        positives = "on" == request.POST.get("positives", "")
+        only_project = "on" == request.POST.get("only_project", "")
 
         # column: ReadsDeduped
         # mode: relative,absolute
@@ -385,16 +387,19 @@ def get_site_dna_content(request, pk):
 
         context.update(
             prepare_data(
+                request,
                 query,
                 column=column,
                 percentage=percentage,
                 breadth=breadth,
                 mode=mode,
                 ancient=ancient,
+                positives=positives,
+                only_project=only_project,
             )
         )
     else:
-        context.update(prepare_data(query))
+        context.update(prepare_data(request, query))
 
     return render(request, "main/site/site-dna-content.html", context)
 
