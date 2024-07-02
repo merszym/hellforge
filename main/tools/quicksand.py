@@ -114,9 +114,10 @@ def prepare_data(
     project = get_project(request)
     maximum = 0
 
+    if only_project:
+        query = query.filter(analyzedsample__project=project)
+
     for entry in query:
-        if only_project and (project not in entry.analyzedsample.project.all()):
-            continue
         any_positives = False
         data = json.loads(entry.data)
         total = 0
