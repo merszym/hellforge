@@ -24,6 +24,8 @@ def queries(many, one):
         ("project", "site"): "project",
         ("project", "layer"): "site__project",
         ("project", "contact"): "site__project",
+        ("project", "quicksand_analysis"): "analyzedsample__sample__project",
+        ("site", "quicksand_analysis"): "analyzedsample__sample__site",
     }
 
     return dict[(many, one)]

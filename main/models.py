@@ -583,9 +583,9 @@ class Dateable(models.Model):
                 all_upper.extend([x.lower for x in self.date.all() if x.upper == None])
 
                 if len(all_upper) > 0:
-                    upper = statistics.mean(all_upper)
+                    upper = int(statistics.mean(all_upper))
                 if len(all_lower) > 0:
-                    lower = statistics.mean(all_lower)
+                    lower = int(statistics.mean(all_lower))
                 # make sure lower is older than upper
                 # with dates beyond radiocarbon, this might happen (because only lower is reported)
                 if lower > upper:
@@ -612,6 +612,8 @@ class Dateable(models.Model):
             return f"< {self.date_upper}"
 
         if self.date_lower:
+            if str(self.date_lower).startswith(">"):
+                return f"{self.date_lower}"
             return f"> {self.date_lower}"
 
         ## else, get from dates
@@ -1149,6 +1151,8 @@ class Sample(Dateable):
             "Sample Year of Collection",
             "Sample Provenience",
             "Sample Age",
+            "Sample Age Upper",
+            "Sample Age Lower",
         ]
 
     def __str__(self):
@@ -1157,6 +1161,11 @@ class Sample(Dateable):
     def get_data(self):
         # for an entry, return a dict {'col': data} that is used for the export of the data
         # dont include layer or project - that is exported with the respective query
+        infinite, upper, lower = self.get_upper_and_lower(calculate_mean=True)
+        if upper == None and lower == None:
+            infinite, upper, lower = self.layer.get_upper_and_lower(calculate_mean=True)
+        if infinite:
+            upper = None
         data = {
             "Sample Name": self.name,
             "Sample Synonyms": ";".join([str(x) for x in self.synonyms.all()]),
@@ -1166,6 +1175,8 @@ class Sample(Dateable):
                 [f"{k}:{v}" for k, v in json.loads(self.provenience).items()]
             ),
             "Sample Age": self.age_summary(),
+            "Sample Age Upper": upper,
+            "Sample Age Lower": lower,
         }
         return data
 
@@ -1355,6 +1366,23 @@ class QuicksandAnalysis(models.Model):
     )
     data = models.JSONField("data", blank=True, null=True)
 
+    @property
+    def sample(self):
+        return self.analyzedsample.sample
+
+    @property
+    def layer(self):
+        return self.analyzedsample.sample.layer
+
+    @property
+    def site(self):
+        return self.analyzedsample.sample.site
+
+    def get_data(self):
+        from main.tools.quicksand import get_data_for_export
+
+        return get_data_for_export(self.data, self.version)
+
 
 models = {
     "site": Site,
@@ -1381,4 +1409,5 @@ models = {
     "connection": Connection,
     "faunal_results": FaunalResults,
     "layeranalysis": LayerAnalysis,
+    "quicksand_analysis": QuicksandAnalysis,
 }

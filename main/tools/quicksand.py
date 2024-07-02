@@ -194,3 +194,106 @@ def prepare_data(
         "positives": positives,
         "only_project": only_project,
     }
+
+
+def get_data_for_export(data, quickv, percentage=0.5, breadth=0.5):
+    export = {
+        "quicksand version": quickv,
+        "ReadsRaw": 0,
+        "ReadsLengthfiltered": 0,
+        "ReadsIdentified": 0,
+        "ReadsMapped": 0,
+        "ReadsDeduped": 0,
+        "DuplicationRate": 0,
+        "ReadsBedfiltered": 0,
+        "SeqsInAncientTaxa": 0,
+        "Ancient": "-",
+        "AncientTaxa": [],
+        "OtherTaxa": [],
+        "Subsitutions": [],
+    }
+
+    if len(data) == 0:
+        return export
+
+    data = json.loads(data)
+    for family in data:
+        entry = data[family][0]
+
+        # overwrite, but its the same for all
+        export["ReadsRaw"] = entry["ReadsRaw"]
+        export["ReadsLengthfiltered"] = entry["ReadsLengthfiltered"]
+
+        # check filters:
+        if not entry["FamPercentage"] >= percentage:
+            continue
+        if "ProportionExpectedBreadth" in entry.keys():
+            if entry["ProportionExpectedBreadth"] == None:
+                continue
+            if not entry["ProportionExpectedBreadth"] >= breadth:
+                continue
+
+        # Add
+        export["ReadsIdentified"] = export["ReadsIdentified"] + entry["ReadsExtracted"]
+        export["ReadsMapped"] = export["ReadsMapped"] + entry["ReadsMapped"]
+        export["ReadsDeduped"] = export["ReadsDeduped"] + entry["ReadsDeduped"]
+        try:
+            export["DuplicationRate"] = round(
+                export["ReadsMapped"] / export["ReadsDeduped"], 2
+            )
+        except:
+            export["DuplicationRate"] = 0
+        try:
+            export["ReadsBedfiltered"] = export["ReadsBedfiltered"] + int(
+                entry["ReadsBedfiltered"]
+            )
+        except:
+            # some have '-', which should be ignored
+            pass
+        if entry["Ancientness"] == "+":
+            # update the export only if not already marked as ancient
+            if export["Ancient"] == "-":
+                export["Ancient"] = "+"
+        if entry["Ancientness"] == "++":
+            export["SeqsInAncientTaxa"] = (
+                export["SeqsInAncientTaxa"] + entry["ReadsDeduped"]
+            )
+            export["Ancient"] = "++"
+            export["AncientTaxa"].append(
+                f"{family}({entry['ReadsDeduped']}[{entry['FamPercentage']}%])"
+            )
+        if entry["Ancientness"] in ["+", "-"]:
+            export["OtherTaxa"].append(
+                f"{family}({entry['ReadsDeduped']}[{entry['FamPercentage']}%])"
+            )
+
+        # reformat the subsitutions
+        deam5 = (
+            entry["Deam5(95ci)"]
+            .replace(" ", "")
+            .replace(",", "-")
+            .replace("(", "[")
+            .replace(")", "]")
+        )
+        deam3 = (
+            entry["Deam3(95ci)"]
+            .replace(" ", "")
+            .replace(",", "-")
+            .replace("(", "[")
+            .replace(")", "]")
+        )
+
+        export["Subsitutions"].append(f"{family}({deam5},{deam3})")
+
+    # now remove the lists
+    export["AncientTaxa"] = (
+        " ".join(export["AncientTaxa"]) if len(export["AncientTaxa"]) > 0 else "-"
+    )
+    export["OtherTaxa"] = (
+        " ".join(export["OtherTaxa"]) if len(export["OtherTaxa"]) > 0 else "-"
+    )
+    export["Subsitutions"] = (
+        " ".join(export["Subsitutions"]) if len(export["Subsitutions"]) > 0 else "-"
+    )
+
+    return export
