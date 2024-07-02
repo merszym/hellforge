@@ -445,6 +445,8 @@ class Date(models.Model):
             "pIRIR225",
             "pIRIR",
             "TT-OSL",
+            "ESR",
+            "US-ESR",
         ]:
             # Luminescence dating
             # by convention reported in ka (from the time of measurement)
