@@ -112,15 +112,15 @@ def prepare_data(
     results = nested_dict()
     positive_samples = []
     project = get_project(request)
-    maximum = 0
+    sum_per_lib = {}
 
     if only_project:
         query = query.filter(analyzedsample__project=project)
 
     for entry in query:
+        sum_per_lib[entry] = 0
         any_positives = False
         data = json.loads(entry.data)
-        total = 0
         for family in data.keys():
             for row in data[family]:
                 # now filters the entries
@@ -148,9 +148,7 @@ def prepare_data(
                     value = 0
 
                 # calculate for the display
-                total = total + value
-                if value > maximum:
-                    maximum = value
+                sum_per_lib[entry] = sum_per_lib[entry] + value
 
                 if not family in results[entry]:
                     results[entry][family] = {}
@@ -159,16 +157,20 @@ def prepare_data(
 
         if mode == "relative":
             for f, v in results[entry].items():
-                results[entry][f]["display"] = round(v["raw"] / total, 4) * 100
+                results[entry][f]["display"] = (
+                    round(v["raw"] / sum_per_lib[entry], 4) * 100
+                )
                 results[entry][f]["raw"] = results[entry][f]["display"]
 
         if any_positives:
             positive_samples.append(entry.analyzedsample)
 
     if mode == "absolute":
+        # get the maximum sum
+        maxsum = max([x for x in sum_per_lib.values()])
         for entry in results.keys():
             for f, v in results[entry].items():
-                results[entry][f]["display"] = round(v["raw"] / maximum, 4) * 100
+                results[entry][f]["display"] = round(v["raw"] / maxsum, 4) * 100
 
     families = set(families)
 
