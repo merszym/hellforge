@@ -17,6 +17,11 @@
     }
 </style>
 
+<div class="has-icon-left">
+    <input class="form-input" id="library-search" type="text" placeholder="Filter Libraries" style="width:50%;">
+    <i class="form-icon icon icon-search"></i>
+</div>
+
 <table class="table table-striped">
     <thead style="position: sticky; top:0; background-color: white; z-index: 100;">
         <tr>
@@ -34,7 +39,7 @@
     <tbody>
         {% with project=request.session.session_project %}
         {% for object in object_list %}
-        <tr class="{{batch.classname}}_libtr">
+        <tr class="{{batch.classname}}_libtr libsearch">
             <td nowrap>
                 <form>
                     {% csrf_token %}
@@ -90,3 +95,16 @@
 </table>
 {% endif %}
 </div>
+
+<script>
+    $('#library-search').on("keyup", function() {
+        var value = $("#library-search").val().toLowerCase();
+        $("tbody>tr.libsearch").filter(function() {
+            if($(this).text().toLowerCase().indexOf(value) > -1){
+                $(this).show()
+            } else {
+                $(this).hide()
+            }
+        });
+    });
+</script>
