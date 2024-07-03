@@ -75,7 +75,7 @@
             <td>{{object.sample}}</td>
             <td>{{object.library}}</td>
             <td>{{object.probes}}</td>
-            <td>{{object.seqrun}}</td>
+            <td>{{object.seqrun|truncatechars:30}}</td>
             <td>{% if object.quicksand_analysis.first %}
                 {{object.quicksand_analysis.first.version}}
                 {% endif %}
