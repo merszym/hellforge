@@ -1206,7 +1206,7 @@ class AnalyzedSample(models.Model):
 
     class Meta:
         unique_together = [["library", "seqrun"]]
-        ordering = ["sample__site", "sample__layer", "sample", "probes"]
+        ordering = ["sample__site", "sample__layer", "sample", "seqrun", "probes"]
 
     def __str__(self):
         return f"{self.library}_{self.seqrun}"
