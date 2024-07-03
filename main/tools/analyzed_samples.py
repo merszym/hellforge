@@ -1,6 +1,6 @@
 from main.models import models
 from main.models import AnalyzedSample, Sample, Project, SampleBatch
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.urls import path
 from django.shortcuts import render
 from main.tools.generic import get_instance_from_string
@@ -11,6 +11,7 @@ import json
 from django.contrib.auth.decorators import (
     login_required,
 )  # this is for now, make smarter later
+from django.contrib import messages
 
 
 def handle_library_file(request, file):
@@ -84,6 +85,42 @@ def save_verified(request):
     return get_site_samplebatch_tab(request, batch.pk)
 
 
+def tags_update(request, pk):
+    object = AnalyzedSample.objects.get(pk=pk)
+    val = request.POST.get("tags", None)
+
+    object.tags = val
+    object.save()
+
+    # finally, return the modal
+    messages.add_message(
+        request,
+        messages.SUCCESS,
+        f"Update of tag successful",
+    )
+
+    request.GET._mutable = True
+    request.GET.update({"object": f"{object.model}_{object.pk}", "type": "tags"})
+
+    from main.ajax import get_modal
+
+    return get_modal(request)
+
+
+def qc_toggle(request, pk):
+    object = AnalyzedSample.objects.get(pk=pk)
+
+    object.qc_pass = object.qc_pass == False
+    object.save()
+
+    if object.qc_pass:  # needs to get removed
+        return HttpResponse("<span style='color:green; cursor:pointer;'>Pass</span>")
+    else:
+        return HttpResponse("<span style='color:red; cursor:pointer;'>Fail</span>")
+
+
 urlpatterns = [
     path("save", save_verified, name="ajax_save_verified_analyzedsamples"),
+    path("<int:pk>/update-tags", tags_update, name="main_analyzedsample_tagupdate"),
+    path("<int:pk>/update-qc", qc_toggle, name="main_analyzedsample_qctoggle"),
 ]

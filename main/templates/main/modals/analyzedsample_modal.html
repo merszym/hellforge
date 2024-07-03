@@ -1,0 +1,59 @@
+{% load static %}
+{% load format %}
+<a href="#close" class="modal-overlay" aria-label="Close"></a>
+<div class="modal-container">
+    <div class="modal-header">
+        <a id="modal-close" class="btn btn-clear float-right modal_close" aria-label="Close" style="cursor: pointer;"></a>
+        <div class="modal-title h5">AnalyzedSample Modal</div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="toast toast-{{ message.tags }}">
+            {{message}}
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if type == "tags" %}
+
+    {# -------------------- #}
+    {#   TAG EDIT MODAL   #}
+    {# -------------------- #}
+
+    <div class="modal-body">
+        <div class="content my-2">
+            <div>
+                <div id="modal-form">
+                    <h6>{{object.library}}</h6>
+                    <div class="input-group">
+                        <span class="input-group-addon">Tag</span>
+                        <form>
+                            <input type="hidden" name="instance_x" value="{{object.model}}_{{object.pk}}"></input>
+                            <select class="form-select" name="tags">
+                                {% if object.tags %}
+                                <option value="{{object.tags}}" selected>{{object.tags}}</option>
+                                {% else %}
+                                <option value="" selected>---</option>
+                                {% endif %}
+                                <option value="Screening">Screening</option>
+                                <option value="Replication">Replication</option>
+                                <option value="Verification">Verification</option>
+                                <option value="Special">Special</option>
+                            </select>
+                            <span
+                                hx-post="{% url 'main_analyzedsample_tagupdate' object.pk %}"
+                                hx-target="#modal-blank"
+                                class="btn btn-primary input-group-btn"
+                            >OK</span>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% endif %}
+
+</div>
+

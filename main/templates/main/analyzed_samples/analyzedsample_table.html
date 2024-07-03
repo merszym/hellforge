@@ -7,16 +7,28 @@
 
     {% else %}
 <a class="generic_filter text-primary" style="cursor:pointer;" data-term="SP" data-search=".{{batch.classname}}_libtr">Reset sample filter</a>
+
+<style>
+    .fail{
+        color:red
+    }
+    .pass{
+        color:green
+    }
+</style>
+
 <table class="table table-striped">
     <thead style="position: sticky; top:0; background-color: white; z-index: 100;">
         <tr>
             <th>Project</th>
+            <th>QC</th>
             <th>Layer</th>
             <th>Sample</th>
             <th>Library</th>
             <th>Capture Probe</th>
             <th>Sequencing Run</th>
             <th>quicksand</th>
+            <th>Tag</th>
         </tr>
     </thead>
     <tbody>
@@ -43,7 +55,18 @@
                     </div>
                 </form>
             </td>
-            <td class="{{object.sample.layer|yesno:'assigned,unassigned'}}">{% if object.sample.layer %}{{object.sample.layer.name}}{% else %}Unassigned{% endif %}</td>
+            <td class='{{object.qc_pass|yesno:"pass,fail"}}'>
+                <form>
+                    {% csrf_token %}
+                    <div
+                        {% if request.user.is_authenticated %}
+                        hx-post="{% url 'main_analyzedsample_qctoggle' object.pk %}"
+                        {% endif %}
+                        >{{object.qc_pass|yesno:"Pass,Fail"}}
+                    </div>
+                </form>
+            </td>
+            <td nowrap class="{{object.sample.layer|yesno:'assigned,unassigned'}}">{% if object.sample.layer %}{{object.sample.layer.name}}{% else %}Unassigned{% endif %}</td>
             <td>{{object.sample}}</td>
             <td>{{object.library}}</td>
             <td>{{object.probes}}</td>
@@ -52,6 +75,14 @@
                 {{object.quicksand_analysis.first.version}}
                 {% endif %}
             </td>
+            <td {% if request.user.is_authenticated %}
+            class="modal_open tooltip tooltip-left" data-tooltip="Edit Tag"
+            hx-get="{% url 'main_modal_get' %}"
+            hx-vals='{"object":"analyzedsample_{{object.pk}}","type":"tags"}'
+            hx-target="#modal-blank"
+            style="cursor: pointer;"
+            {% endif %}
+            >{{object.tags|default:''}}</td>
         </tr>
         {% endfor %}
         {% endwith %}

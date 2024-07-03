@@ -1201,6 +1201,8 @@ class AnalyzedSample(models.Model):
         Project, blank=True, verbose_name="project", related_name="analyzedsample"
     )
     metadata = models.JSONField("metadata", blank=True, null=True)
+    tags = models.CharField("tags", blank=True, null=True, max_length=100)
+    qc_pass = models.BooleanField("qc_pass", default=True)
 
     class Meta:
         unique_together = [["library", "seqrun"]]
