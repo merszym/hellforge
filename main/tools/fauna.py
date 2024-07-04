@@ -13,6 +13,12 @@ import re
 from django.contrib import messages
 
 
+def get_small_mammals():
+    # this is hardcoded for now :')
+    orders = ["Rodentia", "Scandentia", "Eulipotyphla", "Lagomorpha", "Soricomorpha"]
+    return orders
+
+
 def get_fauna_tab(request, pk, type="all", reference="all", by_layer=True):
 
     site = Site.objects.get(pk=pk)
@@ -41,6 +47,18 @@ def get_fauna_tab(request, pk, type="all", reference="all", by_layer=True):
 
     # now get the faunal results from the remaining analysis objects
     entries = FaunalResults.objects.filter(Q(analysis__in=analyses))
+
+    # check the filters for small or big mammals
+    if request.method == "POST":
+        type = request.POST.get("type")
+        if type == "small mammals":
+            orders = get_small_mammals()
+            entries = entries.filter(order__in=orders)
+            analyses = analyses.filter(faunal_results__in=entries).distinct()
+        if type == "large mammals":
+            orders = get_small_mammals()
+            entries = entries.exclude(order__in=orders)
+            analyses = analyses.filter(faunal_results__in=entries).distinct()
 
     # 2. Get the table columns
     # Thats now a bit more complicated, as we need the headers as follows
@@ -151,6 +169,8 @@ def get_fauna_tab(request, pk, type="all", reference="all", by_layer=True):
             "analyses": analyses,
             "all_refs": all_refs,
             "reference": reference,
+            "type": type,
+            "by_layer": by_layer,
         },
     )
 

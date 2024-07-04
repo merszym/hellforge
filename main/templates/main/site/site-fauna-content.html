@@ -70,7 +70,10 @@
             </div>
         </form>
     </div>
-    <div class="panel-body p-0">
+    <div class="panel-body p-2">
+        {% if type != 'all' %}
+        <h3>{{type|title}}</h3>
+        {% endif %}
         {% if families %}
         <table class="table">
             <thead>
