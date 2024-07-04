@@ -19,57 +19,7 @@ def get_small_mammals():
     return orders
 
 
-def get_fauna_tab(request, pk, type="all", reference="all", by_layer=True):
-
-    site = Site.objects.get(pk=pk)
-    project = tools.projects.get_project(request)
-
-    ## Create the table here that is then parsed in the html view
-    # 1. Get all the analyses (layer+reference)
-    analyses = LayerAnalysis.objects.filter(
-        Q(layer__site=site) | Q(site=site) & Q(type="Fauna")
-    ).order_by("layer", "culture__lower")
-
-    # hide entries without reference if not authenticated or not in project
-    if not request.user.is_authenticated:
-        try:
-            if not site in project.site.all():
-                analyses = analyses.filter(ref__isnull=False)
-        except AttributeError:  # no project selected
-            analyses = analyses.filter(ref__isnull=False)
-
-    # check the reference filter in the POST
-    if request.method == "POST":
-        reference = request.POST.get("reference")
-        if reference != "all":
-            reference = get_instance_from_string(reference)
-            analyses = analyses.filter(ref=reference)
-
-    # now get the faunal results from the remaining analysis objects
-    entries = FaunalResults.objects.filter(Q(analysis__in=analyses))
-
-    # check the filters for small or big mammals
-    if request.method == "POST":
-        type = request.POST.get("type")
-        if type == "small mammals":
-            orders = get_small_mammals()
-            entries = entries.filter(order__in=orders)
-            analyses = analyses.filter(faunal_results__in=entries).distinct()
-        if type == "large mammals":
-            orders = get_small_mammals()
-            entries = entries.exclude(order__in=orders)
-            analyses = analyses.filter(faunal_results__in=entries).distinct()
-
-    # 2. Get the table columns
-    # Thats now a bit more complicated, as we need the headers as follows
-    #
-    #                      | Bovidae                      | Cervidae                | Suidae     | <-- This is the family
-    #                      | Bos primigenius | Capra ibex | Dama dama  | xxxx       | Sus scrofa | <-- This is the species
-    #                      | MNI | NISP      | MNI | NISP | MNI | NISP | MNI | NISP | MNI | NISP | <-- This is variable
-    # Layer | Ref | Method |
-    # Layer | Ref | Method |
-
-    # 2.1 So first we need to get the header right
+def get_fauna_data(entries):
     # Lets iterate over the entries and assemble a dict
 
     nested_dict = lambda: defaultdict(nested_dict)
@@ -82,7 +32,11 @@ def get_fauna_tab(request, pk, type="all", reference="all", by_layer=True):
         # header:{'Familidae':[('Species', MNI),('Species', NISP)]} --> this fam requires 2 colspan
         # header:{'Species':[MNI, NISP]}
         #
-        # To construct a html table from that data
+        #
+        # for the collapsed, I want
+        # collapsed:{'Familidae':[MNI, NISP]} --> fam requires colspan 2
+        #
+
         variables = json.loads(entry.results)
 
         for variable in variables.keys():
@@ -104,7 +58,21 @@ def get_fauna_tab(request, pk, type="all", reference="all", by_layer=True):
             except TypeError:
                 data["sorting"][entry.family] = val
 
-            # this is for the table header
+            #
+            # this is for the collapsed view
+            # collapsed:{ 'Familidae':[NISP, MNI] }
+            #
+
+            try:
+                if variable not in data["collapsed"][entry.family]:
+                    data["collapsed"][entry.family].append(variable)
+            except AttributeError:
+                data["collapsed"][entry.family] = [variable]
+
+            #
+            # this is for the non-collapsed table header
+            #
+
             try:
                 if (
                     not (entry.scientific_name, variable)
@@ -115,6 +83,7 @@ def get_fauna_tab(request, pk, type="all", reference="all", by_layer=True):
                     )
             except:
                 data["header"][entry.family] = [(entry.scientific_name, variable)]
+
             # now get the species entries
             spec_key = f"{entry.family}__{entry.scientific_name}"
             try:
@@ -124,14 +93,87 @@ def get_fauna_tab(request, pk, type="all", reference="all", by_layer=True):
                 data["header"][spec_key] = [variable]
 
         # then, collect the data
-        for k, v in variables.items():
-            data["data"][analyses.get(pk=entry.analysis.pk)][spec_key][k] = (
-                int(v) if v == v else None
+        # with the analysis as key, we retain the layer-information
+        for var, val in variables.items():
+            data["data"][entry.analysis][spec_key][var] = (
+                int(val) if val == val else None
             )
+            try:
+                data["data_collapsed"][entry.analysis][entry.family][var] += val
+            except:
+                data["data_collapsed"][entry.analysis][entry.family][var] = val
+
+    return data
+
+
+def get_fauna_tab(
+    request, pk, type="all", reference="all", collapse=True, by_layer=True
+):
+
+    site = Site.objects.get(pk=pk)
+    project = tools.projects.get_project(request)
+
+    # check the POST parameters
+    if request.method == "POST":
+        reference = request.POST.get("reference")
+        type = request.POST.get("type")
+        collapse = "on" == request.POST.get("collapse", "")
+
+    ## Create the table here that is then parsed in the html view
+    # 1. Get all the analyses (layer+reference)
+    analyses = LayerAnalysis.objects.filter(
+        Q(layer__site=site) | Q(site=site) & Q(type="Fauna")
+    ).order_by("layer", "culture__lower")
+
+    # hide entries without reference if not authenticated or not in project
+    if not request.user.is_authenticated:
+        try:
+            if not site in project.site.all():
+                analyses = analyses.filter(ref__isnull=False)
+        except AttributeError:  # no project selected
+            analyses = analyses.filter(ref__isnull=False)
+
+    # check the reference filter
+    if reference != "all":
+        reference = get_instance_from_string(reference)
+        analyses = analyses.filter(ref=reference)
+
+    # now get the faunal results from the remaining analysis objects
+    entries = FaunalResults.objects.filter(Q(analysis__in=analyses))
+
+    # check the filters for small or big mammals
+    if type == "small mammals":
+        orders = get_small_mammals()
+        entries = entries.filter(order__in=orders)
+        analyses = analyses.filter(faunal_results__in=entries).distinct()
+    if type == "large mammals":
+        orders = get_small_mammals()
+        entries = entries.exclude(order__in=orders)
+        analyses = analyses.filter(faunal_results__in=entries).distinct()
+
+    # 2. Get the table columns
+    # Thats now a bit more complicated, as we need the headers as follows
+    #
+    #                      | Bovidae                      | Cervidae                | Suidae     | <-- This is the family
+    #                      | Bos primigenius | Capra ibex | Dama dama  | xxxx       | Sus scrofa | <-- This is the species
+    #                      | MNI | NISP      | MNI | NISP | MNI | NISP | MNI | NISP | MNI | NISP | <-- This is variable
+    # Layer | Ref | Method |
+    # Layer | Ref | Method |
+
+    # Unless we collapse the family, then its
+    #                      | Bovidae    | Cervidae   | Suidae      | <-- This is the family
+    #                      | MNI | NISP | MNI | NISP |  MNI | NISP | <-- This is the summed variables
+    # Layer | Ref | Method |
+    # Layer | Ref | Method |
+
+    # 2.1 So first we need to get the header right
+    # So lets get the data from another function
+
+    data = get_fauna_data(entries)
 
     # get the maximum value for each var
-    for k, v in data["max"].items():
-        data["max"][k] = max([x for x in v if x != None])
+    for var, vals in data["max"].items():
+        data["max"][var] = max([x for x in vals if x != None])
 
     # define the order of families based on the highest assignment
     sorting = sorted(list(data["sorting"]), key=lambda x: -1 * data["sorting"][x])
@@ -171,6 +213,7 @@ def get_fauna_tab(request, pk, type="all", reference="all", by_layer=True):
             "reference": reference,
             "type": type,
             "by_layer": by_layer,
+            "collapse": collapse,
         },
     )
 

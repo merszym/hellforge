@@ -62,9 +62,9 @@
                     <option value="large mammals">Large mammals</option>
                     <option value="all">All</option>
                 </select>
-                <span class="input-group-addon">By Layer</span>
+                <span class="input-group-addon">Collapse Family</span>
                 <label class="form-switch mx-2">
-                    <input type="checkbox" name="rotated" {% if by_layer %}checked{% endif %}><i class="form-icon"></i>
+                    <input type="checkbox" name="collapse" {% if collapse %}checked{% endif %}><i class="form-icon"></i>
                 </label>
                 <button class="btn btn-primary input-group-btn">Filter</button>
             </div>
@@ -75,6 +75,7 @@
         <h3>{{type|title}}</h3>
         {% endif %}
         {% if families %}
+
         <table class="table">
             <thead>
                 <!--Header nr.1-->
@@ -84,10 +85,15 @@
                     <th></th>
                     <th></th>
                     {% for family in families %}
+                        {% if collapse %}
+                        <th colspan="{{data|lookup:'collapsed'|lookup:family|length}}">{{family}}</th>
+                        {% else %}
                         <th colspan="{{data|lookup:'header'|lookup:family|length}}">{{family}}</th>
+                        {% endif %}
                     {% endfor %}
                 </tr>
                 <!--Header nr.2-->
+                {% if not collapse %}
                 <tr>
                     <td></td>
                     <td></td>
@@ -97,17 +103,26 @@
                     <td colspan="{{data|lookup:'header'|lookup:sp|length}}"><i>{{sp|species_from_faunastring}}</i></td>
                     {% endfor %}
                 </tr>
+                {% endif %}
                 <!--Header nr.3-->
                 <tr>
                     <td></td>
                     <td><strong>Reference</strong></td>
                     <td><strong>Method</strong></td>
                     <td></td>
-                    {% for sp in species %}
-                        {% for var in data|lookup:'header'|lookup:sp %}
+                    {% if collapse %}
+                        {% for family in families %}
+                            {% for var in data|lookup:'collapsed'|lookup:family %}
                             <td nowrap>{{var}}</td>
+                            {% endfor %}
                         {% endfor %}
-                    {% endfor %}
+                    {% else %}
+                        {% for sp in species %}
+                            {% for var in data|lookup:'header'|lookup:sp %}
+                                <td nowrap>{{var}}</td>
+                            {% endfor %}
+                        {% endfor %}
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -145,17 +160,32 @@
                         </form>
                         {% endif %}
                     </td>
-                    {% for sp in species %}
-                        {% for var in data|lookup:'header'|lookup:sp %}
-                        {% with val=data|lookup:'data'|lookup:analysis|lookup:sp|lookup:var|default:"" %}
-                        <td class="heatmap" data-max="{{data|lookup:'max'|lookup:var}}">{{val}}</td>
-                        {% endwith %}
+                    {% if collapse %}
+                        {% for family in families %}
+                            {% for var in data|lookup:'collapsed'|lookup:family %}
+                            {% with val=data|lookup:'data_collapsed'|lookup:analysis|lookup:family|lookup:var|default:"" %}
+                            {% if var == 'Yes/No' and val > 0 %}
+                            <td class="heatmap" data-max="{{data|lookup:'max'|lookup:var}}">1</td>
+                            {% else %}
+                            <td class="heatmap" data-max="{{data|lookup:'max'|lookup:var}}">{{val|stringformat:'d'}}</td>
+                            {% endif %}
+                            {% endwith %}
+                            {% endfor %}
                         {% endfor %}
-                    {% endfor %}
+                    {% else %}
+                        {% for sp in species %}
+                            {% for var in data|lookup:'header'|lookup:sp %}
+                            {% with val=data|lookup:'data'|lookup:analysis|lookup:sp|lookup:var|default:"" %}
+                            <td class="heatmap" data-max="{{data|lookup:'max'|lookup:var}}">{{val}}</td>
+                            {% endwith %}
+                            {% endfor %}
+                        {% endfor %}
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+
         <p class="p-2 form-input-hint">Please see the attached publications for details on the faunal analyses. Most common data types are:<br>
             <strong>NISP:</strong> Number of identified specimen<br>
             <strong>MNI:</strong> Miminal number of individuals<br>
