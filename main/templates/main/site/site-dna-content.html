@@ -95,6 +95,7 @@
                     <th>Library</th>
                     <th>Probe</th>
                     <th>Run ID</th>
+                    <th>Tag</th>
                     <th>quicksand</th>
                     <th>Results</th>
                 </tr>
@@ -109,6 +110,7 @@
                     <td nowrap>{{ana.library}}</td>
                     <td nowrap>{{ana.probes}}</td>
                     <td nowrap>{{ana.seqrun|truncatechars:11}}</td>
+                    <td nowrap>{{ana.tags|default:''}}</td>
                     <td nowrap>{{entry.version}}</td>
                     <td nowrap style="min-width: 500px; display: flex;">
                         {% for family in quicksand_results|lookup:entry %}
