@@ -20,7 +20,7 @@
     <!-- Define what to reload upon modal load -->
     {% if type == 'faunal_success' %}
     <div
-        hx-get="{% url 'main_site_fauna_get' %}?{{request.GET|getstring}}"
+        hx-get="{% url 'main_site_fauna_get' object.pk %}"
         hx-trigger="load once"
         hx-vars="{'site':'site_{{object.pk}}'}"
         hx-target="#site_fauna">

@@ -25,8 +25,12 @@ def get_fauna_tab(request, pk, type="all", reference="all", by_layer=True):
     ).order_by("layer", "culture__lower")
 
     # hide entries without reference if not authenticated or not in project
-    if not any([not request.user.is_authenticated, site in project.site.all()]):
-        analyses = analyses.filter(ref__isnull=False)
+    if not request.user.is_authenticated:
+        try:
+            if not site in project.site.all():
+                analyses = analyses.filter(ref__isnull=False)
+        except AttributeError:  # no project selected
+            analyses = analyses.filter(ref__isnull=False)
 
     # check the reference filter in the POST
     if request.method == "POST":
