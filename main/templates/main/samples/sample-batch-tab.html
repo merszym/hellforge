@@ -3,7 +3,9 @@
 <div class="tab-panel panel p-2 my-2">
     <div style="position: relative;">
         <h3 style="margin-bottom:0px;">Batch: {{object}}</h3>
-        <span class="text-gray form-input-hint" style="margin-bottom: 14px;">From: {{object.sampled_by}} ({{object.year_of_arrival}})</span>
+        {% if object.sampled_by %}
+        <span class="text-gray form-input-hint" style="margin-bottom: 14px;">Sampled by {{object.sampled_by}}</span>
+        {% endif %}
         {% if not object.sample.first %}
         <span class="btn btn-primary generic_delete"
             hx-post="{% url 'main_generic_delete' %}"
