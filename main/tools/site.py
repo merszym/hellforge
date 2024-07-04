@@ -365,7 +365,7 @@ def get_site_dna_content(request, pk):
     # first, get the objects
     query = QuicksandAnalysis.objects.filter(
         Q(analyzedsample__sample__site=site) & Q(analyzedsample__qc_pass=True)
-    ).order_by("analyzedsample__sample__layer")
+    ).order_by("analyzedsample")
 
     if request.method == "POST":
         if prset := request.POST.get("probe", False):
