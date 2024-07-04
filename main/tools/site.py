@@ -357,7 +357,7 @@ def get_site_sample_content(request):
     return render(request, "main/site/site-sample-content.html", context)
 
 
-##
+## DNA content
 def get_site_dna_content(request, pk):
     site = Site.objects.get(pk=int(pk))
     context = {"object": site}

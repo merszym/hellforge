@@ -17,15 +17,15 @@
 <div style="height: 40px;"></div>
 <div class="my-2 panel" id="site_taxa_content">
     <div class="panel-head p-2">
-        <h3>Mammalia</h3>
+        <h3>Mammalian remains</h3>
         {% if request.user.is_authenticated %}
-        <span
+        <button
             class='btn tooltip tooltip-right modal_open'
             data-tooltip="Manage Fauna"
             hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
             hx-vals='{"object":"site_{{object.pk}}","type":"faunal_tables"}'
             hx-target="#modal-blank"><i class="icon icon-plus"></i>
-        </span>
+        </button>
         {% endif %}
         <a
             class='btn tooltip tooltip-right'
@@ -34,13 +34,41 @@
             href="{% url 'download_faunal_table' %}?object=site_{{object.pk}}"
             ><i class="icon icon-download"></i>
         </a>
-        {% if all_refs|length > 1 %}
         <h5 style="margin-top: 10px;">Filter</h5>
-        <a class="btn" href="{% url 'site_detail' object.pk %}?tab=site_fauna">All</a>
-        {% for ref in all_refs %}
-        <a class="btn" href="{% url 'site_detail' object.pk %}?tab=site_fauna&reference=reference_{{ref.pk}}">{{ref.short|default:'No Reference'}}</a>
-        {% endfor %}
-        {% endif %}
+        <form
+            hx-post="{% url 'main_site_fauna_get' object.pk %}"
+            hx-target="#site_fauna"
+            style="width: 80%;"
+        >
+            <div class="input-group">
+                <span class="input-group-addon">Reference</span>
+                <select class="form-select" name="reference">
+                    {% if reference != 'all' %}
+                    <option value="reference_{{reference.pk}}" selected>{{reference.short|title}}</option>
+                    {% else %}
+                    <option value="all" selected>All</option>
+                    {% endif %}
+                    {% for ref in all_refs %}
+                    {% if ref != reference %}
+                    <option value="reference_{{ref.pk}}">{{ref}}</option>
+                    {% endif %}
+                    {% endfor %}
+                    <option value="all">All</option>
+                </select>
+                <span class="input-group-addon">Type</span>
+                <select class="form-select" name="type">
+                    <option value="{{type}}" selected>{{type|title}}</option>
+                    <option value="small mammals">Small mammals</option>
+                    <option value="large mammals">Large mammals</option>
+                    <option value="all">All</option>
+                </select>
+                <span class="input-group-addon">By Layer</span>
+                <label class="form-switch mx-2">
+                    <input type="checkbox" name="rotated" {% if by_layer %}checked{% endif %}><i class="form-icon"></i>
+                </label>
+                <button class="btn btn-primary input-group-btn">Filter</button>
+            </div>
+        </form>
     </div>
     <div class="panel-body p-0">
         {% if families %}

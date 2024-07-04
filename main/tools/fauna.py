@@ -1,5 +1,5 @@
 from main.models import models
-from main.models import Reference, FaunalResults, LayerAnalysis, Layer, Culture
+from main.models import Reference, FaunalResults, LayerAnalysis, Layer, Culture, Site
 from django.http import JsonResponse
 from django.urls import path
 from django.shortcuts import render
@@ -13,34 +13,30 @@ import re
 from django.contrib import messages
 
 
-def get_fauna_tab(request):
-    site = get_instance_from_string(request.GET.get("site"))
+def get_fauna_tab(request, pk, type="all", reference="all", by_layer=True):
 
-    ## Create the tabe here that is then parsed in the html view
-    # 1. Get all the entries
-    entries = FaunalResults.objects.filter(
-        Q(analysis__layer__site=site)
-        | Q(analysis__site=site) & Q(analysis__type="Fauna")
-    )
+    site = Site.objects.get(pk=pk)
+    project = tools.projects.get_project(request)
+
+    ## Create the table here that is then parsed in the html view
+    # 1. Get all the analyses (layer+reference)
     analyses = LayerAnalysis.objects.filter(
         Q(layer__site=site) | Q(site=site) & Q(type="Fauna")
     ).order_by("layer", "culture__lower")
 
-    # this is to filter the table in the view
-    all_refs = [
-        Reference.objects.get(pk=x) if x else "No reference"
-        for x in analyses.order_by().values_list("ref", flat=True).distinct()
-    ]
+    # hide entries without reference if not authenticated or not in project
+    if not any([not request.user.is_authenticated, site in project.site.all()]):
+        analyses = analyses.filter(ref__isnull=False)
 
-    # this is to filter the view based on the set reference
-    if ref := request.GET.get("reference", False):
-        try:
-            ref = get_instance_from_string(ref)
-            entries = entries.filter(analysis__ref=ref)
-            analyses = analyses.filter(ref=ref)
-        except ValueError:  # the reference is 'No reference'
-            entries = entries.filter(analysis__ref__isnull=True)
-            analyses = analyses.filter(ref__isnull=True)
+    # check the reference filter in the POST
+    if request.method == "POST":
+        reference = request.POST.get("reference")
+        if reference != "all":
+            reference = get_instance_from_string(reference)
+            analyses = analyses.filter(ref=reference)
+
+    # now get the faunal results from the remaining analysis objects
+    entries = FaunalResults.objects.filter(Q(analysis__in=analyses))
 
     # 2. Get the table columns
     # Thats now a bit more complicated, as we need the headers as follows
@@ -134,6 +130,12 @@ def get_fauna_tab(request):
         if len(data["header"][f"{family}__{species}"]) > 0
     ]
 
+    # this is for the filters in the view
+    all_refs = Reference.objects.filter(
+        Q(layer_analysis__layer__site=site)
+        | Q(layer_analysis__site=site) & Q(layer_analysis__type="Fauna")
+    ).distinct()
+
     return render(
         request,
         "main/site/site-fauna-content.html",
@@ -144,6 +146,7 @@ def get_fauna_tab(request):
             "species": species,
             "analyses": analyses,
             "all_refs": all_refs,
+            "reference": reference,
         },
     )
 
@@ -324,6 +327,6 @@ def download_faunal_table(request):
 
 
 urlpatterns = [
-    path("get-tab", get_fauna_tab, name="main_site_fauna_get"),
+    path("<int:pk>/get-tab", get_fauna_tab, name="main_site_fauna_get"),
     path("download", download_faunal_table, name="download_faunal_table"),
 ]

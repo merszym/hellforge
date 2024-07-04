@@ -669,8 +669,8 @@ class Location(models.Model):
                 geo = self.geo
             for feat in geo["features"]:
                 if feat["geometry"]["type"] == "Point":
-                    long,lat = feat["geometry"]["coordinates"]
-                    return round(lat,4),round(long,4)
+                    long, lat = feat["geometry"]["coordinates"]
+                    return round(lat, 4), round(long, 4)
         return None, None
 
     def get_absolute_url(self):
@@ -1292,6 +1292,7 @@ class LayerAnalysis(models.Model):
     ref = models.ForeignKey(
         Reference,
         verbose_name="reference",
+        related_name="layer_analysis",
         blank=True,
         null=True,
         on_delete=models.PROTECT,

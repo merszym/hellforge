@@ -165,9 +165,8 @@
                 <div class="loading loading-lg m-2"></div>
             </div>
             <div class="block-content" id="site_fauna" style="{% if tab != 'site_fauna' %} display:none {% endif %}"
-                hx-get="{% url 'main_site_fauna_get' %}?{{request.GET|getstring}}"
-                hx-trigger="load once"
-                hx-vars="{'site':'site_{{object.pk}}'}">
+                hx-get="{% url 'main_site_fauna_get' object.pk %}?{{request.GET|getstring}}"
+                hx-trigger="load once">
                 <div class="loading loading-lg m-2"></div>
             </div>
             {% if object.id in project_sites %}
