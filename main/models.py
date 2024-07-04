@@ -669,7 +669,8 @@ class Location(models.Model):
                 geo = self.geo
             for feat in geo["features"]:
                 if feat["geometry"]["type"] == "Point":
-                    return feat["geometry"]["coordinates"]
+                    long,lat = feat["geometry"]["coordinates"]
+                    return round(lat,4),round(long,4)
         return None, None
 
     def get_absolute_url(self):
