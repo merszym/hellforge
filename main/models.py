@@ -1263,6 +1263,15 @@ class AnalyzedSample(models.Model):
 #
 #
 
+class Taxonomy(models.Model):
+    # this class stores a taxonomy-file to fill faunal data
+    # I use a super simple { 'Family':'Order } dict to fill the
+    # Order based on the family-field in the FaunalResults Entries
+    #
+    type = models.CharField("Type", max_length=50, blank=True, null=True)
+    data = models.JSONField("Taxonomy Data", blank=True, null=True)
+
+
 
 class LayerAnalysis(models.Model):
     type = models.CharField("Type", max_length=50, blank=True, null=True)

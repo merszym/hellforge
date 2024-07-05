@@ -1,9 +1,19 @@
 from django.db.models.signals import post_save, m2m_changed, post_delete
 from django.dispatch import receiver
-from main.models import Layer, Culture, Site, Date, Project, Description, Sample
+from main.models import (
+    Layer,
+    Culture,
+    Site,
+    Date,
+    Project,
+    Description,
+    Sample,
+    FaunalResults,
+)
 from main.tools import dating
 import json
 import statistics
+from django.templatetags.static import static
 
 
 # after deleting or adding a date from a dateable - update the mean_upper and mean_lower
@@ -121,3 +131,26 @@ def create_description(sender, instance, **kwargs):
             tmp.refresh_from_db()
             tmp.project.add(instance)
             site.description.add(tmp)
+
+
+# after saving a faunalResults, update the order! (I assume that in most cases I dont do that...)
+@receiver(post_save, sender=FaunalResults)
+def update_order(sender, instance, **kwargs):
+    from main.models import Taxonomy
+
+    if not instance.order:
+
+        try:
+            t = Taxonomy.objects.get(type="family_order")
+            data = json.loads(t.data)
+
+            if instance.family in data:
+                instance.order = data[instance.family]
+
+            if instance.family in data.values():
+                instance.order = instance.family
+
+            instance.save()
+
+        except:
+            pass
