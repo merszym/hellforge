@@ -887,7 +887,10 @@ class Site(models.Model):
         return data
 
     def get_location_features(self):
-        sgeo = self.loc.first().geo
+        try:
+            sgeo = self.loc.first().geo
+        except AttributeError:
+            sgeo = None
         if type(sgeo) == str:
             sgeo = dict(json.loads(sgeo))
         if sgeo:
@@ -1263,6 +1266,7 @@ class AnalyzedSample(models.Model):
 #
 #
 
+
 class Taxonomy(models.Model):
     # this class stores a taxonomy-file to fill faunal data
     # I use a super simple { 'Family':'Order } dict to fill the
@@ -1270,7 +1274,6 @@ class Taxonomy(models.Model):
     #
     type = models.CharField("Type", max_length=50, blank=True, null=True)
     data = models.JSONField("Taxonomy Data", blank=True, null=True)
-
 
 
 class LayerAnalysis(models.Model):

@@ -147,7 +147,7 @@
                     <select class="form-select" name="date">
                         <option selected>----</option>
                         {% for option in site_dates %}
-                        <option value="{{option.pk}}">{{option}} {% if option.estimate %}/ {{option.estimate|default:''}} ± {{option.plusminus|default:''}}{% endif %} ({{option.layer.name}})</option>
+                        <option value="{{option.pk}}">{% if option.oxa %}{{option.oxa}}: {% endif %}{{option}}{% if option.estimate %} / {{option.estimate|default:''}} ± {{option.plusminus|default:''}}{% endif %} ({{option.layer.name}})</option>
                         {% endfor %}
                     </select>
                     <span
