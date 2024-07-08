@@ -138,19 +138,22 @@ def create_description(sender, instance, **kwargs):
 def update_order(sender, instance, **kwargs):
     from main.models import Taxonomy
 
-    if not instance.order:
+    if instance.order != instance.order:
+        # this is because the order is set to a np.nan instance...
 
         try:
             t = Taxonomy.objects.get(type="family_order")
             data = json.loads(t.data)
 
+            instance.family = instance.family.strip()
+
             if instance.family in data:
                 instance.order = data[instance.family]
+                instance.save()
 
             if instance.family in data.values():
                 instance.order = instance.family
-
-            instance.save()
+                instance.save()
 
         except:
             pass
