@@ -2,8 +2,12 @@
 <tr>
     <td id='reference_{{ref.pk}}_short'>{{ref.short}}</td>
     <td>
-        <span id="reference_{{ref.pk}}_title">{{ref.title | title}}</span><br>
-        <p class="form-input-hint" style="margin-bottom:0px;">{{ref.tags}}</p>
+        <div class="p-2">
+            <p id="reference_{{ref.pk}}_title">{{ref.title | title}}</p>
+            {% if ref.doi|first in '1' and display %}
+            <a href="{{ref.link}}">{{ref.doi}}</a>
+            {% endif %}
+        </div>
     </td>
     {% if display %}
         <td><a class="btn" href="{{ref.link}}" target="_blank">Open</a></td>
