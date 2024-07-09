@@ -79,7 +79,7 @@ class SiteListView(ProjectAwareListView):
         return queryset.filter(child=None)
 
 
-def get_timeline_data(site_id, curves=False, request=False):
+def get_timeline_data(site_id, curves=True, request=False):
     if request:
         project = get_project(request)
     data = {}

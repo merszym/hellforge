@@ -7,7 +7,7 @@ def render_timeline(request, model, pk):
     context = {}
     if model == "site":
         context = get_timeline_data(
-            pk, curves=request.GET.get("curves", False), request=request
+            pk, curves=request.GET.get("curves", True), request=request
         )
     return render(request, "main/timeline/timeline.html", context)
 
