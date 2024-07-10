@@ -167,10 +167,13 @@ def prepare_data(
 
     if mode == "absolute":
         # get the maximum sum
-        maxsum = max([x for x in sum_per_lib.values()])
-        for entry in results.keys():
-            for f, v in results[entry].items():
-                results[entry][f]["display"] = round(v["raw"] / maxsum, 4) * 100
+        try:
+            maxsum = max([x for x in sum_per_lib.values()])
+            for entry in results.keys():
+                for f, v in results[entry].items():
+                    results[entry][f]["display"] = round(v["raw"] / maxsum, 4) * 100
+        except ValueError:  # empty sequence
+            maxsum = 0
 
     families = set(families)
 
