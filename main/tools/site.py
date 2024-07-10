@@ -79,20 +79,41 @@ class SiteListView(ProjectAwareListView):
         return queryset.filter(child=None)
 
 
-def get_timeline_data(site_id, curves=True, request=False):
-    if request:
-        project = get_project(request)
-    data = {}
+def get_culture_css(request, site_id):
     site = Site.objects.get(pk=site_id)
+    layers = Layer.objects.filter(Q(site=site))
 
-    layers = Layer.objects.filter(site=site).prefetch_related("date")
     cultures = {}
+    context = {}
     for n, cult in enumerate(
         Culture.objects.filter(
             Q(layer__in=layers) | Q(layer_analysis__site__layer__in=layers)
         ).order_by("layer__pos")
     ):
         cultures[cult.classname] = n
+
+    context["cultures"] = [
+        (k, v)
+        for k, v in zip(
+            [x for x in sorted(cultures, key=lambda x: cultures[x])],
+            sns.color_palette("husl", len(cultures)).as_hex(),
+        )
+    ]
+    return render(request, "main/site/site_culture_css.html", context)
+
+
+def get_timeline_data(site_id, request=False, profile=None):
+    if request:
+        project = get_project(request)
+    data = {}
+    site = Site.objects.get(pk=site_id)
+
+    if profile:
+        layers = Layer.objects.filter(
+            Q(site=site) & Q(profile=profile)
+        ).prefetch_related("date")
+    else:
+        layers = Layer.objects.filter(Q(site=site)).prefetch_related("date")
 
     groups = [
         {
@@ -165,8 +186,8 @@ def get_timeline_data(site_id, curves=True, request=False):
                 "group": layer.name.lower(),
                 "className": layer.culture.classname if layer.culture else "sterile",
                 "type": "point",
-                "style": f"{'background-color: rgba(0,0,0,0); border: none;' if date.raw and curves else ''}",
-                "usesvg": True if curves and date.raw else False,
+                "style": f"{'background-color: rgba(0,0,0,0); border: none;' if date.raw else ''}",
+                "usesvg": True if date.raw else False,
                 "polygon": f"{date.get_polygon_css() if date.raw else ''}",
                 "oxa": f"{date.oxa if date.oxa else ''}",
                 "method": date.method,
@@ -185,13 +206,6 @@ def get_timeline_data(site_id, curves=True, request=False):
             dates.append(layerdata)
     data["groups"] = json.dumps(groups)
     data["itemdata"] = json.dumps(dates)
-    data["cultures"] = [
-        (k, v)
-        for k, v in zip(
-            [x for x in sorted(cultures, key=lambda x: cultures[x])],
-            sns.color_palette("husl", len(cultures)).as_hex(),
-        )
-    ]
     return data
 
 
@@ -582,6 +596,7 @@ urlpatterns = [
     path("geodata", get_site_geo, name="main_site_geo"),
     path("sample-tab", get_site_sample_content, name="main_site_sample_tab"),
     path("<int:pk>/dna-tab", get_site_dna_content, name="main_site_dna_tab"),
+    path("<int:site_id>/culture-css", get_culture_css, name="main_site_culture_css"),
     path("create-batch", samplebatch_create, name="main_samplebatch_create"),
     path(
         "get-samplebatch/<int:pk>",

@@ -1,0 +1,10 @@
+{% for cult,color in cultures %}
+    <style>
+    .{{cult}}{
+        background-color:{{color}};
+        fill: {{color}};
+        vector-effect: non-scaling-stroke;
+        stroke: black;
+    }
+    </style>
+{% endfor %}

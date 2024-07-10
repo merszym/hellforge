@@ -155,6 +155,8 @@
                         >OK</span>
                     </div>
                 </form>
+                <!--update the site css-->
+                <div id="culture-css" hx-get="{% url 'main_site_culture_css' object.site.pk%}" hx-trigger="load once"></div>
                 <br>
                 <h6>Epoch</h6>
                 {% if object.epoch %}

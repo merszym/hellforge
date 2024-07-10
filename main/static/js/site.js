@@ -1,19 +1,3 @@
-function reloadTimeline(){
-    var gets = ""
-    // check if filters are toggled:
-    if($('#timeline-show-curves').hasClass('btn-primary')){
-        gets = `${gets}&curves=1`
-    }
-    ele = $('#timeline-content')
-    if(ele.length){
-        ele.load(`${ele.attr('data-url')}?${gets}`)
-    }
-}
-
-$( document ).ready(function(){
-    reloadTimeline()
-});
-
 // switch between profiles
 $('body').on('click','.switch_profile', function(){
     $('.show_profile').hide();
@@ -50,13 +34,6 @@ $(window).resize(function resize(){
         $('#mobile').addClass('col-4')
     }
 }).trigger('resize');
-
-// load the timeline-data
-$('body').on('click', '.timeline-filter', function(){
-    $(this).toggleClass('btn-primary')
-    reloadTimeline()
-});
-
 
 // switch between main tabs on the site level
 $('body').on('click', '.select-block-content', function(){

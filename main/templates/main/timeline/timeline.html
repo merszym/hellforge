@@ -33,17 +33,13 @@
     background-color: rgba(255, 255, 255, 0);
     background-image: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(148, 131, 131, 0.2), rgba(148, 131, 131, 0.2));
 }
-
-{% for cult,color in cultures %}
-.{{cult}}{
-    background-color:{{color}};
-    vector-effect: non-scaling-stroke;
-    fill: {{color}};
-    stroke: black;
-}
-{% endfor %}
 </style>
 <div id="timeline-content">
+    {% if profile %}
+    <h4>Age Summary ({{profile.name}})</h4>
+    {% else %}
+    <h4>Age Summary (Site)</h4>
+    {% endif %}
     <div style="height:400px;" id="visualization"></div>
 
     <script type="text/javascript">

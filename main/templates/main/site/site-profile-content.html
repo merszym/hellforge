@@ -2,7 +2,13 @@
 <div id="site_profile_content">
     <ul class="tab tab-block" id="profile-list">
         {% for profile in object.profile.all %}
-        <li id="profile-tab_{{profile.pk}}" class="tab-item switch_profile {% if selected_profile == profile %}active{% endif %}" data-group="profile" data-show="profile_{{profile.pk}}">
+        <li id="profile-tab_{{profile.pk}}"
+        class="tab-item switch_profile {% if selected_profile == profile %}active{% endif %}"
+        data-group="profile"
+        data-show="profile_{{profile.pk}}"
+        hx-get="{% url 'main_timeline_render_profile' 'site' object.pk profile.pk %}"
+        hx-target="#timeline-content"
+        >
             <a style="cursor:pointer;">{{profile.name}}</a>
         </li>
         {% endfor %}

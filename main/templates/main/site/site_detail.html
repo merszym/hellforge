@@ -9,6 +9,8 @@
 {% block body %}
 
 <!-- Add dynamic styling for units and cultures -->
+<div id="culture-css" hx-get="{% url 'main_site_culture_css' object.pk%}" hx-trigger="load once"></div>
+
 <div id="reload_site_style">
     <style>
     .leaflet-top{
@@ -21,15 +23,6 @@
         background-color: rgb(117, 117, 117);
     }
     </style>
-    {% for cult,color in cultures %}
-    <style>
-    .{{cult}}{
-        background-color:{{color}};
-        fill: {{color}};
-    }
-    </style>
-    {% endfor %}
-</style>
 </div>
 <span id="get_location_data" data-url="{% url 'main_site_geo' %}?object={{object.pk}}"></span>
 <div class='columns' style="padding:10px;">
@@ -188,18 +181,17 @@
     </div>
 </div>
 {% if object.layer.first %}
-<h4>Age Summary</h4>
 <div class="btn-group mx-2">
-    <!--
-    <button class="btn timeline-filter btn-primary" id="timeline-show-curves">14C Curve</button>
-    -->
     <button class="btn tooltip tooltip-right" data-tooltip="Download all dates">
         <a target="_blank" href="{% url 'get_dataset' %}?from=site_{{object.pk}}&unique=date&include=layer">
             <i class="icon icon-download"></i>
         </a>
     </button>
 </div>
-<div class="m-2 self_reload" id="timeline-content" data-url="{% url 'main_timeline_render' 'site' object.pk %}"></div>
+
+<div hx-get="{% url 'main_timeline_render' 'site' object.pk %}" hx-trigger="load once" hx-target="#timeline-content"></div>
+<div class="m-2" id="timeline-content"></div>
+
 {% endif %}
 <script src="{% static 'js/location.js' %}"></script>
 <script src="{% static 'js/site.js' %}"></script>
