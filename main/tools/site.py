@@ -8,6 +8,7 @@ from main.models import (
     Site,
     Location,
     Culture,
+    Profile,
     Layer,
     Date,
     Description,
@@ -436,9 +437,8 @@ def samplebatch_create(request):
 def get_site_samplebatch_tab(request, pk):
     batch = SampleBatch.objects.get(pk=pk)
 
-    nested_dict = lambda: defaultdict(nested_dict)
-    data = nested_dict()
-    layers = nested_dict()
+    # get the defaults for display
+    current_project = get_project(request)
 
     # TODO: move to signals
     # Create a Gallery for each Batch
@@ -448,7 +448,27 @@ def get_site_samplebatch_tab(request, pk):
         batch.gallery = tmp
         batch.save()
 
-    batch_samples = Sample.objects.filter(batch=batch)
+    batch_samples = Sample.objects.filter(batch=batch).distinct()
+
+    # now filter the samples
+    layer = request.POST.get("layer", "all")
+    profile = request.POST.get("profile", "all")
+    analyzed = "on" == request.POST.get("analyzed", "")
+    only_project = "on" == request.POST.get("only_project", "on")
+
+    if layer != "all":
+        layer = get_instance_from_string(layer)
+        batch_samples = batch_samples.filter(layer=layer)
+
+    if profile != "all":
+        profile = get_instance_from_string(profile)
+        batch_samples = batch_samples.filter(layer__profile=profile)
+
+    if analyzed:
+        batch_samples = batch_samples.filter(analyzed_sample__isnull=False)
+
+    if only_project and current_project:
+        batch_samples = batch_samples.filter(project=current_project)
 
     # make a list of id-synonym keys that are necessary for the sample-table
     sample_synonyms = list(
@@ -457,38 +477,28 @@ def get_site_samplebatch_tab(request, pk):
         .distinct()
     )
 
-    layers["All"] = 0
-    for layer in sorted(
-        list(set([x.layer for x in batch_samples])),
-        key=lambda x: getattr(x, "pos", 0),
-    ):
-        # get the samples
-        layer_samples = batch_samples.filter(layer=layer)
+    layers = Layer.objects.filter(sample__batch=batch).distinct()
 
-        layer_libraries = AnalyzedSample.objects.filter(sample__in=layer_samples)
-        # and add them to the dict
-        if len(layer_samples) > 0:
-            if layer == None:
-                layer = "unknown"
-            # create All placeholders
-            if not "All" in data["samples"]:
-                data["samples"]["All"] = []
-                data["libraries"]["All"] = []
-            data["samples"]["All"].extend(layer_samples)
-            data["libraries"]["All"].extend(layer_libraries)
-            data["samples"][layer] = layer_samples
-            data["libraries"][layer] = layer_libraries
-            # add the layer to the layer-list
+    if profile != "all":
+        layers = layers.filter(profile=profile)
 
-            layers[layer] = len(layer_samples)
-            layers["All"] = layers["All"] + len(layer_samples)
+    profiles = Profile.objects.filter(layer__sample__batch=batch).distinct()
+
+    analyzedsamples = AnalyzedSample.objects.filter(sample__in=batch_samples)
 
     context = {
         "object": batch,
         "layers": layers,
-        "data": data,
+        "profiles": profiles,
         "sample_synonyms": sample_synonyms,
+        "samples": batch_samples,
+        "analyzedsamples": analyzedsamples,
+        "only_project": only_project,
+        "analyzed": analyzed,
+        "layer": layer,
+        "profile": profile,
     }
+
     return render(request, "main/samples/sample-batch-tab.html", context)
 
 

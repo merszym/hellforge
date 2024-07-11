@@ -4,13 +4,12 @@
         <div class="empty-icon">
             <i class="icon icon-flag"></i>
         </div>
-        <p class="empty-title h5">No samples assigned to the batch</p>
-        <p class="empty-subtitle">Assign the batch on the sample level</p>
+        <p class="empty-title h5">No samples yet</p>
+        <p class="empty-subtitle">please upload the data</p>
     </div>
 {% else %}
 
-<div class="sample_table panel tab-panel" data-group="{{object.classname}}-layer-tab"
-    id="{{object.classname}}-layer-tab_{{layer.pk}}" style="{% if counter != 1 %} display: none;{% endif %} max-height:500px; overflow:scroll;">
+<div class="sample_table panel tab-panel" style="max-height:500px; overflow:scroll;">
 <style>
     .unassigned{
         background-color: rgb(201, 115, 115) !important;
@@ -60,13 +59,13 @@
             <td nowrap
                 {% if request.user.is_authenticated %}
                     style="cursor: pointer;"
-                    class="{{object.layer|yesno:'assigned,unassigned'}} modal_open tooltip tooltip-right"
+                    class="{{object.layer|yesno:'assigned,unassigned'}}  {{object.layer.culture.classname|default:'sterile'}} modal_open tooltip tooltip-right"
                     data-tooltip="Update Layer"
                     hx-get="{% url 'main_modal_get' %}"
                     hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_layer" }'
                     hx-target="#modal-blank"
                 {% else %}
-                    class="{{object.layer|yesno:'assigned,unassigned'}}"
+                    class="{{object.layer|yesno:'assigned,unassigned'}}  {{object.layer.culture.classname|default:'sterile'}}"
                 {% endif %}>
                 {% if object.layer %}{{object.layer.name}}{% else %}Unassigned{% endif %}
             </td>
@@ -153,8 +152,6 @@
         {% endfor %}
         {% endwith %}
     </tbody>
-
-
 </table>
 </div>
 {% endif %}

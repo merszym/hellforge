@@ -186,8 +186,6 @@ def save_verified(request):
 
 
 # UPDATE MODALS
-
-
 @login_required
 def update_samplelayer(request):
     if request.method == "POST":
@@ -198,7 +196,9 @@ def update_samplelayer(request):
         except ValueError:  # no layer pk given
             sample.layer = None
         sample.save()
-    # return updated html
+    # return updated html, clear request.POST
+    request.POST._mutable = True
+    request.POST = {}
     return get_site_samplebatch_tab(request, sample.batch.pk)
 
 

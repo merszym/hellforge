@@ -1,11 +1,6 @@
 {% load format %}
-<div class="panel sample_table tab-panel {{batch.classname}}-layer-tab_{{layer.pk}}" data-group="{{batch.classname}}-layer-tab"
-    style="{% if counter != 1 %} display: none;{% endif %} max-height:500px; overflow:scroll;">
-    {% if object_list|length == 0 %}
+<div class="panel" style="max-height:500px; overflow:scroll;">
 
-    No libraries yet
-
-    {% else %}
 <a class="generic_filter text-primary" style="cursor:pointer;" data-term="SP" data-search=".{{batch.classname}}_libtr">Reset sample filter</a>
 
 <style>
@@ -93,7 +88,6 @@
         {% endwith %}
     </tbody>
 </table>
-{% endif %}
 </div>
 
 <script>
