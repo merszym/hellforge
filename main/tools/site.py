@@ -454,7 +454,7 @@ def get_site_samplebatch_tab(request, pk):
     layer = request.POST.get("layer", "all")
     profile = request.POST.get("profile", "all")
     analyzed = "on" == request.POST.get("analyzed", "")
-    only_project = "on" == request.POST.get("only_project", "on")
+    all_projects = "on" == request.POST.get("all_projects", "")
 
     if layer != "all":
         layer = get_instance_from_string(layer)
@@ -467,7 +467,7 @@ def get_site_samplebatch_tab(request, pk):
     if analyzed:
         batch_samples = batch_samples.filter(analyzed_sample__isnull=False)
 
-    if only_project and current_project:
+    if not all_projects and current_project:
         batch_samples = batch_samples.filter(project=current_project)
 
     # make a list of id-synonym keys that are necessary for the sample-table
@@ -493,7 +493,7 @@ def get_site_samplebatch_tab(request, pk):
         "sample_synonyms": sample_synonyms,
         "samples": batch_samples,
         "analyzedsamples": analyzedsamples,
-        "only_project": only_project,
+        "all_projects": all_projects,
         "analyzed": analyzed,
         "layer": layer,
         "profile": profile,

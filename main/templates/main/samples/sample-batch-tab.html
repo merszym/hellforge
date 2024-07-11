@@ -98,9 +98,9 @@
                     <input type="checkbox" name="analyzed" {% if analyzed %}checked{% endif %}><i class="form-icon"></i>
                 </label>
                 {% if request.user.is_authenticated %}
-                <span class="input-group-addon">In Project</span>
+                <span class="input-group-addon">All Projects</span>
                 <label class="form-switch mx-2">
-                    <input type="checkbox" name="only_project" {% if only_project %}checked{% endif %}><i class="form-icon"></i>
+                    <input type="checkbox" name="all_projects" {% if all_projects %}checked{% endif %}><i class="form-icon"></i>
                 </label>
                 {% endif %}
                 <button class="btn btn-primary input-group-btn">OK</button>

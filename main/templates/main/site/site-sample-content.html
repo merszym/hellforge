@@ -45,6 +45,7 @@
                 {% endif %}
                 hx-get="{% url 'main_samplebatch_get' batch.pk %}"
                 hx-trigger="load once">
+                <div class="loading loading-lg m-2"></div>
             </div>
         {% endfor %}
     </section>
