@@ -74,6 +74,7 @@ def save_verified(request):
             object.refresh_from_db()
         # set or update
         object.sample = Sample.objects.get(name=row["Analyzed Sample"])
+        object.tags = row["Tag"]
         object.project.add(
             Project.objects.get(namespace=request.session["session_project"])
         )
