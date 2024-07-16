@@ -77,7 +77,7 @@
                     data-group="site-view-1"
                     hx-get="{% url 'main_render_description' project_description.pk %}"
                     hx-target="#site-panel-1">
-                    Site Description ({{project}})
+                    Site Description ({{project|truncatechars:30}})
                 </div>
                 {% endif %}
             </div>
