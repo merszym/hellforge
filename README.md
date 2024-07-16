@@ -20,8 +20,8 @@ Because of that it currently stores information about:
 **(Published) Sediment DNA projects**
 
 - Project descriptions
-- Samples obtained from the layer
-- DNA Results (WIP)
+- Samples and Libraries obtained from the layer
+- DNA Results (mtDNA)
 
 ## Explore
 

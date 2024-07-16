@@ -2,10 +2,10 @@
 {% block head %}
 {% load static %}
 {% load format %}
-<title>Project: {{object}}</title>
+<title>Hellforge | {{object}}</title>
 {% include 'main/editor/editor-head.html' %}
 {% endblock %}
-{% block headline %}<a href="{% url 'main_project_list' %}">{{object.name}}</a>{% endblock %}
+{% block headline %}<a href="{% url 'main_project_list' %}">All Projects</a>{% endblock %}
 
 {% block body %}
 <style>
@@ -15,9 +15,10 @@
     }
 </style>
 <span id="get_location_data" data-url="{% url 'main_project_geo' %}?object={{object.pk}}"></span>
-<div class='columns' style="padding:10px;">
-    <div class="column col-4" style="position:relative;">
-        <h3>Project Details</h3>
+<h1 class="m-0">Project Overview</h1>
+<div class='columns'>
+    <div class="column col-4 p-2" style="position:relative;">
+        <h3>Details</h3>
         <ul class="tab">
             <li data-group="project" class="tab-item active" style="cursor:pointer;"
                 hx-get="{% url 'main_project_overview' %}"
@@ -48,8 +49,10 @@
     <div class="column">
         <div id="project-content" class="my-2">
             <ul class="tab tab-block">
-                <li class="tab-item active" data-group="project-main" data-show="project-sample-overview" style="cursor:pointer;"><a><h4>Sample Overview</h4></a></li>
+                <li class="tab-item active" data-group="project-main" data-show="project-sample-overview" style="cursor:pointer;"><a><h4>Site Overview</h4></a></li>
+                <!--
                 <li class="tab-item" data-group="project-main" data-show="project-collab-overview" style="cursor:pointer;"><a><h4>Processed Samples</h4></a></li>
+                -->
             </ul>
             <div class="tab-panel m-2 p-2 panel" data-group="project-main" id="project-sample-overview" style="height:720px;overflow: scroll;">
                 <div class="panel-header" style="position: sticky; top: 0;">
