@@ -40,6 +40,9 @@ class Project(models.Model):
     project_description = GenericRelation(
         "Description", related_query_name="project_project"
     )
+    ref = models.ManyToManyField(
+        "Reference", verbose_name="reference", blank=True, related_name="project"
+    )
 
     def __str__(self):
         return self.name
