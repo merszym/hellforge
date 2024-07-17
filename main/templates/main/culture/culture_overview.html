@@ -1,25 +1,26 @@
+{% load format %}
+
 <div style="height: 480px;" id="map"></div>
 <table class="table" id="culture_detail_table">
     <thead>
         <tr>
-        <th>Associated Hominin</th>
-        <th>Parent Culture</th>
-        <th>Children</th>
+        <th>Umbrella Culture</th>
+        <th>Subculture</th>
         </tr>
     </thead>
     <tbody>
         <tr>
-        <td>{{object.hominin_group}}</td>
-        <td>
-        {% if object.culture %}
-        <a class='btn-link' href="{% url 'culture_detail' object.culture.pk %}">{{object.culture.name}}</a>
-        {% endif %}
-        </td>
-        <td>
-        {% for child in object.children %}
-        <a class='btn-link' href="{% url 'culture_detail' child.pk %}">{{child.name}}</a><br>
-        {% endfor %}
-        </td>
+            <td>
+            {% if object.culture %}
+            <a class='btn-link' href="{% url 'culture_detail' object.culture.pk %}">{{object.culture.name}}</a>
+            {% endif %}
+            </td>
+            <td>
+                {{colors_dict}}
+            {% for child in object.children %}
+            <a class='btn-link' style="color: {{colors_dict|lookup:child}};" href="{% url 'culture_detail' child.pk %}">{{child.name}}</a><br>
+            {% endfor %}
+            </td>
         </tr>
     </tbody>
 </table>

@@ -15,7 +15,14 @@ from django.contrib import messages
 
 def get_small_mammals():
     # this is hardcoded for now :')
-    orders = ["Rodentia", "Scandentia", "Eulipotyphla", "Lagomorpha", "Soricomorpha"]
+    orders = [
+        "Rodentia",
+        "Scandentia",
+        "Eulipotyphla",
+        "Lagomorpha",
+        "Soricomorpha",
+        "Chiroptera",
+    ]
     return orders
 
 

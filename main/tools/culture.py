@@ -126,7 +126,7 @@ def get_culture_timline(query):
                 groupdata.append(tmp)
                 continue
 
-    return json.dumps(items), json.dumps(groupdata)
+    return json.dumps(items), json.dumps(groupdata), cult_color_dict
 
 
 ## Cultures ##
@@ -149,7 +149,8 @@ class CultureDetailView(ProjectAwareDetailView):
 
         query = object.all_cultures(nochildren=nochildren)
 
-        items, groups = get_culture_timline(query)
+        items, groups, colors = get_culture_timline(query)
+
         context["itemdata"] = items
         context["groups"] = groups
 
