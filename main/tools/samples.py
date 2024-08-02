@@ -203,6 +203,23 @@ def update_samplelayer(request):
 
 
 @login_required
+def update_samplebatch(request):
+    if request.method == "POST":
+        sample = Sample.objects.get(pk=int(request.POST.get("object")))
+        old_batch = sample.batch
+        try:
+            batch = SampleBatch.objects.get(pk=int(request.POST.get("batch")))
+            sample.batch = batch
+        except ValueError:  # no layer pk given
+            pass
+        sample.save()
+    # return updated html, clear request.POST
+    request.POST._mutable = True
+    request.POST = {}
+    return get_site_samplebatch_tab(request, old_batch.pk)
+
+
+@login_required
 def update_samplebase(request):
     if request.method == "POST":
         sample = Sample.objects.get(pk=int(request.POST.get("object")))
@@ -253,5 +270,6 @@ urlpatterns = [
     path("save", save_verified, name="ajax_save_verified_samples"),
     path("update-base", update_samplebase, name="sample-edit"),
     path("update-layer", update_samplelayer, name="sample-layer-update"),
+    path("update-batch", update_samplebatch, name="sample-batch-update"),
     path("edit-provenience", update_sample_provenience, name="sample-provenience-edit"),
 ]

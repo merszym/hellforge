@@ -13,6 +13,7 @@ from .models import (
     Epoch,
     Date,
     AnalyzedSample,
+    SampleBatch,
 )
 from django.db.models import Q
 from django.urls import reverse, path
@@ -50,6 +51,10 @@ def get_modal_context(object, request):
         if context["type"] == "dates":
             context.update({"datingoptions": DatingMethod.objects.all()})
             context.update({"site_dates": object.layer.site.get_dates()})
+        if context["type"] == "edit_batch":
+            context.update(
+                {"site_batches": SampleBatch.objects.filter(site=object.site)}
+            )
 
     # Add layer edit context
     if object.model == "layer":

@@ -20,6 +20,9 @@
         <tr>
             <th>Project</th>
             <th>Layer</th>
+            {% if request.user.is_authenticated %}
+            <th>Batch</th>
+            {% endif %}
             <th>Type</th>
             <th>Sample</th>
             {% for type in sample_synonyms %}
@@ -69,6 +72,17 @@
                 {% endif %}>
                 {% if object.layer %}{{object.layer.name}}{% else %}Unassigned{% endif %}
             </td>
+            {% if request.user.is_authenticated %}
+            <td nowrap
+                style="cursor: pointer;"
+                class="tooltip tooltip-top modal_open"
+                data-tooltip="Update Sample Synonyms"
+                hx-get="{% url 'main_modal_get' %}"
+                hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_batch" }'
+                hx-target="#modal-blank">
+                {{object.batch.name}}
+            </td>
+            {% endif %}
             <td nowrap
             {% if request.user.is_authenticated %}
                 style="cursor: pointer;"
