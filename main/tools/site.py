@@ -385,7 +385,10 @@ def get_site_dna_content(request, pk):
     if request.method == "POST":
         if prset := request.POST.get("probe", False):
             if prset != "all":
-                query = query.filter(analyzedsample__probes=prset)
+                if prset == "AA163":  # get all the human mt probesets
+                    query = query.filter(analyzedsample__probes__in=["AA163", "AA22"])
+                else:
+                    query = query.filter(analyzedsample__probes=prset)
                 context.update({"probe": prset})
 
         mode = request.POST.get("mode", "absolute")
