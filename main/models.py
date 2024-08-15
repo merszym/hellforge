@@ -1172,7 +1172,10 @@ class Sample(Dateable):
         # dont include layer or project - that is exported with the respective query
         infinite, upper, lower = self.get_upper_and_lower(calculate_mean=True)
         if upper == None and lower == None:
-            infinite, upper, lower = self.layer.get_upper_and_lower(calculate_mean=True)
+            if self.layer:
+                infinite, upper, lower = self.layer.get_upper_and_lower(
+                    calculate_mean=True
+                )
         if infinite:
             upper = None
         data = {
