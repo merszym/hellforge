@@ -144,6 +144,8 @@ def get_project_geo(request):
         except TypeError:
             # apparently some objects are not saved as json, but as dict???
             geo = site.loc.first().geo
+        except AttributeError:  # no location found
+            pass
         if geo:
             site_view_url = reverse("site_detail", kwargs={"pk": site.pk})
             geo["features"][0]["properties"][
