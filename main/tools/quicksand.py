@@ -39,6 +39,9 @@ def handle_quicksand_report(request, file):
     if not runid:
         return return_error("Sequencing ID is missing")
 
+    lane = request.POST.get("lane", "lane1")
+    seqpool = request.POST.get("seqpool", False)
+
     version = request.POST.get("version", False)
     version_format_matches = bool(re.match("v[0-9]+(\.[0-9]+)*", version))
 
@@ -51,7 +54,9 @@ def handle_quicksand_report(request, file):
 
     for library, report in df.groupby("RG"):
         try:
-            analyzed_sample = AnalyzedSample.objects.get(library=library, seqrun=runid)
+            analyzed_sample = AnalyzedSample.objects.get(
+                library=library, seqrun=runid, lane=lane, seqpool=seqpool
+            )
 
             # prepare the data for saving
             data = {}

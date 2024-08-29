@@ -271,6 +271,15 @@
                         {% endfor %}
                     </select>
                     <div class="form-group">
+                        <label class="form-label" for="lane">Sequencing Lane</label>
+                        <input class="form-input" type="text" id="lane" name="lane" placeholder="lane1" required="" pattern="lane[0-9]">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="seqpool">Sequenced Pool</label>
+                        <input class="form-input" type="text" id="seqpool" name="seqpool" placeholder="P.A.1234" pattern="P\.[A-Z]\.[0-9]+">
+                        <p class="form-input-hint">This is required to import pool-reports later!</p>
+                    </div>
+                    <div class="form-group">
                         <label class="form-label" for="version">quicksand version</label>
                         <input class="form-input" type="text" id="version" name="version" placeholder="v2.1" required="" pattern="v[0-9]+(\.[0-9]+){1-2}?">
                         <p class="form-input-hint">please follow the pattern v2.1</p>
