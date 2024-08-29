@@ -1232,6 +1232,8 @@ class AnalyzedSample(models.Model):
             "Library": self.library,
             "Capture Probe": self.probes,
             "Sequencing Run": self.seqrun,
+            "Sequencing Lane": self.lane,
+            "Sequencing Pool": self.seqpool,
             "Tag": self.tags,
             "QC": "Pass" if self.qc_pass else "Fail",
         }
