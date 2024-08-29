@@ -2,6 +2,7 @@ from main.models import models
 from main.models import AnalyzedSample, Sample, Project, SampleBatch
 from django.http import JsonResponse, HttpResponse
 from django.urls import path
+from django import forms
 from django.shortcuts import render
 from main.tools.generic import get_instance_from_string
 import main.tools as tools
@@ -12,6 +13,12 @@ from django.contrib.auth.decorators import (
     login_required,
 )  # this is for now, make smarter later
 from django.contrib import messages
+
+
+class AnalyzedSampleForm(forms.ModelForm):
+    class Meta:
+        model = AnalyzedSample
+        fields = ["seqrun", "seqpool", "lane"]
 
 
 def handle_library_file(request, file):
@@ -110,19 +117,27 @@ def tags_update(request, pk):
 
 def seqrun_update(request, pk):
     object = AnalyzedSample.objects.get(pk=pk)
+    # in case we want to update all
     old_run = object.seqrun
+    old_lane = object.lane
+    old_pool = object.seqpool
 
-    val = request.POST.get("seqrun", None)
-    object.seqrun = val
-    object.save()
+    form = AnalyzedSampleForm(request.POST, instance=object)
+
+    if form.is_valid():
+        form.save()
 
     if request.GET.get("all", "no") == "yes":
         libs = AnalyzedSample.objects.filter(
-            Q(seqrun=old_run) & Q(sample__site=object.sample.site)
+            Q(seqrun=old_run)
+            & Q(seqpool=old_pool)
+            & Q(lane=old_lane)
+            & Q(sample__site=object.sample.site)
         )
         for lib in libs:
-            lib.seqrun = val
-            lib.save()
+            form = AnalyzedSampleForm(request.POST, instance=lib)
+            if form.is_valid():
+                form.save()
 
     # finally, return the modal
     messages.add_message(

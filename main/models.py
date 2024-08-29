@@ -1207,15 +1207,19 @@ class AnalyzedSample(models.Model):
     library = models.CharField("library", max_length=200)
     probes = models.CharField("probes", max_length=200, blank=True, null=True)
     seqrun = models.CharField("sequencing run", max_length=400)
+    lane = models.CharField("lane", max_length=50, default="lane1")
+    seqpool = models.CharField("seqpool", max_length=50, blank=True, null=True)
     project = models.ManyToManyField(
         Project, blank=True, verbose_name="project", related_name="analyzedsample"
     )
-    metadata = models.JSONField("metadata", blank=True, null=True)
+    metadata = models.JSONField(
+        "metadata", blank=True, null=True
+    )  # this is the pool-report
     tags = models.CharField("tags", blank=True, null=True, max_length=100)
     qc_pass = models.BooleanField("qc_pass", default=True)
 
     class Meta:
-        unique_together = [["library", "seqrun"]]
+        unique_together = [["library", "seqrun", "lane"]]
         ordering = ["sample__site", "sample__layer", "sample", "seqrun", "probes"]
 
     def __str__(self):

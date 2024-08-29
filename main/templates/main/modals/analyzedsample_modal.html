@@ -65,23 +65,31 @@
             <div>
                 <div id="modal-form">
                     <h6>{{object.library}}</h6>
-                    <div class="input-group">
-                        <span class="input-group-addon">Sequencing Run</span>
-                        <form>
-                            <input type="hidden" name="instance_x" value="{{object.model}}_{{object.pk}}"></input>
-                            <input type="text" name="seqrun" value="{{object.seqrun}}"></input>
-                            <span
-                                hx-post="{% url 'main_analyzedsample_seqrunupdate' object.pk %}"
-                                hx-target="#modal-blank"
-                                class="btn btn-primary input-group-btn"
-                            >Update this</span>
-                            <span
-                                hx-post="{% url 'main_analyzedsample_seqrunupdate' object.pk %}?all=yes"
-                                hx-target="#modal-blank"
-                                class="btn btn-primary input-group-btn"
-                            >Update ALL</span>
-                        </form>
-                    </div>
+                    <form>
+                        <input type="hidden" name="instance_x" value="{{object.model}}_{{object.pk}}"></input>
+                        <div class="form-group">
+                            <label class="form-label" for="seqrun">Sequencing Run</label>
+                            <input id="seqrun" class="form-input" type="text" name="seqrun" value="{{object.seqrun}}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="lane">Lane</label>
+                            <input id="lane" class="form-input" type="text" name="lane" value="{{object.lane}}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="seqpool">Sequencing Pool</label>
+                            <input id="seqpool" class="form-input" type="text" name="seqpool" value="{{object.seqpool}}">
+                        </div>
+                        <button
+                            hx-post="{% url 'main_analyzedsample_seqrunupdate' object.pk %}"
+                            hx-target="#modal-blank"
+                            class="btn btn-primary input-group-btn"
+                        >Update this</button>
+                        <button
+                            hx-post="{% url 'main_analyzedsample_seqrunupdate' object.pk %}?all=yes"
+                            hx-target="#modal-blank"
+                            class="btn btn-primary input-group-btn"
+                        >Update ALL</button>
+                    </form>
                 </div>
             </div>
         </div>

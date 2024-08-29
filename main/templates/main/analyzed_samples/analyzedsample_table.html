@@ -27,6 +27,8 @@
             <th>Library</th>
             <th>Capture Probe</th>
             <th>Sequencing Run</th>
+            <th>Lane</th>
+            <th>Pool</th>
             <th>quicksand</th>
             <th>Tag</th>
         </tr>
@@ -78,6 +80,8 @@
                 style="cursor: pointer;"
                 {% endif %}
             >{{object.seqrun|truncatechars:30}}</td>
+            <td>{{object.lane}}</td>
+            <td>{{object.seqpool}}</td>
             <td>{% if object.quicksand_analysis.first %}
                 {{object.quicksand_analysis.first.version}}
                 {% endif %}
