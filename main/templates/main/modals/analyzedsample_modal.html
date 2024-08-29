@@ -54,6 +54,39 @@
         </div>
     </div>
 
+    {% elif type == "edit_seqrun" %}
+
+    {# --------------------  #}
+    {#   SEQRUN EDIT MODAL   #}
+    {# --------------------  #}
+
+    <div class="modal-body">
+        <div class="content my-2">
+            <div>
+                <div id="modal-form">
+                    <h6>{{object.library}}</h6>
+                    <div class="input-group">
+                        <span class="input-group-addon">Sequencing Run</span>
+                        <form>
+                            <input type="hidden" name="instance_x" value="{{object.model}}_{{object.pk}}"></input>
+                            <input type="text" name="seqrun" value="{{object.seqrun}}"></input>
+                            <span
+                                hx-post="{% url 'main_analyzedsample_seqrunupdate' object.pk %}"
+                                hx-target="#modal-blank"
+                                class="btn btn-primary input-group-btn"
+                            >Update this</span>
+                            <span
+                                hx-post="{% url 'main_analyzedsample_seqrunupdate' object.pk %}?all=yes"
+                                hx-target="#modal-blank"
+                                class="btn btn-primary input-group-btn"
+                            >Update ALL</span>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {% endif %}
 
 </div>

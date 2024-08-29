@@ -70,7 +70,14 @@
             <td>{{object.sample}}</td>
             <td>{{object.library}}</td>
             <td>{{object.probes}}</td>
-            <td>{{object.seqrun|truncatechars:30}}</td>
+            <td {% if request.user.is_authenticated %}
+                class="modal_open tooltip tooltip-top" data-tooltip="Edit Seqrun"
+                hx-get="{% url 'main_modal_get' %}"
+                hx-vals='{"object":"analyzedsample_{{object.pk}}","type":"edit_seqrun"}'
+                hx-target="#modal-blank"
+                style="cursor: pointer;"
+                {% endif %}
+            >{{object.seqrun|truncatechars:30}}</td>
             <td>{% if object.quicksand_analysis.first %}
                 {{object.quicksand_analysis.first.version}}
                 {% endif %}

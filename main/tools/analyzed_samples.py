@@ -108,6 +108,37 @@ def tags_update(request, pk):
     return get_modal(request)
 
 
+def seqrun_update(request, pk):
+    object = AnalyzedSample.objects.get(pk=pk)
+    old_run = object.seqrun
+
+    val = request.POST.get("seqrun", None)
+    object.seqrun = val
+    object.save()
+
+    if request.GET.get("all", "no") == "yes":
+        libs = AnalyzedSample.objects.filter(
+            Q(seqrun=old_run) & Q(sample__site=object.sample.site)
+        )
+        for lib in libs:
+            lib.seqrun = val
+            lib.save()
+
+    # finally, return the modal
+    messages.add_message(
+        request,
+        messages.SUCCESS,
+        f"Update of Seqrun(s) successful",
+    )
+
+    request.GET._mutable = True
+    request.GET.update({"object": f"{object.model}_{object.pk}", "type": "edit_seqrun"})
+
+    from main.ajax import get_modal
+
+    return get_modal(request)
+
+
 def qc_toggle(request, pk):
     object = AnalyzedSample.objects.get(pk=pk)
 
@@ -123,5 +154,8 @@ def qc_toggle(request, pk):
 urlpatterns = [
     path("save", save_verified, name="ajax_save_verified_analyzedsamples"),
     path("<int:pk>/update-tags", tags_update, name="main_analyzedsample_tagupdate"),
+    path(
+        "<int:pk>/update-seqrun", seqrun_update, name="main_analyzedsample_seqrunupdate"
+    ),
     path("<int:pk>/update-qc", qc_toggle, name="main_analyzedsample_qctoggle"),
 ]
