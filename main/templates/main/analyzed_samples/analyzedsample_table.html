@@ -84,7 +84,16 @@
                 {% endif %}
             >{{object.seqrun|truncatechars:30}}</td>
             <td>{{object.lane}}</td>
-            <td>{{object.seqpool}}</td>
+            <td {% if request.user.is_authenticated %}
+                class="modal_open tooltip tooltip-top" data-tooltip="Import Poolreport"
+                hx-get="{% url 'main_modal_get' %}"
+                hx-vals='{"object":"analyzedsample_{{object.pk}}","type":"import_poolreport"}'
+                hx-target="#modal-blank"
+                style="cursor: pointer;"
+                {% endif %}
+            >
+                {{object.seqpool}}
+            </td>
             <td>{% if object.quicksand_analysis.first %}
                 {{object.quicksand_analysis.first.version}}
                 {% endif %}

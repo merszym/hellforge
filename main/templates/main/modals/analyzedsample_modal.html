@@ -95,6 +95,30 @@
         </div>
     </div>
 
+    {% elif type == "import_poolreport" %}
+
+    {# --------------------  #}
+    {#   SEQRUN EDIT MODAL   #}
+    {# --------------------  #}
+
+    <div class="modal-body">
+        <div class="content my-2">
+            <div>
+                <div id="modal-form">
+                    <h6>{{object.seqpool}}</h6>
+                    <form>
+                        <input name="file" type="file" required>
+                        <button
+                            hx-post="{% url 'main_analyzedsample_poolreport' object.pk %}"
+                            hx-target="#modal-blank"
+                            class="btn btn-primary input-group-btn"
+                        >Update ALL</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {% endif %}
 
 </div>

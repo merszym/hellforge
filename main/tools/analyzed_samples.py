@@ -166,11 +166,47 @@ def qc_toggle(request, pk):
         return HttpResponse("<span style='color:red; cursor:pointer;'>Fail</span>")
 
 
+def import_report(request, pk):
+    file = request.FILES.get("file")
+
+    report_cols = [
+        "Pool Id",
+        "Capture Id",
+        "Indexed Library ID",
+        "P7 Index",
+        "P5 Index",
+        "Index Set",
+        "Sample ID",
+        "SP Freshkill Id",
+        "Lysate ID",
+        "Sample Input (mg)",
+        "Lys Volume Created (uL)",
+        "Extract ID",
+        "Extract Input Volume (uL)",
+        "Extract Elution Volume (uL)",
+        "Unindexed Library ID",
+        "Unindexed Library Input Volume (uL)",
+        "Unindexed Library Elution Volume (uL)"
+        "Quantification pre-Indexing total (molecules)",
+        "Quantification pre-Indexing Spike-in (molecules)",
+        "Efficiency Percent",
+        "Position on Plate",
+        "Indexed Library Plate Id",
+        "Indexed Library Elution Volume (uL)",
+        "Quantification post-Indexing total (ng/uL)",
+    ]
+
+    return True
+
+
 urlpatterns = [
     path("save", save_verified, name="ajax_save_verified_analyzedsamples"),
     path("<int:pk>/update-tags", tags_update, name="main_analyzedsample_tagupdate"),
     path(
         "<int:pk>/update-seqrun", seqrun_update, name="main_analyzedsample_seqrunupdate"
+    ),
+    path(
+        "<int:pk>/import-report", import_report, name="main_analyzedsample_poolreport"
     ),
     path("<int:pk>/update-qc", qc_toggle, name="main_analyzedsample_qctoggle"),
 ]
