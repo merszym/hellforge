@@ -1073,6 +1073,10 @@ class SampleBatch(models.Model):
     def classname(self):
         return get_classname(self.name)
 
+    @property
+    def model(self):
+        return "samplebatch"
+
     def get_data(self):
         # for an entry, return a dict {'col': data} that is used for the export of the data
         # dont include sample or project - that is exported with the respective query

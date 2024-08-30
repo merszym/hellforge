@@ -1,0 +1,55 @@
+{% load static %}
+{% load format %}
+<a href="#close" class="modal-overlay" aria-label="Close"></a>
+<div class="modal-container">
+    <div class="modal-header">
+        <a id="modal-close" class="btn btn-clear float-right modal_close" aria-label="Close" style="cursor: pointer;"></a>
+        <div class="modal-title h5">SampleBatch Modal</div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="toast toast-{{ message.tags }}">
+            {{message}}
+        </div>
+        {% endfor %}
+    {% endif %}
+
+
+
+    {% if type == "edit" %}
+
+    {# -------------------------- #}
+    {#   SAMPLEBATCH EDIT MODAL   #}
+    {# -------------------------- #}
+
+    <div class="modal-body">
+        <div class="content my-2">
+            <div>
+                <div id="modal-form">
+                <h6>{{object.name}}</h6>
+                    <form>
+                        <div class="form-group">
+                            <label class="form-label" for="name">Name</label>
+                            <input class="form-input" name="name" type="text" id="name" value="{{object.name}}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="sampled_by">Sampled By</label>
+                            <input class="form-input" name="sampled_by" type="text" id="sampled_by" value="{{object.sampled_by}}">
+                        </div>
+
+                        <span
+                            hx-post="{% url 'main_samplebatch_update' object.pk %}"
+                            hx-target="#modal-blank"
+                            class="btn btn-primary input-group-btn"
+                        >OK</span>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% endif %}
+
+</div>
+

@@ -25,6 +25,7 @@ urlpatterns = [
     path("projects/", include("main.tools.projects")),
     path("fauna/", include("main.tools.fauna")),
     path("samples/", include("main.tools.samples")),
+    path("samplebatches/", include("main.tools.samplebatch")),
     path("analyzed-samples/", include("main.tools.analyzed_samples")),
     path("ajax/", include("main.ajax")),
     path("contact/add", ajax.save_contact, name="ajax_contact_add"),

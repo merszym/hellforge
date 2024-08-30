@@ -6,6 +6,15 @@
         {% if object.sampled_by %}
         <span class="text-gray form-input-hint" style="margin-bottom: 14px;">Sampled by {{object.sampled_by}}</span>
         {% endif %}
+        {% if request.user.is_authenticated %}
+        <a style="cursor: pointer;"
+        class="modal_open"  hx-get="{% url 'main_modal_get' %}"
+            hx-vals='{"object":"samplebatch_{{object.pk}}","type":"edit"}'
+            hx-target="#modal-blank"
+            style="cursor: pointer;"
+
+        >Edit Batch</a>
+        {% endif %}
         {% if not object.sample.first %}
         <span class="btn btn-primary generic_delete"
             hx-post="{% url 'main_generic_delete' %}"
