@@ -31,12 +31,15 @@
             <th>Pool</th>
             <th>quicksand</th>
             <th>Tag</th>
+            {% if request.user.is_authenticated %}
+            <th></th>
+            {% endif %}
         </tr>
     </thead>
     <tbody>
         {% with project=request.session.session_project %}
         {% for object in object_list %}
-        <tr class="{{batch.classname}}_libtr libsearch">
+        <tr class="{{batch.classname}}_libtr libsearch" id="tr_analyzedsample_{{object.pk}}">
             <td nowrap>
                 <form>
                     {% csrf_token %}
@@ -94,6 +97,20 @@
             style="cursor: pointer;"
             {% endif %}
             >{{object.tags|default:''}}</td>
+            {% if request.user.is_authenticated %}
+            <td>
+                <form>
+                    {% csrf_token %}
+                    <input type="hidden" name="instance_x" value="analyzedsample_{{object.pk}}">
+                    <a class="tooltip tooltip-left"
+                    hx-post="{% url 'main_generic_delete' %}"
+                    hx-confirm="Delete the Library"
+                    hx-target="#tr_analyzedsample_{{object.pk}}"
+                    hx-swap="delete"
+                    data-tooltip="Delete AnalyzedSample Entry"><i class="icon icon-delete"></i></a>
+                </form>
+            </td>
+            {% endif %}
         </tr>
         {% endfor %}
         {% endwith %}
