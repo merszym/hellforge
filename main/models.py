@@ -1409,6 +1409,10 @@ class QuicksandAnalysis(models.Model):
         return self.analyzedsample.sample
 
     @property
+    def samplebatch(self):
+        return self.analyzedsample.sample.batch
+
+    @property
     def layer(self):
         return self.analyzedsample.sample.layer
 
