@@ -163,9 +163,13 @@ def get_project_overview(request):
     site_count = len(Site.objects.filter(project=object, child=None).values("pk"))
     sample_count = len(object.sample.values("pk"))
     analyzedsample_count = len(
-        set(object.analyzedsample.values_list("sample", flat=True))
+        set(
+            object.analyzedsample.exclude(sample__isnull=True).values_list(
+                "sample", flat=True
+            )
+        )
     )
-    library_count = len(object.analyzedsample.values("pk"))
+    library_count = len(object.analyzedsample.exclude(sample__isnull=True).values("pk"))
 
     context["site_count"] = site_count
     context["sample_count"] = sample_count
