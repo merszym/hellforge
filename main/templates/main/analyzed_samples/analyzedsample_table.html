@@ -24,7 +24,10 @@
             <th>QC</th>
             <th>Layer</th>
             <th>Sample</th>
+            <th>Lysate</th>
+            <th>ENC Batch</th>
             <th>Library</th>
+            <th>LNC Batch</th>
             <th>Capture Probe</th>
             <th>Sequencing Run</th>
             <th>Lane</th>
@@ -73,7 +76,10 @@
             </td>
             <td nowrap class="{{object.sample.layer|yesno:'assigned,unassigned'}}">{% if object.sample.layer %}{{object.sample.layer.name}}{% else %}Unassigned{% endif %}</td>
             <td>{{object.sample}}</td>
+            <td>{{object.lysate|default:""}}</td>
+            <td nowrap>{{object.enc_batch|default:""}}</td>
             <td>{{object.library}}</td>
+            <td>{{object.lnc_batch|default:""}}</td>
             <td>{{object.probes}}</td>
             <td {% if request.user.is_authenticated %}
                 class="modal_open tooltip tooltip-top" data-tooltip="Edit Seqrun"

@@ -67,6 +67,11 @@ def save_verified(request):
 
     batch = SampleBatch.objects.get(pk=int(request.GET.get("batch")))
 
+    def value_or_none(val):
+        if val == "nan" or val != val:
+            return None
+        return val
+
     # go through the layers
     for i, row in df.iterrows():
         if row["Tag"] in ["LNC", "ENC"]:
@@ -81,10 +86,10 @@ def save_verified(request):
             lane=row["Sequencing Lane"],
         )
         # set or update
-        object.lysate = row["Lysate"]
-        object.enc_batch = row["ENC Batch"]
-        object.lnc_batch = row["LNC Batch"]
-        object.tags = row["Tag"]
+        object.lysate = value_or_none(row["Lysate"])
+        object.enc_batch = value_or_none(row["ENC Batch"])
+        object.lnc_batch = value_or_none(row["LNC Batch"])
+        object.tags = value_or_none(row["Tag"])
         object.project.add(
             Project.objects.get(namespace=request.session["session_project"])
         )
