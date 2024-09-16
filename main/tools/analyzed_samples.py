@@ -30,6 +30,7 @@ def update_query_for_negatives(query):
         | (Q(sample__isnull=True) & Q(lnc_batch__in=lnc_batches))
         | (Q(sample__isnull=True) & Q(enc_batch__in=enc_batches))
     )
+
     return query
 
 

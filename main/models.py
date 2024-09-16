@@ -1231,7 +1231,8 @@ class AnalyzedSample(models.Model):
 
     class Meta:
         unique_together = [["library", "seqrun", "lane"]]
-        ordering = ["sample__site", "sample__layer", "sample", "seqrun", "probes"]
+        ordering = ["seqrun", "library"]
+        # ordering = ["sample__site", "sample__layer", "sample", "seqrun", "probes"]
 
     def __str__(self):
         return f"{self.library}_{self.seqrun}"
@@ -1443,6 +1444,15 @@ class QuicksandAnalysis(models.Model):
         from main.tools.quicksand import get_data_for_export
 
         return get_data_for_export(self.data, self.version)
+
+    class Meta:
+        ordering = [
+            "analyzedsample__sample__site",
+            "analyzedsample__sample__layer",
+            "analyzedsample__sample",
+            "analyzedsample__seqrun",
+            "analyzedsample__probes",
+        ]
 
 
 models = {

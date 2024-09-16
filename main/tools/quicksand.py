@@ -110,6 +110,7 @@ def prepare_data(
     breadth=0.5,
     positives=False,
     only_project=True,
+    controls=False,
 ):
 
     families = []  # for the colors
@@ -121,6 +122,9 @@ def prepare_data(
 
     if only_project:
         query = query.filter(analyzedsample__project=project)
+
+    if controls == False:
+        query = query.exclude(analyzedsample__sample__isnull=True)
 
     for entry in query:
         sum_per_lib[entry] = 0
@@ -204,6 +208,7 @@ def prepare_data(
         "ancient": ancient,
         "positives": positives,
         "only_project": only_project,
+        "controls": controls,
     }
 
 

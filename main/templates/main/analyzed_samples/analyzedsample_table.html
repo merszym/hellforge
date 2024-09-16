@@ -74,7 +74,13 @@
                     </div>
                 </form>
             </td>
-            <td nowrap class="{{object.sample.layer|yesno:'assigned,unassigned'}}">{% if object.sample.layer %}{{object.sample.layer.name}}{% else %}Unassigned{% endif %}</td>
+            <td nowrap class="{% if object.sample %}{{object.sample.layer|yesno:'assigned,unassigned'}}{% endif %}">
+                {% if object.sample %}
+                    {% if object.sample.layer %}{{object.sample.layer.name}}{% else %}Unassigned{% endif %}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
             <td>{{object.sample|default:"Control"}}</td>
             <td>{{object.lysate|default:""}}</td>
             <td nowrap>{{object.enc_batch|default:""}}</td>
@@ -95,7 +101,7 @@
                 {{object.quicksand_analysis.first.version}}
                 {% endif %}
             </td>
-            <td {% if request.user.is_authenticated %}
+            <td {% if request.user.is_authenticated and object.sample %}
             class="modal_open tooltip tooltip-left" data-tooltip="Edit Tag"
             hx-get="{% url 'main_modal_get' %}"
             hx-vals='{"object":"analyzedsample_{{object.pk}}","type":"tags"}'
