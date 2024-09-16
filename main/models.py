@@ -1243,7 +1243,7 @@ class AnalyzedSample(models.Model):
             "Library": self.library,
             "Lysate": self.lysate,
             "ENC Batch": self.enc_batch,
-            "LNC_Batch": self.lnc_batch,
+            "LNC Batch": self.lnc_batch,
             "Capture Probe": self.probes,
             "Sequencing Run": self.seqrun,
             "Sequencing Lane": self.lane,
