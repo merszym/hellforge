@@ -4,7 +4,6 @@ from django.http import JsonResponse, HttpResponse
 from django.urls import path
 from django import forms
 from django.shortcuts import render
-from main.tools.generic import get_instance_from_string
 import main.tools as tools
 from django.db.models import Q
 import pandas as pd
@@ -13,6 +12,25 @@ from django.contrib.auth.decorators import (
     login_required,
 )  # this is for now, make smarter later
 from django.contrib import messages
+
+
+def update_query_for_negatives(query):
+    samples = query.values_list("sample")
+
+    # get the ENC and LNC batches, then update the analyzedsamples query again to include LNC and ENC
+    enc_batches = set(
+        query.exclude(enc_batch__isnull=True).values_list("enc_batch", flat=True)
+    )
+    lnc_batches = set(
+        query.exclude(lnc_batch__isnull=True).values_list("lnc_batch", flat=True)
+    )
+
+    query = AnalyzedSample.objects.filter(
+        Q(sample__in=samples)
+        | (Q(sample__isnull=True) & Q(lnc_batch__in=lnc_batches))
+        | (Q(sample__isnull=True) & Q(enc_batch__in=enc_batches))
+    )
+    return query
 
 
 class AnalyzedSampleForm(forms.ModelForm):
@@ -93,7 +111,7 @@ def save_verified(request):
         object.project.add(
             Project.objects.get(namespace=request.session["session_project"])
         )
-        object.probes = row["Capture Probe"]
+        object.probes = value_or_none(row["Capture Probe"])
         object.save()
 
     from main.tools.site import get_site_samplebatch_tab

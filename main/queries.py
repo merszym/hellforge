@@ -1,4 +1,5 @@
 from main.models import models
+from main.tools.analyzed_samples import update_query_for_negatives
 
 
 def queries(many, one):
@@ -29,3 +30,18 @@ def queries(many, one):
     }
 
     return dict[(many, one)]
+
+
+def get_querysets(many, unique, start):
+    """
+    This is the updated version - more manual, but allows for exceptions in the queryset pick
+    """
+    if unique == "quicksand_analysis":
+        # we first need to get all the analyze_samples that we need,
+        # then update to include the negative controls
+        filter = {queries(many, "library"): start}
+        qs = update_query_for_negatives(
+            models["library"].objects.filter(**filter).distinct()
+        )
+        # only then return the actual quicksand dataset
+        return models["quicksand_analysis"].objects.filter(analyzedsample__in=qs)

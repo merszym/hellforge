@@ -104,9 +104,21 @@
                 {% for entry in object_list.all %}
                 {% with ana=entry.analyzedsample %}
                 <tr class="dna-tr">
-                    <td nowrap class="{{ana.sample.layer.culture.classname|default:'sterile'}}">{{ana.sample.layer.name|default:'unassigned'}}</td>
-                    <td nowrap>{{ana.sample.age_summary|default:'unassigned'}}</td>
-                    <td nowrap>{{ana.sample.name}}</td>
+                    <td nowrap class="{% if ana.sample%}{{ana.sample.layer.culture.classname|default:'sterile'}}{%endif %}">
+                        {% if ana.sample %}
+                            {{ana.sample.layer.name|default:'unassigned'}}
+                        {% else %}
+                            Control
+                        {% endif %}
+                    </td>
+                    <td nowrap>{{ana.sample.age_summary|default:''}}</td>
+                    <td nowrap>
+                        {% if ana.sample %}
+                        {{ana.sample.name}}
+                        {% else %}
+                        {{ana.tags}}
+                        {% endif %}
+                    </td>
                     <td nowrap>{{ana.library}}</td>
                     <td nowrap>{{ana.probes}}</td>
                     <td nowrap>{{ana.seqrun|truncatechars:11}}</td>

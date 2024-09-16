@@ -75,7 +75,7 @@
                 </form>
             </td>
             <td nowrap class="{{object.sample.layer|yesno:'assigned,unassigned'}}">{% if object.sample.layer %}{{object.sample.layer.name}}{% else %}Unassigned{% endif %}</td>
-            <td>{{object.sample}}</td>
+            <td>{{object.sample|default:"Control"}}</td>
             <td>{{object.lysate|default:""}}</td>
             <td nowrap>{{object.enc_batch|default:""}}</td>
             <td>{{object.library}}</td>

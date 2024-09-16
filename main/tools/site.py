@@ -41,6 +41,7 @@ from main.tools.generic import (
 )
 from main.tools.projects import get_project
 from main.tools.quicksand import prepare_data
+from main.tools.analyzed_samples import update_query_for_negatives
 
 
 ## Sites
@@ -378,8 +379,11 @@ def get_site_dna_content(request, pk):
     context = {"object": site}
 
     # first, get the objects
+    analyzed_samples = update_query_for_negatives(
+        AnalyzedSample.objects.filter(Q(sample__site=site) & Q(qc_pass=True))
+    )
     query = QuicksandAnalysis.objects.filter(
-        Q(analyzedsample__sample__site=site) & Q(analyzedsample__qc_pass=True)
+        analyzedsample__in=analyzed_samples
     ).order_by("analyzedsample")
 
     if request.method == "POST":
@@ -487,7 +491,9 @@ def get_site_samplebatch_tab(request, pk):
 
     profiles = Profile.objects.filter(layer__sample__batch=batch).distinct()
 
-    analyzedsamples = AnalyzedSample.objects.filter(sample__in=batch_samples)
+    analyzedsamples = update_query_for_negatives(
+        AnalyzedSample.objects.filter(sample__in=batch_samples)
+    )
 
     context = {
         "object": batch,

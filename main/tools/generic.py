@@ -1,5 +1,5 @@
 from main.models import models, Sample
-from main.queries import queries
+from main.queries import queries, get_querysets
 from django.http import JsonResponse, HttpResponse
 from django.urls import path, reverse
 from django.shortcuts import render
@@ -10,6 +10,8 @@ from datetime import datetime
 import json
 import pandas as pd
 import numpy as np
+
+from main.tools.analyzed_samples import update_query_for_negatives
 
 
 def return_next(request, next, object="instance_x"):
@@ -81,8 +83,15 @@ def get_dataset(request):
 
     if unique == "date" and column == "site":
         qs = start.get_dates()
+
+    elif unique == "quicksand_analysis":
+        qs = get_querysets(column, unique, start)
+
     else:
         qs = models[unique].objects.filter(**filter).distinct()
+
+        if unique in ["analyzedsample", "library"]:
+            qs = update_query_for_negatives(qs)
 
     # and get the dataframe
     df = get_dataset_df(qs, start, include)
