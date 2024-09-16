@@ -39,7 +39,11 @@ def handle_library_file(request, file):
     if dropped := [
         x for x in df["Analyzed Sample"] if len(samples.filter(name=x)) == 0
     ]:
-        issues.append(f"Samples not in Database: {','.join(dropped)}")
+        dropped = [
+            x for x in dropped if x == x
+        ]  # ignore empty samples, as they are negative controls
+        if len(dropped) > 0:
+            issues.append(f"Samples not in Database: {','.join(dropped)}")
     df = df[df["Analyzed Sample"].isin(dropped) == False]
 
     return render(
@@ -65,22 +69,21 @@ def save_verified(request):
 
     # go through the layers
     for i, row in df.iterrows():
+        if row["Tag"] in ["LNC", "ENC"]:
+            sample = None
+        else:
+            sample = Sample.objects.get(name=row["Analyzed Sample"])
         # try if the library already exists
-        try:
-            object = AnalyzedSample.objects.get(
-                library=row["Library"],
-                seqrun=row["Sequencing Run"],
-            )
-        except:
-            object = AnalyzedSample(
-                sample=Sample.objects.get(name=row["Analyzed Sample"]),
-                library=row["Library"],
-                seqrun=row["Sequencing Run"],
-            )
-            object.save()
-            object.refresh_from_db()
+        object, created = AnalyzedSample.objects.get_or_create(
+            library=row["Library"],
+            seqrun=row["Sequencing Run"],
+            seqpool=row["Sequencing Pool"],
+            lane=row["Sequencing Lane"],
+        )
         # set or update
-        object.sample = Sample.objects.get(name=row["Analyzed Sample"])
+        object.lysate = row["Lysate"]
+        object.enc_batch = row["ENC Batch"]
+        object.lnc_batch = row["LNC Batch"]
         object.tags = row["Tag"]
         object.project.add(
             Project.objects.get(namespace=request.session["session_project"])

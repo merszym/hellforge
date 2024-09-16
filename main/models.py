@@ -1206,7 +1206,11 @@ class Sample(Dateable):
 
 class AnalyzedSample(models.Model):
     sample = models.ForeignKey(
-        Sample, related_name="analyzed_sample", on_delete=models.PROTECT
+        Sample,
+        related_name="analyzed_sample",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
     )
     lysate = models.CharField("Lysate Id", max_length=200, blank=True, null=True)
     enc_batch = models.CharField("ENC Batch", max_length=200, blank=True, null=True)
