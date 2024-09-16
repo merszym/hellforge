@@ -1108,6 +1108,9 @@ class Sample(Dateable):
         related_name="sample",
         on_delete=models.PROTECT,
     )
+    negative_control_batch = models.CharField(
+        "Negative Control Batch", max_length=200, blank=True, null=True
+    )
     year_of_collection = models.IntegerField(
         "year of collection", blank=True, null=True
     )
@@ -1206,7 +1209,11 @@ class Sample(Dateable):
 
 class AnalyzedSample(models.Model):
     sample = models.ForeignKey(
-        Sample, related_name="analyzed_sample", on_delete=models.PROTECT
+        Sample,
+        related_name="analyzed_sample",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
     )
     library = models.CharField("library", max_length=200)
     probes = models.CharField("probes", max_length=200, blank=True, null=True)
@@ -1221,6 +1228,9 @@ class AnalyzedSample(models.Model):
     )  # this is the pool-report
     tags = models.CharField("tags", blank=True, null=True, max_length=100)
     qc_pass = models.BooleanField("qc_pass", default=True)
+    negative_control_batch = models.CharField(
+        "Negative Control Batch", max_length=200, blank=True, null=True
+    )
 
     class Meta:
         unique_together = [["library", "seqrun", "lane"]]
