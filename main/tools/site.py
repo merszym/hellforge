@@ -453,6 +453,16 @@ def get_site_samplebatch_tab(request, pk):
 
     batch_samples = Sample.objects.filter(batch=batch).distinct()
 
+    # include the negative controls
+    control_batches = set(
+        batch_samples.exclude(negative_control_batch__isnull=True).values_list(
+            "negative_control_batch", flat=True
+        )
+    )
+    batch_samples = Sample.objects.filter(
+        Q(batch=batch) | (Q(negative_control_batch__in=control_batches) & Q(type="ENC"))
+    ).distinct()
+
     # now filter the samples
     layer = request.POST.get("layer", "all")
     profile = request.POST.get("profile", "all")

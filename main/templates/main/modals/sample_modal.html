@@ -86,6 +86,41 @@
         </div>
     </div>
 
+    {% elif type == "edit_negbatch" %}
+
+    {# -------------------- #}
+    {#   BATCH EDIT MODAL   #}
+    {# -------------------- #}
+
+    <div class="modal-body">
+        <div class="content my-2">
+            <div>
+                <div id="modal-form">
+                    <h6>Sample {{object}}</h6>
+                    <div class="input-group">
+                        <span class="input-group-addon">Sample Negative Control Batch</span>
+                        <form>
+                            <input type="hidden" name="object" value="{{object.pk}}"></input>
+                            <select class="form-select" name="batch">
+                                <option value="{{object.batch.pk}}" selected>{{object.batch.name}}</option>
+                                {% for option in site_batches %}
+                                {% if option != object.batch %}
+                                <option value="{{option.pk}}">{{option.name}}</option>
+                                {% endif %}
+                                {% endfor %}
+                            </select>
+                            <span
+                                hx-post="{% url 'sample-negbatch-update' %}"
+                                hx-target="#sample-batch-tab_{{object.batch.pk}}"
+                                class="btn btn-primary input-group-btn modal_close"
+                            >OK</span>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {% elif type == "edit_provenience" %}
 
     {# -------------------------- #}

@@ -1164,6 +1164,7 @@ class Sample(Dateable):
             "Sample Name",
             "Sample Synonyms",
             "Sample Type",
+            "Sample Control Batch",
             "Sample Year of Collection",
             "Sample Provenience",
             "Sample Age",
@@ -1189,6 +1190,7 @@ class Sample(Dateable):
             "Sample Name": self.name,
             "Sample Synonyms": ";".join([str(x) for x in self.synonyms.all()]),
             "Sample Type": self.type,
+            "Sample Control Batch": self.negative_control_batch,
             "Sample Year of Collection": self.year_of_collection,
             "Sample Provenience": ";".join(
                 [f"{k}:{v}" for k, v in json.loads(self.provenience).items()]

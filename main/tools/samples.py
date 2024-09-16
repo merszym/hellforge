@@ -6,6 +6,7 @@ from django.urls import path
 from django.shortcuts import render
 from main.tools.generic import get_instance_from_string
 import main.tools as tools
+import numpy as np
 from django.db.models import Q
 import pandas as pd
 import json
@@ -57,6 +58,7 @@ def handle_samplebatch_file(request, file):
     df.drop_duplicates(inplace=True)
 
     batch = SampleBatch.objects.get(pk=int(request.GET.get("batch", None)))
+    print(request.GET)
     site = batch.site
 
     all_layers = [x.name for x in site.layer.all()]
@@ -84,8 +86,10 @@ def handle_samplebatch_file(request, file):
         )
         df.drop(layer_wrong.index, inplace=True)
 
-    # add the sample batch
-    df.insert(0, "Sample Batch", batch.name)
+    # add the sample batch, unless type = 'ENC'
+    df.insert(0, "Sample Batch", np.nan)
+    df.loc[df["Sample Type"] != "ENC", "Sample Batch"] = batch.name
+    print(df)
 
     return render(
         request,
@@ -121,6 +125,7 @@ def save_verified(request):
             sample,
             synonyms,
             type,
+            negbatch,
             yoc,
             provenience,
         ) in zip(
@@ -128,16 +133,26 @@ def save_verified(request):
             dat["Sample Name"],
             dat["Sample Synonyms"],
             dat["Sample Type"],
+            dat["Sample Control Batch"],
             dat["Sample Year of Collection"],
             dat["Sample Provenience"],
         ):
-            # check if a sample exists already, get it
-            s, created = Sample.objects.get_or_create(name=sample, layer=l, site=site)
+            # check if a sample/control exists already, get it
+            if type != "ENC":
+                s, created = Sample.objects.get_or_create(name=sample, site=site)
+            else:
+                # its important here, that the sample _could_ be ENC if there is only one ENC per sample-batch... But its much better to use
+                # the real extraction ID and infer that it is a ENC
+                s, created = Sample.objects.get_or_create(
+                    name=sample, negative_control_batch=negbatch
+                )
             # if layer is given: Update the layer
+            # should be None for the ENC
             s.layer = l
-            # get the batch
-            batch = SampleBatch.objects.get(site=site, name=batch)
-            s.batch = batch
+            # get the batch if the sample is a sample
+            if type != "ENC":
+                batch = SampleBatch.objects.get(site=site, name=batch)
+                s.batch = batch
             # add project
             project = Project.objects.get(namespace=request.session["session_project"])
             s.project.add(project)
@@ -162,6 +177,8 @@ def save_verified(request):
                         s.synonyms.add(sample_syn)
             # Type
             s.type = type
+            # Negative Control Batch
+            s.negative_control_batch = negbatch
             # year of collection
             s.year_of_collection = int(yoc) if yoc == yoc else None
             # provenience
