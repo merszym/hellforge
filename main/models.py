@@ -1208,7 +1208,10 @@ class AnalyzedSample(models.Model):
     sample = models.ForeignKey(
         Sample, related_name="analyzed_sample", on_delete=models.PROTECT
     )
+    lysate = models.CharField("Lysate Id", max_length=200, blank=True, null=True)
+    enc_batch = models.CharField("ENC Batch", max_length=200, blank=True, null=True)
     library = models.CharField("library", max_length=200)
+    lnc_batch = models.CharField("LNC Batch", max_length=200, blank=True, null=True)
     probes = models.CharField("probes", max_length=200, blank=True, null=True)
     seqrun = models.CharField("sequencing run", max_length=400)
     lane = models.CharField("lane", max_length=50, default="lane1")
@@ -1234,6 +1237,9 @@ class AnalyzedSample(models.Model):
         # dont include sample or project - that is exported with the respective query
         data = {
             "Library": self.library,
+            "Lysate": self.lysate,
+            "ENC Batch": self.enc_batch,
+            "LNC_Batch": self.lnc_batch,
             "Capture Probe": self.probes,
             "Sequencing Run": self.seqrun,
             "Sequencing Lane": self.lane,
@@ -1259,9 +1265,14 @@ class AnalyzedSample(models.Model):
     def table_columns(self):
         return [
             "Analyzed Sample",
+            "Lysate",
+            "ENC Batch",
             "Library",
+            "LNC Batch",
             "Capture Probe",
             "Sequencing Run",
+            "Sequencing Lane",
+            "Sequencing Pool",
             "Tag",
             "QC",
         ]
