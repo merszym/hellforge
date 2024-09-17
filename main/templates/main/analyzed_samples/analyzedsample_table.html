@@ -101,7 +101,7 @@
                 {{object.quicksand_analysis.first.version}}
                 {% endif %}
             </td>
-            <td {% if request.user.is_authenticated and object.sample %}
+            <td nowrap {% if request.user.is_authenticated and object.sample %}
             class="modal_open tooltip tooltip-left" data-tooltip="Edit Tag"
             hx-get="{% url 'main_modal_get' %}"
             hx-vals='{"object":"analyzedsample_{{object.pk}}","type":"tags"}'
