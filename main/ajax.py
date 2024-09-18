@@ -21,6 +21,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from .models import models
 from main.tools.generic import get_instance_from_string, download_csv
+from main.tools.analyzed_samples import update_query_for_negatives
 
 
 def download_header(request):
@@ -88,8 +89,8 @@ def get_modal_context(object, request):
                         list(
                             set(
                                 x.seqrun
-                                for x in AnalyzedSample.objects.filter(
-                                    sample__site=object
+                                for x in update_query_for_negatives(
+                                    AnalyzedSample.objects.filter(sample__site=object)
                                 )
                             )
                         )
