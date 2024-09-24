@@ -101,7 +101,6 @@ def save_verified(request):
         object, created = AnalyzedSample.objects.get_or_create(
             library=row["Library"],
             seqrun=row["Sequencing Run"],
-            seqpool=row["Sequencing Pool"],
             lane=row["Sequencing Lane"],
         )
         # set or update
