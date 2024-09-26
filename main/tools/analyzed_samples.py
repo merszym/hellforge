@@ -104,10 +104,13 @@ def save_verified(request):
             lane=row["Sequencing Lane"],
         )
         # set or update
+        object.sample = sample
         object.lysate = value_or_none(row["Lysate"])
         object.enc_batch = value_or_none(row["ENC Batch"])
         object.lnc_batch = value_or_none(row["LNC Batch"])
         object.tags = value_or_none(row["Tag"])
+        object.seqpool = value_or_none(row["Sequencing Pool"])
+        object.lane = value_or_none(row["Sequencing Lane"])
         object.project.add(
             Project.objects.get(namespace=request.session["session_project"])
         )
