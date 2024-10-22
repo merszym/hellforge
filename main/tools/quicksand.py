@@ -111,6 +111,7 @@ def prepare_data(
     positives=False,
     only_project=True,
     controls=False,
+    tableview=False
 ):
 
     families = []  # for the colors
@@ -209,6 +210,7 @@ def prepare_data(
         "positives": positives,
         "only_project": only_project,
         "controls": controls,
+        "tableview": tableview
     }
 
 

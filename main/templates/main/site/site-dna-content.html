@@ -60,7 +60,6 @@
                 <label class="form-switch mx-2">
                     <input type="checkbox" name="controls" {% if controls %}checked{% endif %}><i class="form-icon"></i>
                 </label>
-
             </div>
             <div class="input-group">
                 <span class="input-group-addon"><strong>Filter</strong></span>
@@ -71,6 +70,10 @@
                 <span class="input-group-addon">Ancient only</span>
                 <label class="form-switch mx-2">
                     <input type="checkbox" name="ancient" {% if ancient %}checked{% endif %}><i class="form-icon"></i>
+                </label>
+                <span class="input-group-addon">Table-View</span>
+                <label class="form-switch mx-2">
+                    <input type="checkbox" name="tableview" {% if tableview %}checked{% endif %}><i class="form-icon"></i>
                 </label>
                 {% if request.user.is_authenticated %}
                 <span class="input-group-addon">In Project</span>
@@ -91,7 +94,7 @@
     <div class="panel-body p-0">
         {% if object_list %}
         <table class="table table-striped">
-            <thead style="position: sticky; top:0; background-color: white; z-index: 100;">
+            <thead style="position: sticky; top:0; z-index: 100;">
                 <tr>
                     <th>Layer</th>
                     <th>Dating</th>
@@ -101,9 +104,15 @@
                     <th>Run ID</th>
                     <th>Tag</th>
                     <th>quicksand</th>
-                    {% for family,color in colors %}
-                    <th>{{family}}</th>
-                    {% endfor %}
+                    {% if tableview %}
+                        {% for family,color in colors %}
+                        <th style="border-left:solid black 1px;">{{family}}</th>
+                        {% empty %}
+                        <th>Results</th>
+                        {% endfor %}
+                    {% else %}
+                    <th>Results</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -130,20 +139,37 @@
                     <td nowrap>{{ana.seqrun|truncatechars:11}}</td>
                     <td nowrap>{{ana.tags|default:''}}</td>
                     <td nowrap>{{entry.version}}</td>
-                    {% for f,color in colors %}
-                    {% with family=quicksand_results|lookup:entry|lookup:f %}
-                        <td nowrap 
-                            {% if quicksand_results|lookup:entry|lookup:f %}
-                            class="p-1 tooltip tooltip-left {{f}}"
-                            data-tooltip='{{f}} ({{quicksand_results|lookup:entry|lookup:f|lookup:"raw"|floatformat:"0"}}{% if mode == "relative" %}%{% endif %})'
-                            {% else %}
-                            class="p-1"
-                            {% endif %}   
-                            >
-                            {{quicksand_results|lookup:entry|lookup:f|lookup:'raw'|floatformat:"0"}}{% if mode == 'relative' %}%{% endif %}
+                    {% if tableview %}
+                        {% for f,color in colors %}
+                        {% with family=quicksand_results|lookup:entry|lookup:f %}
+                            <td nowrap 
+                                style="border-left:solid black 1px;"
+                                {% if family %}
+                                class="p-1 tooltip tooltip-left {{f}}"
+                                data-tooltip='{{f}} ({{family|lookup:"raw"|floatformat:"0"}}{% if mode == "relative" %}%{% endif %})'
+                                {% else %}
+                                class="p-1"
+                                {% endif %}   
+                                >
+                                {{quicksand_results|lookup:entry|lookup:f|lookup:'raw'|floatformat:"0"}}{% if mode == 'relative' and family %}%{% endif %}
+                            </td>
+                        {% endwith %}
+                        {% empty %}
+                            <td nowrap ><span class="text-gray">No DNA found</span></td>
+                        {% endfor %}
+                    {% else %}
+                        <td nowrap style="min-width: 300px; display: flex;">
+                            {% for family in quicksand_results|lookup:entry %}
+                            <span 
+                                class="{{family}} p-1 tooltip tooltip-left"
+                                data-tooltip='{{family}} ({{quicksand_results|lookup:entry|lookup:family|lookup:"raw"|floatformat:"0"}}{% if mode == "relative" %}%{% endif %})'
+                                style="width:{{quicksand_results|lookup:entry|lookup:family|lookup:'display'|floatformat:'2'}}%;">
+                                {{quicksand_results|lookup:entry|lookup:family|lookup:'raw'|floatformat:"0"}}{% if mode == 'relative' %}%{% endif %}</span>
+                            {% empty %}
+                                <span class="text-gray">No DNA found</span>
+                            {% endfor %}
                         </td>
-                    {% endwith %}
-                    {% endfor %}
+                    {% endif %}
                 </tr>
                 {% endwith %}
                 {% endfor %}

@@ -401,6 +401,7 @@ def get_site_dna_content(request, pk):
         positives = "on" == request.POST.get("positives", "")
         only_project = "on" == request.POST.get("only_project", "")
         controls = "on" == request.POST.get("controls", "")
+        tableview = "on" == request.POST.get("tableview", "")
 
         # column: ReadsDeduped
         # mode: relative,absolute
@@ -418,11 +419,12 @@ def get_site_dna_content(request, pk):
                 positives=positives,
                 only_project=only_project,
                 controls=controls,
+                tableview=tableview
             )
         )
     else:
         context.update(prepare_data(request, query))
-
+    
     return render(request, "main/site/site-dna-content.html", context)
 
 
