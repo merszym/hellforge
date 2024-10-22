@@ -101,7 +101,9 @@
                     <th>Run ID</th>
                     <th>Tag</th>
                     <th>quicksand</th>
-                    <th>Results</th>
+                    {% for family,color in colors %}
+                    <th>{{family}}</th>
+                    {% endfor %}
                 </tr>
             </thead>
             <tbody>
@@ -128,15 +130,20 @@
                     <td nowrap>{{ana.seqrun|truncatechars:11}}</td>
                     <td nowrap>{{ana.tags|default:''}}</td>
                     <td nowrap>{{entry.version}}</td>
-                    <td nowrap style="min-width: 500px; display: flex;">
-                        {% for family in quicksand_results|lookup:entry %}
-                            <span class="{{family}} p-1 tooltip tooltip-left"
-                                data-tooltip='{{family}} ({{quicksand_results|lookup:entry|lookup:family|lookup:"raw"|floatformat:"0"}}{% if mode == "relative" %}%{% endif %})'
-                            style="width:{{quicksand_results|lookup:entry|lookup:family|lookup:'display'|floatformat:'2'}}%;">{{quicksand_results|lookup:entry|lookup:family|lookup:'raw'|floatformat:"0"}}{% if mode == 'relative' %}%{% endif %}</span>
-                        {% empty %}
-                            <span class="text-gray">No DNA found</span>
-                        {% endfor %}
-                    </td>
+                    {% for f,color in colors %}
+                    {% with family=quicksand_results|lookup:entry|lookup:f %}
+                        <td nowrap 
+                            {% if quicksand_results|lookup:entry|lookup:f %}
+                            class="p-1 tooltip tooltip-left {{f}}"
+                            data-tooltip='{{f}} ({{quicksand_results|lookup:entry|lookup:f|lookup:"raw"|floatformat:"0"}}{% if mode == "relative" %}%{% endif %})'
+                            {% else %}
+                            class="p-1"
+                            {% endif %}   
+                            >
+                            {{quicksand_results|lookup:entry|lookup:f|lookup:'raw'|floatformat:"0"}}{% if mode == 'relative' %}%{% endif %}
+                        </td>
+                    {% endwith %}
+                    {% endfor %}
                 </tr>
                 {% endwith %}
                 {% endfor %}
