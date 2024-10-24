@@ -32,13 +32,7 @@
             <input type="hidden" name="object" value="{{object.pk}}">
             <div class="input-group">
                 <span class="input-group-addon"><strong>General</strong></span>
-                <span class="input-group-addon">Display</span>
-                <select class="form-select" name="mode">
-                    <option value="{{mode}}" selected>{{mode|title}} values</option>
-                    <option value="relative">Relative values</option>
-                    <option value="absolute">Absolute values</option>
-                </select>
-                <span class="input-group-addon">Report Column</span>
+                <span class="input-group-addon">Values</span>
                 <select class="form-select" name="column">
                     <option value="{{column}}" selected>{{column}}</option>
                     <option value="ReadsDeduped">ReadsDeduped</option>
@@ -62,6 +56,19 @@
                 </label>
             </div>
             <div class="input-group">
+                <span class="input-group-addon"><strong>Display</strong></span>
+                <span class="input-group-addon">Values</span>
+                <select class="form-select" name="mode">
+                    <option value="{{mode}}" selected>{{mode|title}} values</option>
+                    <option value="relative">Relative values</option>
+                    <option value="absolute">Absolute values</option>
+                </select>
+                <span class="input-group-addon">Table-View</span>
+                <label class="form-switch mx-2">
+                    <input type="checkbox" name="tableview" {% if tableview %}checked{% endif %}><i class="form-icon"></i>
+                </label>
+            </div>
+            <div class="input-group">
                 <span class="input-group-addon"><strong>Filter</strong></span>
                 <span class="input-group-addon">Percentage Cutoff</span>
                 <input class="form-input" type="float" name="percentage" value="{{percentage}}">
@@ -70,10 +77,6 @@
                 <span class="input-group-addon">Ancient only</span>
                 <label class="form-switch mx-2">
                     <input type="checkbox" name="ancient" {% if ancient %}checked{% endif %}><i class="form-icon"></i>
-                </label>
-                <span class="input-group-addon">Table-View</span>
-                <label class="form-switch mx-2">
-                    <input type="checkbox" name="tableview" {% if tableview %}checked{% endif %}><i class="form-icon"></i>
                 </label>
                 {% if request.user.is_authenticated %}
                 <span class="input-group-addon">In Project</span>
