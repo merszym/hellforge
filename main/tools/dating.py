@@ -126,15 +126,22 @@ def save_verified_batchdata(request):
     for i, dat in df.iterrows():
         dat = dat.dropna()
         tmp = Date(method=dat["Method"])
+        ref_old = None
+
         if "Lab Code" in dat:
             try:
                 # get an already existing date
                 tmp = Date.objects.get(oxa=dat["Lab Code"])
+                ref_old = tmp.ref.first()
             except:
                 # continue with the new one
                 tmp.oxa = dat["Lab Code"]
-        # if a new date
-        if not tmp.pk:
+        
+        # if it is a new date OR the reference is the same (then --> update)
+        if "Reference" in dat:
+            ref_new = Reference.objects.get(pk=dat["Reference"]["id"])
+
+        if not tmp.pk or ref_old == ref_new:
             if "Date" in dat:
                 tmp.estimate = dat["Date"]
             if "Error" in dat:
@@ -155,8 +162,9 @@ def save_verified_batchdata(request):
                 # TODO: do something with the curve.
                 # TODO: this is not working yet!
 
-        if "Reference" in dat:
-            tmp.ref.add(Reference.objects.get(pk=dat["Reference"]["id"]))
+        if "Reference" in dat and not ref_old:
+            tmp.ref.add(ref_new)
+
         tmp_layer = Layer.objects.filter(Q(site=site) & Q(name=dat["Layer"])).first()
         tmp_layer.date.add(tmp)
         tmp_layer.save()

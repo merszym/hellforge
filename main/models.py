@@ -437,9 +437,13 @@ class Date(models.Model):
                     return f"> {self.lower:,} calBP"
                 return f"> {self.lower:,} BP"
 
-            if self.estimate:
+            if self.estimate and self.plusminus:
                 # or uncalibrated
                 return f"{self.estimate:,} ± {self.plusminus:,} BP"
+            
+            if self.estimate:
+                # uploaded by accident without errors?
+                return f"{self.estimate:,} ± N/A BP"
 
         elif self.method.strip() in [
             "OSL",
