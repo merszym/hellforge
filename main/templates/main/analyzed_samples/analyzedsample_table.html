@@ -27,7 +27,10 @@
             <th>Lysate</th>
             <th>ENC Batch</th>
             <th>Library</th>
+            <th>qPCR</th>
+            <th>Efficiency</th>
             <th>LNC Batch</th>
+            <th>Capture</th>
             <th>Capture Probe</th>
             <th>Sequencing Run</th>
             <th>Lane</th>
@@ -85,7 +88,10 @@
             <td>{{object.lysate|default:""}}</td>
             <td nowrap>{{object.enc_batch|default:""}}</td>
             <td>{{object.library}}</td>
+            <td>{{object.molecules_qpcr|default:""}}</td>
+            <td>{{object.efficiency|default:""}}</td>
             <td>{{object.lnc_batch|default:""}}</td>
+            <td>{{object.capture|default:""}}</td>
             <td>{{object.probes}}</td>
             <td {% if request.user.is_authenticated %}
                 class="modal_open tooltip tooltip-top" data-tooltip="Edit Seqrun"

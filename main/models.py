@@ -1218,8 +1218,11 @@ class AnalyzedSample(models.Model):
     )
     lysate = models.CharField("Lysate Id", max_length=200, blank=True, null=True)
     enc_batch = models.CharField("ENC Batch", max_length=200, blank=True, null=True)
-    library = models.CharField("library", max_length=200)
+    library = models.CharField("library", max_length=200, blank=True, null=True)
+    molecules_qpcr = models.IntegerField("qPCR molecules", blank=True, null=True)
+    efficiency = models.FloatField("Library Prep Efficiency", blank=True, null=True)
     lnc_batch = models.CharField("LNC Batch", max_length=200, blank=True, null=True)
+    capture = models.CharField("capture", max_length=200, blank=True, null=True)
     probes = models.CharField("probes", max_length=200, blank=True, null=True)
     seqrun = models.CharField("sequencing run", max_length=400)
     lane = models.CharField("lane", max_length=50, default="lane1")
@@ -1245,10 +1248,13 @@ class AnalyzedSample(models.Model):
         # for an entry, return a dict {'col': data} that is used for the export of the data
         # dont include sample or project - that is exported with the respective query
         data = {
-            "Library": self.library,
             "Lysate": self.lysate,
             "ENC Batch": self.enc_batch,
+            "Library": self.library,
+            "Molecules (qPCR)": self.molecules_qpcr,
+            "Efficiency": self.efficiency,
             "LNC Batch": self.lnc_batch,
+            "Capture": self.capture,
             "Capture Probe": self.probes,
             "Sequencing Run": self.seqrun,
             "Sequencing Lane": self.lane,
@@ -1273,11 +1279,14 @@ class AnalyzedSample(models.Model):
     @classmethod
     def table_columns(self):
         return [
-            "Analyzed Sample",
+            "Sample Name",
             "Lysate",
             "ENC Batch",
             "Library",
             "LNC Batch",
+            "Molecules (qPCR)",
+            "Efficiency",
+            "Capture",
             "Capture Probe",
             "Sequencing Run",
             "Sequencing Lane",

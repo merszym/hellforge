@@ -108,7 +108,9 @@
         var groups = JSON.parse("{{ groups|escapejs }}");
         var data = JSON.parse("{{ itemdata|escapejs }}");
         data.forEach(element => {
-            element.start = new Date(element.start);
+            if(element.start){
+                element.start = new Date(element.start);
+            }
             if(element.end){
                 element.end = new Date(element.end);
             }

@@ -56,14 +56,14 @@ def handle_library_file(request, file):
     samples = Sample.objects.values("name")
 
     if dropped := [
-        x for x in df["Analyzed Sample"] if len(samples.filter(name=x)) == 0
+        x for x in df["Sample Name"] if len(samples.filter(name=x)) == 0
     ]:
         dropped = [
             x for x in dropped if x == x
         ]  # ignore empty samples, as they are negative controls
         if len(dropped) > 0:
             issues.append(f"Samples not in Database: {','.join(dropped)}")
-    df = df[df["Analyzed Sample"].isin(dropped) == False]
+    df = df[df["Sample Name"].isin(dropped) == False]
 
     return render(
         request,
@@ -96,7 +96,7 @@ def save_verified(request):
         if row["Tag"] in ["LNC", "ENC"]:
             sample = None
         else:
-            sample = Sample.objects.get(name=row["Analyzed Sample"])
+            sample = Sample.objects.get(name=row["Sample Name"])
         # try if the library already exists
         object, created = AnalyzedSample.objects.get_or_create(
             library=row["Library"],
@@ -106,17 +106,21 @@ def save_verified(request):
         # set or update
         object.sample = sample
         object.lysate = value_or_none(row["Lysate"])
+        object.capture = value_or_none(row["Capture"])
+        object.probes = value_or_none(row["Capture Probe"])
         object.enc_batch = value_or_none(row["ENC Batch"])
         object.lnc_batch = value_or_none(row["LNC Batch"])
+        object.molecules_qpcr = value_or_none(row["Molecules (qPCR)"])
+        object.efficiency = value_or_none(row["Efficiency"])
         object.tags = value_or_none(row["Tag"])
         object.seqpool = value_or_none(row["Sequencing Pool"])
         object.lane = value_or_none(row["Sequencing Lane"])
-        object.project.add(
-            Project.objects.get(namespace=request.session["session_project"])
-        )
-        object.probes = value_or_none(row["Capture Probe"])
+        if created: # dont just add to project on update...
+            object.project.add(
+                Project.objects.get(namespace=request.session["session_project"])
+            )
+        
         object.save()
-
     from main.tools.site import get_site_samplebatch_tab
 
     return get_site_samplebatch_tab(request, batch.pk)
