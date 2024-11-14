@@ -89,7 +89,7 @@
             <td nowrap>{{object.enc_batch|default:""}}</td>
             <td>{{object.library}}</td>
             <td>{{object.molecules_qpcr|stringformat:".2e"}}</td>
-            <td>{{object.efficiency|default:""}}</td>
+            <td>{{object.efficiency|stringformat:".2f"}}</td>
             <td>{{object.lnc_batch|default:""}}</td>
             <td>{{object.capture|default:""}}</td>
             <td>{{object.probes}}</td>
