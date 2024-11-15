@@ -1,5 +1,5 @@
 from main.models import models, Sample
-from main.queries import queries, get_querysets
+from main.queries import queries, get_quicksand_results, get_libraries
 from django.http import JsonResponse, HttpResponse
 from django.urls import path, reverse
 from django.shortcuts import render
@@ -84,16 +84,14 @@ def get_dataset(request):
     if unique == "date" and column == "site":
         qs = start.get_dates()
 
+    elif unique in ['library', 'analyzedsample']:
+        qs = get_libraries(start)
+
     elif unique == "quicksand_analysis":
-        qs = get_querysets(column, unique, start)
+        qs = get_quicksand_results(start)
 
     else:
         qs = models[unique].objects.filter(**filter).distinct()
-
-        if unique in ["analyzedsample", "library"]:
-            #remove negative controls, they are added in the next step 
-            qs = qs.filter(sample__isnull=False)
-            qs = update_query_for_negatives(qs, project=start if start.model == 'project' else False)
 
     # and get the dataframe
     df = get_dataset_df(qs, start, include)

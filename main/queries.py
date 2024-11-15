@@ -1,5 +1,6 @@
 from main.models import models
 from main.tools.analyzed_samples import update_query_for_negatives
+from django.db.models import Q
 
 
 def queries(many, one):
@@ -31,17 +32,26 @@ def queries(many, one):
 
     return dict[(many, one)]
 
+def get_libraries(start):
+    """
+    The more controlled query to get the libraries query. This is necessary, because the automated one is too buggy...
+    """
+    if start.model == 'site':
+        qs = models['analyzedsample'].objects.filter(sample__site=start)
+        qs = update_query_for_negatives(q)
+        return qs
+    if start.model == 'project':
+        qs = models['analyzedsample'].objects.filter(
+                Q(sample__site__project=start)
+                & Q(sample__project=start)
+                & Q(project=start)
+            )
+        qs = update_query_for_negatives(qs)
+        return qs
 
-def get_querysets(many, unique, start):
+def get_quicksand_results(start):
     """
-    This is the updated version - more manual, but allows for exceptions in the queryset pick
+    Get the quicksand analyses
     """
-    if unique == "quicksand_analysis":
-        # we first need to get all the analyze_samples that we need,
-        # then update to include the negative controls
-        filter = {queries(many, "library"): start}
-        qs = update_query_for_negatives(
-            models["library"].objects.filter(**filter).distinct()
-        )
-        # only then return the actual quicksand dataset
-        return models["quicksand_analysis"].objects.filter(analyzedsample__in=qs)
+    qs = get_libraries(start)
+    return models["quicksand_analysis"].objects.filter(analyzedsample__in=qs)
