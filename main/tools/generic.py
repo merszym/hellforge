@@ -91,7 +91,9 @@ def get_dataset(request):
         qs = models[unique].objects.filter(**filter).distinct()
 
         if unique in ["analyzedsample", "library"]:
-            qs = update_query_for_negatives(qs)
+            #remove negative controls, they are added in the next step 
+            qs = qs.filter(sample__isnull=False)
+            qs = update_query_for_negatives(qs, project=start if start.model == 'project' else False)
 
     # and get the dataframe
     df = get_dataset_df(qs, start, include)

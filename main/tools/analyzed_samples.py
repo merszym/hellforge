@@ -13,27 +13,30 @@ from django.contrib.auth.decorators import (
 )  # this is for now, make smarter later
 from django.contrib import messages
 
-
-def update_query_for_negatives(query):
+def update_query_for_negatives(query, project=False):
     lnc_negatives = set(query.values_list("lnc_batch","probes"))
     enc_negatives = set(query.values_list("enc_batch","probes"))
     lnc_ids = []
     enc_ids = []
 
+    if project:
+        pre_select = AnalyzedSample.objects.filter(project=project)
+    else:
+        pre_select = AnalyzedSample.objects.all()
+
     for batch, probe in lnc_negatives:
-        lnc_query = AnalyzedSample.objects.filter(
+        lnc_query = pre_select.filter(
             Q(sample__isnull=True) & Q(lnc_batch=batch) & Q(tags="LNC") & Q(probes=probe)
         )
         lnc_ids.extend(list(lnc_query.values_list("pk", flat=True)))
 
     for batch, probe in enc_negatives:
-        enc_query = AnalyzedSample.objects.filter(
+        enc_query = pre_select.filter(
             Q(sample__isnull=True) & Q(enc_batch=batch) & Q(tags="ENC") & Q(probes=probe)
         )
         enc_ids.extend(list(enc_query.values_list("pk", flat=True)))
 
     # got the ENC and LNC entries, now update the analyzedsamples query again to include LNC and ENC
-
 
     updated_query = AnalyzedSample.objects.filter(
         Q(pk__in=query.values_list("pk", flat=True))
@@ -95,6 +98,7 @@ def save_verified(request):
     df.convert_dtypes()
 
     batch = SampleBatch.objects.get(pk=int(request.GET.get("batch")))
+    project = Project.objects.get(namespace=request.session["session_project"])
 
     def value_or_none(val):
         if val == "nan" or val != val:
@@ -124,12 +128,7 @@ def save_verified(request):
         object.efficiency = value_or_none(row["Efficiency"])
         object.tags = value_or_none(row["Tag"])
         object.seqpool = value_or_none(row["Sequencing Pool"])
-        object.lane = value_or_none(row["Sequencing Lane"])
-        if created: # dont just add to project on update...
-            object.project.add(
-                Project.objects.get(namespace=request.session["session_project"])
-            )
-        
+        object.lane = value_or_none(row["Sequencing Lane"])        
         object.save()
     from main.tools.site import get_site_samplebatch_tab
 
