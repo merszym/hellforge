@@ -15,23 +15,33 @@ from django.contrib import messages
 
 
 def update_query_for_negatives(query):
-    samples = query.values_list("sample")
+    lnc_negatives = set(query.values_list("lnc_batch","probes"))
+    enc_negatives = set(query.values_list("enc_batch","probes"))
+    lnc_ids = []
+    enc_ids = []
 
-    # get the ENC and LNC batches, then update the analyzedsamples query again to include LNC and ENC
-    enc_batches = set(
-        query.exclude(enc_batch__isnull=True).values_list("enc_batch", flat=True)
-    )
-    lnc_batches = set(
-        query.exclude(lnc_batch__isnull=True).values_list("lnc_batch", flat=True)
+    for batch, probe in lnc_negatives:
+        lnc_query = AnalyzedSample.objects.filter(
+            Q(sample__isnull=True) & Q(lnc_batch=batch) & Q(tags="LNC") & Q(probes=probe)
+        )
+        lnc_ids.extend(list(lnc_query.values_list("pk", flat=True)))
+
+    for batch, probe in enc_negatives:
+        enc_query = AnalyzedSample.objects.filter(
+            Q(sample__isnull=True) & Q(enc_batch=batch) & Q(tags="ENC") & Q(probes=probe)
+        )
+        enc_ids.extend(list(enc_query.values_list("pk", flat=True)))
+
+    # got the ENC and LNC entries, now update the analyzedsamples query again to include LNC and ENC
+
+
+    updated_query = AnalyzedSample.objects.filter(
+        Q(pk__in=query.values_list("pk", flat=True))
+        | Q(pk__in=lnc_ids)
+        | Q(pk__in=enc_ids)
     )
 
-    query = AnalyzedSample.objects.filter(
-        Q(sample__in=samples)
-        | (Q(sample__isnull=True) & Q(lnc_batch__in=lnc_batches) & Q(tags="LNC"))
-        | (Q(sample__isnull=True) & Q(enc_batch__in=enc_batches) & Q(tags="ENC"))
-    )
-
-    return query
+    return updated_query
 
 
 class AnalyzedSampleForm(forms.ModelForm):
