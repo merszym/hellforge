@@ -15,6 +15,7 @@ from django.contrib import messages
 
 def update_query_for_negatives(query, project=False):
     lnc_negatives = set(query.values_list("lnc_batch","probes"))
+    all_plates = [x[0] for x in lnc_negatives]
     enc_negatives = set(query.values_list("enc_batch","probes"))
     lnc_ids = []
     enc_ids = []
@@ -31,9 +32,16 @@ def update_query_for_negatives(query, project=False):
         lnc_ids.extend(list(lnc_query.values_list("pk", flat=True)))
 
     for batch, probe in enc_negatives:
+        # try to fetch only the ones on the same library plate
         enc_query = pre_select.filter(
-            Q(sample__isnull=True) & Q(enc_batch=batch) & Q(tags="ENC") & Q(probes=probe)
+            Q(sample__isnull=True) & Q(enc_batch=batch) & Q(tags="ENC") & Q(probes=probe) & Q(lnc_batch__in=all_plates)
         )
+        # if non exist - fetch from other plates as well
+        if len(enc_query)==0:
+            enc_query = pre_select.filter(
+                Q(sample__isnull=True) & Q(enc_batch=batch) & Q(tags="ENC") & Q(probes=probe)
+            )
+
         enc_ids.extend(list(enc_query.values_list("pk", flat=True)))
 
     # got the ENC and LNC entries, now update the analyzedsamples query again to include LNC and ENC
