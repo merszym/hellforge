@@ -13,7 +13,7 @@
 </style>
 
 <div class="has-icon-left">
-    <input class="form-input" id="library-search" type="text" placeholder="Filter Libraries" style="width:50%;">
+    <input class="form-input" id="{{batch.classname}}-library-search" type="text" placeholder="Filter Libraries" style="width:50%;">
     <i class="form-icon icon icon-search"></i>
 </div>
 
@@ -137,9 +137,9 @@
 </div>
 
 <script>
-    $('#library-search').on("keyup", function() {
-        var value = $("#library-search").val().toLowerCase();
-        $("tbody>tr.libsearch").filter(function() {
+    $('#{{batch.classname}}-library-search').on("keyup", function() {
+        var value = $("#{{batch.classname}}-library-search").val().toLowerCase();
+        $(".{{batch.classname}}_libtr").filter(function() {
             if($(this).text().toLowerCase().indexOf(value) > -1){
                 $(this).show()
             } else {
