@@ -493,9 +493,14 @@ def get_site_samplebatch_tab(request, pk):
 
     profiles = Profile.objects.filter(layer__sample__batch=batch).distinct()
 
-    analyzedsamples = update_query_for_negatives(
-        AnalyzedSample.objects.filter(sample__in=batch_samples)
-    )
+    if not all_projects and current_project: 
+        analyzedsamples = update_query_for_negatives(
+            AnalyzedSample.objects.filter(sample__in=batch_samples, project=current_project)
+        )
+    else:
+        analyzedsamples = update_query_for_negatives(
+            AnalyzedSample.objects.filter(sample__in=batch_samples)
+        )
 
     context = {
         "object": batch,
