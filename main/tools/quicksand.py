@@ -54,10 +54,16 @@ def handle_quicksand_report(request, file):
 
     for library, report in df.groupby("RG"):
         try:
-            analyzed_sample = AnalyzedSample.objects.get(
-                library=library, seqrun=runid, lane=lane, seqpool=seqpool
-            )
-
+            if library.startswith("Lib"):
+                analyzed_sample = AnalyzedSample.objects.get(
+                    library=library, seqrun=runid, lane=lane, seqpool=seqpool
+                )
+            elif library.startswith("Cap"):
+                analyzed_sample = AnalyzedSample.objects.get(
+                    capture=library, seqrun=runid, lane=lane, seqpool=seqpool
+                )
+            else:
+                raise TypeError
             # prepare the data for saving
             data = {}
 
