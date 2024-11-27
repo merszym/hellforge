@@ -24,7 +24,7 @@ def update_query_for_negatives(query, project=False):
         pre_select = AnalyzedSample.objects.filter(project=project)
     else:
         pre_select = AnalyzedSample.objects.all()
-
+    
     for batch, probe in lnc_negatives:
         lnc_query = pre_select.filter(
             Q(sample__isnull=True) & Q(lnc_batch=batch) & Q(tags="LNC") & Q(probes=probe)
