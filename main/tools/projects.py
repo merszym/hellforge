@@ -133,7 +133,7 @@ class ProjectDetailView(DetailView):
             )
 
             analyzedsample_dict[site.name]["libraries"] = len(libs)
-            analyzedsample_dict[site.name]["controls"] = len(update_query_for_negatives(libs).filter(sample__isnull=True))
+            analyzedsample_dict[site.name]["controls"] = len(update_query_for_negatives(libs, project=project).filter(sample__isnull=True))
             analyzedsample_dict[site.name]["samples"] = len(set(libs.values_list("sample", flat=True)))
         
         # summary stats
@@ -177,7 +177,7 @@ def get_project_overview(request):
             & Q(sample__project=object)
             & Q(project=object)
         )
-    qs = update_query_for_negatives(qs)
+    qs = update_query_for_negatives(qs, project=object)
     
     analyzedsample_count = len(
         set(
