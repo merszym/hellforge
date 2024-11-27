@@ -71,8 +71,8 @@
                                 <th>Samples</th>
                                 <th>Analyzed</th>
                                 <th>Libraries</th>
+                                <th>Controls</th>
                                 <th>Collaborators</th>
-                                <th>Status</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -82,18 +82,20 @@
                                     <td>{{site.country}}</td>
                                     <td>{{site.coredb_id}}</td>
                                     <td>{{site.name}}</td>
-                                    {% with sample_count=sample_dict|lookup:site.name|length %}
+                                    {% with sample_count=sample_dict|lookup:site.name %}
                                     <td>{% if sample_count == 0 %}ToDo{% else %}{{sample_count}}{% endif %}</td>
                                     {% endwith %}
-                                    {% with analyzedsample_count=analyzedsample_dict|lookup:site.name|lookup:'libraries'|length %}
-                                    {% with analyzedsample_set_count=analyzedsample_dict|lookup:site.name|lookup:'samples'|length %}
-                                    <td>{% if analyzedsample_count == 0 %}WIP{% else %}{{analyzedsample_set_count}}{% endif %}</td>
-                                    <td>{% if analyzedsample_count == 0 %}WIP{% else %}{{analyzedsample_count}}{% endif %}</td>
+                                    {% with analyzedsample_count=analyzedsample_dict|lookup:site.name|lookup:'libraries' %}
+                                    {% with analyzedsample_set_count=analyzedsample_dict|lookup:site.name|lookup:'samples' %}
+                                    {% with control_count=analyzedsample_dict|lookup:site.name|lookup:'controls' %}
+                                    <td>{{analyzedsample_set_count}}</td>
+                                    <td>{{analyzedsample_count}}</td>
+                                    <td>{{control_count}}</td>
+                                    {% endwith %}
                                     {% endwith %}
                                     {% endwith %}
                                     <td><span>{{site.contact.all|join:", "}}</span><br>
                                     </td>
-                                    <td></td>
                                     <td><a href="{% url 'site_detail' site.pk %}"><span class="btn">Go</span></a></td>
                                 </tr>
                             {% endfor %}

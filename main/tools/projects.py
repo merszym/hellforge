@@ -1,6 +1,8 @@
 from django.views.generic import ListView, DetailView, UpdateView
 from django.urls import path, reverse
+from django.db.models import Q
 from main.models import Project, Description, Site, Sample, AnalyzedSample
+from main.tools.analyzed_samples import update_query_for_negatives
 from django.http import JsonResponse, HttpResponse
 from main.tools.generic import (
     add_x_to_y_m2m,
@@ -101,35 +103,40 @@ class ProjectDetailView(DetailView):
         context = super(ProjectDetailView, self).get_context_data(**kwargs)
         # this is quick and dirty - create a description if non exists for a project
         project = self.get_object()
+
+        # this is only because I am too lazy to make it into a signal
         if not project.project_description.first():
             tmp = Description(content_object=project)
             tmp.save()
+
         # display the project sites
         object_list = sorted(
             Site.objects.filter(project=project, child=None), key=lambda x: x.country
         )
         context["object_list"] = object_list
-        # get the related samples
-        sample_dict = defaultdict(int)
-        analyzedsample_dict = defaultdict()
+
+        sample_dict = defaultdict(int) # for the number of collected samples
+        analyzedsample_dict = defaultdict() 
+
         for site in object_list:
-            sample_list = Sample.objects.filter(project=project, site=site)
-            sample_dict[site.name] = sample_list
+            qs = Sample.objects.filter(
+                    Q(site=site) & Q(project=project)
+                )
+            sample_dict[site.name] = len(qs)
+
             analyzedsample_dict[site.name] = defaultdict()
-            analyzedsample_dict[site.name]["libraries"] = AnalyzedSample.objects.filter(
-                project=project, sample__in=sample_list
+            
+            libs = AnalyzedSample.objects.filter(
+                Q(sample__site=site) &
+                Q(sample__project=project) &
+                Q(project=project)
             )
-            analyzedsample_dict[site.name]["samples"] = set(
-                [x.sample for x in analyzedsample_dict[site.name]["libraries"]]
-            )
+
+            analyzedsample_dict[site.name]["libraries"] = len(libs)
+            analyzedsample_dict[site.name]["controls"] = len(update_query_for_negatives(libs).filter(sample__isnull=True))
+            analyzedsample_dict[site.name]["samples"] = len(set(libs.values_list("sample", flat=True)))
+        
         # summary stats
-        sample_list = Sample.objects.filter(project=project, site__in=object_list)
-        analyzedsample_list = AnalyzedSample.objects.filter(
-            project=project, sample__in=sample_list
-        )
-        context["sample_list"] = sample_list
-        context["analyzedsample_list"] = analyzedsample_list
-        context["analyzedsample_set"] = set([x.sample for x in analyzedsample_list])
         context["sample_dict"] = sample_dict
         context["analyzedsample_dict"] = analyzedsample_dict
         return context
@@ -160,21 +167,35 @@ def get_project_overview(request):
     object = Project.objects.get(pk=int(request.GET.get("object")))
     context = {"object": object}
     # get context data
-    site_count = len(Site.objects.filter(project=object, child=None).values("pk"))
-    sample_count = len(object.sample.values("pk"))
+    sites = Site.objects.filter(project=object, child=None).values("pk")
+    site_count = len(sites)
+    sample_count = len(Sample.objects.filter(project=object, site__pk__in=sites).values("pk"))
+    
+    # get the related libraries
+    qs = AnalyzedSample.objects.filter(
+            Q(sample__site__project=object)
+            & Q(sample__project=object)
+            & Q(project=object)
+        )
+    qs = update_query_for_negatives(qs)
+    
     analyzedsample_count = len(
         set(
-            object.analyzedsample.exclude(sample__isnull=True).values_list(
+            qs.exclude(sample__isnull=True).values_list(
                 "sample", flat=True
             )
         )
     )
-    library_count = len(object.analyzedsample.exclude(sample__isnull=True).values("pk"))
+    library_count = len(qs.exclude(sample__isnull=True).values("pk"))
+    negatives_count = len(qs.filter(sample__isnull=True).values("pk"))
 
     context["site_count"] = site_count
     context["sample_count"] = sample_count
     context["analyzedsample_count"] = analyzedsample_count
     context["library_count"] = library_count
+    context["negatives_count"] = negatives_count
+    context["total"] = len(qs)
+
     object_list = sorted(
         Site.objects.filter(project=object, child=None), key=lambda x: x.country
     )

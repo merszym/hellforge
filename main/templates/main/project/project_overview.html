@@ -1,6 +1,6 @@
 <h4>{{object.name}}</h4>
-<h5>Exports</h5>
-<div>
+{{object.published|yesno:"Public Project,Private Project,NA"}}
+<div class="my-2">
     <a target="_blank" href="{% url 'get_dataset' %}?from=project_{{object.pk}}&unique=library&include=site,layer,samplebatch,sample&extend=sample"
         class="btn tooltip tooltip-right" data-tooltip="Export samples and libraries">
         <i class="icon icon-download"></i>
@@ -11,17 +11,19 @@
     <a target="_blank" class="btn tooltip tooltip-right" href="{% url 'get_dataset' %}?from=project_{{object.pk}}&unique=quicksand_analysis&include=site,layer,sample,analyzedsample" data-tooltip="Export quicksand results">
         <i class="icon icon-flag"></i>
     </a>
+    <span class="share_button btn btn-primary tooltip tooltip-right" onclick="copyClipboard(`{{request.scheme}}://{{request.get_host}}{% url 'main_project_checkout' object.namespace %}?pw={{object.public_password}}`)" data-tooltip="Copy Share Link">
+        <i class="icon icon-link"></i>
+    </span>
 </div>
-
 <table class="table">
     <thead>
         <tr>
             <th>Sites</th>
-            <th>Collected Samples</th>
+            <th>Samples Collected</th>
             <th>Analyzed</th>
             <th>Libraries</th>
-            <th>Project Visibility</th>
-            <th></th>
+            <th>Controls</th>
+            <th>Total</th>
         </tr>
     </thead>
     <tbody>
@@ -30,11 +32,9 @@
             <td>{{sample_count}}</td>
             <td>{{analyzedsample_count}}</td>
             <td>{{library_count}}</td>
-            <td>{{object.published|yesno:"Published,Private,NA"}}</td>
+            <td>{{negatives_count}}</td>
+            <td>{{total}}</td>
             <td>
-                <span class="share_button btn btn-primary tooltip tooltip-right" onclick="copyClipboard(`{{request.scheme}}://{{request.get_host}}{% url 'main_project_checkout' object.namespace %}?pw={{object.public_password}}`)" data-tooltip="Copy Share Link">
-                    <i class="icon icon-link"></i>
-                </span>
             </td>
         </tr>
     </tbody>
