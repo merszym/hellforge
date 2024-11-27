@@ -38,7 +38,7 @@ def get_libraries(start):
     """
     if start.model == 'site':
         qs = models['analyzedsample'].objects.filter(sample__site=start)
-        qs = update_query_for_negatives(q)
+        qs = update_query_for_negatives(qs)
         return qs
     if start.model == 'project':
         qs = models['analyzedsample'].objects.filter(

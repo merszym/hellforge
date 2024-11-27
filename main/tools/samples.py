@@ -75,12 +75,12 @@ def handle_samplebatch_file(request, file):
             issues.append("Reference was not found (see Table)")
 
     layer_wrong = df[
-        (df["Sample Layer"].isin(all_layers) == False)
-        & (df["Sample Layer"] == df["Sample Layer"])
+        (df["Layer Name"].isin(all_layers) == False)
+        & (df["Layer Name"] == df["Layer Name"])
     ].copy()
     if len(layer_wrong) > 0:
         issues.append(
-            f"Removed non-existing Layers: {','.join(set(layer_wrong['Sample Layer']))}"
+            f"Removed non-existing Layers: {','.join(set(layer_wrong['Layer Name']))}"
         )
         df.drop(layer_wrong.index, inplace=True)
 
@@ -109,8 +109,8 @@ def save_verified(request):
     df.convert_dtypes()
 
     # go through the layers
-    df["Sample Layer"] = df["Sample Layer"].fillna("unknown")
-    for layer, dat in df.groupby("Sample Layer"):
+    df["Layer Name"] = df["Layer Name"].fillna("unknown")
+    for layer, dat in df.groupby("Layer Name"):
         if layer == "unknown":
             l = None
         else:

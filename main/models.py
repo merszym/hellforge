@@ -1161,7 +1161,7 @@ class Sample(Dateable):
     @classmethod
     def table_columns(self):
         return [
-            "Sample Layer",
+            "Layer Name",
             "Sample Name",
             "Sample Synonyms",
             "Sample Type",
