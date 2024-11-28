@@ -106,6 +106,7 @@
             <td>{% if object.quicksand_analysis.first %}
                 {{object.quicksand_analysis.first.version}}
                 {% endif %}
+                {% if object.matthias_analysis.first %} (MM) {% endif %}
             </td>
             <td nowrap {% if request.user.is_authenticated and object.sample %}
             class="modal_open tooltip tooltip-left" data-tooltip="Edit Tag"
