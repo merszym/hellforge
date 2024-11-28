@@ -1467,6 +1467,33 @@ class QuicksandAnalysis(models.Model):
             "analyzedsample__probes",
         ]
 
+#
+#
+# Matthias summary script results
+#
+#
+
+class HumanDiagnosticPositions(models.Model):
+    version = models.CharField("Version", max_length=100, blank=True, null=True)
+    analyzedsample = models.ForeignKey(  # [[library, sequencing-run combination]]
+        AnalyzedSample,
+        verbose_name="analyzedsample",
+        related_name="matthias_analysis",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+    data = models.JSONField("data", blank=True, null=True)
+    
+    class Meta:
+        ordering = [
+            "analyzedsample__sample__site",
+            "analyzedsample__sample__layer",
+            "analyzedsample__sample",
+            "analyzedsample__seqrun",
+            "analyzedsample__probes",
+        ]
+
 
 models = {
     "site": Site,

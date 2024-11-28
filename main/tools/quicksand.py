@@ -3,9 +3,12 @@ import pandas as pd
 import seaborn as sns
 from django.contrib import messages
 from django.shortcuts import render
+from django.urls import path
+from django.db.models import Q
 from main.tools.generic import get_instance_from_string
 from main.tools.projects import get_project
-from main.models import QuicksandAnalysis, AnalyzedSample
+from main.tools.analyzed_samples import update_query_for_negatives
+from main.models import QuicksandAnalysis, AnalyzedSample, Site
 import re
 import json
 from collections import defaultdict
@@ -39,7 +42,6 @@ def handle_quicksand_report(request, file):
     if not runid:
         return return_error("Sequencing ID is missing")
 
-    lane = request.POST.get("lane", "lane1")
     seqpool = request.POST.get("seqpool", False)
 
     version = request.POST.get("version", False)
@@ -56,11 +58,11 @@ def handle_quicksand_report(request, file):
         try:
             if library.startswith("Lib"):
                 analyzed_sample = AnalyzedSample.objects.get(
-                    library=library, seqrun=runid, lane=lane, seqpool=seqpool
+                    library=library, seqrun=runid, seqpool=seqpool
                 )
             elif library.startswith("Cap"):
                 analyzed_sample = AnalyzedSample.objects.get(
-                    capture=library, seqrun=runid, lane=lane, seqpool=seqpool
+                    capture=library, seqrun=runid, seqpool=seqpool
                 )
             else:
                 raise TypeError
@@ -321,3 +323,67 @@ def get_data_for_export(data, quickv, percentage=0.5, breadth=0.5):
     )
 
     return export
+
+
+def get_quicksand_tab(request, pk):
+    """
+    In the DNA Tab, render the quicksand table and form
+    """
+    site = Site.objects.get(pk=int(pk))
+    context = {"object": site}
+
+    # first, get the objects
+    analyzed_samples = update_query_for_negatives(
+        AnalyzedSample.objects.filter(Q(sample__site=site) & Q(qc_pass=True))
+    )
+    query = QuicksandAnalysis.objects.filter(analyzedsample__in=analyzed_samples)
+
+    if request.method == "POST":
+        if prset := request.POST.get("probe", False):
+            if prset != "all":
+                if prset == "AA163":  # get all the human mt probesets
+                    query = query.filter(analyzedsample__probes__in=["AA163", "AA22"])
+                else:
+                    query = query.filter(analyzedsample__probes=prset)
+            context.update({"probe": prset})
+
+        mode = request.POST.get("mode", "absolute")
+        column = request.POST.get("column", "ReadsDeduped")
+        percentage = float(request.POST.get("percentage", 0.5))
+        breadth = float(request.POST.get("breadth", 0.5))
+        ancient = "on" == request.POST.get("ancient", "")
+        positives = "on" == request.POST.get("positives", "")
+        only_project = "on" == request.POST.get("only_project", "")
+        controls = "on" == request.POST.get("controls", "")
+        tableview = "on" == request.POST.get("tableview", "")
+
+        # column: ReadsDeduped
+        # mode: relative,absolute
+        # filter: ancient, breadth, percentage
+
+        context.update(
+            prepare_data(
+                request,
+                query,
+                column=column,
+                percentage=percentage,
+                breadth=breadth,
+                mode=mode,
+                ancient=ancient,
+                positives=positives,
+                only_project=only_project,
+                controls=controls,
+                tableview=tableview
+            )
+        )
+    else:
+        query = query.filter(analyzedsample__probes="AA75")
+        context.update({"probe": "AA75"})
+        context.update(prepare_data(request, query))
+    
+    return render(request, "main/quicksand/quicksand-content.html", context)
+
+
+urlpatterns = [
+    path("get-table/<int:pk>", get_quicksand_tab, name="main_site_getquicksand")
+]

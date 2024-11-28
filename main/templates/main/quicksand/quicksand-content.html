@@ -1,0 +1,218 @@
+{% load format %}
+
+{% for family,color in colors %}
+    <style>
+    .{{family}}{
+        background-color:{{color}};
+    }
+    </style>
+{% endfor %}
+
+<div id="quicksand-display">
+    <div class="p-2">
+        <h3>quicksand results</h3>
+        <p>This tab shows the results of the analysis for mammalian mtDNA in the sample</p>
+    </div>
+    <div class="panel-head p-2">
+        {% if request.user.is_authenticated %}
+        <span
+            class='btn tooltip tooltip-right modal_open'
+            data-tooltip="Upload quicksand run"
+            hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
+            hx-vals='{"object":"site_{{object.pk}}","type":"quicksand_upload"}'
+            hx-target="#modal-blank"><i class="icon icon-plus"></i>
+        </span>
+        {% endif %}
+        <form
+            hx-post="{% url 'main_site_getquicksand' object.pk %}"
+            hx-target="#site_dna_content"
+            style="width: 80%;"
+        >
+            <input type="hidden" name="object" value="{{object.pk}}">
+            <div class="input-group">
+                <span class="input-group-addon"><strong>General</strong></span>
+                <span class="input-group-addon">Values</span>
+                <select class="form-select" name="column">
+                    <option value="{{column}}" selected>{{column}}</option>
+                    <option value="ReadsDeduped">ReadsDeduped</option>
+                    <option value="ReadsDeam(3term)">ReadsDeam(3term)</option>
+                </select>
+                <span class="input-group-addon">Probeset</span>
+                <select class="form-select" name="probe">
+                    <option value="{{probe}}" selected>{{probe}}</option>
+                    <option value="all">Show All</option>
+                    <option value="AA163">Human mtDNA (AA163/AA22)</option>
+                    <option value="AA75">Mammalian mtDNA (AA75)</option>
+                    <option value="Shotgun">Shotgun</option>
+                </select>
+                <span class="input-group-addon">Positive only</span>
+                <label class="form-switch mx-2">
+                    <input type="checkbox" name="positives" {% if positives %}checked{% endif %}><i class="form-icon"></i>
+                </label>
+                <span class="input-group-addon">Controls</span>
+                <label class="form-switch mx-2">
+                    <input type="checkbox" name="controls" {% if controls %}checked{% endif %}><i class="form-icon"></i>
+                </label>
+            </div>
+            <div class="input-group">
+                <span class="input-group-addon"><strong>Display</strong></span>
+                <span class="input-group-addon">Values</span>
+                <select class="form-select" name="mode">
+                    <option value="{{mode}}" selected>{{mode|title}} values</option>
+                    <option value="relative">Relative values</option>
+                    <option value="absolute">Absolute values</option>
+                </select>
+                <span class="input-group-addon">Table-View</span>
+                <label class="form-switch mx-2">
+                    <input type="checkbox" name="tableview" {% if tableview %}checked{% endif %}><i class="form-icon"></i>
+                </label>
+            </div>
+            <div class="input-group">
+                <span class="input-group-addon"><strong>Filter</strong></span>
+                <span class="input-group-addon">Percentage Cutoff</span>
+                <input class="form-input" type="float" name="percentage" value="{{percentage}}">
+                <span class="input-group-addon">Expected Breadth Cutoff</span>
+                <input class="form-input" type="float" name="breadth" value="{{breadth}}">
+                <span class="input-group-addon">Ancient only</span>
+                <label class="form-switch mx-2">
+                    <input type="checkbox" name="ancient" {% if ancient %}checked{% endif %}><i class="form-icon"></i>
+                </label>
+                {% if request.user.is_authenticated %}
+                <span class="input-group-addon">In Project</span>
+                <label class="form-switch mx-2">
+                    <input type="checkbox" name="only_project" {% if only_project %}checked{% endif %}><i class="form-icon"></i>
+                </label>
+                {% endif %}
+                <button class="btn btn-primary input-group-btn">Submit</button>
+            </div>
+        </form>
+        <div class="has-icon-left">
+            <input class="form-input" id="dna-list-search" type="text" placeholder="Type to filter table by content" style="width:50%;">
+            <i class="form-icon icon icon-search"></i>
+        </div>
+    </div>
+
+    <div class="panel-body p-0">
+        {% if object_list %}
+        <table class="table table-striped">
+            <thead style="position: sticky; top:0; z-index: 100;">
+                <tr>
+                    <th>Layer</th>
+                    <th>Sample</th>
+                    <th>Library</th>
+                    <th>Capture</th>
+                    {% if probe == "all" %}
+                    <th>Probe</th>
+                    {% endif %}
+                    <th>Run ID</th>
+                    <th>Tag</th>
+                    <th>quicksand</th>
+                    {% if tableview %}
+                        {% for family,color in colors %}
+                        <th style="border-left:solid black 1px;">{{family}}</th>
+                        {% empty %}
+                        <th>Results</th>
+                        {% endfor %}
+                    {% else %}
+                    <th>Results</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in object_list.all %}
+                {% with ana=entry.analyzedsample %}
+                <tr class="dna-tr">
+                    <td nowrap class="{% if ana.sample%}{{ana.sample.layer.culture.classname|default:'sterile'}}{%endif %}">
+                        {% if ana.sample %}
+                            {{ana.sample.layer.name|default:'unassigned'}}
+                        {% else %}
+                            Control
+                        {% endif %}
+                    </td>
+                    <td nowrap>
+                        {% if ana.sample %}
+                        {{ana.sample.name}}
+                        {% else %}
+                        {{ana.tags}}
+                        {% endif %}
+                    </td>
+                    <td nowrap>{{ana.library}}</td>
+                    <td nowrap>{{ana.capture|default:""}}</td>
+                    {% if probe == "all" %}
+                    <td nowrap>{{ana.probes}}</td>
+                    {% endif %}
+                    <td nowrap>{{ana.seqrun|truncatechars:11}}</td>
+                    <td nowrap>{{ana.tags|default:''}}</td>
+                    <td nowrap>{{entry.version}}</td>
+                    {% if tableview %}
+                        {% for f,color in colors %}
+                        {% with family=quicksand_results|lookup:entry|lookup:f %}
+                            <td nowrap 
+                                style="border-left:solid black 1px;"
+                                {% if family %}
+                                class="p-1 tooltip tooltip-left {{f}}"
+                                data-tooltip='{{f}} ({{family|lookup:"raw"|floatformat:"0"}}{% if mode == "relative" %}%{% endif %})'
+                                {% else %}
+                                class="p-1"
+                                {% endif %}   
+                                >
+                                {{quicksand_results|lookup:entry|lookup:f|lookup:'raw'|floatformat:"0"}}{% if mode == 'relative' and family %}%{% endif %}
+                            </td>
+                        {% endwith %}
+                        {% empty %}
+                            <td nowrap ><span class="text-gray">No DNA found</span></td>
+                        {% endfor %}
+                    {% else %}
+                        <td nowrap style="min-width: 300px; display: flex;">
+                            {% for family in quicksand_results|lookup:entry %}
+                            <span 
+                                class="{{family}} p-1 tooltip tooltip-left"
+                                data-tooltip='{{family}} ({{quicksand_results|lookup:entry|lookup:family|lookup:"raw"|floatformat:"0"}}{% if mode == "relative" %}%{% endif %})'
+                                style="width:{{quicksand_results|lookup:entry|lookup:family|lookup:'display'|floatformat:'2'}}%;">
+                                {{quicksand_results|lookup:entry|lookup:family|lookup:'raw'|floatformat:"0"}}{% if mode == 'relative' %}%{% endif %}</span>
+                            {% empty %}
+                                <span class="text-gray">No DNA found</span>
+                            {% endfor %}
+                        </td>
+                    {% endif %}
+                </tr>
+                {% endwith %}
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if colors %}
+        <div style="display:flex; max-width: 100%; flex-wrap: wrap;">
+            {% for family,color in colors %}
+            <div class="p-2" style="display: flex; align-items: center;">
+                <span class="{{family}} p-2" style="width: 10px;height: 10px; display: block;"></span>
+                <span class="p-2" style="display: block;">{{family}}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <p class="p-2 form-input-hint">The results were obtained by running the <a href="https://github.com/mpieva/quicksand">quicksand</a> pipeline with the specified version<br>
+        </p>
+
+        {% else %}
+        <div class="empty">
+            <div class="empty-icon">
+                <i class="icon icon-flag"></i>
+            </div>
+            <p class="empty-title h5">No quicksand run imported yet</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    $('#dna-list-search').on("keyup", function() {
+        var value = $("#dna-list-search").val().toLowerCase();
+        $("tr.dna-tr").filter(function() {
+            if($(this).text().toLowerCase().indexOf(value) > -1){
+                $(this).show()
+            } else {
+                $(this).hide()
+            }
+        });
+    });
+</script>

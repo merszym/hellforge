@@ -82,7 +82,7 @@ def get_modal_context(object, request):
                 }
             )
     if object.model == "site":
-        if context["type"] == "quicksand_upload":
+        if context["type"] in ["quicksand_upload","matthias_upload"]:
             context.update(
                 {
                     "seqruns": sorted(
@@ -198,6 +198,10 @@ def upload(request):
 
         return handle_quicksand_report(request, file)
 
+    if type == "matthias":
+        from main.tools.matthias import handle_file_upload
+
+        return handle_file_upload(request, file)
 
 def save_contact(request):
     form = ContactForm(request.POST)

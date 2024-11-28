@@ -1,0 +1,204 @@
+{% load format %}
+
+{% for lineage,color in lineages %}
+    <style>
+    .{{lineage}}{
+        background-color:{{color}};
+    }
+    .sig-1{
+        background-color: rgba(247, 113, 137, 0.3)
+    }
+    .sig-2{
+        background-color: rgba(247, 113, 137, 0.6)
+    }
+    .sig-3{
+        background-color: rgba(247, 113, 137, 1)
+    }
+    </style>
+{% endfor %}
+
+<div id="matthias-display">
+    <div class="p-2">
+        <h3>Human Lineage Assignments</h3>
+        <p>This tab shows the results of the analysis for the diagnostic positions test in the sample</p>
+    </div>
+    <div class="panel-head p-2">
+        {% if request.user.is_authenticated %}
+        <span
+            class='btn tooltip tooltip-right modal_open'
+            data-tooltip="Upload quicksand run"
+            hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
+            hx-vals='{"object":"site_{{object.pk}}","type":"matthias_upload"}'
+            hx-target="#modal-blank"><i class="icon icon-plus"></i>
+        </span>
+        {% endif %}
+        <form
+            hx-post="{% url 'main_site_getmatthias' object.pk %}"
+            hx-target="#DNA-tab_AA163-content"
+            style="width: 80%;"
+        >
+            <input type="hidden" name="object" value="{{object.pk}}">
+            <div class="input-group">
+                <span class="input-group-addon"><strong>General</strong></span>
+                <span class="input-group-addon">Probeset</span>
+                <select class="form-select" name="probe">
+                    <option value="{{probe}}" selected>{{probe}}</option>
+                    <option value="all">Show All</option>
+                    <option value="AA163">Human mtDNA (AA163/AA22)</option>
+                    <option value="AA75">Mammalian mtDNA (AA75)</option>
+                    <option value="Shotgun">Shotgun</option>
+                </select>
+                <span class="input-group-addon">Positive only</span>
+                <label class="form-switch mx-2">
+                    <input type="checkbox" name="positives" {% if positives %}checked{% endif %}><i class="form-icon"></i>
+                </label>
+                <span class="input-group-addon">Controls</span>
+                <label class="form-switch mx-2">
+                    <input type="checkbox" name="controls" {% if controls %}checked{% endif %}><i class="form-icon"></i>
+                </label>
+            </div>
+            <div class="input-group">
+                <span class="input-group-addon"><strong>Filter</strong></span>
+                <span class="input-group-addon">Deaminated only</span>
+                <label class="form-switch mx-2">
+                    <input type="checkbox" name="ancient" {% if ancient %}checked{% endif %}><i class="form-icon"></i>
+                </label>
+                <span class="input-group-addon">Extended</span>
+                <label class="form-switch mx-2">
+                    <input type="checkbox" name="extended" {% if extended %}checked{% endif %}><i class="form-icon"></i>
+                </label>
+                {% if request.user.is_authenticated %}
+                <span class="input-group-addon">In Project</span>
+                <label class="form-switch mx-2">
+                    <input type="checkbox" name="only_project" {% if only_project %}checked{% endif %}><i class="form-icon"></i>
+                </label>
+                {% endif %}
+                <button class="btn btn-primary input-group-btn">Submit</button>
+            </div>
+        </form>
+        <div class="has-icon-left">
+            <input class="form-input" id="matthias-list-search" type="text" placeholder="Type to filter table by content" style="width:50%;">
+            <i class="form-icon icon icon-search"></i>
+        </div>
+    </div>
+
+    <div class="panel-body p-0">
+        {% if object_list %}
+        <table class="table table-striped">
+            <thead style="position: sticky; top:0; z-index: 100;">
+                <tr>
+                    <th>Layer</th>
+                    <th>Sample</th>
+                    <th>Library</th>
+                    <th>Capture</th>
+                    {% if probe == "all" %}
+                    <th>Probe</th>
+                    {% endif %}
+                    <th>Run ID</th>
+                    <th>Tag</th>
+                    <th>Ancient</th>
+                    {% if extended %}
+                    <th>RawSeqs</th>
+                    <th>Mapped</th>
+                    <th>Unique</th>   
+                    <th nowrap>Dupl. Rate</th>
+                    <th nowrap>CC Reads</th>
+                    <th>5'CT</th>
+                    <th>3'CT</th>
+                    <th>5'CT(95%CI)</th>
+                    <th>3'CT(95%CI)</th>
+                    <th>cond5'CT(95%CI)</th> 
+                    <th>cond3'CT(95%CI)</th> 
+                    {% endif %}
+                    {% for lineage,color in lineages %}
+                    <th style="border-left:solid black 1px;">{{lineage|cut:"_support"|cut:"_deam"}}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in object_list %}
+                {% with ana=entry.analyzedsample %}
+                <tr class="matthias-tr">
+                    <td nowrap class="{% if ana.sample%}{{ana.sample.layer.culture.classname|default:'sterile'}}{%endif %}">
+                        {% if ana.sample %}
+                            {{ana.sample.layer.name|default:'unassigned'}}
+                        {% else %}
+                            Control
+                        {% endif %}
+                    </td>
+                    <td nowrap>
+                        {% if ana.sample %}
+                        {{ana.sample.name}}
+                        {% else %}
+                        {{ana.tags}}
+                        {% endif %}
+                    </td>
+                    <td nowrap>{{ana.library}}</td>
+                    <td nowrap>{{ana.capture|default:""}}</td>
+                    {% if probe == "all" %}
+                    <td nowrap>{{ana.probes}}</td>
+                    {% endif %}
+                    <td nowrap>{{ana.seqrun|truncatechars:11}}</td>
+                    <td nowrap>{{ana.tags|default:''}}</td>
+                    <td nowrap>{{results|lookup:entry|lookup:"Ancient"}}</td>
+                    {% if extended %}
+                    <td nowrap>{{results|lookup:entry|lookup:"RawSeqs"}}</td>
+                    <td nowrap>{{results|lookup:entry|lookup:"Mapped"}}</td>
+                    <td nowrap>{{results|lookup:entry|lookup:"Unique"}}</td>   
+                    <td nowrap>{{results|lookup:entry|lookup:"Duplication_Rate"}}</td>
+                    <td nowrap>{{results|lookup:entry|lookup:"CC_reads"}}</td>
+                    <td nowrap>{{results|lookup:entry|lookup:"5'CT"}}</td>
+                    <td nowrap>{{results|lookup:entry|lookup:"3'CT"}}</td>
+                    <td nowrap>{{results|lookup:entry|lookup:"5'CT(95%CI)"}}</td>
+                    <td nowrap>{{results|lookup:entry|lookup:"3'CT(95%CI)"}}</td>
+                    <td nowrap>{{results|lookup:entry|lookup:"cond5'CT(95%CI)"}}</td> 
+                    <td nowrap>{{results|lookup:entry|lookup:"cond3'CT(95%CI)"}}</td> 
+                    {% endif %}
+                    {% for lineage,color in lineages %}
+                    {% with res=results|lookup:entry|lookup:lineage %}
+                        <td nowrap 
+                            style="border-left:solid black 1px;"
+                            class="p-1 add_class"
+                            >
+                            {{res}}
+                        </td>
+                    {% endwith %}
+                    {% endfor %}
+                </tr>
+                {% endwith %}
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        {% else %}
+        <div class="empty">
+            <div class="empty-icon">
+                <i class="icon icon-flag"></i>
+            </div>
+            <p class="empty-title h5">No Results for diagnostic positions imported</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    $('#matthias-list-search').on("keyup", function() {
+        var value = $("#matthias-list-search").val().toLowerCase();
+        $("tr.matthias-tr").filter(function() {
+            if($(this).text().toLowerCase().indexOf(value) > -1){
+                $(this).show()
+            } else {
+                $(this).hide()
+            }
+        });
+    });
+    $(document).ready(function(){
+        $('.add_class').each(function(){
+            var val = $(this).html()
+            var sig = (val.match(/\^/g)||[]).length;
+            if(val){
+                $(this).addClass(`sig-${sig}`)
+            }
+        })
+    });
+</script>

@@ -20,6 +20,7 @@ from main.models import (
     Synonym,
     Connection,
     QuicksandAnalysis,
+    HumanDiagnosticPositions
 )
 from copy import copy
 import json
@@ -374,57 +375,11 @@ def get_site_sample_content(request):
 
 
 ## DNA content
+## At the moment only quicksand content...
 def get_site_dna_content(request, pk):
     site = Site.objects.get(pk=int(pk))
     context = {"object": site}
-
-    # first, get the objects
-    analyzed_samples = update_query_for_negatives(
-        AnalyzedSample.objects.filter(Q(sample__site=site) & Q(qc_pass=True))
-    )
-    query = QuicksandAnalysis.objects.filter(analyzedsample__in=analyzed_samples)
-
-    if request.method == "POST":
-        if prset := request.POST.get("probe", False):
-            if prset != "all":
-                if prset == "AA163":  # get all the human mt probesets
-                    query = query.filter(analyzedsample__probes__in=["AA163", "AA22"])
-                else:
-                    query = query.filter(analyzedsample__probes=prset)
-                context.update({"probe": prset})
-
-        mode = request.POST.get("mode", "absolute")
-        column = request.POST.get("column", "ReadsDeduped")
-        percentage = float(request.POST.get("percentage", 0.5))
-        breadth = float(request.POST.get("breadth", 0.5))
-        ancient = "on" == request.POST.get("ancient", "")
-        positives = "on" == request.POST.get("positives", "")
-        only_project = "on" == request.POST.get("only_project", "")
-        controls = "on" == request.POST.get("controls", "")
-        tableview = "on" == request.POST.get("tableview", "")
-
-        # column: ReadsDeduped
-        # mode: relative,absolute
-        # filter: ancient, breadth, percentage
-
-        context.update(
-            prepare_data(
-                request,
-                query,
-                column=column,
-                percentage=percentage,
-                breadth=breadth,
-                mode=mode,
-                ancient=ancient,
-                positives=positives,
-                only_project=only_project,
-                controls=controls,
-                tableview=tableview
-            )
-        )
-    else:
-        context.update(prepare_data(request, query))
-    
+   
     return render(request, "main/site/site-dna-content.html", context)
 
 
