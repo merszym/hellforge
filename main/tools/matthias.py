@@ -37,7 +37,7 @@ def handle_file_upload(request, file):
             },
         )
 
-    df = pd.read_csv(file, sep="\t")
+    df = pd.read_csv(file, sep="\t", index_col=False)
     df = df[[x for x in df.columns if x.startswith('Unnamed')==False]].copy()
 
     # input verification
@@ -54,6 +54,8 @@ def handle_file_upload(request, file):
     not_found = []
     imported = []
 
+    print(df)
+
     for i, data in df.iterrows():
         try:
             if data["CapLibIDCoreDB"]:
@@ -66,6 +68,7 @@ def handle_file_upload(request, file):
                 )
             else:
                 raise TypeError
+            print(analyzed_sample)
             # prepare the data for saving
             entry = json.loads(data.to_json(orient="index"))
             
@@ -86,7 +89,7 @@ def handle_file_upload(request, file):
         messages.add_message(
             request,
             messages.WARNING,
-            f"{', '.join(not_found)}: Libraries not found in database, ignored for upload",
+            f"{len(not_found)} Libraries not found in database, ignored for upload",
         )
 
     if len(imported) > 0:
