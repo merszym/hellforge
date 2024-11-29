@@ -142,7 +142,7 @@ def prepare_data(
         else:
             lineages.extend([x for x in data.keys() if x.endswith('support')])
 
-    lineages = sorted(list(set(lineages)), key=lambda x: ["H","N","D",'S'].index(x[0]) )
+    lineages = sorted(list(set(lineages)), key=lambda x: ["H","N","N-HST","HST","D","D-S","S"].index(x.split("_")[0]) )
 
     colors = [
         (k, v)
