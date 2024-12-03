@@ -97,6 +97,7 @@
                     <th>Run ID</th>
                     <th>Tag</th>
                     <th>Ancient</th>
+                    <th>Deaminated</th>
                     {% if extended %}
                     <th>RawSeqs</th>
                     <th>Mapped</th>
@@ -141,6 +142,7 @@
                     <td nowrap>{{ana.seqrun|truncatechars:11}}</td>
                     <td nowrap>{{ana.tags|default:''}}</td>
                     <td nowrap>{{results|lookup:entry|lookup:"Ancient"}}</td>
+                    <td nowrap>{{results|lookup:entry|lookup:"Deaminated(term3)"}}</td>
                     {% if extended %}
                     <td nowrap>{{results|lookup:entry|lookup:"RawSeqs"}}</td>
                     <td nowrap>{{results|lookup:entry|lookup:"Mapped"}}</td>
