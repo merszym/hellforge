@@ -8,7 +8,7 @@
     <a target="_blank" href="{% url 'get_dataset' %}?from=project_{{object.pk}}&unique=contact&include=site" class="btn tooltip tooltip-right" data-tooltip="Export Collaborators">
         <i class="icon icon-people"></i>
     </a>
-    <a target="_blank" class="btn tooltip tooltip-right" href="{% url 'get_dataset' %}?from=project_{{object.pk}}&unique=quicksand_analysis&include=site,layer,sample,analyzedsample" data-tooltip="Export quicksand results">
+    <a target="_blank" class="btn tooltip tooltip-right" href="{% url 'get_dataset' %}?from=project_{{object.pk}}&unique=library&include=site,layer,samplebatch,sample&append=qs,mm" data-tooltip="Export analysis results">
         <i class="icon icon-flag"></i>
     </a>
     <span class="share_button btn btn-primary tooltip tooltip-right" onclick="copyClipboard(`{{request.scheme}}://{{request.get_host}}{% url 'main_project_checkout' object.namespace %}?pw={{object.public_password}}`)" data-tooltip="Copy Share Link">

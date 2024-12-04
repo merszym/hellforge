@@ -1244,7 +1244,7 @@ class AnalyzedSample(models.Model):
     def __str__(self):
         return f"{self.library}_{self.seqrun}"
 
-    def get_data(self):
+    def get_data(self, qs=True, mm=True):
         # for an entry, return a dict {'col': data} that is used for the export of the data
         # dont include sample or project - that is exported with the respective query
         data = {
@@ -1262,6 +1262,14 @@ class AnalyzedSample(models.Model):
             "Tag": self.tags,
             "QC": "Pass" if self.qc_pass else "Fail",
         }
+        if qs and self.quicksand_analysis.first():
+            data.update(
+                self.quicksand_analysis.last().get_data()
+            )
+        if mm and self.matthias_analysis.first():
+            data.update(
+                self.matthias_analysis.last().get_data()
+            )
         return data
 
     @property
@@ -1433,26 +1441,6 @@ class QuicksandAnalysis(models.Model):
     )
     data = models.JSONField("data", blank=True, null=True)
 
-    @property
-    def sample(self):
-        return self.analyzedsample.sample
-
-    @property
-    def library(self):
-        return self.analyzedsample
-
-    @property
-    def samplebatch(self):
-        return self.analyzedsample.sample.batch
-
-    @property
-    def layer(self):
-        return self.analyzedsample.sample.layer
-
-    @property
-    def site(self):
-        return self.analyzedsample.sample.site
-
     def get_data(self):
         from main.tools.quicksand import get_data_for_export
 
@@ -1493,6 +1481,18 @@ class HumanDiagnosticPositions(models.Model):
             "analyzedsample__seqrun",
             "analyzedsample__probes",
         ]
+    
+    def get_data(self):
+        exclude = [
+            "DB_entry","QC","QC_comment","Comments","Project_used","RunID","IndexLibID","CapLibID","IndexLibIDCoreDB","CapLibIDCoreDB",
+            "p7","p5","SampleID","ExtractID","SampleType","ExperimentType","Site","ProbeSet","Description"
+        ]
+        duplicates = ["Ancient"]
+        data = json.loads(self.data)
+        for k in exclude:
+            data.pop(k, None)
+        new_data = {(f"MM_{k}" if k in duplicates else k):v for k,v in data.items() } # preserve column names in data
+        return new_data
 
 
 models = {

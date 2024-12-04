@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import (
     login_required,
 )  # this is for now, make smarter later
 from datetime import datetime
-import json
+import json, re
 import pandas as pd
 import numpy as np
 
@@ -26,7 +26,7 @@ def return_next(request, next, object="instance_x"):
     return get_modal(request)
 
 
-def get_dataset_df(qs, start, include):
+def get_dataset_df(qs, start, include, append):
     # iterate over the m:1 frame, collect information from models
     records = []
     for entry in qs:
@@ -50,7 +50,12 @@ def get_dataset_df(qs, start, include):
                     # if that fails, add empty lines...
                     empty = {k: None for k in models[incl].table_columns()}
                     data.update(empty)
-        data.update(entry.get_data())
+        if entry.model == "analyzedsample":
+            quicksand_analysis = bool(re.search("qs", str(append)))
+            matthias_analysis = bool(re.search("mm", str(append)))
+            data.update(entry.get_data(qs=quicksand_analysis, mm=matthias_analysis))
+        else:
+            data.update(entry.get_data())
         records.append(data)
     df = pd.DataFrame.from_records(records)
     return df
@@ -67,6 +72,7 @@ def get_dataset(request):
     ?start --> site, project
     ?unique --> which parameter is the unique (m:1) column (library, sample, layer?)
     ?include --> include intermediate columns (like sample information)
+    ?append ---> for the libraries, append the quicksand or summarystats columns
 
     specifiy at each model(!) or separate queries.py file, how the output columns look like.
     """
@@ -77,6 +83,7 @@ def get_dataset(request):
     unique = request.GET.get("unique")
     include = request.GET.get("include", "null").split(",")
     extend = request.GET.get("extend", 0)
+    append = request.GET.get("append",0)
 
     # now set up the query
     filter = {queries(column, unique): start}
@@ -87,14 +94,11 @@ def get_dataset(request):
     elif unique in ['library', 'analyzedsample']:
         qs = get_libraries(start)
 
-    elif unique == "quicksand_analysis":
-        qs = get_quicksand_results(start)
-
     else:
         qs = models[unique].objects.filter(**filter).distinct()
 
     # and get the dataframe
-    df = get_dataset_df(qs, start, include)
+    df = get_dataset_df(qs, start, include, append)
 
     # if extend, add the entries of a lower hierarchie that are not in unique
     # e.g. all samples even if no libraries exist
@@ -109,7 +113,7 @@ def get_dataset(request):
         )
 
         # and get the dataset
-        df2 = get_dataset_df(eqs, start, include)
+        df2 = get_dataset_df(eqs, start, include, append)
         # in case the unique call was empty, dont filter columns
         if len(df.columns) > 0:
             df2 = df2[[x for x in df2.columns if x in df.columns]].copy()
