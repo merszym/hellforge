@@ -1,5 +1,5 @@
 from main.models import models, Sample
-from main.queries import queries, get_quicksand_results, get_libraries
+from main.queries import queries, get_libraries
 from django.http import JsonResponse, HttpResponse
 from django.urls import path, reverse
 from django.shortcuts import render
