@@ -46,12 +46,5 @@ def get_libraries(start):
                 & Q(sample__project=start)
                 & Q(project=start)
             )
-        qs = update_query_for_negatives(qs)
+        qs = update_query_for_negatives(qs, project=start)
         return qs
-
-def get_quicksand_results(start):
-    """
-    Get the quicksand analyses
-    """
-    qs = get_libraries(start)
-    return models["quicksand_analysis"].objects.filter(analyzedsample__in=qs)
