@@ -173,7 +173,7 @@ def get_matthias_tab(request, pk):
 
         # first, get the objects
     analyzed_samples = update_query_for_negatives(
-        AnalyzedSample.objects.filter(Q(sample__site=site) & Q(qc_pass=True))
+        AnalyzedSample.objects.filter(Q(sample__site=site))
     )
     query = HumanDiagnosticPositions.objects.filter(analyzedsample__in=analyzed_samples)
 

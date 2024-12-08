@@ -96,6 +96,7 @@
                     {% endif %}
                     <th>Run ID</th>
                     <th>Tag</th>
+                    <th>QC</th>
                     <th>Ancient</th>
                     <th>Deaminated</th>
                     {% if extended %}
@@ -141,6 +142,7 @@
                     {% endif %}
                     <td nowrap>{{ana.seqrun|truncatechars:11}}</td>
                     <td nowrap>{{ana.tags|default:''}}</td>
+                    <td nowrap>{{ana.qc_pass|yesno:'Pass,Fail'}}</td>
                     <td nowrap>{{results|lookup:entry|lookup:"Ancient"}}</td>
                     <td nowrap>{{results|lookup:entry|lookup:"Deaminated(term3)"}}</td>
                     {% if extended %}

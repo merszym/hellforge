@@ -334,7 +334,7 @@ def get_quicksand_tab(request, pk):
 
     # first, get the objects
     analyzed_samples = update_query_for_negatives(
-        AnalyzedSample.objects.filter(Q(sample__site=site) & Q(qc_pass=True))
+        AnalyzedSample.objects.filter(Q(sample__site=site))
     )
     query = QuicksandAnalysis.objects.filter(analyzedsample__in=analyzed_samples)
 
