@@ -1,6 +1,6 @@
 from main.models import models, Sample
 from main.queries import queries, get_libraries
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, StreamingHttpResponse
 from django.urls import path, reverse
 from django.shortcuts import render
 from django.contrib.auth.decorators import (
@@ -10,6 +10,7 @@ from datetime import datetime
 import json, re
 import pandas as pd
 import numpy as np
+import csv
 
 from main.tools.analyzed_samples import update_query_for_negatives
 
@@ -28,6 +29,7 @@ def return_next(request, next, object="instance_x"):
 
 def get_dataset_df(qs, start, include, append):
     # iterate over the m:1 frame, collect information from models
+    # do it as a generator to allow streaming
     records = []
     for entry in qs:
         # start is the "1", e.g. project
@@ -56,9 +58,11 @@ def get_dataset_df(qs, start, include, append):
             data.update(entry.get_data(qs=quicksand_analysis, mm=matthias_analysis))
         else:
             data.update(entry.get_data())
-        records.append(data)
-    df = pd.DataFrame.from_records(records)
-    return df
+        yield data
+    #    records.append(data)
+    #
+    #df = pd.DataFrame.from_records(records)
+    #return df
 
 
 def get_dataset(request):
@@ -82,7 +86,7 @@ def get_dataset(request):
     column = start.model
     unique = request.GET.get("unique")
     include = request.GET.get("include", "null").split(",")
-    extend = request.GET.get("extend", 0)
+    extend = request.GET.get("extend", 0) # TODO: Fix this with the generator download
     append = request.GET.get("append",0)
 
     # now set up the query
@@ -97,8 +101,8 @@ def get_dataset(request):
     else:
         qs = models[unique].objects.filter(**filter).distinct()
 
-    # and get the dataframe
-    df = get_dataset_df(qs, start, include, append)
+    # and get the dataframe generator
+    data = get_dataset_df(qs, start, include, append)
 
     # if extend, add the entries of a lower hierarchie that are not in unique
     # e.g. all samples even if no libraries exist
@@ -127,7 +131,7 @@ def get_dataset(request):
         df = df.sort_values(by=list(df2.columns))
 
     # download the data
-    return download_csv(df, name=f"{start}_{unique}_m_1.csv")
+    return download_csv(data, name=f"{start}_{unique}_m_1.csv")
 
 
 @login_required
@@ -246,15 +250,43 @@ def delete_x(request, response=True):
 
 
 # data download from dataframe
-def download_csv(df, name="download.csv"):
-    from django.core.files.base import ContentFile
+class Echo:
+    """An object that implements just the write method of a json row-object."""
+    def write(self, value):
+        return value
+
+def json_to_csv_rows(data):
+    """
+    Generator to yield CSV rows from JSON data.
+    Assumes 'data' is a generator of dictionaries.
+    """
+    pseudo_buffer = Echo()
+    writer = csv.writer(pseudo_buffer)
+
+    # Extract headers from the first JSON object
+    if not data:
+        return  # No data to process
+    
+    header = False
+    headers = []
+
+    # Write each row
+    for row in data:
+        if not header:
+            headers = list(row.keys())
+            yield writer.writerow(headers)
+            header = True
+        yield writer.writerow([row.get(header, "") for header in headers])
+
+def download_csv(data, name="download.csv"):
 
     today = datetime.strftime(datetime.today(), "%Y%m%d")
-    file_to_send = ContentFile(df.to_csv(index=False))
-    response = HttpResponse(file_to_send, content_type="application/octet-stream")
-    response["Content-Disposition"] = f"attachment; filename={today}_{name}"
 
-    return response
+    return StreamingHttpResponse(
+        json_to_csv_rows(data),
+        content_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={today}_{name}"},
+    )
 
 
 urlpatterns = [
