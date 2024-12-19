@@ -10,6 +10,7 @@ import hashlib
 import statistics
 
 
+
 # In case models implement the 'hidden' attribute
 class VisibleObjectManager(models.Manager):
     def get_queryset(self):
@@ -54,7 +55,7 @@ class Project(models.Model):
     def model(self):
         return "project"
 
-    def get_data(self):
+    def get_data(self, **kwargs):
         # for an entry, return a dict {'col': data} that is used for the export of the data
         # dont include sample or project - that is exported with the respective query
         data = {
@@ -239,7 +240,7 @@ class Person(models.Model):
             | Q(affiliation__name__contains=kw)
         )
 
-    def get_data(self):
+    def get_data(self, **kwargs):
         # for an entry, return a dict {'col': data} that is used for the export of the data
         data = {
             "Contact Name": self.name,
@@ -365,7 +366,7 @@ class Date(models.Model):
             "Reference",
         ]
 
-    def get_data(self):
+    def get_data(self, **kwargs):
         # for an entry, return a dict {'col': data} that is used for the export of the data
         data = {
             "Method": self.method,
@@ -864,7 +865,7 @@ class Site(models.Model):
     def filter(self, kw):
         return Site.objects.filter(Q(name__contains=kw) | Q(country__contains=kw))
 
-    def get_data(self):
+    def get_data(self, **kwargs):
         # for an entry, return a dict {'col': data} that is used for the export of the data
         # dont include sample or project - that is exported with the respective query
         data = {
@@ -1026,7 +1027,7 @@ class Layer(Dateable):
     def get_absolute_url(self):
         return f"{reverse('site_detail', kwargs={'pk':self.site.id})}#profile"
 
-    def get_data(self):
+    def get_data(self, **kwargs):
         # for an entry, return a dict {'col': data} that is used for the export of the data
         # dont include site or project - that is exported with the respective query
         data = {
@@ -1081,7 +1082,7 @@ class SampleBatch(models.Model):
     def model(self):
         return "samplebatch"
 
-    def get_data(self):
+    def get_data(self, **kwargs):
         # for an entry, return a dict {'col': data} that is used for the export of the data
         # dont include sample or project - that is exported with the respective query
         data = {
@@ -1175,7 +1176,7 @@ class Sample(Dateable):
     def __str__(self):
         return self.name if self.name != None else self
 
-    def get_data(self, append=None):
+    def get_data(self, append=None, project=None, **kwargs):
         # for an entry, return a dict {'col': data} that is used for the export of the data
         # dont include layer or project - that is exported with the respective query
         infinite, upper, lower = self.get_upper_and_lower(calculate_mean=True)
@@ -1198,15 +1199,23 @@ class Sample(Dateable):
             "Sample Age Upper": upper,
             "Sample Age Lower": lower,
         }
+
         if append and self.analyzed_sample.first(): # append could be library, mm, qs
             all_data = []
-            for lib in self.analyzed_sample.all(): # all libraries. Check for project???
-                tmp = data.copy()
-                tmp.update(
-                    lib.get_data(append=append)
-                )
-                all_data.append(tmp)
-            return all_data
+            if project: # all libraries. Or check for project!
+                libs = self.analyzed_sample.filter(project=project)
+            else:
+                libs = self.analyzed_sample.all()
+            if len(libs) > 0:
+                for lib in libs: 
+                    tmp = data.copy()
+                    tmp.update(
+                        lib.get_data(append=append)
+                    )
+                    all_data.append(tmp)
+                return all_data
+            # no library in the project, so return only the sample data
+            return data
         return data
 
     @property
@@ -1253,7 +1262,7 @@ class AnalyzedSample(models.Model):
     def __str__(self):
         return f"{self.library}_{self.seqrun}"
 
-    def get_data(self, append=None):
+    def get_data(self, append=None, **kwargs):
         # for an entry, return a dict {'col': data} that is used for the export of the data
         # dont include sample or project - that is exported with the respective query
         data = {
@@ -1452,7 +1461,7 @@ class QuicksandAnalysis(models.Model):
     )
     data = models.JSONField("data", blank=True, null=True)
 
-    def get_data(self):
+    def get_data(self, **kwargs):
         from main.tools.quicksand import get_data_for_export
 
         return get_data_for_export(self.data, self.version)
@@ -1493,7 +1502,7 @@ class HumanDiagnosticPositions(models.Model):
             "analyzedsample__probes",
         ]
     
-    def get_data(self):
+    def get_data(self, **kwargs):
         exclude = [
             "DB_entry","QC","QC_comment","Comments","Project_used","RunID","IndexLibID","CapLibID","IndexLibIDCoreDB","CapLibIDCoreDB",
             "p7","p5","SampleID","ExtractID","SampleType","ExperimentType","Site","ProbeSet","Description"

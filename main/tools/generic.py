@@ -51,7 +51,10 @@ def get_dataset_df(qs, start, include, append):
                     # if that fails, add empty lines...
                     empty = {k: None for k in models[incl].table_columns()}
                     data.update(empty)
-        entry_data = entry.get_data(append=append)
+        project = None
+        if start.model == "project":
+            project = start
+        entry_data = entry.get_data(append=append, project=project)
         # this could now be more than one row,so check if its a list
         if isinstance(entry_data, list):
             for libdata in entry_data:
