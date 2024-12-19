@@ -30,7 +30,6 @@ def return_next(request, next, object="instance_x"):
 def get_dataset_df(qs, start, include, append):
     # iterate over the m:1 frame, collect information from models
     # do it as a generator to allow streaming
-    records = []
     for entry in qs:
         # start is the "1", e.g. project
         data = start.get_data()
@@ -52,17 +51,20 @@ def get_dataset_df(qs, start, include, append):
                     # if that fails, add empty lines...
                     empty = {k: None for k in models[incl].table_columns()}
                     data.update(empty)
-        if entry.model == "analyzedsample":
-            quicksand_analysis = bool(re.search("qs", str(append)))
-            matthias_analysis = bool(re.search("mm", str(append)))
-            data.update(entry.get_data(qs=quicksand_analysis, mm=matthias_analysis))
+        entry_data = entry.get_data(append=append)
+        # this could now be more than one row,so check if its a list
+        if isinstance(entry_data, list):
+            results = []
+            for libdata in entry_data:
+                tmp = data.copy()
+                tmp.update(libdata)
+                results.append(tmp)
+            yield results
+        # else return a single row as dict
         else:
-            data.update(entry.get_data())
-        yield data
-    #    records.append(data)
-    #
-    #df = pd.DataFrame.from_records(records)
-    #return df
+            data.update(entry_data)
+            yield data
+
 
 
 def get_dataset(request):
@@ -76,7 +78,7 @@ def get_dataset(request):
     ?start --> site, project
     ?unique --> which parameter is the unique (m:1) column (library, sample, layer?)
     ?include --> include intermediate columns (like sample information)
-    ?append ---> for the libraries, append the quicksand or summarystats columns
+    ?append ---> for the libraries, append the quicksand or summarystats columns, or for samples, append the libraries
 
     specifiy at each model(!) or separate queries.py file, how the output columns look like.
     """
@@ -86,7 +88,6 @@ def get_dataset(request):
     column = start.model
     unique = request.GET.get("unique")
     include = request.GET.get("include", "null").split(",")
-    extend = request.GET.get("extend", 0) # TODO: Fix this with the generator download
     append = request.GET.get("append",0)
 
     # now set up the query
@@ -101,34 +102,9 @@ def get_dataset(request):
     else:
         qs = models[unique].objects.filter(**filter).distinct()
 
-    # and get the dataframe generator
+    # and get the row generator
+    # it generates a single dict or a list of dicts (if append=True)
     data = get_dataset_df(qs, start, include, append)
-
-    # if extend, add the entries of a lower hierarchie that are not in unique
-    # e.g. all samples even if no libraries exist
-    if extend:
-        # now some of the entries are a subset of the first query
-        # so lets filter them out
-        excl = qs.values(extend)
-        eqs = (
-            models[extend]
-            .objects.filter(**{queries(column, extend): start})
-            .exclude(pk__in=excl)
-        )
-
-        # and get the dataset
-        df2 = get_dataset_df(eqs, start, include, append)
-        # in case the unique call was empty, dont filter columns
-        if len(df.columns) > 0:
-            df2 = df2[[x for x in df2.columns if x in df.columns]].copy()
-        df = pd.concat([df, df2], ignore_index=True)
-
-        # remove some weird error message
-        for col in df.columns:
-            df[col] = df[col].fillna("").apply(lambda x: str(x) if x != None else "")
-
-        # sort the data again
-        df = df.sort_values(by=list(df2.columns))
 
     # download the data
     return download_csv(data, name=f"{start}_{unique}_m_1.csv")
@@ -259,6 +235,7 @@ def json_to_csv_rows(data):
     """
     Generator to yield CSV rows from JSON data.
     Assumes 'data' is a generator of dictionaries.
+    BUT it sometimes also is a list of dictionaries...
     """
     pseudo_buffer = Echo()
     writer = csv.writer(pseudo_buffer)
@@ -272,11 +249,20 @@ def json_to_csv_rows(data):
 
     # Write each row
     for row in data:
-        if not header:
-            headers = list(row.keys())
-            yield writer.writerow(headers)
-            header = True
-        yield writer.writerow([row.get(header, "") for header in headers])
+        # in case the row is a list of entries
+        if isinstance(row, list):
+            for entry in row:
+                if not header:
+                    headers = list(entry.keys())
+                    yield writer.writerow(headers)
+                    header = True
+                yield writer.writerow([entry.get(header, "") for header in headers])
+        else:
+            if not header:
+                headers = list(row.keys())
+                yield writer.writerow(headers)
+                header = True
+            yield writer.writerow([row.get(header, "") for header in headers])
 
 def download_csv(data, name="download.csv"):
 

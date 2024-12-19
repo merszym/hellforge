@@ -1175,7 +1175,7 @@ class Sample(Dateable):
     def __str__(self):
         return self.name if self.name != None else self
 
-    def get_data(self):
+    def get_data(self, append=None):
         # for an entry, return a dict {'col': data} that is used for the export of the data
         # dont include layer or project - that is exported with the respective query
         infinite, upper, lower = self.get_upper_and_lower(calculate_mean=True)
@@ -1198,6 +1198,15 @@ class Sample(Dateable):
             "Sample Age Upper": upper,
             "Sample Age Lower": lower,
         }
+        if append and self.analyzed_sample.first(): # append could be library, mm, qs
+            all_data = []
+            for lib in self.analyzed_sample.all(): # all libraries. Check for project???
+                tmp = data.copy()
+                tmp.update(
+                    lib.get_data(append=append)
+                )
+                all_data.append(tmp)
+            return all_data
         return data
 
     @property
@@ -1244,7 +1253,7 @@ class AnalyzedSample(models.Model):
     def __str__(self):
         return f"{self.library}_{self.seqrun}"
 
-    def get_data(self, qs=True, mm=True):
+    def get_data(self, append=None):
         # for an entry, return a dict {'col': data} that is used for the export of the data
         # dont include sample or project - that is exported with the respective query
         data = {
@@ -1262,11 +1271,13 @@ class AnalyzedSample(models.Model):
             "Tag": self.tags,
             "QC": "Pass" if self.qc_pass else "Fail",
         }
-        if qs and self.quicksand_analysis.first():
+        quicksand_analysis = bool(re.search("qs", str(append)))
+        matthias_analysis = bool(re.search("mm", str(append)))
+        if quicksand_analysis and self.quicksand_analysis.first():
             data.update(
                 self.quicksand_analysis.last().get_data()
             )
-        if mm and self.matthias_analysis.first():
+        if matthias_analysis and self.matthias_analysis.first():
             data.update(
                 self.matthias_analysis.last().get_data()
             )
