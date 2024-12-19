@@ -1,7 +1,7 @@
 <h4>{{object.name}}</h4>
 {{object.published|yesno:"Public Project,Private Project,NA"}}
 <div class="my-2">
-    <a target="_blank" href="{% url 'get_dataset' %}?from=project_{{object.pk}}&unique=library&include=site,layer,samplebatch,sample&extend=sample"
+    <a target="_blank" href="{% url 'get_dataset' %}?from=project_{{object.pk}}&unique=sample&include=site,layer,samplebatch,sample&append=library"
         class="btn tooltip tooltip-right" data-tooltip="Export samples and libraries">
         <i class="icon icon-download"></i>
     </a>

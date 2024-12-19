@@ -54,12 +54,10 @@ def get_dataset_df(qs, start, include, append):
         entry_data = entry.get_data(append=append)
         # this could now be more than one row,so check if its a list
         if isinstance(entry_data, list):
-            results = []
             for libdata in entry_data:
                 tmp = data.copy()
                 tmp.update(libdata)
-                results.append(tmp)
-            yield results
+                yield tmp
         # else return a single row as dict
         else:
             data.update(entry_data)
@@ -103,7 +101,7 @@ def get_dataset(request):
         qs = models[unique].objects.filter(**filter).distinct()
 
     # and get the row generator
-    # it generates a single dict or a list of dicts (if append=True)
+    # it generates a single dict
     data = get_dataset_df(qs, start, include, append)
 
     # download the data
@@ -250,19 +248,11 @@ def json_to_csv_rows(data):
     # Write each row
     for row in data:
         # in case the row is a list of entries
-        if isinstance(row, list):
-            for entry in row:
-                if not header:
-                    headers = list(entry.keys())
-                    yield writer.writerow(headers)
-                    header = True
-                yield writer.writerow([entry.get(header, "") for header in headers])
-        else:
-            if not header:
-                headers = list(row.keys())
-                yield writer.writerow(headers)
-                header = True
-            yield writer.writerow([row.get(header, "") for header in headers])
+        if not header:
+            headers = list(row.keys())
+            yield writer.writerow(headers)
+            header = True
+        yield writer.writerow([row.get(header, "") for header in headers])
 
 def download_csv(data, name="download.csv"):
 
