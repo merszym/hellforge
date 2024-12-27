@@ -393,11 +393,13 @@ def download_faunal_table(request):
         Q(analysis__layer__site=site)
         | Q(analysis__site=site) & Q(analysis__type="Fauna")
     ).order_by("analysis__layer")
-    df = pd.DataFrame()
+    
+    data = []
     for entry in entries:
-        df = pd.concat([df, to_table(entry)], ignore_index=True)
-
-    return download_csv(df, name=f"{site.name.replace(' ','_')}_faunal_overview.csv")
+        tmp = json.loads(to_table(entry).to_json(orient="records"))
+        data.extend(tmp)
+    
+    return download_csv(data, name=f"{site.name.replace(' ','_')}_faunal_overview.csv")
 
 
 urlpatterns = [

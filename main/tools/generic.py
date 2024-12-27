@@ -51,6 +51,7 @@ def get_dataset_df(qs, start, include, append):
                     # if that fails, add empty lines...
                     empty = {k: None for k in models[incl].table_columns()}
                     data.update(empty)
+        # check for projects
         project = None
         if start.model == "project":
             project = start
@@ -252,6 +253,7 @@ def json_to_csv_rows(data):
     for row in data:
         # in case the row is a list of entries
         if not header:
+            print(row)
             headers = list(row.keys())
             yield writer.writerow(headers)
             header = True
