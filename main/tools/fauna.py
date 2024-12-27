@@ -387,7 +387,11 @@ def download_faunal_table(request):
             tmp[col] = tmp[col].apply(lambda x: None if x == "nan" else x)
         return tmp
 
-    site = get_instance_from_string(request.GET.get("object"))
+    obj = request.GET.get("object")
+    try:
+        site = get_instance_from_string(obj)
+    except:
+        site = Site.objects.get(name=obj)
 
     entries = FaunalResults.objects.filter(
         Q(analysis__layer__site=site)
@@ -400,6 +404,15 @@ def download_faunal_table(request):
         data.extend(tmp)
     
     return download_csv(data, name=f"{site.name.replace(' ','_')}_faunal_overview.csv")
+
+
+def download_faunal_jsons(analysis):
+    entries = FaunalResults.objects.filter(
+        Q(analysi=analysis) & Q(analysis__type="Fauna")
+    ).order_by("analysis__layer")
+
+    for entry in entries:
+        print(entry.squash_data())
 
 
 urlpatterns = [
