@@ -406,15 +406,6 @@ def download_faunal_table(request):
     return download_csv(data, name=f"{site.name.replace(' ','_')}_faunal_overview.csv")
 
 
-def download_faunal_jsons(analysis):
-    entries = FaunalResults.objects.filter(
-        Q(analysi=analysis) & Q(analysis__type="Fauna")
-    ).order_by("analysis__layer")
-
-    for entry in entries:
-        print(entry.squash_data())
-
-
 urlpatterns = [
     path("<int:pk>/get-tab", get_fauna_tab, name="main_site_fauna_get"),
     path("download", download_faunal_table, name="download_faunal_table"),

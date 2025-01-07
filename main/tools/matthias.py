@@ -54,8 +54,6 @@ def handle_file_upload(request, file):
     not_found = []
     imported = []
 
-    print(df)
-
     for i, data in df.iterrows():
         try:
             if data["CapLibIDCoreDB"]:
@@ -68,7 +66,6 @@ def handle_file_upload(request, file):
                 )
             else:
                 raise TypeError
-            print(analyzed_sample)
             # prepare the data for saving
             entry = json.loads(data.to_json(orient="index"))
             

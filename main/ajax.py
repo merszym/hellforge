@@ -30,7 +30,7 @@ def download_header(request):
 
     model = models[request.GET.get("model")]
     cols = model.table_columns()
-    df = pd.DataFrame(columns=cols)
+    df = [{x:None for x in cols}]
 
     return download_csv(df)
 
