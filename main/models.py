@@ -268,7 +268,7 @@ class Reference(models.Model):
         return self.short if self.short else self.title
 
     def get_absolute_url(self):
-        return reverse("ref_add")
+        return reverse("ref_update", kwargs={"pk": self.pk})
 
     @classmethod
     def filter(self, kw):

@@ -29,7 +29,6 @@ def update_dates(sender, instance, **kwargs):
 @receiver(post_save, sender=Reference)
 def get_bibtex(sender, instance, **kwargs):
     if instance.doi.startswith("10") and not instance.bibtex:
-        print("hello")
         from main.tools.references import doi2bib
         bibtex = doi2bib(instance.doi, instance.pk)
         instance.bibtex = bibtex
