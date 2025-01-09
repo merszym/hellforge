@@ -25,7 +25,7 @@ def update_dates(sender, instance, **kwargs):
         dating.recalculate_mean(instance)
 
 
-# Date validation
+# Get BibTex from DOI
 @receiver(post_save, sender=Reference)
 def get_bibtex(sender, instance, **kwargs):
     if instance.doi.startswith("10") and not instance.bibtex:

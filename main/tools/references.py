@@ -22,7 +22,7 @@ def doi2bib(doi, pk):
     if doi.startswith("10"): 
         content = requests.get(f"https://www.doi.org/{doi}", headers={"Accept":"application/x-bibtex"}).content.decode('UTF-8')
         # replace the tag with the pk, so that it is always unique!
-        subbed = re.sub("(?<=\{)\w+(?=,)",f"reference_{pk}",content)
+        subbed = re.sub("(?<=\{)\w+(?=,)",f"reference_{pk}",content, 1)
         return subbed.strip()
         
 
