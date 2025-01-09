@@ -9,6 +9,7 @@ from main.models import (
     Description,
     Sample,
     FaunalResults,
+    Reference
 )
 from main.tools import dating
 import json
@@ -22,6 +23,17 @@ from django.templatetags.static import static
 def update_dates(sender, instance, **kwargs):
     if kwargs.pop("action", False) in ["post_add", "post_remove"]:
         dating.recalculate_mean(instance)
+
+
+# Date validation
+@receiver(post_save, sender=Reference)
+def get_bibtex(sender, instance, **kwargs):
+    if instance.doi.startswith("10") and not instance.bibtex:
+        print("hello")
+        from main.tools.references import doi2bib
+        bibtex = doi2bib(instance.doi, instance.pk)
+        instance.bibtex = bibtex
+        instance.save()
 
 
 # Date validation

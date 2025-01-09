@@ -10,6 +10,7 @@ dependencies = [
     "pandas>=2.2.3",
     "python-decouple>=3.8",
     "python-dotenv>=1.0.1",
+    "requests>=2.32.3",
     "seaborn>=0.13.2",
     "setuptools>=75.6.0",
     "titlecase>=2.4.1",

@@ -259,6 +259,7 @@ class Reference(models.Model):
     short = models.CharField("short", max_length=200, blank=True, null=True)
     tags = models.TextField("tags", blank=True)
     doi = models.CharField("doi", max_length=500)
+    bibtex = models.TextField("bibtex", blank=True)
 
     class Meta:
         ordering = ["short"]

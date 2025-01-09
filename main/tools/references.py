@@ -1,5 +1,7 @@
 from main.models import Reference, models
 from main.forms import ReferenceForm
+import re
+import requests
 import numpy as np
 from django.db.models import Q
 from django.http import JsonResponse
@@ -11,6 +13,18 @@ from django.contrib.auth.mixins import (
     LoginRequiredMixin,
 )  # this is for now, make smarter later
 
+def doi2bib(doi, pk):
+    """
+    - This function scrapes the doi2bibm webpage to retrieve the bib-tex entry for a given doi, 
+    - then replaces the tag with the entry ID
+    - returns the bibtex as string
+    """
+    if doi.startswith("10"): 
+        content = requests.get(f"https://www.doi.org/{doi}", headers={"Accept":"application/x-bibtex"}).content.decode('UTF-8')
+        # replace the tag with the pk, so that it is always unique!
+        subbed = re.sub("(?<=\{)\w+(?=,)",f"reference_{pk}",content)
+        return subbed.strip()
+        
 
 def find(kw):
     # find the best reference for a given search term
