@@ -13,6 +13,7 @@ from django.contrib.auth.mixins import (
     LoginRequiredMixin,
 )  # this is for now, make smarter later
 
+
 def write_bibliography(references):
     # this function needs citeproc and citeproc_styles
     from io import StringIO
@@ -39,14 +40,22 @@ def write_bibliography(references):
     short_dict = {}
 
     for ref in references:
-        cit = Citation([CitationItem(f'reference_{ref.pk}')])
-        bibliography.register(cit)
-        short_dict[ref.pk] = bibliography.cite(cit, print())
+        try:
+            cit = Citation([CitationItem(f'reference_{ref.pk}')])
+            bibliography.register(cit)
+            short_dict[ref.pk] = bibliography.cite(cit, print("Warn:Reference not yet with bibtex"))
+        except TypeError:
+            pass
 
-    return [str(item) for item in bibliography.bibliography()], short_dict
+    try:
+        return [str(item) for item in bibliography.bibliography()], short_dict
+    except TypeError:
+        return []
+        
+    
 
 def bibtex_replace_key(bibtex, pk):
-    bibtex_mod = re.sub("\{(.*?),",fr"{{reference_{pk},",bibtex, 1)
+    bibtex_mod = re.sub(r"\{(.*?),",fr"{{reference_{pk},",bibtex, 1)
     return bibtex_mod.strip()
 
 
