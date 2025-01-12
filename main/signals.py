@@ -15,6 +15,7 @@ from main.tools import dating
 import json
 import statistics
 from django.templatetags.static import static
+import re
 
 
 # after deleting or adding a date from a dateable - update the mean_upper and mean_lower
@@ -33,6 +34,11 @@ def get_bibtex(sender, instance, **kwargs):
         bibtex = doi2bib(instance.doi, instance.pk)
         instance.bibtex = bibtex
         instance.save()
+    if not re.search("\{(reference_[0-9]+)",instance.bibtex):
+        from main.tools.references import bibtex_replace_key
+        instance.bibtex = bibtex_replace_key(instance.bibtex, instance.pk)
+        instance.save()
+
 
 
 # Date validation

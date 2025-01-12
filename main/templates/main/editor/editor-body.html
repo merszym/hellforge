@@ -53,6 +53,9 @@
 
 <div id="description-references" style="display:none;">
   <h5>References</h5>
+  {% for ref in reference_items %}
+  <p>{{ref|safe}}</p>
+  {% endfor %}
   <table class="table table-striped my-2">
     <tbody id="description-reference-tbody" style="border-top: 1px solid lightgrey;">
       {% for ref in description.ref.all %}
