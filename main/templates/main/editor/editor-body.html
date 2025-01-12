@@ -58,7 +58,7 @@
   {% endfor %}
   <table class="table table-striped my-2">
     <tbody id="description-reference-tbody" style="border-top: 1px solid lightgrey;">
-      {% for ref in description.ref.all %}
+      {% for ref in remaining_references %}
         {% include 'main/reference/reference-tablerow.html' with display=True %}
       {% endfor %}
     </tbody>

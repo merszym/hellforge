@@ -115,7 +115,8 @@ def render_description(request, pk):
     description = Description.objects.get(pk=int(pk))
     # get all the references with bibtex 
     references = description.ref.filter(bibtex__isnull=False).exclude(bibtex__exact="")
-    reference_items, short_dict = write_bibliography(references)
+    remaining_references = description.ref.exclude(id__in=references.values_list('id', flat=True))
+    reference_items, _ = write_bibliography(references)
     return render(
         request,
         "main/description/description_render.html",
@@ -125,7 +126,7 @@ def render_description(request, pk):
             "origin": origin,
             "object": description,
             "reference_items": reference_items,
-            "short_dict" : short_dict
+            "remaining_references":remaining_references
         },
     )
 

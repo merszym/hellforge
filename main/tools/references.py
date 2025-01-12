@@ -15,6 +15,8 @@ from django.contrib.auth.mixins import (
 
 
 def write_bibliography(references):
+    if len(references) == 0:
+        return [],{}
     # this function needs citeproc and citeproc_styles
     from io import StringIO
     from citeproc.source.bibtex import BibTeX
@@ -91,15 +93,23 @@ def get_modal(request):
 def get_popup(request):
     pk = int(request.GET.get("pk", False))
     obj = Reference.objects.get(pk=pk)
-    reference_items, short_dict = write_bibliography([obj])
-    
-    context = {"ref": obj, "pos": "right"}
+    title = request.GET.get("title", False)
 
-    if title := request.GET.get("title", False):
-        if pk in short_dict:
-            context.update({"title": short_dict[pk]})
-        else: 
-            context.update({"title": title})
+    context = {"ref": obj, "pos": "bottom"}
+
+    if obj.bibtex:
+        _, short_dict = write_bibliography([obj])
+        new_title = short_dict[pk]
+        # make sure to render it correctly. If the original "title" was not in parantheses
+        # remove the parantheses from the new title
+        if not re.match(r"\(.*\)", title):
+            new_title = new_title.replace("(","").replace(")","")
+        context.update({"title": new_title})
+    
+    else:
+        title = request.GET.get("title", False)
+        context.update({"title": title})
+
     return render(request, "main/reference/reference-popup.html", context)
 
 
