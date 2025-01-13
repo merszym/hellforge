@@ -34,7 +34,7 @@ def get_bibtex(sender, instance, **kwargs):
         bibtex = doi2bib(instance.doi, instance.pk)
         instance.bibtex = bibtex
         instance.save()
-    if not re.search("\{(reference_[0-9]+)",instance.bibtex):
+    if instance.bibtex and not re.search("\{(reference_[0-9]+)",instance.bibtex):
         from main.tools.references import bibtex_replace_key
         instance.bibtex = bibtex_replace_key(instance.bibtex, instance.pk)
         instance.save()
