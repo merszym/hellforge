@@ -2,26 +2,7 @@
 
 **Helpfully labeled layers (for geneticists)**
 
-This repository contains the code to the Webapp/Database that I use to collect archaeological context for the samples of my **ancient sedimentary DNA research** projects. (And for other sites as well, when I read up on them...)
-
-The database is centered around the concept of **archaeological layers** and the research of **ancient humans** and **mammals**
-
-Because of that it currently stores information about:
-
-**(Published) Archaeological Context**
-
-- Site location and stratigraphy
-- Associated human cultures
-- Associated epochs
-- Dates obtained from the layers or samples
-- Associated mammalian taxa
-- Geological properties (WIP)
-
-**(Published) Sediment DNA projects**
-
-- Project descriptions
-- Samples and Libraries obtained from the layer
-- DNA Results (mtDNA)
+A Webapp/Database for the collection of archaeological context information related to **ancient sedimentary DNA research** projects. The key unit for the database is the "Archaeological Layer"
 
 ## Explore
 
@@ -31,20 +12,21 @@ The webapp is currently available at [https://hellforge.merlin-szymanski.de](htt
 
 ### Requirements
 
-- conda
+- [uv](https://github.com/astral-sh/uv) for package management  
 
 ### Start
 
-Assuming, that you have a copy of the hellforge database (named `db.sqlite3`) sitting in the root of the folder structure
+1. Clone the github repository `git clone https://www.github.com/merszym/hellforge` and change into it `cd hellforge`
+2. Create a file `.env` that will contain some instance-specific settings (see below)
+3. Set up the database and your useraccount (see below)
+4. Start the database
 
-To run this webapp locally, install and activate the environment:
+### Instructions
 
-```
-conda env create -f env.yml
-conda activate hellforge
-```
+##### env-file
 
-Then create a `.env` file in the root of the repository, make sure to include the following `secrets`:
+Create an `.env` file (thats the full name, it starts with a `.` so it is invisible later) in the hellforge directory, make sure to include the following `settings`:
+Be aware of the quotation marks for the string-based values.
 
 ```
 SECRET_KEY="RANDOM-STRING-HERE"
@@ -52,10 +34,25 @@ DEBUG=True
 HOST="localhost 127.0.0.1"
 ```
 
-Then run the django server!
+##### Database and User
+
+If you have a copy of the hellforge database (named `db.sqlite3`) copied into the dierctory already, skip this step. Otherwise create an empty database:
 
 ```
-python3 manage.py runserver
+uv run manage.py migrate
+```
+Voila, you have a database called "db.sqlite3" sitting in your folder. Then, please create a user to enjoy user privileges
+
+```
+uv run manage.py createsuperuser
+```
+
+##### Run the Database
+and then start the webapp
+
+```
+uv run manage.py runserver
 ```
 
 And in your browser navigate to `localhost:8000`
+If you created an empty database, log into the admin-interface first to start editing the database `localhost:8000/admin`
