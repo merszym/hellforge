@@ -9,6 +9,9 @@
         <i class="icon icon-edit"></i>
     </a>
     {% endif %}
+    <a class="btn btn-primary tooltip tooltip-right" href="{% url 'main_description_print' %}?URL={{ request.scheme }}://{{ request.META.HTTP_HOST }}{% url 'main_render_description' description.pk %}?print=1" data-tooltip="Print View">
+        <i class="icon icon-download"></i>
+    </a>
     <span id="resize-editor" class="btn tooltip tooltip-left" style="position:absolute; right: 15px" data-tooltip="Toggle Full Width">
         <i class="icon icon-resize-horiz"></i>
     </span>
@@ -35,6 +38,7 @@
         <div style="text-align: justify;">
         {{rendered_description|safe}}
         </div>
+        <br>
         {% else %}
         {% include 'main/editor/editor-body.html' with description=description model=model %}
         {% endif %}
