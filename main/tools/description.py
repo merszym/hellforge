@@ -1,6 +1,6 @@
 from main.models import Person, Author, Description, Reference, Gallery
 from main.tools.generic import get_instance_from_string, delete_x
-from django.http import JsonResponse
+from django.http import JsonResponse,FileResponse
 from django.urls import path
 from django.views.generic import UpdateView
 from django.views.decorators.csrf import csrf_exempt
@@ -14,6 +14,35 @@ from django.contrib.auth.mixins import (
 )  # this is for now, make smarter later
 from main.tools.generic import get_instance_from_string
 from django.shortcuts import render
+
+
+def print_html(request, pk):
+    #print a description using weasyprint. 
+    #get the html as string first, then print with weasyprint
+    from weasyprint import HTML, CSS
+    import io
+    from django.conf import settings
+
+    # get the required html
+    html = render_description(request, pk, tostring=True)
+
+    #get the required css
+    if settings.DEBUG:
+        style = CSS(str(settings.BASE_DIR) +  '/main/static/css/spectre.css')
+    else:
+        style = CSS(settings.STATIC_ROOT +  'css/spectre.css')
+
+    #and write it to buffer
+    buffer = io.BytesIO()
+
+    HTML(string=html, base_url=request.build_absolute_uri()).write_pdf(buffer, stylesheets=[style])
+    buffer.seek(0)
+
+    return FileResponse(
+        buffer,
+        content_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=hellforge_pdf-printout.pdf"},
+    )
 
 
 # Get description json for detail views in editor.js
@@ -128,7 +157,7 @@ def render_references(html_doc, short_dict):
     return str(soup)
 
 
-def render_description(request, pk):
+def render_description(request, pk, tostring=False):
     from main.tools.references import write_bibliography
     from pyeditorjs import EditorJsParser
 
@@ -152,21 +181,24 @@ def render_description(request, pk):
     if description.content_object:
         header=description.content_object
 
+    context = {
+        "description": description,
+        "rendered_description":html2,
+        "model": "site",
+        "header":header,
+        "origin": origin,
+        "object": description,
+        "reference_items": reference_items,
+        "remaining_references":remaining_references
+    }
 
-    return render(
-        request,
-        "main/description/description_render.html",
-        {
-            "description": description,
-            "rendered_description":html2,
-            "model": "site",
-            "header":header,
-            "origin": origin,
-            "object": description,
-            "reference_items": reference_items,
-            "remaining_references":remaining_references
-        },
-    )
+    if tostring:
+        # this is for printing only
+        from django.template.loader import render_to_string
+        context.update({"print":True})
+        return render_to_string("main/description/description_render.html", context)
+
+    return render(request, "main/description/description_render.html", context)
 
 
 urlpatterns = [
@@ -179,4 +211,5 @@ urlpatterns = [
         render_description,
         name="main_render_description",
     ),
+    path("print-html/<int:pk>", print_html, name="main_description_print")
 ]

@@ -34,7 +34,10 @@ def isin(key, collection):
 
 @register.filter(name="getstring")
 def getstring(dict):
-    return "&".join([f"{k}={v}" for k, v in dict.items()])
+    try:
+        return "&".join([f"{k}={v}" for k, v in dict.items()])
+    except AttributeError: #if you render_to _string, dict becomes a string
+        return ""
 
 
 @register.filter(name="species_from_faunastring")

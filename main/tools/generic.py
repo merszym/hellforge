@@ -14,26 +14,6 @@ import csv
 
 from main.tools.analyzed_samples import update_query_for_negatives
 
-def print_html(request):
-    #print a url using weasyprint. 
-    #requires the URL of the page to print as a get request
-    from weasyprint import HTML
-    import io
-
-    URL = request.GET.get("URL", False)
-    buffer = io.BytesIO()
-
-    if URL:
-        HTML(URL).write_pdf(buffer)
-        buffer.seek(0)
-
-    return FileResponse(
-        buffer,
-        content_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename=hellforge_pdf-printout.pdf"},
-    )
-
-
 
 def return_next(request, next, object="instance_x"):
     # return html if the request came from a modal...
@@ -301,5 +281,4 @@ urlpatterns = [
     path("addm2m", add_x_to_y_m2m, name="main_generic_addm2m"),
     path("deletex", delete_x, name="main_generic_delete"),
     path("get-dataset", get_dataset, name="get_dataset"),
-    path("print_html", print_html, name="main_description_print")
 ]
