@@ -1,3 +1,8 @@
+{% extends 'main/print.html' %}
+
+{% block body %}
+
+{% if not request.GET.print %}
 <div class="panel-header" style="position:relative;">
     {% if request.user.is_authenticated %}
     <a class="btn btn-primary tooltip tooltip-right" href="{% url 'main_descr_update' description.pk %}{% if origin %}?origin={{origin}}{% endif %}" data-tooltip="Edit Description">
@@ -8,10 +13,46 @@
         <i class="icon icon-resize-horiz"></i>
     </span>
 </div>
+{% else %}
+
+<h1>{{header}}</h1>
+
+{% endif %}
+
 <div class="panel-body" style="max-height:720px;">
-    {% if description.author.first %}
-    <h5>Authors</h5>
-    {% include 'main/description/author_tile.html' with object=description %}
-    {% endif %}
-    {% include 'main/editor/editor-body.html' with description=description model=model %}
+    <div class="authors">
+        {% if description.author.first %}
+        {% if not request.GET.print %}
+        <h5>Authors</h5>
+        {% endif %}
+        {% include 'main/description/author_tile.html' with object=description %}
+        {% endif %}
+        
+    </div>
+    <div class="text">
+        {% if request.GET.print %}
+        <br>
+        <div style="text-align: justify;">
+        {{rendered_description|safe}}
+        </div>
+        {% else %}
+        {% include 'main/editor/editor-body.html' with description=description model=model %}
+        {% endif %}
+    </div>
+
+    <div id="description-references">
+        <h5>References</h5>
+        {% for ref in reference_items %}
+        <p>{{ref|safe}}</p>
+        {% endfor %}
+        <table class="table table-striped my-2">
+          <tbody id="description-reference-tbody" style="border-top: 1px solid lightgrey;">
+            {% for ref in remaining_references %}
+              {% include 'main/reference/reference-tablerow.html' with display=True %}
+            {% endfor %}
+          </tbody>
+        </table>
+    </div>
 </div>
+
+{% endblock %}

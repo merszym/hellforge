@@ -109,20 +109,58 @@ def create_and_add_author(request):
     return JsonResponse({"status": True})
 
 
+def render_references(html_doc, short_dict):
+    from bs4 import BeautifulSoup
+
+    soup = BeautifulSoup(html_doc, 'html.parser')
+    for tag in soup.find_all('reference-tag'):
+        try: #might not have a bibtex
+            ref = short_dict[int(tag.get('id'))]
+            ref = ref.replace("(","").replace(")","")
+            tag.string.replace_with(str(ref))
+        except KeyError:
+            pass
+    # image suptitles are also only present in the placeholder
+    for img in soup.find_all("div", class_="image-tool__caption"):
+        img.string = img.get("data-placeholder")
+        img["class"]="image-tool__caption cdx-input"
+        
+    return str(soup)
+
+
 def render_description(request, pk):
     from main.tools.references import write_bibliography
+    from pyeditorjs import EditorJsParser
+
     origin = request.GET.get("origin", None)
     description = Description.objects.get(pk=int(pk))
     # get all the references with bibtex 
     references = description.ref.filter(bibtex__isnull=False).exclude(bibtex__exact="")
     remaining_references = description.ref.exclude(id__in=references.values_list('id', flat=True))
-    reference_items, _ = write_bibliography(references)
+    reference_items, short_dict = write_bibliography(references)
+
+    #Render the html in backend instead of frontend, required for pdf-export
+    editor_js_data = json.loads(description.content)
+    parser = EditorJsParser(editor_js_data)
+    html = parser.html(sanitize=False)
+
+    #replace the reference-tags and do some manual cleanup, because this is not done by the HTMLParser 
+    html2 = render_references(html, short_dict)
+
+    header="Description"
+    #for printing, print the site
+    if description.content_object:
+        header=description.content_object
+
+
     return render(
         request,
         "main/description/description_render.html",
         {
             "description": description,
+            "rendered_description":html2,
             "model": "site",
+            "header":header,
             "origin": origin,
             "object": description,
             "reference_items": reference_items,

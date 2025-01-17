@@ -50,18 +50,4 @@
     <span id="description-save" class="btn btn-primary" data-url="{% url 'ajax_description_save' %}?id={{description.pk}}">Save</span>
 </div>
 {% endif %}
-
-<div id="description-references" style="display:none;">
-  <h5>References</h5>
-  {% for ref in reference_items %}
-  <p>{{ref|safe}}</p>
-  {% endfor %}
-  <table class="table table-striped my-2">
-    <tbody id="description-reference-tbody" style="border-top: 1px solid lightgrey;">
-      {% for ref in remaining_references %}
-        {% include 'main/reference/reference-tablerow.html' with display=True %}
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
 <script src="{% static 'js/packages/editor.js' %}"></script>
