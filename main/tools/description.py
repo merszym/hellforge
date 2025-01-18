@@ -1,6 +1,6 @@
 from main.models import Person, Author, Description, Reference, Gallery
 from main.tools.generic import get_instance_from_string, delete_x
-from django.http import JsonResponse,FileResponse
+from django.http import JsonResponse,FileResponse, StreamingHttpResponse
 from django.urls import path
 from django.views.generic import UpdateView
 from django.views.decorators.csrf import csrf_exempt
@@ -19,23 +19,41 @@ from django.shortcuts import render
 def combine_pdf(request,pks):
     from pypdf import PdfWriter
 
-    merger = PdfWriter()
+    """
+    Stream the resulting PDF as chunks while generating PDFs incrementally.
+    """
 
-    for pk in pks.split(","):
-        buffer = print_html(request, pk, buffer=True)    
-        merger.append(buffer)
+    def pdf_generator():
+        merger = PdfWriter()
 
-    buffer = io.BytesIO()
-    merger.write(buffer)
-    merger.close()
+        for pk in pks.split(","):
+            # Generate each PDF on the fly
+            buffer = print_html(request, pk, buffer=True)  # Time-consuming function
 
-    buffer.seek(0)
+            # Append the generated PDF to the writer
+            merger.append(buffer)
 
-    return FileResponse(
-        buffer,
+            # Write the current state of the merged PDF into a BytesIO object
+            temp_buffer = io.BytesIO()
+            merger.write(temp_buffer)
+            temp_buffer.seek(0)
+
+            # Yield the PDF content in chunks
+            chunk_size = 8192  # Define chunk size
+            while chunk := temp_buffer.read(chunk_size):
+                yield chunk
+
+        # Close the writer after all PDFs are merged
+        merger.close()
+
+    # Create and return the StreamingHttpResponse
+    response = StreamingHttpResponse(
+        pdf_generator(),
         content_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename=hellforge_pdf-printout.pdf"},
     )
+    response['Content-Disposition'] = 'attachment; filename="hellforge_pdf-printout.pdf"'
+    return response
+
     
     
 def print_html(request, pk, buffer=False):
