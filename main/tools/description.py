@@ -5,6 +5,7 @@ from django.urls import path
 from django.views.generic import UpdateView
 from django.views.decorators.csrf import csrf_exempt
 import json
+import io
 from django.urls import reverse
 from django.contrib.auth.decorators import (
     login_required,
@@ -15,12 +16,32 @@ from django.contrib.auth.mixins import (
 from main.tools.generic import get_instance_from_string
 from django.shortcuts import render
 
+def combine_pdf(request,pks):
+    from pypdf import PdfWriter
 
-def print_html(request, pk):
+    merger = PdfWriter()
+
+    for pk in pks.split(","):
+        buffer = print_html(request, pk, buffer=True)    
+        merger.append(buffer)
+
+    buffer = io.BytesIO()
+    merger.write(buffer)
+    merger.close()
+
+    buffer.seek(0)
+
+    return FileResponse(
+        buffer,
+        content_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=hellforge_pdf-printout.pdf"},
+    )
+    
+    
+def print_html(request, pk, buffer=False):
     #print a description using weasyprint. 
     #get the html as string first, then print with weasyprint
     from weasyprint import HTML, CSS
-    import io
     from django.conf import settings
 
     # get the required html
@@ -37,6 +58,9 @@ def print_html(request, pk):
 
     HTML(string=html, base_url=request.build_absolute_uri()).write_pdf(buffer, stylesheets=[style])
     buffer.seek(0)
+
+    if buffer:
+        return buffer
 
     return FileResponse(
         buffer,
@@ -216,5 +240,6 @@ urlpatterns = [
         render_description,
         name="main_render_description",
     ),
-    path("print-html/<int:pk>", print_html, name="main_description_print")
+    path("print-html/<int:pk>", print_html, name="main_description_print"),
+    path("combine-pdf/<str:pks>", combine_pdf, name="main_description_combinepdf")
 ]
