@@ -30,24 +30,28 @@
         {% endif %}
         {% include 'main/description/author_tile.html' with object=description %}
         {% endif %}
-        
     </div>
     <div class="text">
         {% if request.GET.print or print %}
-        <br>
         <div style="text-align: justify;">
         {{rendered_description|safe}}
         </div>
-        <br>
         {% else %}
         {% include 'main/editor/editor-body.html' with description=description model=model %}
         {% endif %}
     </div>
 
     <div id="description-references">
+        <style>
+            .reference{
+                font-size: 0.7rem;
+                margin-bottom: 10px;
+                margin-top:0px;   
+            }
+        </style>
         <h5>References</h5>
         {% for ref in reference_items %}
-        <p>{{ref|safe}}</p>
+        <p class="reference">{{ref|safe}}</p>
         {% endfor %}
         <table class="table table-striped my-2">
           <tbody id="description-reference-tbody" style="border-top: 1px solid lightgrey;">

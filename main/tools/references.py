@@ -32,7 +32,7 @@ def write_bibliography(references):
     bib_source = BibTeX(StringIO(bibs))
     
     # import chicago style sheet
-    style_path = get_style_filepath('chicago-author-date')
+    style_path = get_style_filepath("apa")#('chicago-author-date')
     bib_style = CitationStylesStyle(style_path)
     
     bibliography = CitationStylesBibliography(bib_style, bib_source, formatter.html)
