@@ -327,7 +327,6 @@ dependencies = [
     { name = "seaborn" },
     { name = "setuptools" },
     { name = "titlecase" },
-    { name = "uwsgi" },
     { name = "weasyprint" },
 ]
 
@@ -346,7 +345,6 @@ requires-dist = [
     { name = "seaborn", specifier = ">=0.13.2" },
     { name = "setuptools", specifier = ">=75.6.0" },
     { name = "titlecase", specifier = ">=2.4.1" },
-    { name = "uwsgi", specifier = ">=2.0.28" },
     { name = "weasyprint", specifier = ">=63.1" },
 ]
 
@@ -831,12 +829,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/aa/63/e53da845320b757bf
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c8/19/4ec628951a74043532ca2cf5d97b7b14863931476d117c471e8e2b1eb39f/urllib3-2.3.0-py3-none-any.whl", hash = "sha256:1cee9ad369867bfdbbb48b7dd50374c0967a0bb7710050facf0dd6911440e3df", size = 128369 },
 ]
-
-[[package]]
-name = "uwsgi"
-version = "2.0.28"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/24/c2/d58480aadc9a1f420dd96fc43cf0dcd8cb5ededb95cab53743529c23b6cd/uwsgi-2.0.28.tar.gz", hash = "sha256:79ca1891ef2df14508ab0471ee8c0eb94bd2d51d03f32f90c4bbe557ab1e99d0", size = 816212 }
 
 [[package]]
 name = "weasyprint"

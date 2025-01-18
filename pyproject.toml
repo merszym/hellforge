@@ -18,6 +18,5 @@ dependencies = [
     "seaborn>=0.13.2",
     "setuptools>=75.6.0",
     "titlecase>=2.4.1",
-    "uwsgi>=2.0.28",
     "weasyprint>=63.1",
 ]
