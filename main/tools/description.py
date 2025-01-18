@@ -33,7 +33,7 @@ def combine_pdf(request):
 
         for descr in descriptions:
             # Generate each PDF on the fly
-            buffer = print_html(request, descr.pk, buffer=True)  # Time-consuming function
+            buffer = print_html(request, descr.pk, returnbuffer=True)  # Time-consuming function
 
             # Append the generated PDF to the writer
             merger.append(buffer)
@@ -63,7 +63,7 @@ def combine_pdf(request):
 
     
     
-def print_html(request, pk, buffer=False):
+def print_html(request, pk, returnbuffer=False):
     #print a description using weasyprint. 
     #get the html as string first, then print with weasyprint
     from weasyprint import HTML, CSS
@@ -92,7 +92,7 @@ def print_html(request, pk, buffer=False):
     )
     buffer.seek(0)
 
-    if buffer:
+    if returnbuffer:
         return buffer
 
     return FileResponse(
