@@ -32,7 +32,7 @@ def write_bibliography(references):
     bib_source = BibTeX(StringIO(bibs))
     
     # import chicago style sheet
-    style_path = get_style_filepath("apa")#('chicago-author-date')
+    style_path = get_style_filepath('chicago-author-date')#("apa")
     bib_style = CitationStylesStyle(style_path)
     
     bibliography = CitationStylesBibliography(bib_style, bib_source, formatter.html)
@@ -51,8 +51,9 @@ def write_bibliography(references):
 
     try:
         return [str(item) for item in bibliography.bibliography()], short_dict
-    except TypeError:
-        return []
+    except (AttributeError, TypeError):
+        print(bibliography.bibliography())
+        return [],short_dict
         
     
 
