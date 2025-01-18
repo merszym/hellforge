@@ -1,4 +1,4 @@
-from main.models import Person, Author, Description, Reference, Gallery
+from main.models import Person, Author, Description, Reference, Gallery, Site
 from main.tools.generic import get_instance_from_string, delete_x
 from django.http import JsonResponse,FileResponse, StreamingHttpResponse
 from django.urls import path
@@ -16,19 +16,24 @@ from django.contrib.auth.mixins import (
 from main.tools.generic import get_instance_from_string
 from django.shortcuts import render
 
-def combine_pdf(request,pks):
-    from pypdf import PdfWriter
-
+def combine_pdf(request):
     """
+    from a project (pk), create the pdfs of all project-site descriptions.
     Stream the resulting PDF as chunks while generating PDFs incrementally.
     """
+    from pypdf import PdfWriter
+    from main.tools.projects import get_project
 
+    project = get_project(request)
+    # get all descriptions that are part of the sites in the project
+    descriptions = [Description.objects.get(project=project, site=x) for x in Site.objects.filter(project=project)]
+    
     def pdf_generator():
         merger = PdfWriter()
 
-        for pk in pks.split(","):
+        for descr in descriptions:
             # Generate each PDF on the fly
-            buffer = print_html(request, pk, buffer=True)  # Time-consuming function
+            buffer = print_html(request, descr.pk, buffer=True)  # Time-consuming function
 
             # Append the generated PDF to the writer
             merger.append(buffer)
@@ -46,12 +51,14 @@ def combine_pdf(request,pks):
         # Close the writer after all PDFs are merged
         merger.close()
 
+    # Create a meaningful file-name
+    filename = str(project.name).lower().replace(" ","_")
     # Create and return the StreamingHttpResponse
     response = StreamingHttpResponse(
         pdf_generator(),
         content_type="application/pdf",
     )
-    response['Content-Disposition'] = 'attachment; filename="hellforge_pdf-printout.pdf"'
+    response['Content-Disposition'] = f'attachment; filename="hellforge-{filename}.pdf"'
     return response
 
     
@@ -74,7 +81,15 @@ def print_html(request, pk, buffer=False):
     #and write it to buffer
     buffer = io.BytesIO()
 
-    HTML(string=html, base_url=request.build_absolute_uri()).write_pdf(buffer, stylesheets=[style])
+    HTML(string=html,base_url=request.build_absolute_uri()).write_pdf(
+        buffer, 
+        stylesheets=[style], 
+        optimize_images=True,
+        uncompressed_pdf=False,
+        jpeg_quality=50,
+        dpi=72,
+        full_fonts=False
+    )
     buffer.seek(0)
 
     if buffer:
@@ -259,5 +274,5 @@ urlpatterns = [
         name="main_render_description",
     ),
     path("print-html/<int:pk>", print_html, name="main_description_print"),
-    path("combine-pdf/<str:pks>", combine_pdf, name="main_description_combinepdf")
+    path("combine-pdf", combine_pdf, name="main_description_combinepdf")
 ]
