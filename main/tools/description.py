@@ -169,12 +169,17 @@ def render_description(request, pk, tostring=False):
     reference_items, short_dict = write_bibliography(references)
 
     #Render the html in backend instead of frontend, required for pdf-export
-    editor_js_data = json.loads(description.content)
-    parser = EditorJsParser(editor_js_data)
-    html = parser.html(sanitize=False)
+    try:
+        editor_js_data = json.loads(description.content)
+        parser = EditorJsParser(editor_js_data)
+        html = parser.html(sanitize=False)
 
-    #replace the reference-tags and do some manual cleanup, because this is not done by the HTMLParser 
-    html2 = render_references(html, short_dict)
+        #replace the reference-tags and do some manual cleanup, because this is not done by the HTMLParser 
+        html2 = render_references(html, short_dict)
+
+    except TypeError: # description.content == null
+        html2 = ""
+        pass
 
     header="Description"
     #for printing, print the site
@@ -183,9 +188,9 @@ def render_description(request, pk, tostring=False):
 
     context = {
         "description": description,
-        "rendered_description":html2,
+        "rendered_description": html2,
         "model": "site",
-        "header":header,
+        "header": header,
         "origin": origin,
         "object": description,
         "reference_items": reference_items,
