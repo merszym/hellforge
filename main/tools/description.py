@@ -26,7 +26,7 @@ def combine_pdf(request):
 
     project = get_project(request)
     # get all descriptions that are part of the sites in the project
-    descriptions = [Description.objects.get(project=project, site=x) for x in Site.objects.filter(project=project)]
+    descriptions = [Description.objects.get(project=project, site=x, exclude_from_print=False) for x in Site.objects.filter(project=project)]
     
     def pdf_generator():
         merger = PdfWriter()

@@ -145,6 +145,7 @@ class Description(models.Model):
         null=True
     )  # null=True only for backwarts compability
     content_object = GenericForeignKey("content_type", "object_id")
+    exclude_from_print = models.BooleanField("exclude_from_print", default=False)
 
     @property
     def affiliations(self):
