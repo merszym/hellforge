@@ -86,8 +86,8 @@ def print_html(request, pk, returnbuffer=False):
         stylesheets=[style], 
         optimize_images=True,
         uncompressed_pdf=False,
-        jpeg_quality=50,
-        dpi=72,
+        jpeg_quality=100,
+        dpi=150,
         full_fonts=False
     )
     buffer.seek(0)

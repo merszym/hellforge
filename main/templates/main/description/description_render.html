@@ -47,9 +47,12 @@
                 font-size: 0.7rem;
                 margin-bottom: 10px;
                 margin-top:0px;   
+                line-height: 1.3em !important;
             }
         </style>
+        {% if reference_items|length > 0 or remaining_references|length > 0 %}
         <h5>References</h5>
+        {% endif %}
         {% for ref in reference_items %}
         <p class="reference">{{ref|safe}}</p>
         {% endfor %}
