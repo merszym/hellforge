@@ -41,7 +41,7 @@
         {% endif %}
     </div>
 
-    <div id="description-references">
+    <div id="description-references" style="padding-top: 20px;">
         <style>
             .reference{
                 font-size: 0.7rem;
@@ -56,6 +56,7 @@
         {% for ref in reference_items %}
         <p class="reference">{{ref|safe}}</p>
         {% endfor %}
+        {% if remaining_references|length > 0 %}
         <table class="table table-striped my-2">
           <tbody id="description-reference-tbody" style="border-top: 1px solid lightgrey;">
             {% for ref in remaining_references %}
@@ -63,6 +64,7 @@
             {% endfor %}
           </tbody>
         </table>
+        {% endif %}
     </div>
 </div>
 
