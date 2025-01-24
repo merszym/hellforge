@@ -206,7 +206,7 @@ def render_references(html_doc, short_dict):
             ref = short_dict[int(tag.get('id'))]
             ref = ref.replace("(","").replace(")","")
             tag.string.replace_with(str(ref))
-        except KeyError:
+        except (KeyError, AttributeError):
             pass
     # image suptitles are also only present in the placeholder
     for img in soup.find_all("div", class_="image-tool__caption"):
