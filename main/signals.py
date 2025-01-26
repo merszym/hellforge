@@ -1,4 +1,4 @@
-from django.db.models.signals import post_save, m2m_changed, post_delete
+from django.db.models.signals import pre_save, post_save, m2m_changed, post_delete
 from django.dispatch import receiver
 from main.models import (
     Layer,
@@ -16,6 +16,7 @@ import json
 import statistics
 from django.templatetags.static import static
 import re
+import colour
 
 
 # after deleting or adding a date from a dateable - update the mean_upper and mean_lower
@@ -174,3 +175,16 @@ def update_order(sender, instance, **kwargs):
 
         except:
             pass
+
+# this is done pre-save! check if appropriate
+@receiver(pre_save, sender=Layer)
+def update_colour(sender, instance, **kwargs):
+
+    if instance.colour_munsell is not None or instance.colour_munsell != "":
+        #print("Creating hex value")
+        colour_munsell = instance.colour_munsell
+        colour_sRGB = colour.XYZ_to_RGB(colour.xyY_to_XYZ(colour.munsell_colour_to_xyY(colour_munsell)), "sRGB")
+        colour_RGB = [round(x) for x in (colour.models.eotf_inverse_sRGB(colour_sRGB) * 255)] # linearise sRGB values and convert to integer RGB
+
+        instance.colour_hex = "#%02x%02x%02x" % tuple(colour_RGB) # convert to hex and assign. we convert to hex, as it works better than RGB for html
+
