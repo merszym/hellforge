@@ -1,3 +1,4 @@
+import numpy
 from django.db.models.signals import pre_save, post_save, m2m_changed, post_delete
 from django.dispatch import receiver
 from main.models import (
@@ -180,11 +181,12 @@ def update_order(sender, instance, **kwargs):
 @receiver(pre_save, sender=Layer)
 def update_colour(sender, instance, **kwargs):
 
-    if instance.colour_munsell is not None or instance.colour_munsell != "":
+    if instance.colour_munsell is not numpy.nan and instance.colour_munsell != "":
         #print("Creating hex value")
+        #print(instance.colour_munsell)
         colour_munsell = instance.colour_munsell
         colour_sRGB = colour.XYZ_to_RGB(colour.xyY_to_XYZ(colour.munsell_colour_to_xyY(colour_munsell)), "sRGB")
-        colour_RGB = [round(x) for x in (colour.models.eotf_inverse_sRGB(colour_sRGB) * 255)] # linearise sRGB values and convert to integer RGB
+        colour_RGB = [min(round(x), 255) for x in (colour.models.eotf_inverse_sRGB(colour_sRGB) * 255)] # linearise sRGB values and convert to integer RGB
 
         instance.colour_hex = "#%02x%02x%02x" % tuple(colour_RGB) # convert to hex and assign. we convert to hex, as it works better than RGB for html
 

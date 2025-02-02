@@ -9,14 +9,6 @@
         {% endfor %}
     {% endif %}
 </td>
-<td class="{% if layer.culture %}{{layer.culture.classname}}{% else %}sterile{% endif%}" style="width: 5px;white-space: nowrap;">
-    {% if layer.parent %}
-    <strong>{{layer.name}}</strong>
-    {% for syn in layer.synonyms.all %}
-    <br><span style="font-size:11pt;">{{syn.name}} ({{syn.type}})</span>
-    {% endfor %}
-    {% endif %}
-</td>
 <td bgcolor="{% if layer.colour_hex %}{{ layer.colour_hex }}{% else %}white{% endif %}"></td>
 <!-- texture -->
 <td>
@@ -27,6 +19,15 @@
 <td>
     {{layer.colour|default:"N/A"}}
     <br><span class="text-gray" style="font-size:11pt;">{{layer.colour_munsell}}</span>
+</td>
+
+<td class="{% if layer.culture %}{{layer.culture.classname}}{% else %}sterile{% endif%}" style="width: 5px;white-space: nowrap;">
+    {% if layer.parent %}
+    <strong>{{layer.name}}</strong>
+    {% for syn in layer.synonyms.all %}
+    <br><span style="font-size:11pt;">{{syn.name}} ({{syn.type}})</span>
+    {% endfor %}
+    {% endif %}
 </td>
 <td>
     <span
