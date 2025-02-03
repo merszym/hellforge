@@ -9,18 +9,6 @@
         {% endfor %}
     {% endif %}
 </td>
-<td bgcolor="{% if layer.colour_hex %}{{ layer.colour_hex }}{% else %}white{% endif %}"></td>
-<!-- texture -->
-<td>
-    {{layer.texture|default:"N/A"}}
-</td>
-<!-- colour -->
-
-<td>
-    {{layer.colour|default:"N/A"}}
-    <br><span class="text-gray" style="font-size:11pt;">{{layer.colour_munsell}}</span>
-</td>
-
 <td class="{% if layer.culture %}{{layer.culture.classname}}{% else %}sterile{% endif%}" style="width: 5px;white-space: nowrap;">
     {% if layer.parent %}
     <strong>{{layer.name}}</strong>
@@ -29,6 +17,22 @@
     {% endfor %}
     {% endif %}
 </td>
+
+<!-- colour -->
+<td style="{%if layer.colour_hex %}background-color:{{layer.colour_hex}}{% endif %}">
+    {{layer.colour|default:""}}
+    {% if layer.colour_munsell %}
+    <br>
+    <span class="text-gray" style="font-size:11pt;">
+        {{layer.colour_munsell}}
+    </span>
+    {% endif %}
+</td>
+<!-- texture -->
+<td>
+    {{layer.texture|default:""}}
+</td>
+
 <td>
     <span
         class="text-primary c-hand tooltip tooltip-right modal_open"
