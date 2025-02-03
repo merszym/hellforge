@@ -23,7 +23,6 @@ def update(request, pk):
     object = Layer.objects.get(pk=pk)
     form = LayerColourForm(request.POST, instance=object)
     if form.is_valid():
-        print(form)
         form.save()
     
     request.GET._mutable = True

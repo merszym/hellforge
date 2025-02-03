@@ -20,7 +20,6 @@
 
 <!-- colour -->
 <td nowrap
-    style="{%if layer.colour_hex %}background-color:{{layer.colour_hex}}{% endif %}"
     {% if request.user.is_authenticated %}
     class="text-primary c-hand tooltip tooltip-right modal_open"
     data-tooltip="Colour"
@@ -37,6 +36,7 @@
     </span>
     {% endif %}
 </td>
+<td style="{%if layer.colour_hex %}background-color:{{layer.colour_hex}}{% endif %}"></td>
 <!-- texture -->
 <td nowrap>
     {{layer.texture|default:""}}
