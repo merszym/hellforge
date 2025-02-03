@@ -2,6 +2,7 @@ import json
 from django.db import models
 from django.urls import reverse
 from django.db.models import Q
+from django.core.validators import RegexValidator
 from django.contrib.contenttypes.fields import GenericForeignKey  # for the description
 from django.contrib.contenttypes.models import ContentType  # for the description
 from django.contrib.contenttypes.fields import GenericRelation
@@ -945,6 +946,24 @@ class Profile(models.Model):
         return Profile.objects.filter(site=self.site).exclude(id=self.pk)
 
 
+texture_choices = {x:x for x in [
+    '',
+    'Clay',
+    'Clay Loam',
+    'Sandy Clay',
+    'Sandy Clay Loam',
+    'Sandy Loam',
+    'Sand/Silt',
+    'Loam',
+    'Loamy Sand',
+    'Sand',
+    'Silty Clay',
+    'Silty Clay Loam',
+    'Silt Loam',
+    'Silt'
+]}
+
+
 class Layer(Dateable):
     name = models.CharField("name", max_length=200)
     synonyms = models.ManyToManyField(
@@ -991,10 +1010,21 @@ class Layer(Dateable):
         null=True,
     )
     # fields related to geological sediment properties
-    colour = models.CharField("colour",max_length=200, blank=True, null=True)
-    colour_munsell = models.CharField("colour_munsell", max_length=200, blank=True, null=True)
-    colour_hex = models.CharField("colour_rgb", max_length=200, blank=True, null=True)
-    texture = models.CharField("texture", max_length=200, blank=True, null=True)
+    colour = models.CharField("colour",max_length=200, blank=True, null=True) # this is the "informal" name
+    colour_munsell = models.CharField(
+        "colour_munsell", 
+        max_length=200, 
+        validators=[
+            RegexValidator(
+                regex=r'^[0-9]+(\.[0-9]+)?[A-Z]+\s+[1-9](\.[0-9]+)?/[0-9]+(\.[0-9]+)?$',
+                message="Enter a valid Munsell Number in the format 8.75YR 4.5/3",
+                code="invalid_registration",
+            ),
+        ],
+        blank=True, 
+        null=True) # The Munsell Color Code
+    colour_hex = models.CharField("colour_rgb", max_length=200, blank=True, null=True) # The hex value calculated from Munsell
+    texture = models.CharField("texture", max_length=200, blank=True, null=True, choices=texture_choices)
 
     #
     ## References

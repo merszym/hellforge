@@ -10,7 +10,13 @@ from .models import (
     Synonym,
     SampleBatch,
     QuicksandAnalysis,
+    Layer
 )
+
+class LayerColourForm(forms.ModelForm):
+    class Meta:
+        model = Layer
+        fields = ['colour', 'colour_munsell', 'texture']
 
 
 class SampleBatchForm(forms.ModelForm):

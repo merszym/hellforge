@@ -1,4 +1,4 @@
-from .forms import ReferenceForm, DateForm, ContactForm, SampleBatchForm, ProfileForm
+from .forms import ReferenceForm, DateForm, ContactForm, SampleBatchForm, ProfileForm, LayerColourForm
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from .models import (
@@ -81,6 +81,19 @@ def get_modal_context(object, request):
                     "epochs": Epoch.objects.all().order_by("name"),
                 }
             )
+        if context["type"] == "colour":
+            if not 'form' in request.GET:
+                context.update(
+                    {
+                        'form':LayerColourForm(instance=object)
+                    }
+                )
+            else:
+                context.update(
+                    {
+                        'form':request.GET.get('form')
+                    }
+                )
     if object.model == "site":
         if context["type"] in ["quicksand_upload","matthias_upload"]:
             context.update(

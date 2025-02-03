@@ -19,7 +19,16 @@
 </td>
 
 <!-- colour -->
-<td style="{%if layer.colour_hex %}background-color:{{layer.colour_hex}}{% endif %}">
+<td nowrap
+    style="{%if layer.colour_hex %}background-color:{{layer.colour_hex}}{% endif %}"
+    {% if request.user.is_authenticated %}
+    class="text-primary c-hand tooltip tooltip-right modal_open"
+    data-tooltip="Colour"
+    hx-get="{% url 'main_modal_get' %}"
+    hx-vals='{"object":"layer_{{layer.pk}}","type":"colour"}'
+    hx-target="#modal-blank"
+    {% endif %}
+    >
     {{layer.colour|default:""}}
     {% if layer.colour_munsell %}
     <br>
@@ -29,7 +38,7 @@
     {% endif %}
 </td>
 <!-- texture -->
-<td>
+<td nowrap>
     {{layer.texture|default:""}}
 </td>
 

@@ -199,6 +199,30 @@
         </div>
     </div>
 
+    {% elif type == "colour" %}
+
+    {# --------------------- #}
+    {#   LAYER COLOR MODALS  #}
+    {# --------------------- #}
+
+
+    <div class="modal-body">
+        <div class="content my-2">
+            <div id="modal-form">
+                <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                    {{form}}
+                    <br>
+                    <span class="btn btn-primary input-group-btn"
+                        hx-post="{% url 'main_layer_update' object.pk %}"
+                        hx-target="#modal-blank">Update
+                    </span>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
     {# ---------------------#}
     {#   LAYER DATE MODALS  #}
     {# ---------------------#}

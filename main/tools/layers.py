@@ -4,7 +4,7 @@ from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DeleteView, UpdateView
 from main.models import Layer, Profile, Site, Culture, models, Epoch
-from main.forms import ReferenceForm
+from main.forms import ReferenceForm, LayerColourForm
 from django.contrib.auth.decorators import (
     login_required,
 )  # this is for now, make smarter later
@@ -16,6 +16,20 @@ import copy
 from django.shortcuts import render
 from main.ajax import get_modal
 
+
+@login_required
+def update(request, pk):
+    # this is only for color and texture now, but I should make this a generic function for layer updates
+    object = Layer.objects.get(pk=pk)
+    form = LayerColourForm(request.POST, instance=object)
+    if form.is_valid():
+        print(form)
+        form.save()
+    
+    request.GET._mutable = True
+    request.GET.update({"object": f"layer_{object.pk}", "type": "colour", 'form':form})
+
+    return get_modal(request)
 
 @login_required
 def clone(request, pk):
@@ -128,6 +142,7 @@ def set_epoch(request):
 
 # and the respective urlpatterns
 urlpatterns = [
+    path("update/<int:pk>", update, name="main_layer_update"),
     path("set-name", set_name, name="main_layer_setname"),
     path("set-culture", set_culture, name="layer-culture-update"),
     path("set-epoch", set_epoch, name="layer-epoch-update"),

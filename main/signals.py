@@ -177,16 +177,17 @@ def update_order(sender, instance, **kwargs):
         except:
             pass
 
-# this is done pre-save! check if appropriate
 @receiver(pre_save, sender=Layer)
 def update_colour(sender, instance, **kwargs):
+    # unset the hex-colour
+    if instance.colour_munsell == "" or not instance.colour_munsell:
+        instance.colour_hex = None
+    # set the hex-colour
+    if instance.colour_munsell and instance.colour_munsell != "":
+        try:
+            colour_sRGB = colour.XYZ_to_RGB(colour.xyY_to_XYZ(colour.munsell_colour_to_xyY(instance.colour_munsell)), "sRGB")
+            colour_RGB = [min(round(x), 255) for x in (colour.models.eotf_inverse_sRGB(colour_sRGB) * 255)] # linearise sRGB values and convert to integer RGB
 
-    if instance.colour_munsell is not numpy.nan and instance.colour_munsell != "":
-        #print("Creating hex value")
-        #print(instance.colour_munsell)
-        colour_munsell = instance.colour_munsell
-        colour_sRGB = colour.XYZ_to_RGB(colour.xyY_to_XYZ(colour.munsell_colour_to_xyY(colour_munsell)), "sRGB")
-        colour_RGB = [min(round(x), 255) for x in (colour.models.eotf_inverse_sRGB(colour_sRGB) * 255)] # linearise sRGB values and convert to integer RGB
-
-        instance.colour_hex = "#%02x%02x%02x" % tuple(colour_RGB) # convert to hex and assign. we convert to hex, as it works better than RGB for html
-
+            instance.colour_hex = "#%02x%02x%02x" % tuple(colour_RGB) # convert to hex and assign. we convert to hex, as it works better than RGB for html
+        except: #except the case that the Munsell Color has a wrong specification..
+            pass
