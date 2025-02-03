@@ -990,11 +990,11 @@ class Layer(Dateable):
         blank=True,
         null=True,
     )
-
-    colour = models.CharField("colour",max_length=32, blank=True)
-    colour_munsell = models.CharField("colour_munsell", max_length=32, blank=True)
-    colour_hex = models.CharField("colour_rgb", max_length=7, blank=True)
-    texture = models.CharField("texture", max_length=15, blank=True)
+    # fields related to geological sediment properties
+    colour = models.CharField("colour",max_length=200, blank=True, null=True)
+    colour_munsell = models.CharField("colour_munsell", max_length=200, blank=True, null=True)
+    colour_hex = models.CharField("colour_rgb", max_length=200, blank=True, null=True)
+    texture = models.CharField("texture", max_length=200, blank=True, null=True)
 
     #
     ## References
