@@ -1085,6 +1085,8 @@ class Layer(Dateable):
         # the table_columns for uploading and empty columns
         return [
             "Layer Name",
+            "Layer Colour",
+            "Layer Texture",
             "Layer Age",
             "Layer Culture",
             "Layer Umbrella Culture",
