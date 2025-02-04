@@ -1069,6 +1069,8 @@ class Layer(Dateable):
         # dont include site or project - that is exported with the respective query
         data = {
             "Layer Name": self.name,
+            "Layer Colour": self.colour_munsell,
+            "Layer Texture": self.texture,
             "Layer Age": self.age_summary(export=True),
             "Layer Culture": self.culture.name if self.culture else None,
             "Layer Umbrella Culture": (
