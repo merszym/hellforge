@@ -68,11 +68,19 @@ def get_modal_context(object, request):
         if context["type"] == "dates":
             # Add a date to the layer
             context.update(
-                {"datingoptions": DatingMethod.objects.all(), "origin": "form"}
+                {
+                    "datingoptions": DatingMethod.objects.all(), 
+                    "origin": "form",
+                }
             )
         if context["type"] == "dates_list":
             # Add dates as the layer boundaries
-            context.update({"site_dates": object.site.get_dates()})
+            context.update(
+                {
+                    "site_dates": object.site.get_dates(),
+                    "layeroptions": Layer.objects.filter(Q(site=object.site)).exclude(id=object.pk)
+                }
+            )
 
         if context["type"] == "properties":
             context.update(

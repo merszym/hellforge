@@ -5,13 +5,34 @@ from django.shortcuts import render
 from django.urls import path
 from django.db.models import Q
 from main.models import models, Date, Site
-from main.tools.generic import remove_x_from_y_m2m, delete_x, get_instance_from_string
+from main.tools.generic import remove_x_from_y_m2m, delete_x, get_instance_from_string, add_x_to_y_m2m
 from main.ajax import get_modal
 from django.contrib.auth.decorators import (
     login_required,
 )  # this is for now, make smarter later
 from django.db.models import ProtectedError
 from django.contrib import messages
+
+@login_required
+def date_move(request):
+    """
+    - in the post request, get the layer (object_x), a date (instance_x) and a second layer (object_y).
+    - move the date from instance_x to instance_y
+    - return the layer-modal (type 'date_list') of the object
+    """
+    layer1 = get_instance_from_string(request.POST.get("instance_y"))
+    layer2 = get_instance_from_string(request.POST.get("instance_z"))
+    date = get_instance_from_string(request.POST.get("instance_x"))
+
+    getattr(layer1, "date").remove(date)
+    getattr(layer2, "date").add(date)
+
+    request.GET._mutable = True
+    request.GET.update({"object": f"layer_{layer1.pk}", "type": "dates_list"})
+
+    from main.ajax import get_modal
+
+    return get_modal(request)
 
 
 def recalculate_mean(dateable):
@@ -363,4 +384,5 @@ urlpatterns = [
     path("recalibrate", recalibrate_c14, name="ajax_date_recalibrate"),
     path("set-bounds", dateable_setbounds, name="main_dateable_setbounds"),
     path("set-date", dateable_setdate, name="main_dateable_setdate"),
+    path("move", date_move, name="main_date_move")
 ]
