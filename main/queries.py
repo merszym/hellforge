@@ -32,6 +32,16 @@ def queries(many, one):
 
     return dict[(many, one)]
 
+def get_project_samples(project):
+    """
+    The more controlled query to get the project_samples query. This is necessary, because the automated one is too buggy...
+    """
+    qs = models['sample'].objects.filter(
+            Q(site__project=project)
+            & Q(project=project)
+        )
+    return qs
+
 def get_libraries(start):
     """
     The more controlled query to get the libraries query. This is necessary, because the automated one is too buggy...

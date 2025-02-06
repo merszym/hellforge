@@ -1,5 +1,5 @@
 from main.models import models, Sample
-from main.queries import queries, get_libraries
+from main.queries import queries, get_libraries, get_project_samples
 from django.http import JsonResponse, HttpResponse, StreamingHttpResponse, FileResponse
 from django.urls import path, reverse
 from django.shortcuts import render
@@ -100,6 +100,9 @@ def get_dataset(request):
 
     elif unique in ['library', 'analyzedsample']:
         qs = get_libraries(start)
+
+    elif unique=='sample' and start.model == 'project':
+        qs = get_project_samples(start)
 
     else:
         qs = models[unique].objects.filter(**filter).distinct()
