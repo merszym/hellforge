@@ -215,7 +215,7 @@ class Author(models.Model):
 
     def __str__(self):
         return f"{self.person.name}"
-
+    
 
 class Person(models.Model):
     name = models.CharField("name", max_length=300)
@@ -241,6 +241,14 @@ class Person(models.Model):
             | Q(orcid__contains=kw)
             | Q(affiliation__name__contains=kw)
         )
+    @classmethod
+    def table_columns(self):
+        return [
+            "Contact Name",
+            "Contact Email",
+            "Contact Affiliations",
+            "Contact ORCID",
+        ]
 
     def get_data(self, **kwargs):
         # for an entry, return a dict {'col': data} that is used for the export of the data

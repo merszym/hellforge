@@ -32,6 +32,20 @@ def queries(many, one):
 
     return dict[(many, one)]
 
+
+def get_project_authors(project):
+    """
+    Get project authors (via description)
+    """
+    qs = models['person'].objects.filter(
+        Q(author__description__project=project) |
+        Q(author__description__site__project=project)
+    )
+    # a person can appear multiple times if author on several sites
+    # so return distinct
+    return qs.distinct()
+
+
 def get_project_samples(project):
     """
     The more controlled query to get the project_samples query. This is necessary, because the automated one is too buggy...
