@@ -33,7 +33,7 @@ class PersonListView(LoginRequiredMixin, ListView):
 @login_required
 def create_from_string(request):
     """Create a new Person from String. Add additional information later"""
-    person = Person(name=request.POST.get("person_search"), email="placeholder@fill.me")
+    person = Person(name=request.POST.get("person_search").strip(), email="placeholder@fill.me")
     person.save()
     person.refresh_from_db()
     return JsonResponse({"status": True, "pk": person.pk})
@@ -46,7 +46,7 @@ def create_and_add_affiliation(request):
     """
     person = request.POST.get("instance_y")
     affiliation, created = Affiliation.objects.get_or_create(
-        name=request.POST.get("affiliation")
+        name=request.POST.get("affiliation").strip()
     )
 
     # Use the generic add_to_m2m function
