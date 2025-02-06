@@ -1229,6 +1229,7 @@ class Sample(Dateable):
         if infinite:
             upper = None
         data = {
+            "Layer Name":self.layer.name if self.layer else None,
             "Sample Name": self.name,
             "Sample Synonyms": ";".join([str(x) for x in self.synonyms.all()]),
             "Sample Type": self.type,

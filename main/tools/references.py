@@ -52,7 +52,6 @@ def write_bibliography(references):
     try:
         return [str(item) for item in bibliography.bibliography()], short_dict
     except (AttributeError, TypeError):
-        print(bibliography.bibliography())
         return [],short_dict
         
     
