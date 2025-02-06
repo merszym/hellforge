@@ -93,8 +93,6 @@ def get_dataset(request):
     append = request.GET.get("append",0)
 
     # now set up the query
-    filter = {queries(column, unique): start}
-
     if unique == "date" and column == "site":
         qs = start.get_dates()
 
@@ -108,6 +106,7 @@ def get_dataset(request):
         qs = get_project_authors(start)
 
     else:
+        filter = {queries(column, unique): start}
         qs = models[unique].objects.filter(**filter).distinct()
 
     # and get the row generator
