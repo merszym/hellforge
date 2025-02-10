@@ -39,7 +39,7 @@ def get_project_authors(project):
     """
     qs = models['person'].objects.filter(
         Q(author__description__project=project) |
-        Q(author__description__site__project=project)
+        Q(author__description__project_project=project)
     )
     # a person can appear multiple times if author on several sites
     # so return distinct
