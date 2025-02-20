@@ -99,8 +99,8 @@
                   <input list="affiliation-choices" type="text" class="form-input" id="person_{{person.pk}}_val" placeholder="Search...">
                   <button id="person_{{person.pk}}" data-url="{% url 'main_contact_affiliation_add' %}" class="btn btn-primary input-group-btn add_affiliation">Add</button>
                 </div>
-
-                <strong>Affiliations</strong>
+                <br>
+                <h6>Affiliations</h6>
                 {% for aff in person.affiliation.all %}
                 <div class="tile tile-centered my-1">
                   <div class="tile-icon">
@@ -127,6 +127,14 @@
                 <p>{{author}}</p>
                 {% endfor %}
                 -->
+                <br>
+                <h6>Links</h6>
+                {% for site in person.site.all %}
+                <p class="p-1 m-1">Contact | {{site.name}}</p>
+                {% endfor %}
+                {% for authorship in person.author.all %}
+                <p class="p-1 m-1">{{authorship}}</p>
+                {% endfor %}
               </div>
               {% endfor %}
             </div>

@@ -214,7 +214,35 @@ class Author(models.Model):
         ordering = ["position"]
 
     def __str__(self):
-        return f"{self.person.name}"
+        # return a meaningfull short name to project/Site
+        description = self.description
+        return_string = f"Authorship"
+        
+        # first, get the project can be not assigned a project if its a note or a culture
+        n_projects = len(description.project.all())
+        if n_projects == 0:
+            # project-description?
+            if project := description.project_project.first():
+                return_string = f"{return_string} | {project.name} (Project Description)"
+            # culture description?
+            if culture := description.culture.first():
+                return_string = f"{return_string} | {culture.name} (Culture Description)"
+            # site notes
+            if site := description.site.first():
+                return_string = f"{return_string} | {site.name} (Site Notes)"
+
+        elif n_projects == 1:
+            project = description.project.first()
+            # its the description of a site
+            site = description.site.first()
+            return_string = f"{return_string} | {project.name} | {site.name} (Site Description)"
+        
+        else:
+            # we dont have this case yet, in theory a description could be linked to multiple projects, but actually I should remove that
+            # feature and instead make that a foreign key field...
+            for project in description.project.all():
+                return_string = f"{return_string} | {project.name} (Multi-Use)"
+        return return_string
     
 
 class Person(models.Model):
