@@ -1,5 +1,5 @@
 {% for author,aff in object.authors %}
-{% if author.person.orcid %}<a href="https://orcid.org/{{author.person.orcid}}">{{author}}</a>{% else %}{{author}}{% endif %}<sup>{{aff}}</sup>,
+{% if author.person.orcid %}<a href="https://orcid.org/{{author.person.orcid}}">{{author.person.name}}</a>{% else %}{{author.person.name}}{% endif %}<sup>{{aff}}</sup>,
 {% endfor %}
 <br><br>
 <p class="reference">
