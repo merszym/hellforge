@@ -198,7 +198,7 @@
     </button>
 </div>
 
-<div hx-get="{% url 'main_timeline_render' 'site' object.pk %}" hx-trigger="load once" hx-target="#timeline-content"></div>
+<div hx-get="{% url 'main_timeline_render_profile' 'site' object.pk site.profile.first.pk %}" hx-trigger="load once" hx-target="#timeline-content"></div>
 <div class="m-2" id="timeline-content"></div>
 
 {% endif %}
