@@ -1362,7 +1362,7 @@ class AnalyzedSample(models.Model):
         matthias_analysis = bool(re.search("mm", str(append)))
         if quicksand_analysis and self.quicksand_analysis.first():
             data.update(
-                self.quicksand_analysis.last().get_data()
+                self.quicksand_analysis.last().get_data(**kwargs)
             )
         if matthias_analysis and self.matthias_analysis.first():
             data.update(
@@ -1542,7 +1542,7 @@ class QuicksandAnalysis(models.Model):
     def get_data(self, **kwargs):
         from main.tools.quicksand import get_data_for_export
 
-        return get_data_for_export(self.data, self.version)
+        return get_data_for_export(self.data, self.version, **kwargs)
 
     class Meta:
         ordering = [

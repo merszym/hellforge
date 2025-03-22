@@ -222,7 +222,7 @@ def prepare_data(
     }
 
 
-def get_data_for_export(data, quickv, percentage=0.5, breadth=0.5):
+def get_data_for_export(data, quickv, percentage=0.5, breadth=0.5, **kwargs):
     export = {
         "quicksand version": quickv,
         "ReadsRaw": 0,

@@ -27,7 +27,7 @@ def return_next(request, next, object="instance_x"):
     return get_modal(request)
 
 
-def get_dataset_df(qs, start, include, append):
+def get_dataset_df(qs, start, include, append, **kwargs):
     # iterate over the m:1 frame, collect information from models
     # do it as a generator to allow streaming
     for entry in qs:
@@ -55,7 +55,7 @@ def get_dataset_df(qs, start, include, append):
         project = None
         if start.model == "project":
             project = start
-        entry_data = entry.get_data(append=append, project=project)
+        entry_data = entry.get_data(append=append, project=project, **kwargs)
         # this could now be more than one row,so check if its a list
         if isinstance(entry_data, list):
             for libdata in entry_data:
@@ -91,6 +91,8 @@ def get_dataset(request):
     unique = request.GET.get("unique")
     include = request.GET.get("include", "null").split(",")
     append = request.GET.get("append",0)
+    percentage = float(request.GET.get("percentage",0.5))
+    breadth = float(request.GET.get("breadth",0.5))
 
     # now set up the query
     if unique == "date" and column == "site":
@@ -111,7 +113,7 @@ def get_dataset(request):
 
     # and get the row generator
     # it generates a single dict
-    data = get_dataset_df(qs, start, include, append)
+    data = get_dataset_df(qs, start, include, append, percentage=percentage, breadth=breadth)
 
     # download the data
     return download_csv(data, name=f"{start}_{unique}_m_1.csv")
