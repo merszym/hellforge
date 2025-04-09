@@ -1,11 +1,12 @@
 {% load static %}
+{% load format %}
 {% csrf_token %}
 <div class="input-group">
     <span class="input-group-addon">Add Synonym</span>
     <input type="text" name="type" class="form-input" placeholder="Tag/Type">
     <input type="text" name="name" class="form-input" placeholder="Name">
     <span
-        hx-post="{% url 'main_synonym_add' %}"
+        hx-post="{% url 'main_synonym_add' %}?{{request.GET|getstring}}"
         hx-target="#modal-blank"
         class="btn btn-primary input-group-btn">Add</span>
 </div>

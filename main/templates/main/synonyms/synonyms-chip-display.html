@@ -1,8 +1,9 @@
+{% load format %}
 <div class="divider text-center" data-content="Synonyms"></div>
 {% for syn in object.synonyms.all %}
 <div class="tile tile-centered" id="synonym_{{syn.pk}}">
     <div class="tile-icon"
-      hx-post="{% url 'main_generic_delete' %}"
+      hx-post="{% url 'main_generic_delete' %}?{{request.GET|getstring}}"
       hx-vals='{
           "instance_x":"synonym_{{syn.pk}}"
         }'
