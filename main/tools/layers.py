@@ -3,7 +3,7 @@ from django.urls import path, reverse
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DeleteView, UpdateView
-from main.models import Layer, Profile, Site, Culture, models, Epoch
+from main.models import Layer, Profile, Site, Culture, models, Epoch, ProfileLayerJunction
 from main.forms import ReferenceForm, LayerColourForm
 from django.contrib.auth.decorators import (
     login_required,
@@ -32,32 +32,31 @@ def update(request, pk):
 
 @login_required
 def clone(request, pk):
-    new_layer = Layer.objects.get(pk=pk)
-    layer = Layer.objects.get(pk=pk)
+    """
+    from the ProfileLayerJunction, get the layer.
+    Clone the layer and create a new ProfileLayerJunction. Set the position +1 and move all other layers one down
+    """
+    junction = ProfileLayerJunction.objects.get(pk=pk)
+    profile = junction.profile
+
+    new_layer = junction.layer
+    layer = junction.layer
     new_layer.pk = None
     # find the last postion:
-    new_layer.pos = max([x.pos for x in Layer.objects.filter(site=layer.site)]) + 1
+    new_layer.name = f"{layer.name} (+)"
     new_layer.save()
+    new_layer.refresh_from_db()
 
-    for profile in layer.profile.all():
-        new_layer.profile.add(profile)
+    ProfileLayerJunction(layer=new_layer, profile=profile, position = junction.position).save()
 
-    for ref in layer.ref.all():
-        new_layer.ref.add(ref)
-
-    from main.tools.site import get_site_profile_tab
-
-    context = {"site": f"site_{layer.site.pk}"}
-
-    # check if selected profile exists
-    if prof := request.GET.get("profile", False):
-        profile = get_instance_from_string(prof)
-        context.update({"profile": f"profile_{profile.pk}"})
+    context = {"profile": f"profile_{profile.pk}"}
 
     request.GET._mutable = True
     request.GET.update(context)
 
-    return get_site_profile_tab(request)
+    from main.tools.profile import get_profile_detail
+
+    return get_profile_detail(request)
 
 
 @login_required

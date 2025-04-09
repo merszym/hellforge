@@ -81,7 +81,7 @@
                   <div class="card-body">
                     <span class="btn tooltip tooltip-top"
                       data-tooltip="Clone Layer"
-                      hx-post="{% url 'main_layer_clone' layer.pk %}?{{request.GET|getstring}}"
+                      hx-post="{% url 'main_layer_clone' junction.pk %}"
                       hx-target="#site_layer">
                       <i class="icon icon-plus"></i>
                     </span>
