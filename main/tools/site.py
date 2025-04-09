@@ -538,7 +538,8 @@ def handle_stratigraphy(request, file):
     # All required information is in the table
 
     ## 0. Verify the data-table
-    expected_columns = ["Layer Name", "Layer Culture", "Layer Epoch"]
+    from main.models import ProfileLayerJunction
+    expected_columns = ProfileLayerJunction.table_columns()
     ## there can be more, but check that all required are in
 
     if not all(x in df.columns for x in expected_columns):
@@ -548,19 +549,20 @@ def handle_stratigraphy(request, file):
         return return_error(request, issues, df)
 
     for n, (i, data) in enumerate(df.iterrows()):
-        try:
-            layer = Layer.objects.get(site=site, name=data["Layer Name"].strip())
-            layer.pos = n
+        profile, _ = Profile.objects.get_or_create(site=site, name=data['Profile'].strip())
+        layer, created = Layer.objects.get_or_create(site=site, name=data['Layer'].strip())
+
+        #first, check if the parent of the layers exist or if they need to be created as well
+        if data['Layer Parent'] == data['Layer Parent']:
+            parent_layer, created = Layer.objects.get_or_create(site=site, name=data['Layer Parent'].strip())
+            layer.layer = parent_layer
             layer.save()
 
-        except Layer.DoesNotExist:
-            return return_error(
-                request,
-                [f'Layer: {data["Layer Name"]} doesnt exist'],
-                pd.DataFrame(
-                    {k: v for k, v in zip(data.index, data.values)}, index=[0]
-                ),
-            )
+        # now get or create the ProfileLayerJunctions for the layer
+        junction, _ = ProfileLayerJunction.objects.get_or_create(profile=profile, layer=layer)
+        junction.position = n
+        junction.save()
+ 
 
     return render(
         request,

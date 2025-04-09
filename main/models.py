@@ -1017,6 +1017,7 @@ class ProfileLayerJunction(models.Model):
         # human readable representation of the dates
         return [
             "Profile",
+            "Layer Parent",
             "Layer"
         ]
 
@@ -1024,6 +1025,7 @@ class ProfileLayerJunction(models.Model):
         # for an entry, return a dict {'col': data} that is used for the export of the data
         data = {
             "Profile": self.profile.name,
+            "Layer Parent": self.layer.parent.name if self.layer.parent else None,
             "Layer":self.layer.name,
         }
         return data
