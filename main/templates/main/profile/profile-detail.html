@@ -62,9 +62,8 @@
             <span
               class="tooltip tooltip-right"
               data-tooltip="Move Layer up"
-              hx-post="{% url 'main_layer_positionupdate' %}"
-              hx-target="#site_layer"
-              hx-vars="{'direction':'up'}"
+              hx-post="{% url 'main_layer_positionupdate' junction.pk %}"
+              hx-target="#show_profile"
             >
               <i class="icon icon-upward text-gray"></i>
             </span>

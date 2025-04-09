@@ -30,6 +30,7 @@ def update(request, pk):
 
     return get_modal(request)
 
+
 @login_required
 def clone(request, pk):
     """
@@ -48,6 +49,13 @@ def clone(request, pk):
     new_layer.refresh_from_db()
 
     ProfileLayerJunction(layer=new_layer, profile=profile, position = junction.position).save()
+    
+    #after cloning a layer, the cloned layer has the same position as the original layer within the profile.
+    #So given a profile, reset the position-counts for each junction
+    
+    for n,junction in enumerate(ProfileLayerJunction.objects.filter(profile=profile)):
+        junction.position = n
+        junction.save()
 
     context = {"profile": f"profile_{profile.pk}"}
 
@@ -60,46 +68,41 @@ def clone(request, pk):
 
 
 @login_required
-def update_positions(request):
-    layer = get_instance_from_string(request.POST.get("object"))
-    direction = request.POST.get("direction")
+def update_positions(request, pk):
+    junction = ProfileLayerJunction.objects.get(pk=pk)
+    profile = junction.profile
 
-    all_layers = list(layer.site.layer.all())
-    positions = [x.pos for x in all_layers]
+    all_junctions = ProfileLayerJunction.objects.filter(profile=profile)
 
-    layer_index = positions.index(layer.pos)
-    layer_pos = layer.pos
+    positions = [x.position for x in all_junctions]
+    
+    junction_pos = junction.position
+    junction_index = positions.index(junction_pos) #the relative position of the junction
+    
 
-    # do some basic checking: already at top or aleady at bottom
-    check1 = all([layer_index == 0, direction == "up"])
-    check2 = all([layer_index == len(positions) - 1, direction == "down"])
-    if not any([check1, check2]):
+    # do some basic checking: already at top?
+    if not junction_index == 0:
         # now get the index of the layer to switch positions with
-        n = layer_index - 1 if direction == "up" else layer_index + 1
-        swap_layer = all_layers[n]
-        swap_pos = swap_layer.pos
+        n = junction_index - 1
+        swap_junction = all_junctions[n]
+        swap_pos = swap_junction.position
 
         # and swap positions
-        layer.pos = swap_pos
-        swap_layer.pos = layer_pos
+        junction.position = swap_pos
+        swap_junction.position = junction_pos
 
         # and save
-        layer.save()
-        swap_layer.save()
+        junction.save()
+        swap_junction.save()
 
-    from main.tools.site import get_site_profile_tab
+    from main.tools.profile import get_profile_detail
 
-    context = {"site": f"site_{layer.site.pk}"}
-
-    # check if selected profile exists
-    if prof := request.GET.get("profile", False):
-        profile = get_instance_from_string(prof)
-        context.update({"profile": f"profile_{profile.pk}"})
+    context = {"profile": f"profile_{profile.pk}"}
 
     request.GET._mutable = True
     request.GET.update(context)
 
-    return get_site_profile_tab(request)
+    return get_profile_detail(request)
 
 
 @login_required
@@ -145,5 +148,5 @@ urlpatterns = [
     path("set-culture", set_culture, name="layer-culture-update"),
     path("set-epoch", set_epoch, name="layer-epoch-update"),
     path("clone/<int:pk>", clone, name="main_layer_clone"),
-    path("positions", update_positions, name="main_layer_positionupdate"),
+    path("positions/<int:pk>", update_positions, name="main_layer_positionupdate"),
 ]
