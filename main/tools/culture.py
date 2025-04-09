@@ -34,7 +34,7 @@ from django.db.models import Subquery
 
 
 def get_culture_timline(query):
-    sites = Site.objects.filter(layer__culture__in=query)
+    sites = Site.objects.filter(Q(layer__culture__in=query)|Q(layer__additional_cultures__in=query))
 
     cult_color_dict = {
         cult: f"{col}"
@@ -46,7 +46,7 @@ def get_culture_timline(query):
     groupdata_tmp = {}
 
     for cult in query:
-        filtered_layers = Layer.objects.filter(culture=cult).order_by("-mean_upper")
+        filtered_layers = Layer.objects.filter(Q(culture=cult)|Q(additional_cultures=cult)).order_by("-mean_upper")
 
         site_date_dict = dict.fromkeys([x.site for x in filtered_layers])
 

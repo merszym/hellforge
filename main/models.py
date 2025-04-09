@@ -1160,10 +1160,11 @@ class Layer(Dateable):
             "Layer Colour": self.colour_munsell,
             "Layer Texture": self.texture,
             "Layer Age": self.age_summary(export=True),
-            "Layer Culture": self.culture.name if self.culture else None,
             "Layer Umbrella Culture": (
                 self.culture.get_highest().name if self.culture else None
             ),
+            "Layer Culture": self.culture.name if self.culture else None,
+            "Layer Culture (Mixed)": ",".join([x.name for x in self.additional_cultures.all()]),
             "Layer Epoch": self.epoch.name if self.epoch else None,
         }
         return data
@@ -1179,8 +1180,9 @@ class Layer(Dateable):
             "Layer Colour",
             "Layer Texture",
             "Layer Age",
-            "Layer Culture",
             "Layer Umbrella Culture",
+            "Layer Culture",
+            "Layer Culture (Mixed)",
             "Layer Epoch",
         ]
 
