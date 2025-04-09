@@ -975,12 +975,11 @@ class Profile(models.Model):
 
     @property
     def other_layers(self):
-        return Layer.objects.filter(Q(site=self.site)).exclude(profile=self)
+        return Layer.objects.filter(Q(site=self.site))
 
     @property
     def other_profiles(self):
         return Profile.objects.filter(site=self.site).exclude(id=self.pk)
-
 
     def get_data(self, **kwargs):
         # for an entry, return a dict {'col': data} that is used for the export of the data
@@ -1010,6 +1009,8 @@ class ProfileLayerJunction(models.Model):
     )
     position = models.IntegerField('Position', default=1)
 
+    class Meta:
+        ordering = ["position"]
 
 texture_choices = {x:x for x in [
     '',
@@ -1044,9 +1045,6 @@ class Layer(Dateable):
     )
     description = models.TextField("description", blank=True)
     site_use = models.TextField("site use", blank=True)
-    profile = models.ManyToManyField(
-        Profile, verbose_name="profile", related_name="layer"
-    )
     site = models.ForeignKey(
         Site,
         verbose_name="site",
@@ -1055,7 +1053,6 @@ class Layer(Dateable):
         blank=True,
         null=True,
     )
-    pos = models.IntegerField("position in profile", null=True, blank=True) #for legacy, this should be removed after migration
     culture = models.ForeignKey(
         Culture,
         verbose_name="culture",
@@ -1097,9 +1094,6 @@ class Layer(Dateable):
         Reference, verbose_name="reference", blank=True, related_name="layer"
     )
 
-    class Meta:
-        ordering = ["pos"]
-
     @property
     def parent(self):
         return self.layer
@@ -1113,7 +1107,7 @@ class Layer(Dateable):
 
     @property
     def in_profile(self):
-        return ",".join([x.name for x in self.profile.all()])
+        return ",".join([x.profile.name for x in self.profile_junction.all()])
 
     def __str__(self):
         if self.site:
@@ -1246,7 +1240,7 @@ class Sample(Dateable):
     )
 
     class Meta:
-        ordering = ["site", "batch", "layer__pos", "name"]
+        ordering = ["site", "batch", "layer", "name"]
 
     def get_provenience(self):
         try:

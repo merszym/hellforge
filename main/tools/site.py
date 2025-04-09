@@ -20,7 +20,8 @@ from main.models import (
     Synonym,
     Connection,
     QuicksandAnalysis,
-    HumanDiagnosticPositions
+    HumanDiagnosticPositions,
+    ProfileLayerJunction
 )
 from copy import copy
 import json
@@ -91,7 +92,7 @@ def get_culture_css(request, site_id):
     for n, cult in enumerate(
         Culture.objects.filter(
             Q(layer__in=layers) | Q(layer_analysis__site__layer__in=layers)
-        ).order_by("layer__pos")
+        ).order_by("layer__profile_junction__position")
     ):
         cultures[cult.classname] = n
 
@@ -113,7 +114,7 @@ def get_timeline_data(site_id, request=False, profile=None):
 
     if profile:
         layers = Layer.objects.filter(
-            Q(site=site) & Q(profile=profile)
+            Q(site=site) & Q(profile_junction__profile=profile)
         ).prefetch_related("date")
     else:
         layers = Layer.objects.filter(Q(site=site)).prefetch_related("date")
@@ -123,7 +124,7 @@ def get_timeline_data(site_id, request=False, profile=None):
             "id": layer.name.lower(),
             "content": layer.name,
             "treeLevel": 2,
-            "order": int(layer.pos) if layer.pos else 0,
+            "order": ProfileLayerJunction.objects.filter(layer=layer, profile=profile).first().position,
         }
         for layer in layers
     ]
@@ -428,7 +429,7 @@ def get_site_samplebatch_tab(request, pk):
 
     if profile != "all":
         profile = get_instance_from_string(profile)
-        batch_samples = batch_samples.filter(layer__profile=profile)
+        batch_samples = batch_samples.filter(layer__profile_junction__profile=profile)
 
     if analyzed:
         batch_samples = batch_samples.filter(analyzed_sample__isnull=False)
@@ -447,9 +448,9 @@ def get_site_samplebatch_tab(request, pk):
     layers = Layer.objects.filter(sample__batch=batch).distinct()
 
     if profile != "all":
-        layers = layers.filter(profile=profile)
+        layers = layers.filter(profile_junction__profile=profile)
 
-    profiles = Profile.objects.filter(layer__sample__batch=batch).distinct()
+    profiles = Profile.objects.filter(layer_junction__layer__sample__batch=batch).distinct()
 
     if not all_projects and current_project: 
         analyzedsamples = update_query_for_negatives(
