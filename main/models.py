@@ -1010,7 +1010,23 @@ class ProfileLayerJunction(models.Model):
     position = models.IntegerField('Position', default=1)
 
     class Meta:
-        ordering = ["position"]
+        ordering = ["profile","position"]
+
+    @classmethod
+    def table_columns(self):
+        # human readable representation of the dates
+        return [
+            "Profile",
+            "Layer"
+        ]
+
+    def get_data(self, **kwargs):
+        # for an entry, return a dict {'col': data} that is used for the export of the data
+        data = {
+            "Profile": self.profile.name,
+            "Layer":self.layer.name,
+        }
+        return data
 
 texture_choices = {x:x for x in [
     '',
@@ -1132,6 +1148,7 @@ class Layer(Dateable):
         data = {
             "Layer Name": self.name,
             "Layer Parent": self.parent.get_highest().name if self.parent else None,
+            "Layer Profile": self.in_profile,
             "Layer Colour": self.colour_munsell,
             "Layer Texture": self.texture,
             "Layer Age": self.age_summary(export=True),
@@ -1143,12 +1160,14 @@ class Layer(Dateable):
         }
         return data
 
+
     @classmethod
     def table_columns(self):
         # the table_columns for uploading and empty columns
         return [
             "Layer Name",
             "Layer Parent",
+            "Layer Profile",
             "Layer Colour",
             "Layer Texture",
             "Layer Age",

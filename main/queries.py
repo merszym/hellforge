@@ -28,6 +28,7 @@ def queries(many, one):
         ("project", "contact"): "site__project",
         ("project", "quicksand_analysis"): "analyzedsample__sample__project",
         ("site", "quicksand_analysis"): "analyzedsample__sample__site",
+        ("site", "profilelayerjunction"): "profile__site",
     }
 
     return dict[(many, one)]
@@ -55,6 +56,7 @@ def get_project_samples(project):
             & Q(project=project)
         )
     return qs
+
 
 def get_libraries(start):
     """
