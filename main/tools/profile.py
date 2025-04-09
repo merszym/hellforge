@@ -1,16 +1,26 @@
 from django.urls import path
+from django.shortcuts import render
 from main.models import Layer, ProfileLayerJunction
 from main.tools.generic import get_instance_from_string
 from django.contrib.auth.decorators import login_required
 
 
+def get_profile_detail(request):
+    """
+    the content of the profile that is rendered when selecting a profile and on load of the site-stratigraphy section
+    """
+    profile = get_instance_from_string(request.GET.get('profile'))
+
+    return render(request,"main/profile/profile-detail.html", {'object':profile})
+
+
 @login_required
-def add_layer_to_profile(request, layer, profile):
+def add_layer_to_profile(request, layer):
     """
     Add an existing layer to an existing profile.
     - create a new instance of ProfileLayerJunction with the correct position!
     """
-    profile = get_instance_from_string(f"profile_{profile}")
+    profile = get_instance_from_string(request.GET.get('profile'))
     layer = get_instance_from_string(f"layer_{layer}")
 
     all_layers = [x.position for x in ProfileLayerJunction.objects.filter(profile=profile).all()]
@@ -20,14 +30,12 @@ def add_layer_to_profile(request, layer, profile):
     ProfileLayerJunction(profile=profile, layer=layer, position=position).save()
 
     # render the updated profile
-    from main.tools.site import get_site_profile_tab
-
     request.GET._mutable = True
     request.GET.update(
-        {"site": f"site_{profile.site.pk}", "profile": f"profile_{profile.pk}"}
+        {"profile": f"profile_{profile.pk}"}
     )
 
-    return get_site_profile_tab(request)
+    return get_profile_detail(request)
 
 
 @login_required
@@ -66,8 +74,9 @@ def create_layer(request):
 urlpatterns = [
     path("create-layer", create_layer, name="main_profile_layer_create"),
     path(
-        "add/<int:layer>/<int:profile>",
+        "add/<int:layer>",
         add_layer_to_profile,
         name="main_profile_layer_add",
     ),
+    path('get', get_profile_detail ,name='main_profile_get')
 ]

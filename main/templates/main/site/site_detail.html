@@ -161,7 +161,7 @@
             </script>
 
             <div class="block-content" id="site_layer" style="{% if tab != 'site_layer' %} display:none {% endif %}"
-                hx-get="{% url 'main_profile_get' %}?{{request.GET|getstring}}"
+                hx-get="{% url 'main_profile-tab_get' %}?{{request.GET|getstring}}"
                 hx-trigger="load once"
                 hx-vars="{'site':'site_{{object.pk}}'}">
                 <div class="loading loading-lg m-2"></div>

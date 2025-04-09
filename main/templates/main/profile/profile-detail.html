@@ -1,220 +1,176 @@
 {% load static %}
 {% load format %}
-<section class="m-2 show_profile" style="padding-top: 20px;{% if profile != selected_profile%}display:none;{% endif %}" id="show_profile_{{object.pk}}">
-    <div style="position: relative;">
-      <h3>{{object.name}}</h3>
-      {% if request.user.is_authenticated %}
-      <div style="position:absolute; right:5%; top:10px">
-        <span class="btn btn-primary tooltip tooltip-left generic_delete"
-          hx-post="{% url 'main_generic_delete' %}"
-          hx-vals='{
-            "instance_x": "profile_{{object.pk}}"
-          }'
-          data-hide="show_profile_{{object.pk}},profile-tab_{{object.pk}}"
-          hx-confirm="Delete the profile"
-          data-tooltip="Delete the Profile">
-            <i class="icon icon-delete"></i>
-        </span>
-        <span
-            class='btn tooltip tooltip-left modal_open'
-            data-tooltip="Manage Layers"
-            hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
-            hx-vals='{"object":"site_{{object.site.pk}}","type":"stratigraphy"}'
-            hx-target="#modal-blank"><i class="icon icon-plus"></i>
-        </span>
-      </div>
-      {% endif %}
+  <div style="position: relative;">
+    <h3>{{object.name}}</h3>
+    {% if request.user.is_authenticated %}
+    <div style="position:absolute; right:5%; top:10px">
+      <span class="btn btn-primary tooltip tooltip-left generic_delete"
+        hx-post="{% url 'main_generic_delete' %}"
+        hx-vals='{
+          "instance_x": "profile_{{object.pk}}"
+        }'
+        data-hide="show_profile_{{object.pk}},profile-tab_{{object.pk}}"
+        hx-confirm="Delete the profile"
+        data-tooltip="Delete the Profile">
+          <i class="icon icon-delete"></i>
+      </span>
+      <span
+          class='btn tooltip tooltip-left modal_open'
+          data-tooltip="Manage Layers"
+          hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
+          hx-vals='{"object":"site_{{object.site.pk}}","type":"stratigraphy"}'
+          hx-target="#modal-blank"><i class="icon icon-plus"></i>
+      </span>
     </div>
-    <!--show the global profile id for ajax calls-->
-    <input name="profile_id" value="{{object.pk}}" style="display:none;">
-    <!--the layers-->
-    <div id="profiledetail_{{object.pk}}">
-    {% if object.layer_junction.first %}
-    <!-- <div class="panel" style="max-height:720px; overflow: scroll;"> -->
-      <style>
-        td{
-          padding-top: 2px !important;
-          padding-bottom: 2px !important;
-        }
-      </style>
-      <table class="table table-striped table-hover" style="line-height: 1.2;">
-        <thead>
-          <tr>
-            {# this is the draggable column #}
-            {% if request.user.is_authenticated %}
-            <th></th>
-            {% endif %}
-            {% include 'main/profile/layer-tablehead.html' with site=object.site %}
-            {# this is the menu column #}
-            {% if request.user.is_authenticated %}
-            <th></th>
-            {% endif %}
-          </tr>
-        </thead>
-        <tbody>
-          {% for junction in object.layer_junction.all %}
-          {% with layer=junction.layer %}
-          <tr class="table_row" id="profilelayerjunction_{{junction.pk}}" data-pos="{{junction.position}}">
-            {% if request.user.is_authenticated %}
-            <td>
-              <form style="width: 2px;">
-              {% csrf_token %}
-              <input name="object" value="layer_{{layer.pk}}" style="display: none;">
-              <span
-                class="tooltip tooltip-right"
-                data-tooltip="Move Layer up"
-                hx-post="{% url 'main_layer_positionupdate' %}"
-                hx-target="#site_layer"
-                hx-vars="{'direction':'up'}"
-              >
-                <i class="icon icon-upward text-gray"></i>
-              </span>
-              </form>
-            </td>
-            {% endif %}
-            {% include 'main/profile/layer-tablecells.html' with site=object.site %}
-            {% if request.user.is_authenticated %}
-            <td>
-              <div class="popover popover-left">
-                <a href="#">Edit</a>
-                <div class="popover-container">
-                  <div class="card">
-                    <div class="card-body">
-                      <span class="btn tooltip tooltip-top"
-                        data-tooltip="Clone Layer"
-                        hx-post="{% url 'main_layer_clone' layer.pk %}?{{request.GET|getstring}}"
-                        hx-target="#site_layer">
-                        <i class="icon icon-plus"></i>
-                      </span>
+    {% endif %}
+  </div>
+  <!--show the global profile id for ajax calls-->
+  <input name="profile_id" value="{{object.pk}}" style="display:none;">
+  <!--the layers-->
+  <div id="profiledetail_{{object.pk}}">
+  {% if object.layer_junction.first %}
+  <!-- <div class="panel" style="max-height:720px; overflow: scroll;"> -->
+    <style>
+      td{
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+      }
+    </style>
+    <table class="table table-striped table-hover" style="line-height: 1.2;">
+      <thead>
+        <tr>
+          {# this is the draggable column #}
+          {% if request.user.is_authenticated %}
+          <th></th>
+          {% endif %}
+          {% include 'main/profile/layer-tablehead.html' with site=object.site %}
+          {# this is the menu column #}
+          {% if request.user.is_authenticated %}
+          <th></th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for junction in object.layer_junction.all %}
+        {% with layer=junction.layer %}
+        <tr class="table_row" id="profilelayerjunction_{{junction.pk}}" data-pos="{{junction.position}}">
+          {% if request.user.is_authenticated %}
+          <td>
+            <form style="width: 2px;">
+            {% csrf_token %}
+            <input name="object" value="layer_{{layer.pk}}" style="display: none;">
+            <span
+              class="tooltip tooltip-right"
+              data-tooltip="Move Layer up"
+              hx-post="{% url 'main_layer_positionupdate' %}"
+              hx-target="#site_layer"
+              hx-vars="{'direction':'up'}"
+            >
+              <i class="icon icon-upward text-gray"></i>
+            </span>
+            </form>
+          </td>
+          {% endif %}
+          {% include 'main/profile/layer-tablecells.html' with site=object.site %}
+          {% if request.user.is_authenticated %}
+          <td>
+            <div class="popover popover-left">
+              <a href="#">Edit</a>
+              <div class="popover-container">
+                <div class="card">
+                  <div class="card-body">
+                    <span class="btn tooltip tooltip-top"
+                      data-tooltip="Clone Layer"
+                      hx-post="{% url 'main_layer_clone' layer.pk %}?{{request.GET|getstring}}"
+                      hx-target="#site_layer">
+                      <i class="icon icon-plus"></i>
+                    </span>
 
-                      <span class="btn tooltip tooltip-top"
-                          hx-post="{% url 'main_generic_delete' %}"
-                          hx-vals='{
-                            "instance_x":"profilelayerjunction_{{junction.pk}}"
-                          }'
-                          hx-target="#profilelayerjunction_{{junction.pk}}"
-                          hx-swap="delete"
-                          data-tooltip="Remove Layer from Profile"
-                        ><i class="icon icon-downward"></i>
-                      </span>
+                    <span class="btn tooltip tooltip-top"
+                        hx-post="{% url 'main_generic_delete' %}"
+                        hx-vals='{
+                          "instance_x":"profilelayerjunction_{{junction.pk}}"
+                        }'
+                        hx-target="#profilelayerjunction_{{junction.pk}}"
+                        hx-swap="delete"
+                        data-tooltip="Remove Layer from Profile"
+                      ><i class="icon icon-downward"></i>
+                    </span>
 
-                      <a class="btn tooltip tooltip-top"
-                          hx-post="{% url 'main_generic_delete' %}"
-                          hx-vals='{
-                            "instance_x":"layer_{{layer.pk}}"
-                          }'
-                          hx-confirm="Delete Layer"
-                          hx-target="#profilelayerjunction_{{junction.pk}}"
-                          hx-swap="delete"
-                          data-tooltip="Delete Layer"
-                        ><i class="icon icon-delete"></i>
-                      </a>
+                    <a class="btn tooltip tooltip-top"
+                        hx-post="{% url 'main_generic_delete' %}"
+                        hx-vals='{
+                          "instance_x":"layer_{{layer.pk}}"
+                        }'
+                        hx-confirm="Delete Layer"
+                        hx-target="#profilelayerjunction_{{junction.pk}}"
+                        hx-swap="delete"
+                        data-tooltip="Delete Layer"
+                      ><i class="icon icon-delete"></i>
+                    </a>
 
-                      <div class="divider"></div>
+                    <div class="divider"></div>
 
-                      <span class="btn modal_open tooltip tooltip-top" data-tooltip="Edit Layer"
-                        hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
-                        hx-vals='{"object":"layer_{{layer.pk}}", "type":"edit"}'
-                        hx-target="#modal-blank">
-                        <i class="icon icon-edit"></i>
-                      </span>
+                    <span class="btn modal_open tooltip tooltip-top" data-tooltip="Edit Layer"
+                      hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
+                      hx-vals='{"object":"layer_{{layer.pk}}", "type":"edit"}'
+                      hx-target="#modal-blank">
+                      <i class="icon icon-edit"></i>
+                    </span>
 
-                      <span class="btn modal_open tooltip tooltip-top" data-tooltip="Edit Layer Properties"
-                        hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
-                        hx-vals='{"object":"layer_{{layer.pk}}","type":"properties"}'
-                        hx-target="#modal-blank">
-                        Prop
-                      </span>
-                    </div>
+                    <span class="btn modal_open tooltip tooltip-top" data-tooltip="Edit Layer Properties"
+                      hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
+                      hx-vals='{"object":"layer_{{layer.pk}}","type":"properties"}'
+                      hx-target="#modal-blank">
+                      Prop
+                    </span>
                   </div>
                 </div>
               </div>
-            </td>
-            {% endif %}
-          </tr>
-          {% endwith %}
-          {% endfor %}
-        </tbody>
-        </table>
-        {% if request.user.is_authenticated %}
-        <div class="panel-footer">
-          <form>
-            {% csrf_token %}
-            <input name="instance_y" value="profile_{{object.pk}}" style="display: none;">
-            <span class="btn btn-primary tooltip tooltip-right"
-                hx-post="{% url 'main_profile_layer_create' %}"
-                hx-target="#site_layer"
-                data-tooltip="Add a new Layer">
-                <i class="icon icon-plus"></i>
-            </span>
-          </form>
-        </div>
-        {%endif %}
-      <br>
-    {% else %}
-      <div class="empty">
-        <div class="empty-icon">
-          <i class="icon icon-flag"></i>
-        </div>
-        <p class="empty-title h5">No Layers</p>
-        {% if request.user.is_authenticated %}
-        <p class="empty-subtitle">Click the button to add a new Layer.</p>
-        <div class="empty-action">
-          <form>
-            {% csrf_token %}
-            <input name="instance_y" value="profile_{{object.pk}}" style="display: none;">
-            <span class="btn btn-primary tooltip tooltip-right"
-                hx-post="{% url 'main_profile_layer_create' %}"
-                hx-target="#site_layer"
-                data-tooltip="Add a new Layer">
-                <i class="icon icon-plus"></i>
-            </span>
-          </form>
-        </div>
-        {% endif %}
-      </div>
-    {% endif %}
-    </div>
-    <!-- Add layers from other profiles -->
-    {% if request.user.is_authenticated %}
-    {% if object.other_layers %}
-    <div>
-        <h5 id="toggle_other_layers_{{object.pk}}"> Add Layer from other profile </h5>
-        <table id="show_other_layers_{{object.pk}}" class="table table-striped table-hover" style="display: none;">
-          <thead>
-            <tr>
-              <th>Profile</th>
-              {% include 'main/profile/layer-tablehead.html' %}
-              <th></th>
-              <th></th>
-            </tr>
-          </thead>
-        <tbody id="other_profile_layer_tbody">
-        {% for layer in object.other_layers %}
-          <tr>
-            <td>{{layer.in_profile}}</td>
-            {% include 'main/profile/layer-tablecells.html' %}
-            <td>
-              <form>
-                {% csrf_token %}
-                <span class="btn"
-                  hx-post="{% url 'main_profile_layer_add' layer.pk object.pk %}"
-                  hx-target="#site_layer">
-                  <i class="icon icon-upward"></i>
-                </span>
-              </form>
-            </td>
-          </tr>
+            </div>
+          </td>
+          {% endif %}
+        </tr>
+        {% endwith %}
         {% endfor %}
-        </tbody>
-        </table>
+      </tbody>
+      </table>
+      {% if request.user.is_authenticated %}
+      <div class="panel-footer">
+        <form>
+          {% csrf_token %}
+          <input name="instance_y" value="profile_{{object.pk}}" style="display: none;">
+          <span class="btn btn-primary tooltip tooltip-right"
+              hx-post="{% url 'main_profile_layer_create' %}"
+              hx-target="#site_layer"
+              data-tooltip="Add a new Layer">
+              <i class="icon icon-plus"></i>
+          </span>
+        </form>
+      </div>
+      {%endif %}
+    <br>
+  {% else %}
+    <div class="empty">
+      <div class="empty-icon">
+        <i class="icon icon-flag"></i>
+      </div>
+      <p class="empty-title h5">No Layers</p>
+      {% if request.user.is_authenticated %}
+      <p class="empty-subtitle">Click the button to add a new Layer.</p>
+      <div class="empty-action">
+        <form>
+          {% csrf_token %}
+          <input name="instance_y" value="profile_{{object.pk}}" style="display: none;">
+          <span class="btn btn-primary tooltip tooltip-right"
+              hx-post="{% url 'main_profile_layer_create' %}"
+              hx-target="#site_layer"
+              data-tooltip="Add a new Layer">
+              <i class="icon icon-plus"></i>
+          </span>
+        </form>
+      </div>
+      {% endif %}
     </div>
-    {% endif %}
-    {% endif %}
-
-    <script>
-      $("body").on('click','#toggle_other_layers_{{object.pk}}',function(){
-        $("#show_other_layers_{{object.pk}}").toggle()
-      });
-    </script>
-  </section>
+  {% endif %}
+  </div>

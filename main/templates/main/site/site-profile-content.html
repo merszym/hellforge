@@ -11,6 +11,11 @@
         >
             <a style="cursor:pointer;">{{profile.name}}</a>
         </li>
+        <span style="display: none;"
+        hx-get="{% url 'main_profile_get' %}?profile=profile_{{profile.pk}}"
+        hx-target="#show_profile"
+        hx-trigger="click from:#profile-tab_{{profile.pk}}"
+        ></span>
         {% endfor %}
         <script>
             $('body').on('click', '.switch_profile', function(){
@@ -28,9 +33,12 @@
         </li>
         {% endif %}
     </ul>
-    {% for profile in object.profile.all %}
-    {% include 'main/profile/profile-detail.html' with object=profile selected_profile=selected_profile %}
-    {% empty %}
+    <!--Show the selected profile-->
+    {% if selected_profile %}
+    <section class="m-2" style="padding-top: 20px;" id="show_profile">
+    {% include 'main/profile/profile-detail.html' with object=selected_profile %}
+    </section>
+    {% else %}
     <div class="empty">
         <div class="empty-icon">
         <i class="icon icon-flag"></i>
@@ -38,6 +46,45 @@
         <p class="empty-title h5">No Profiles yet</p>
         <p class="empty-subtitle">Click the button above to add a profile.</p>
     </div>
-    {% endfor %}
+    {% endif %}
+    <!-- Add layers from other profiles -->
+    {% if request.user.is_authenticated %}
+    <div>
+        <h5 id="toggle_other_layers"> Add Layer from to profile </h5>
+        <table id="show_other_layers" class="table table-striped table-hover" style="display: none;">
+            <thead>
+            <tr>
+                <th>Profile</th>
+                {% include 'main/profile/layer-tablehead.html' %}
+                <th></th>
+                <th></th>
+            </tr>
+            </thead>
+        <tbody id="other_profile_layer_tbody">
+        {% for layer in object.layer.all %}
+            <tr>
+            <td>{{layer.in_profile}}</td>
+            {% include 'main/profile/layer-tablecells.html' %}
+            <td>
+                <form>
+                {% csrf_token %}
+                <span class="btn"
+                    hx-post="{% url 'main_profile_layer_add' layer.pk %}?{{request.GET|getstring}}"
+                    hx-target="#show_profile">
+                    <i class="icon icon-upward"></i>
+                </span>
+                </form>
+            </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+        </table>
+    </div>
+    <script>
+        $("body").on('click','#toggle_other_layers',function(){
+          $("#show_other_layers").toggle()
+        });
+      </script>
+    {% endif %} 
     </div>
 </div>

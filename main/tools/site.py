@@ -573,7 +573,7 @@ def handle_stratigraphy(request, file):
 
 urlpatterns = [
     path("add-profile/<int:site_id>", add_profile, name="main_site_profile_create"),
-    path("get-profile", get_site_profile_tab, name="main_profile_get"),
+    path("get-profile", get_site_profile_tab, name="main_profile-tab_get"),
     path("create", site_create_update, name="main_site_add"),
     path("edit/<int:pk>", site_create_update, name="main_site_update"),
     path("list", SiteListView.as_view(), name="site_list"),
