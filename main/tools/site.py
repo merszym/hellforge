@@ -123,7 +123,7 @@ def get_timeline_data(site_id, request=False, profile=None):
             "id": layer.name.lower(),
             "content": layer.name,
             "treeLevel": 2,
-            "order": int(layer.pos),
+            "order": int(layer.pos) if layer.pos else 0,
         }
         for layer in layers
     ]
@@ -235,6 +235,8 @@ def get_site_profile_tab(request):
         selected_profile = get_instance_from_string(selected_profile)
     else:
         selected_profile = object.profile.first()
+        
+    #print(selected_profile.layer_junction)
 
     context = {
         "object": object,

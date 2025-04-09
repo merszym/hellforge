@@ -1,5 +1,5 @@
 from django.urls import path
-from main.models import Layer
+from main.models import Layer, ProfileLayerJunction
 from main.tools.generic import get_instance_from_string
 from django.contrib.auth.decorators import login_required
 
@@ -46,15 +46,21 @@ def add_layer_to_profile(request, layer, profile):
 def create_layer(request):
     """
     create a new layer and add it to an existing profile.
+    - create a new instance of ProfileLayerJunction with the correct position!
+    
+    in the request.POST:
     instance_y = the profile
     """
     profile = get_instance_from_string(request.POST.get("instance_y"))
 
-    all_layers = [x.pos for x in Layer.objects.filter(site__id=profile.site.pk).all()]
+    all_layers = [x.position for x in ProfileLayerJunction.objects.filter(profile=profile).all()]
     last = max(all_layers) if len(all_layers) > 0 else 0
-    layer = Layer(name=f"Layer {last+1}", pos=last + 1, site=profile.site)
+    position = last + 1
+    layer = Layer(name=f"Layer {last+1}", site=profile.site)
     layer.save()
     layer.refresh_from_db()
+
+    ProfileLayerJunction(profile=profile, layer=layer, position=position).save()
 
     return add_layer_to_profile(request, layer.pk, profile.pk)
 

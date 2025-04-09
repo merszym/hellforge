@@ -966,7 +966,7 @@ class Site(models.Model):
 class Profile(models.Model):
     name = models.CharField("name", max_length=200)
     site = models.ForeignKey(
-        Site, verbose_name="site", on_delete=models.PROTECT, related_name="profile"
+        Site, verbose_name="site", on_delete=models.CASCADE, related_name="profile"
     )
     type = models.CharField("type", max_length=200, blank=True)
 
@@ -980,6 +980,35 @@ class Profile(models.Model):
     @property
     def other_profiles(self):
         return Profile.objects.filter(site=self.site).exclude(id=self.pk)
+
+
+    def get_data(self, **kwargs):
+        # for an entry, return a dict {'col': data} that is used for the export of the data
+        data = {
+            "Profile Name": self.name,
+        }
+        return data
+
+    @classmethod
+    def table_columns(self):
+        return ["Profile Name"]
+
+class ProfileLayerJunction(models.Model):
+    profile = models.ForeignKey('Profile',
+        verbose_name="profile",
+        related_name="layer_junction",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE
+    )
+    layer = models.ForeignKey('Layer',
+        verbose_name="layer",
+        related_name="profile_junction",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE
+    )
+    position = models.IntegerField('Position', default=1)
 
 
 texture_choices = {x:x for x in [
@@ -1013,10 +1042,8 @@ class Layer(Dateable):
         null=True,
         on_delete=models.SET_NULL,
     )
-    unit = models.CharField("unit", max_length=300, blank=True, null=True)
     description = models.TextField("description", blank=True)
     site_use = models.TextField("site use", blank=True)
-    characteristics = models.TextField("characteristics", blank=True)
     profile = models.ManyToManyField(
         Profile, verbose_name="profile", related_name="layer"
     )
@@ -1028,7 +1055,7 @@ class Layer(Dateable):
         blank=True,
         null=True,
     )
-    pos = models.IntegerField("position in profile")
+    pos = models.IntegerField("position in profile", null=True, blank=True) #for legacy, this should be removed after migration
     culture = models.ForeignKey(
         Culture,
         verbose_name="culture",
@@ -1600,6 +1627,7 @@ models = {
     "date": Date,
     "synonym": Synonym,
     "profile": Profile,
+    "profile_layer_junction":ProfileLayerJunction,
     "epoch": Epoch,
     "reference": Reference,
     "ref": Reference,

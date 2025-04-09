@@ -29,7 +29,7 @@
     <input name="profile_id" value="{{object.pk}}" style="display:none;">
     <!--the layers-->
     <div id="profiledetail_{{object.pk}}">
-    {% if object.layer.first %}
+    {% if object.layer_junction.first %}
     <!-- <div class="panel" style="max-height:720px; overflow: scroll;"> -->
       <style>
         td{
@@ -52,8 +52,9 @@
           </tr>
         </thead>
         <tbody>
-          {% for layer in object.layer.all %}
-          <tr class="table_row" id="layer_{{layer.pk}}" data-pos="{{layer.pos}}">
+          {% for junction in object.layer_junction.all %}
+          {% with layer=junction.layer %}
+          <tr class="table_row" id="layer_{{layer.pk}}" data-pos="{{junction.position}}">
             {% if request.user.is_authenticated %}
             <td>
               <form style="width: 2px;">
@@ -125,6 +126,7 @@
             </td>
             {% endif %}
           </tr>
+          {% endwith %}
           {% endfor %}
         </tbody>
         </table>
