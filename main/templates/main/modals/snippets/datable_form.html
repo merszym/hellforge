@@ -32,7 +32,7 @@
                 >
                 {% if request.user.is_authenticated %}
                 <span id="set_layer_bounds" class="btn btn-primary input-group-btn"
-                    hx-post="{% url 'main_dateable_setbounds' %}"
+                    hx-post="{% url 'main_dateable_setbounds' %}?{{request.GET|getstring}}"
                     hx-target="#modal-blank">Set
                 </span>
                 {% endif %}

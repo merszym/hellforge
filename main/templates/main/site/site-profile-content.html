@@ -20,6 +20,7 @@
         <script>
             $('body').on('click', '.switch_profile', function(){
                 add_url_params({'profile':$(this).attr('data-show')})
+                $("input[id=main_profile_layer_add]").val($(this).attr('data-show'))
             })
         </script>
         {% if request.user.is_authenticated %}
@@ -67,12 +68,13 @@
             {% include 'main/profile/layer-tablecells.html' %}
             <td>
                 <form>
-                {% csrf_token %}
-                <span class="btn"
-                    hx-post="{% url 'main_profile_layer_add' layer.pk %}?{{request.GET|getstring}}"
-                    hx-target="#show_profile">
-                    <i class="icon icon-upward"></i>
-                </span>
+                    <input id="main_profile_layer_add" type="hidden" name="instance_x" value="profile_{{selected_profile.pk}}">
+                    {% csrf_token %}
+                    <span class="btn"
+                        hx-post="{% url 'main_profile_layer_add' layer.pk %}"
+                        hx-target="#show_profile">
+                        <i class="icon icon-upward"></i>
+                    </span>
                 </form>
             </td>
             </tr>

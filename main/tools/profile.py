@@ -20,7 +20,7 @@ def add_layer_to_profile(request, layer):
     Add an existing layer to an existing profile.
     - create a new instance of ProfileLayerJunction with the correct position!
     """
-    profile = get_instance_from_string(request.GET.get('profile'))
+    profile = get_instance_from_string(request.POST.get('instance_x'))
     layer = get_instance_from_string(f"layer_{layer}")
 
     all_layers = [x.position for x in ProfileLayerJunction.objects.filter(profile=profile).all()]

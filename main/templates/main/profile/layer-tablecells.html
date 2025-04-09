@@ -24,7 +24,7 @@
     class="text-primary c-hand tooltip tooltip-right modal_open"
     data-tooltip="Colour"
     hx-get="{% url 'main_modal_get' %}"
-    hx-vals='{"object":"layer_{{layer.pk}}","type":"colour"}'
+    hx-vals='{"object":"layer_{{layer.pk}}","profile":"profile_{{object.pk}}","type":"colour"}'
     hx-target="#modal-blank"
     {% endif %}
     >

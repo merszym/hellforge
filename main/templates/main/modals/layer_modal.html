@@ -27,8 +27,7 @@
     <div
         hx-get="{% url 'main_profile_get' %}?{{request.GET|getstring}}"
         hx-trigger="load"
-        hx-vars="{'site':'site_{{object.site.pk}}'}"
-        hx-target="#site_layer">
+        hx-target="#show_profile">
     </div>
 
     {% if type == "edit" %}
@@ -71,7 +70,7 @@
                                 <span class="btn tooltip tooltip-right"
                                     data-tooltip="Remove"
                                     hx-target="#modal-blank"
-                                    hx-post="{% url 'main_generic_unsetfk' %}?next=modal_edit"
+                                    hx-post="{% url 'main_generic_unsetfk' %}?next=modal_edit&{{request.GET|getstring}}"
                                     >
                                     <i class="icon icon-delete" centered></i>
                                 </span>
@@ -149,7 +148,7 @@
                             {% endfor %}
                         </select>
                         <span
-                            hx-post="{% url 'layer-culture-update' %}"
+                            hx-post="{% url 'layer-culture-update' %}?{{request.GET|getstring}}"
                             hx-target="#modal-blank"
                             class="btn btn-primary input-group-btn"
                         >OK</span>
@@ -189,7 +188,7 @@
                             {% endfor %}
                         </select>
                         <span
-                            hx-post="{% url 'layer-epoch-update' %}"
+                            hx-post="{% url 'layer-epoch-update' %}?{{request.GET|getstring}}"
                             hx-target="#modal-blank"
                             class="btn btn-primary input-group-btn"
                         >OK</span>
@@ -214,7 +213,7 @@
                     {{form}}
                     <br>
                     <span class="btn btn-primary input-group-btn"
-                        hx-post="{% url 'main_layer_update' object.pk %}"
+                        hx-post="{% url 'main_layer_update' object.pk %}?{{request.GET|getstring}}"
                         hx-target="#modal-blank">Update
                     </span>
                 </form>
