@@ -1627,7 +1627,7 @@ models = {
     "date": Date,
     "synonym": Synonym,
     "profile": Profile,
-    "profile_layer_junction":ProfileLayerJunction,
+    "profilelayerjunction":ProfileLayerJunction,
     "epoch": Epoch,
     "reference": Reference,
     "ref": Reference,

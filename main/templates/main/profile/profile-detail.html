@@ -54,7 +54,7 @@
         <tbody>
           {% for junction in object.layer_junction.all %}
           {% with layer=junction.layer %}
-          <tr class="table_row" id="layer_{{layer.pk}}" data-pos="{{junction.position}}">
+          <tr class="table_row" id="profilelayerjunction_{{junction.pk}}" data-pos="{{junction.position}}">
             {% if request.user.is_authenticated %}
             <td>
               <form style="width: 2px;">
@@ -85,25 +85,31 @@
                         hx-post="{% url 'main_layer_clone' layer.pk %}?{{request.GET|getstring}}"
                         hx-target="#site_layer">
                         <i class="icon icon-plus"></i>
-                    </span>
+                      </span>
 
-                      <span class="btn tooltip tooltip-left"
-                        data-tooltip="Remove Layer from Profile"
-                        hx-post="{% url 'main_profile_layer_remove' layer.pk object.pk %}"
-                        hx-target="#site_layer">
-                        <i class="icon icon-downward"></i>
+                      <span class="btn tooltip tooltip-top"
+                          hx-post="{% url 'main_generic_delete' %}"
+                          hx-vals='{
+                            "instance_x":"profilelayerjunction_{{junction.pk}}"
+                          }'
+                          hx-target="#profilelayerjunction_{{junction.pk}}"
+                          hx-swap="delete"
+                          data-tooltip="Remove Layer from Profile"
+                        ><i class="icon icon-downward"></i>
                       </span>
 
                       <a class="btn tooltip tooltip-top"
-                        hx-post="{% url 'main_generic_delete' %}"
-                        hx-vals='{
-                          "instance_x":"layer_{{layer.pk}}"
-                        }'
-                        hx-confirm="Delete Layer"
-                        hx-target="#layer_{{layer.pk}}"
-                        hx-swap="delete"
-                        data-tooltip="Delete Layer"
-                      ><i class="icon icon-delete"></i></a>
+                          hx-post="{% url 'main_generic_delete' %}"
+                          hx-vals='{
+                            "instance_x":"layer_{{layer.pk}}"
+                          }'
+                          hx-confirm="Delete Layer"
+                          hx-target="#profilelayerjunction_{{junction.pk}}"
+                          hx-swap="delete"
+                          data-tooltip="Delete Layer"
+                        ><i class="icon icon-delete"></i>
+                      </a>
+
                       <div class="divider"></div>
 
                       <span class="btn modal_open tooltip tooltip-top" data-tooltip="Edit Layer"
