@@ -157,6 +157,46 @@
                 <!--update the site css-->
                 <div id="culture-css" hx-get="{% url 'main_site_culture_css' object.site.pk%}" hx-trigger="load once"></div>
                 <br>
+                <h6>Secondary/Alternative Cultures</h6>
+                {% if object.additional_cultures.first %}
+                    {% for additional_culture in object.additional_cultures.all %}
+                    <div class="tile tile-centered">
+                        <div class="tile-icon">
+                            <div class="example-tile-icon">
+                                <form>
+                                    {% csrf_token %}
+                                    <button class="btn"
+                                        hx-post="{% url 'main_generic_rmm2m' %}?{{request.GET|getstring}}&next=modal_properties"
+                                        hx-vars="{'instance_y':'layer_{{object.pk}}', 'instance_x':'culture_{{additional_culture.pk}}', 'field':'additional_cultures'}"
+                                        hx-target="#modal-blank">
+                                        <i class="icon icon-delete"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="tile-content">
+                            <div class="tile-title">{{additional_culture}}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+                <form>
+                    <input name="instance_x" value="layer_{{object.pk}}" style="display: none;"/>
+                    <div class="input-group">
+                        <select class="form-select" name="additional_cultures">
+                            <option selected>----</option>
+                            {% for option in cultures %}
+                            <option value="{{option.pk}}">{{option}}</option>
+                            {% endfor %}
+                        </select>
+                        <span
+                            hx-post="{% url 'layer-culture-update' %}?{{request.GET|getstring}}"
+                            hx-target="#modal-blank"
+                            class="btn btn-primary input-group-btn"
+                        >Add</span>
+                    </div>
+                </form>
+                <br>
                 <h6>Epoch</h6>
                 {% if object.epoch %}
                     <div class="tile tile-centered">

@@ -1079,6 +1079,12 @@ class Layer(Dateable):
         blank=True,
         null=True,
     )
+    additional_cultures = models.ManyToManyField(
+        Culture,
+        verbose_name="additional_cultures",
+        related_name="layers",
+        blank=True,
+    )
     epoch = models.ForeignKey(
         Epoch,
         verbose_name="epoch",

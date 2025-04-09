@@ -120,8 +120,13 @@ def set_name(request):
 @login_required
 def set_culture(request):
     object = get_instance_from_string(request.POST.get("instance_x"))
-    object.culture = Culture.objects.get(pk=int(request.POST.get("culture")))
-    object.save()
+    # first check if we want to set a secondary culture
+    if add_culture:= request.POST.get('additional_cultures', False):
+        cult = Culture.objects.get(pk=int(add_culture))
+        object.additional_cultures.add(cult)
+    else:
+        object.culture = Culture.objects.get(pk=int(request.POST.get("culture")))
+        object.save()
 
     request.GET._mutable = True
     request.GET.update({"object": f"layer_{object.pk}", "type": "properties"})

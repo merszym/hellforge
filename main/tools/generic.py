@@ -205,6 +205,7 @@ def add_x_to_y_m2m(request, field=None, response=True):
 def remove_x_from_y_m2m(request, field=None, response=True):
     x = get_instance_from_string(request.POST.get("instance_x"))
     y = get_instance_from_string(request.POST.get("instance_y"))
+    field = request.POST.get('field',False)
     if not field:
         field = request.POST.get("instance_x").split("_")[0]
     if x and y:

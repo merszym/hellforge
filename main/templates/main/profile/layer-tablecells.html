@@ -56,6 +56,11 @@
 </td>
 <td>{% if layer.culture %}
     <a class="btn-link" href="{% url 'culture_detail' pk=layer.culture.pk %}">{{layer.culture}}</a>
+        {% if layer.additional_cultures.first %}
+            {% for cult in layer.additional_cultures.all %}
+            <br><a class="btn-link" style="font-size:11pt;" href="{% url 'culture_detail' pk=cult.pk %}">{{cult}}</a>
+            {% endfor %}
+        {% endif %}
     {% endif %}
 </td>
 <td>
