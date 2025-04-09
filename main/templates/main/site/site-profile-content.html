@@ -51,36 +51,58 @@
     <!-- Add layers from other profiles -->
     {% if request.user.is_authenticated %}
     <div>
-        <h5 id="toggle_other_layers"> Add Layer from to profile </h5>
-        <table id="show_other_layers" class="table table-striped table-hover" style="display: none;">
-            <thead>
-            <tr>
-                <th>Profile</th>
-                {% include 'main/profile/layer-tablehead.html' %}
-                <th></th>
-                <th></th>
-            </tr>
-            </thead>
-        <tbody id="other_profile_layer_tbody">
-        {% for layer in object.layer.all %}
-            <tr>
-            <td>{{layer.in_profile}}</td>
-            {% include 'main/profile/layer-tablecells.html' %}
-            <td>
-                <form>
-                    <input id="main_profile_layer_add" type="hidden" name="instance_x" value="profile_{{selected_profile.pk}}">
-                    {% csrf_token %}
-                    <span class="btn"
-                        hx-post="{% url 'main_profile_layer_add' layer.pk %}"
-                        hx-target="#show_profile">
-                        <i class="icon icon-upward"></i>
-                    </span>
-                </form>
-            </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-        </table>
+        <h5 id="toggle_other_layers"> Add Layer to profile </h5>
+        <div id="show_other_layers" style="display: none;">
+            <div class="has-icon-left">
+                <input class="form-input" id="layer-list-search" type="text" placeholder="Find Layer" style="width:50%;">
+                <i class="form-icon icon icon-search"></i>
+            </div>
+            <script>
+                $('#layer-list-search').on("keyup", function() {
+                    var value = $("#layer-list-search").val().toLowerCase();
+                    $("tr.layer_search").filter(function() {
+                        if($(this).text().toLowerCase().indexOf(value) > -1){
+                            $(this).show()
+                        } else {
+                            $(this).hide()
+                        }
+                    });
+                });
+            </script>
+            <table class="table table-striped table-hover">
+                <thead>
+                <tr>
+                    <th>Profile</th>
+                    {% include 'main/profile/layer-tablehead.html' %}
+                    <th></th>
+                    <th></th>
+                </tr>
+                </thead>
+            <tbody id="other_profile_layer_tbody">
+            {% for profile in object.profile.all %}
+                {% for junction in profile.layer_junction.all %}
+                {% with layer=junction.layer %}
+                    <tr class="layer_search">
+                    <td>{{profile.name}}</td>
+                    {% include 'main/profile/layer-tablecells.html'%}
+                    <td>
+                        <form>
+                            <input id="main_profile_layer_add" type="hidden" name="instance_x" value="profile_{{selected_profile.pk}}">
+                            {% csrf_token %}
+                            <span class="btn"
+                                hx-post="{% url 'main_profile_layer_add' layer.pk %}"
+                                hx-target="#show_profile">
+                                <i class="icon icon-upward"></i>
+                            </span>
+                        </form>
+                    </td>
+                    </tr>
+                {% endwith %}
+                {% endfor %}
+            {% endfor %}
+            </tbody>
+            </table>
+        </div>
     </div>
     <script>
         $("body").on('click','#toggle_other_layers',function(){
