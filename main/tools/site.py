@@ -119,6 +119,7 @@ def get_timeline_data(site_id, request=False, profile=None):
     else:
         layers = Layer.objects.filter(Q(site=site)).prefetch_related("date")
 
+    unique_groups = set(layers)
     groups = [
         {
             "id": layer.name.lower(),
@@ -126,7 +127,7 @@ def get_timeline_data(site_id, request=False, profile=None):
             "treeLevel": 2,
             "order": ProfileLayerJunction.objects.filter(layer=layer, profile=profile).first().position,
         }
-        for layer in layers
+        for layer in unique_groups
     ]
     dates = []
     for layer in layers:
