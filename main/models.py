@@ -1098,6 +1098,11 @@ class Layer(Dateable):
     def parent(self):
         return self.layer
 
+    def get_highest(self):
+        if self.parent:
+            return self.parent.get_highest()
+        return self
+
     @property
     def hierarchie(self):
         try:
@@ -1126,6 +1131,7 @@ class Layer(Dateable):
         # dont include site or project - that is exported with the respective query
         data = {
             "Layer Name": self.name,
+            "Layer Parent": self.parent.get_highest().name if self.parent else None,
             "Layer Colour": self.colour_munsell,
             "Layer Texture": self.texture,
             "Layer Age": self.age_summary(export=True),
@@ -1142,6 +1148,7 @@ class Layer(Dateable):
         # the table_columns for uploading and empty columns
         return [
             "Layer Name",
+            "Layer Parent",
             "Layer Colour",
             "Layer Texture",
             "Layer Age",
