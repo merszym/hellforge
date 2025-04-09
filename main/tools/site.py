@@ -91,18 +91,29 @@ def get_culture_css(request, site_id):
     context = {}
     for n, cult in enumerate(
         Culture.objects.filter(
-            Q(layer__in=layers) | Q(layer_analysis__site__layer__in=layers)
+            Q(layer__in=layers) 
+            | Q(layers__in=layers)
+            | Q(layer_analysis__site__layer__in=layers)
         ).order_by("layer__profile_junction__position")
     ):
         cultures[cult.classname] = n
 
-    context["cultures"] = [
-        (k, v)
-        for k, v in zip(
+    cult_color_dict = {
+        k:v for k,v in zip(
             [x for x in sorted(cultures, key=lambda x: cultures[x])],
             sns.color_palette("husl", len(cultures)).as_hex(),
         )
-    ]
+    }
+
+    context["cultures"] = cult_color_dict.items()
+
+    #for mixed cultures, create a gradient
+    mixed = {}
+    for layer in layers:
+        if mix:= layer.additional_cultures.first():
+            mixed[f"layer_{layer.pk}"] = (cult_color_dict[layer.culture.classname], cult_color_dict[mix.classname])
+
+    context['mixed'] = mixed.items()
     return render(request, "main/site/site_culture_css.html", context)
 
 

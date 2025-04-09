@@ -8,3 +8,12 @@
     }
     </style>
 {% endfor %}
+{% for layer,colors in mixed %}
+    <style>
+        .{{layer}}{
+            background: linear-gradient(110deg, {{colors.0}} 60%, {{colors.1}} 40%) !important;
+            stroke: black;
+        }
+    </style>
+
+{% endfor %}
