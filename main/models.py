@@ -1118,6 +1118,9 @@ class Layer(Dateable):
         Reference, verbose_name="reference", blank=True, related_name="layer"
     )
 
+    class Meta:
+        ordering = ['profile_junction__position']
+
     @property
     def parent(self):
         return self.layer

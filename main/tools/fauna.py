@@ -128,9 +128,9 @@ def get_fauna_tab(
 
     ## Create the table here that is then parsed in the html view
     # 1. Get all the analyses (layer+reference)
-    analyses = LayerAnalysis.objects.filter(
+    analyses = sorted(list(set(LayerAnalysis.objects.filter(
         Q(layer__site=site) | Q(site=site) & Q(type="Fauna")
-    ).order_by("layer", "culture__lower")
+    ))), key=lambda x: (x.ref.short, x.layer.profile_junction.first().position))
 
     # hide entries without reference if not authenticated or not in project
     if not request.user.is_authenticated:
