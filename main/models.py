@@ -152,9 +152,9 @@ class Description(models.Model):
     def affiliations(self):
         affs = []
         for author in self.author.all():
-            for affiliation in author.person.affiliation.all():
-                if affiliation not in affs:
-                    affs.append(affiliation)
+            for junction in author.person.affiliation.all():
+                if junction.affiliation not in affs:
+                    affs.append(junction.affiliation)
         affs = [(x, n) for n, x in enumerate(affs, 1)]
         return affs
 
@@ -164,8 +164,8 @@ class Description(models.Model):
         affs = {x: n for (x, n) in self.affiliations}
         for author in self.author.all():
             aff_string = []
-            for affiliation in author.person.affiliation.all():
-                aff_string.append(str(affs[affiliation]))
+            for junction in author.person.affiliation.all():
+                aff_string.append(str(affs[junction.affiliation]))
             authors.append((author, ",".join(aff_string)))
         return authors
 
@@ -191,6 +191,14 @@ class Affiliation(models.Model):
 
     def __str__(self):
         return self.name
+
+class AffiliationPersonJunction(models.Model):
+    affiliation = models.ForeignKey("Affiliation", on_delete=models.CASCADE, related_name="person_junction")
+    person = models.ForeignKey("Person", on_delete=models.CASCADE, related_name="affiliation_junction")
+    position = models.IntegerField('Position')
+
+    class Meta:
+        ordering = ['position']
 
 
 class Author(models.Model):
@@ -248,9 +256,6 @@ class Author(models.Model):
 class Person(models.Model):
     name = models.CharField("name", max_length=300)
     email = models.CharField("email", max_length=300, default="placeholder@fill.me")
-    affiliation = models.ManyToManyField(
-        "Affiliation", blank=True, related_name="person", verbose_name="affiliation"
-    )
     orcid = models.CharField("orcid_id", max_length=300, blank=True, null=True)
     tags = models.CharField("tags", max_length=300, blank=True, null=True)
 
@@ -259,6 +264,10 @@ class Person(models.Model):
 
     def get_absolute_url(self):
         return reverse("main_person_list")
+
+    @property
+    def affiliation(self):
+        return self.affiliation_junction
 
     @classmethod
     def filter(self, kw):
@@ -1669,6 +1678,7 @@ models = {
     "affiliation": Affiliation,
     "description": Description,
     "author": Author,
+    "affiliationjunction": AffiliationPersonJunction,
     "project": Project,
     "sample": Sample,
     "samplebatch": SampleBatch,

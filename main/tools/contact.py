@@ -1,4 +1,5 @@
 from django.views.generic import CreateView, UpdateView, ListView
+from django.shortcuts import render
 from django.urls import path
 from main.models import Person, Affiliation
 from django.http import JsonResponse
@@ -42,22 +43,23 @@ def create_from_string(request):
 @login_required
 def create_and_add_affiliation(request):
     """
-    get or create an affiliation and add it to an instance_y in the request
+    get or create an affiliation and link it to a Person via a junction
+    
     """
-    person = request.POST.get("instance_y")
+    person = get_instance_from_string(request.POST.get("instance_x"))
+    position = int(request.POST.get('position'))
+    
     affiliation, created = Affiliation.objects.get_or_create(
         name=request.POST.get("affiliation").strip()
     )
 
-    # Use the generic add_to_m2m function
-    post = request.POST.copy()
-    post["instance_x"] = f"affiliation_{affiliation.pk}"
 
-    # Create a mutable copy of the request object
-    # set the POST parameter
-    new_request = copy.copy(request)
-    new_request.POST = post
-    return add_x_to_y_m2m(new_request, "affiliation")
+    from main.models import AffiliationPersonJunction
+
+    AffiliationPersonJunction(person=person, affiliation=affiliation, position=position).save()
+
+    ## return the updated form
+    return render(request, 'main/contact/person_form.html', {'person':person, 'display':True})
 
 
 @login_required

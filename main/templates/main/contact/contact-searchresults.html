@@ -13,8 +13,8 @@
             {% for contact in object_list %}
             <tr>
                 <td>{{contact.name}}</td>
-                <td>{% for aff in contact.affiliation.all %}
-                    {{aff}}<br>
+                <td>{% for junction in contact.affiliation.all %}
+                    {{junction.affiliation}}<br>
                     {% endfor %}
                 </td>
                 <td>

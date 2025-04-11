@@ -33,8 +33,8 @@
                         <tr class="tr_click" id="trperson_{{person.pk}}">
                           <td>{{ person.name }}</td>
                           <td>{{ person.email }}</td>
-                          <td>{% for aff in person.affiliation.all %}
-                              {{aff}}<br>
+                          <td>{% for aff in person.affiliation_junction.all %}
+                              <strong>{{aff.position}}</strong>.{{aff.affiliation}}<br>
                               {% endfor %}
                           </td>
                           <td>{{ person.orcid }}</td>
@@ -61,81 +61,7 @@
             <div class="panel p-2" id="person_detail_container">
               <!--Render all panels, but hide-->
               {% for person in object_list %}
-              <div id="person_form_{{person.pk}}" class="person_form" style="display: none;">
-
-                <button class="btn btn-sm float-right tooltip tooltip-left generic_delete"
-                    data-tooltip="Cancel this Person"
-                    hx-post="{% url 'main_generic_delete' %}"
-                    hx-vals='{
-                        "instance_x":"person_{{person.pk}}"
-                    }'
-                    hx-swap="none"
-                    hx-confirm="Delete the Person?"
-                    data-hide="reload">
-                  <i class="icon icon-delete"></i>
-                </button>
-
-                <form method="POST" enctype="multipart/form-data" id="formdata_{{person.pk}}">
-                  {% csrf_token %}
-                  <div class="form-group">
-                    <label class="form-label" for="name_{{person.pk}}">Name</label>
-                    <input class="form-input" name="name" type="text" id="name_{{person.pk}}" placeholder="Name" value="{{person.name}}">
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label" for="email_{{person.pk}}">Email</label>
-                    <input class="form-input" name="email" type="text" id="email_{{person.pk}}" placeholder="Email" value="{{person.email}}">
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label" for="orcid_{{person.pk}}">ORCID ID</label>
-                    <input class="form-input" name="orcid_id" type="text" id="orcid_{{person.pk}}" placeholder="ORCID ID" value="{{person.orcid}}">
-                  </div>
-                  <span class="btn update_person" data-x="person_{{person.pk}}" data-url="{% url 'main_person_update' %}">Save</span>
-                </form>
-                <br>
-
-                <label class="form-label" for="person_{{person.pk}}">Add Affiliation</label>
-                <div class="input-group">
-                  <input list="affiliation-choices" type="text" class="form-input" id="person_{{person.pk}}_val" placeholder="Search...">
-                  <button id="person_{{person.pk}}" data-url="{% url 'main_contact_affiliation_add' %}" class="btn btn-primary input-group-btn add_affiliation">Add</button>
-                </div>
-                <br>
-                <h6>Affiliations</h6>
-                {% for aff in person.affiliation.all %}
-                <div class="tile tile-centered my-1">
-                  <div class="tile-icon">
-                    <button class="btn btn-primary">
-                        <i class="icon icon-location" centered></i>
-                    </button>
-                  </div>
-                  <div class="tile-content">
-                    <div class="tile-title">{{aff}}</div>
-                  </div>
-                  <div class="tile-action">
-                      <button class="btn generic_rmm2m"
-                          data-x="affiliation_{{aff.pk}}"
-                          data-y="person_{{person.pk}}"
-                          data-reload="person_form_{{person.pk}},trperson_{{person.pk}}">
-                      <i class="icon icon-delete"></i>
-                    </button>
-                  </div>
-                </div>
-                {% endfor %}
-                <!--
-                <strong>Authorships</strong>
-                {% for author in person.author.all %}
-                <p>{{author}}</p>
-                {% endfor %}
-                -->
-                <br>
-                <h6>Links</h6>
-                {% for site in person.site.all %}
-                <p class="p-1 m-1">Contact | {{site.name}}</p>
-                {% endfor %}
-                {% for authorship in person.author.all %}
-                <p class="p-1 m-1">{{authorship}}</p>
-                {% endfor %}
-              </div>
+              {% include 'main/contact/person_form.html' %}
               {% endfor %}
             </div>
         </div>

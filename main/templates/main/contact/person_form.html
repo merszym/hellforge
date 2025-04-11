@@ -1,0 +1,92 @@
+<div id="person_form_{{person.pk}}" class="person_form" {% if not display %} style="display: none;" {% endif %}>
+
+    <button class="btn btn-sm float-right tooltip tooltip-left generic_delete"
+        data-tooltip="Cancel this Person"
+        hx-post="{% url 'main_generic_delete' %}"
+        hx-vals='{
+            "instance_x":"person_{{person.pk}}"
+        }'
+        hx-swap="none"
+        hx-confirm="Delete the Person?"
+        data-hide="reload">
+      <i class="icon icon-delete"></i>
+    </button>
+
+    <form method="POST" enctype="multipart/form-data" id="formdata_{{person.pk}}">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label" for="name_{{person.pk}}">Name</label>
+        <input class="form-input" name="name" type="text" id="name_{{person.pk}}" placeholder="Name" value="{{person.name}}">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="email_{{person.pk}}">Email</label>
+        <input class="form-input" name="email" type="text" id="email_{{person.pk}}" placeholder="Email" value="{{person.email}}">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="orcid_{{person.pk}}">ORCID ID</label>
+        <input class="form-input" name="orcid_id" type="text" id="orcid_{{person.pk}}" placeholder="ORCID ID" value="{{person.orcid}}">
+      </div>
+      <span class="btn update_person" data-x="person_{{person.pk}}" data-url="{% url 'main_person_update' %}">Save</span>
+    </form>
+    <br>
+
+    <div>
+      <h6>Add Affiliation</h6>
+      <form method="POST"
+        hx-post="{% url 'main_contact_affiliation_add' %}"
+        hx-target="#person_form_{{person.pk}}"
+      >
+        <input type="hidden" name="instance_x" value="person_{{person.pk}}"/>
+        <div class="form-group">
+          <label class="form-label" for="position">Order</label>
+          <input class="form-input" type="number" name="position" placeholder="1" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="affiliation">Affiliation</label>
+          <input class="form-input" list="affiliation-choices" type="text"  id="person_{{person.pk}}_val" name="affiliation" placeholder="Search..." required>
+        </div>
+        <button type="submit" class="btn btn-primary">Add</button>
+      </form>
+    </div>
+    <br>
+    <h6>Affiliations</h6>
+    {% for junction in person.affiliation_junction.all %}
+    <div class="tile tile-centered my-1" id="affiliationjunction_{{junction.pk}}">
+      <div class="tile-icon">
+        <span class="btn btn-primary">
+            {{junction.position}}
+        </span>
+      </div>
+      <div class="tile-content">
+        <div class="tile-title">{{junction.affiliation}}</div>
+      </div>
+      <div class="tile-action">
+          <button class="btn tooltip tooltip-left"
+              hx-post="{% url 'main_generic_delete' %}"
+              hx-vals='{
+                "instance_x":"affiliationjunction_{{junction.pk}}"
+              }'
+              hx-target="#affiliationjunction_{{junction.pk}}"
+              hx-swap="delete"
+              data-tooltip="Remove Affiliation from Person">
+          <i class="icon icon-delete"></i>
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+    <!--
+    <strong>Authorships</strong>
+    {% for author in person.author.all %}
+    <p>{{author}}</p>
+    {% endfor %}
+    -->
+    <br>
+    <h6>Links</h6>
+    {% for site in person.site.all %}
+    <p class="p-1 m-1">Contact | {{site.name}}</p>
+    {% endfor %}
+    {% for authorship in person.author.all %}
+    <p class="p-1 m-1">{{authorship}}</p>
+    {% endfor %}
+</div>

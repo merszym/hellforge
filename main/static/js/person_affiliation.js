@@ -37,28 +37,6 @@ $("body").on('click', '.update_person', function(){
         });
 })
 
-// Add Affiliation to Person
-$("body").on('click', '.add_affiliation', function(){
-    var person = $(this).attr('id')
-    var affiliation = $(`#${person}_val`).val()
-    var id = person.split('_')[1]
-    var formdata = new FormData();
-    formdata.append('csrfmiddlewaretoken',$('[name=csrfmiddlewaretoken]').val())
-    formdata.append('instance_y', person); //Person
-    formdata.append('affiliation', affiliation ); //Affiliation String
-
-    $.ajax({
-        type: "POST",
-        processData: false,
-        contentType: false,
-        url: $(this).attr('data-url'),
-        data: formdata,
-        }).done(function(){
-            reloadElement(`trperson_${id}`)
-            reloadElement(`person_form_${id}`)
-        });
-})
-
 //Add a person from the search String
 $('body').on('click','#create_person_from_string', function(){
     var formdata = new FormData();

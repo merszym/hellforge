@@ -18,8 +18,8 @@
         </div>
         <div class="tile-content">
             <div class="tile-title">{{contact.name}}</div>
-            {% for affiliation in contact.affiliation.all %}
-            <small class="tile-subtitle text-gray">{{affiliation}}</small>
+            {% for junction in contact.affiliation.all %}
+            <small class="tile-subtitle text-gray">{{junction.affiliation}}</small>
             {% endfor %}
         </div>
     </div>
