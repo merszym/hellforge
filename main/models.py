@@ -276,7 +276,7 @@ class Person(models.Model):
             | Q(email__contains=kw)
             | Q(tags__contains=kw)
             | Q(orcid__contains=kw)
-            | Q(affiliation__name__contains=kw)
+            | Q(affiliation_junction__affiliation__name__contains=kw)
         )
     @classmethod
     def table_columns(self):
