@@ -60,7 +60,7 @@ def get_modal_context(object, request):
         if context["type"] == "edit_base":
             context.update(
                 {
-                "group_choices": list(Sample.objects.filter(domain='archaeology').values_list('hominin_group', flat=True))
+                "group_choices": set(Sample.objects.filter(domain='archaeology').values_list('hominin_group', flat=True))
                 }
             )
 
