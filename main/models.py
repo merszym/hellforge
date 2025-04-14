@@ -1243,11 +1243,26 @@ class SampleBatch(models.Model):
 
 
 class Sample(Dateable):
+    # here we combine two separate concepts
+    # 1. A sample in the DNA-sense with an MPI EVA ID (or maybe from other publications?)
+    # 2. A "sample" or "fossil" in the archaeological sense (e.g. Denisova 15)
+    # so we need to also account for some special cases in either of the cases
+    # I _know_ I should make abstract classes, but thats a bit too late now...
+    
+    #this is to differentiate these cases in the front-end
+    # use domain="archaeology" for fossil remains
+    domain = models.CharField('domain', default="mpi_eva", max_length=100)
+
+    #required fields for the Fossil Remains tab
+    hominin_group = models.CharField('hominin_group', null=True, blank=True, max_length=100)
+
+    #this is now for all the samples
     type = models.CharField("sample type", max_length=400, null=True, blank=True)
     name = models.CharField("name", max_length=200, null=True, blank=True)
     synonyms = models.ManyToManyField(
         Synonym, blank=True, verbose_name="synonym", related_name="sample"
     )
+    ## only for DNA samples
     project = models.ManyToManyField(
         Project, blank=True, verbose_name="project", related_name="sample"
     )
@@ -1265,6 +1280,15 @@ class Sample(Dateable):
     # description
     description = GenericRelation(Description, related_query_name="sample")
     # origin of samples
+    # case: DNA sample has bone (e.g. Denisova3) as the origin 
+    sample = models.ForeignKey(
+        'self', 
+        related_name='parent', 
+        verbose_name='sample', 
+        null=True, 
+        blank=True, 
+        on_delete=models.PROTECT
+    )
     # site for the cases, where the layer is yet unknown
     site = models.ForeignKey(
         Site,
@@ -1274,6 +1298,7 @@ class Sample(Dateable):
         blank=True,
         null=True,
     )
+    # main case for sediments - origin is a layer
     layer = models.ForeignKey(
         Layer,
         verbose_name="layer",
