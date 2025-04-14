@@ -185,10 +185,27 @@ def save_verified(request):
     return get_site_samplebatch_tab(request, batch.pk)
 
 
+def add_human_remain(request):
+    # add a human remains entry from the browser
+    site = get_instance_from_string(request.POST.get('site'))
+    # create the samples
+    Sample(
+        domain='archaeology',
+        name="unnamed remain",
+        site = site,
+    ).save()
+
+    from main.tools.site import get_site_human_content
+    
+    return get_site_human_content(request, site.pk)
+
+
+
 # UPDATE MODALS
 @login_required
 def update_samplelayer(request):
     if request.method == "POST":
+        print(request.POST)
         sample = Sample.objects.get(pk=int(request.POST.get("object")))
         try:
             layer = Layer.objects.get(pk=int(request.POST.get("layer")))
@@ -196,10 +213,11 @@ def update_samplelayer(request):
         except ValueError:  # no layer pk given
             sample.layer = None
         sample.save()
-    # return updated html, clear request.POST
-    request.POST._mutable = True
-    request.POST = {}
-    return get_site_samplebatch_tab(request, sample.batch.pk)
+    return render(
+        request,
+        "main/modals/sample_modal.html",
+        {"object": sample, "type": "edit_layer"},
+    )
 
 
 @login_required
@@ -224,6 +242,7 @@ def update_samplebase(request):
     if request.method == "POST":
         sample = Sample.objects.get(pk=int(request.POST.get("object")))
 
+        sample.name = request.POST.get("name")
         sample.type = request.POST.get("type", None)
         sample.year_of_collection = request.POST.get("year_of_collection", None)
         sample.hominin_group = request.POST.get("hominin_group", None)
@@ -269,6 +288,7 @@ def update_sample_provenience(request):
 
 urlpatterns = [
     path("save", save_verified, name="ajax_save_verified_samples"),
+    path("add", add_human_remain, name="main_sample_create"),
     path("update-base", update_samplebase, name="sample-edit"),
     path("update-layer", update_samplelayer, name="sample-layer-update"),
     path("update-batch", update_samplebatch, name="sample-batch-update"),

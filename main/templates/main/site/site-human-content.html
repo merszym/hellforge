@@ -3,22 +3,6 @@
 <div class="my-2 panel">
     <div class="panel-head p-2">
         <h3>Human remains</h3>
-        {% if request.user.is_authenticated %}
-        <button
-            class='btn tooltip tooltip-right modal_open'
-            data-tooltip="Manage Fauna"
-            hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
-            hx-vals='{"object":"site_{{object.pk}}","type":"faunal_tables"}'
-            hx-target="#modal-blank"><i class="icon icon-plus"></i>
-        </button>
-        {% endif %}
-        <a
-            class='btn tooltip tooltip-right'
-            data-tooltip="Download Fauna"
-            target="_blank"
-            href="{% url 'download_faunal_table' %}?object=site_{{object.pk}}"
-            ><i class="icon icon-download"></i>
-        </a>
     </div>
     <div class="panel-body p-2">
         {% if remains %}
@@ -26,45 +10,51 @@
             <thead>
                 <tr>
                     <th>Layer</th>
+                    <th>Culture</th>
                     <th>Type</th>
                     <th>Name</th>
-                    <th>Hominin Group</th>
-                    <th>Reference</th>
+                    <th>Hominin Type</th>
+                    <th>Year of Discovery</th>
                     <th>Dating</th>
                     <th>Dating Type</th>
-                    <th>Year of Discovery</th>
+                    {% if request.user.is_authenticated %}
+                    <th></th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
-                {% for object in remains %}
-                <tr>
+                {% for remain in remains %}
+                <tr id="remain_{{remain.pk}}">
                     <td nowrap
                         {% if request.user.is_authenticated %}
                             style="cursor: pointer;"
-                            class="{{object.layer|yesno:'assigned,unassigned'}}  {{object.layer.culture.classname|default:'sterile'}} modal_open tooltip tooltip-right"
+                            class="{{remain.layer|yesno:'assigned,unassigned'}}  {{remain.layer.culture.classname|default:'sterile'}} modal_open tooltip tooltip-right"
                             data-tooltip="Update Layer"
                             hx-get="{% url 'main_modal_get' %}"
-                            hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_layer" }'
+                            hx-vals='{"object":"sample_{{remain.pk}}", "type":"edit_layer" }'
                             hx-target="#modal-blank"
                         {% else %}
-                            class="{{object.layer|yesno:'assigned,unassigned'}}  {{object.layer.culture.classname|default:'sterile'}}"
+                            class="{{remain.layer|yesno:'assigned,unassigned'}}  {{remain.layer.culture.classname|default:'sterile'}}"
                         {% endif %}>
-                        {% if object.layer %}{{object.layer.name}}{% else %}Unassigned{% endif %}
+                        {% if remain.layer %}{{remain.layer.name}}{% else %}Unassigned{% endif %}
                     </td>
+                    <td class="{{remain.layer|yesno:'assigned,unassigned'}}  {{remain.layer.culture.classname|default:'sterile'}}">{% if remain.layer %}{{remain.layer.culture.name}}{% else %}Unassigned{% endif %}</td>
                     <td nowrap
                     {% if request.user.is_authenticated %}
                         style="cursor: pointer;"
                         class="tooltip tooltip-top modal_open"
                         data-tooltip="Update Sample Type"
                         hx-get="{% url 'main_modal_get' %}"
-                        hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_base" }'
+                        hx-vals='{"object":"sample_{{remain.pk}}", "type":"edit_base" }'
                         hx-target="#modal-blank"
                     {% endif %}>
-                        {{object.type}}
+                        {{remain.type}}
                     </td>
-                    <td nowrap>{{object.name}}</td>
-                    <td>{{object.hominin_group}}</td>
-                    <td>Reference</td>
+                    <td nowrap>{{remain.name}}</td>
+                    <td>{{remain.hominin_group}}</td>
+                    <td>
+                        {% if remain.year_of_collection%}{{remain.year_of_collection}}{% endif%}
+                    </td>
                     <td nowrap>
                         <a href="#"
                     {% if request.user.is_authenticated %}
@@ -72,30 +62,32 @@
                         class="tooltip tooltip-top modal_open"
                         data-tooltip="Update Sample Dating"
                         hx-get="{% url 'main_modal_get' %}"
-                        hx-vals='{"object":"sample_{{object.pk}}", "type":"dates_list" }'
+                        hx-vals='{"object":"sample_{{remain.pk}}", "type":"dates_list" }'
                         hx-target="#modal-blank"
                     {% endif %}>
-                    {{object.age_summary}}
+                    {{remain.age_summary}}
                         </a>
                     </td>
                     <td>
-                        {% if object.date.first %}
+                        {% if remain.date.first %}
                         Direct
                         {% else %}
                         Context
                         {% endif %}
                     </td>
-                    <td nowrap
                     {% if request.user.is_authenticated %}
-                        style="cursor: pointer;"
-                        class="tooltip tooltip-top modal_open"
-                        data-tooltip="Update Year of Collection"
-                        hx-get="{% url 'main_modal_get' %}"
-                        hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_base" }'
-                        hx-target="#modal-blank"
-                    {% endif %}>
-                        {% if object.year_of_collection%}{{object.year_of_collection}}{% endif%}
-                    </td>
+                    <td><a class="btn tooltip tooltip-top"
+                        hx-post="{% url 'main_generic_delete' %}"
+                        hx-vals='{
+                          "instance_x":"sample_{{remain.pk}}"
+                        }'
+                        hx-confirm="Do you really want to delete this entry?"
+                        hx-target="#remain_{{remain.pk}}"
+                        hx-swap="delete"
+                        data-tooltip="Delete Entry"
+                      ><i class="icon icon-delete"></i>
+                    </a></td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>
@@ -105,8 +97,21 @@
             <div class="empty-icon">
               <i class="icon icon-flag"></i>
             </div>
-            <p class="empty-title h5">No Human Remains imported</p>
+            <p class="empty-title h5">No Human Remains added</p>
         </div>
         {% endif %}
+        {% if request.user.is_authenticated %}
+        <form>
+            {% csrf_token %}
+            <input name="site" value="site_{{object.pk}}" style="display: none;">
+            <span class="btn btn-primary tooltip tooltip-right"
+                hx-post="{% url 'main_sample_create' %}"
+                hx-target="#site_human"
+                data-tooltip="Add a new entry">
+                <i class="icon icon-plus"></i>
+            </span>
+        </form>
+        {% endif %}
     </div>
+
 </div>

@@ -16,6 +16,12 @@
         hx-trigger="load"
         hx-target="#site_human">
     </div>
+    {% else %}
+    <div
+        hx-get="{% url 'main_samplebatch_get' object.batch.pk %}"
+        hx-trigger="load"
+        hx-target="#sample-batch-tab_{{object.batch.pk}}">
+    </div>
     {% endif %}
 
     {% if messages %}
@@ -52,8 +58,8 @@
                             </select>
                             <span
                                 hx-post="{% url 'sample-layer-update' %}"
-                                hx-target="#sample-batch-tab_{{object.batch.pk}}"
-                                class="btn btn-primary input-group-btn modal_close"
+                                hx-target="#modal-blank"
+                                class="btn btn-primary input-group-btn"
                             >OK</span>
                         </form>
                     </div>
@@ -175,6 +181,11 @@
                     <form>
                         <input style="display: none;" name="object" value="{{object.pk}}" />
                         <div class="form-group">
+                            <label class="form-label" for="name_form">Name</label>
+                            <input class="form-input" list="group-choices" name="name" type="text" id="name_form" placeholder="Modern Human"
+                            value="{{ object.name }}">
+                        </div>
+                        <div class="form-group">
                             <label class="form-label" for="type-form">Sample Type</label>
                             <input class="form-input" id="type-form" type="text" name="type" placeholder="Sediment"
                             value="{{ object.type }}">
@@ -201,12 +212,6 @@
                                 hx-target="#modal-blank">OK
                         </button>
                     </form>
-                    {% if object.batch %}
-                    <div hx-get="{% url 'main_samplebatch_get' object.batch.pk %}"
-                            hx-target="#sample-batch-tab_{{object.batch.pk}}"
-                            hx-trigger="click from:#sample-update-trigger">
-                    </div>
-                    {% endif %}
                 </div>
             </div>
         </div>

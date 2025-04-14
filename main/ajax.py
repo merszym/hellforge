@@ -14,6 +14,7 @@ from .models import (
     Date,
     AnalyzedSample,
     SampleBatch,
+    Sample
 )
 from django.db.models import Q
 from django.urls import reverse, path
@@ -54,7 +55,11 @@ def get_modal_context(object, request):
             context.update({"site_dates": object.layer.site.get_dates()})
         if context["type"] == "edit_batch":
             context.update(
-                {"site_batches": SampleBatch.objects.filter(site=object.site),
+                {"site_batches": SampleBatch.objects.filter(site=object.site)}
+            )
+        if context["type"] == "edit_base":
+            context.update(
+                {
                 "group_choices": list(Sample.objects.filter(domain='archaeology').values_list('hominin_group', flat=True))
                 }
             )
