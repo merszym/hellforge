@@ -57,14 +57,12 @@
                     </td>
                     <td nowrap>
                         <a href="#"
-                    {% if request.user.is_authenticated %}
                         style="cursor: pointer;"
                         class="tooltip tooltip-top modal_open"
                         data-tooltip="Update Sample Dating"
                         hx-get="{% url 'main_modal_get' %}"
                         hx-vals='{"object":"sample_{{remain.pk}}", "type":"dates_list" }'
-                        hx-target="#modal-blank"
-                    {% endif %}>
+                        hx-target="#modal-blank">
                     {{remain.age_summary}}
                         </a>
                     </td>
