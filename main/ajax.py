@@ -54,7 +54,9 @@ def get_modal_context(object, request):
             context.update({"site_dates": object.layer.site.get_dates()})
         if context["type"] == "edit_batch":
             context.update(
-                {"site_batches": SampleBatch.objects.filter(site=object.site)}
+                {"site_batches": SampleBatch.objects.filter(site=object.site),
+                "group_choices": list(Sample.objects.filter(domain='archaeology').values_list('hominin_group', flat=True))
+                }
             )
 
     # Add layer edit context

@@ -7,6 +7,17 @@
         <div class="modal-title h5">Sample Modal</div>
     </div>
 
+    <!--Whenever the sample-modal appears, I assume either the sample-batch or the human remains were updated. 
+    So reload them in the background
+    -->
+    {% if object.domain == 'archaeology' %}
+    <div
+        hx-get="{% url 'main_site_human_get' object.site.pk %}?{{request.GET|getstring}}"
+        hx-trigger="load"
+        hx-target="#site_human">
+    </div>
+    {% endif %}
+
     {% if messages %}
         {% for message in messages %}
         <div class="toast toast-{{ message.tags }}">
@@ -173,15 +184,29 @@
                             <input class="form-input" name="year_of_collection" type="number" id="yoc-form" placeholder="2011"
                             value="{{ object.year_of_collection }}">
                         </div>
+                        {% if object.domain == 'archaeology' %}
+                        <datalist id="group-choices">
+                            {% for choice in group_choices %}
+                              <option value="{{choice}}"></option>
+                            {% endfor %}
+                        </datalist>
+                        <div class="form-group">
+                            <label class="form-label" for="hominin_group_form">Hominin Group</label>
+                            <input class="form-input" list="group-choices" name="hominin_group" type="text" id="hominin_group_form" placeholder="Modern Human"
+                            value="{{ object.hominin_group }}">
+                        </div>
+                        {% endif %}
                         <button class="btn btn-primary modal_close" id="sample-update-trigger"
                                 hx-post="{% url 'sample-edit' %}"
                                 hx-target="#modal-blank">OK
                         </button>
                     </form>
+                    {% if object.batch %}
                     <div hx-get="{% url 'main_samplebatch_get' object.batch.pk %}"
                             hx-target="#sample-batch-tab_{{object.batch.pk}}"
                             hx-trigger="click from:#sample-update-trigger">
                     </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

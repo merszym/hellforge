@@ -353,7 +353,7 @@ def get_site_sample_content(request):
     # load the samples and batches
     # first create a batch for the samples that dont have one yet...
     tmp, c = SampleBatch.objects.get_or_create(name="Undefined Batch", site=object)
-    nobatch = Sample.objects.filter(Q(site=object, batch=None))
+    nobatch = Sample.objects.filter(Q(site=object, batch=None, domain='mpi_eva'))
     for sample in nobatch:
         sample.batch = tmp
         sample.save()
@@ -391,7 +391,10 @@ def get_site_sample_content(request):
 
 ## The human remains tab
 def get_site_human_content(request, pk):
-    return render(request, "main/site/site-human-content.html" ,{})
+    site = Site.objects.get(pk=int(pk))
+    remains = Sample.objects.filter(site=site, domain="archaeology")
+    context = {"object": site, "remains":remains}
+    return render(request, "main/site/site-human-content.html", context)
 
 ## DNA content
 ## At the moment only quicksand content...

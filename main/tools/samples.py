@@ -226,6 +226,7 @@ def update_samplebase(request):
 
         sample.type = request.POST.get("type", None)
         sample.year_of_collection = request.POST.get("year_of_collection", None)
+        sample.hominin_group = request.POST.get("hominin_group", None)
 
         sample.save()
     # return updated html

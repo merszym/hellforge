@@ -1,1 +1,112 @@
-Hello World
+{% load format %}
+<div style="height: 40px;"></div>
+<div class="my-2 panel">
+    <div class="panel-head p-2">
+        <h3>Human remains</h3>
+        {% if request.user.is_authenticated %}
+        <button
+            class='btn tooltip tooltip-right modal_open'
+            data-tooltip="Manage Fauna"
+            hx-get="{% url 'main_modal_get' %}?{{request.GET|getstring}}"
+            hx-vals='{"object":"site_{{object.pk}}","type":"faunal_tables"}'
+            hx-target="#modal-blank"><i class="icon icon-plus"></i>
+        </button>
+        {% endif %}
+        <a
+            class='btn tooltip tooltip-right'
+            data-tooltip="Download Fauna"
+            target="_blank"
+            href="{% url 'download_faunal_table' %}?object=site_{{object.pk}}"
+            ><i class="icon icon-download"></i>
+        </a>
+    </div>
+    <div class="panel-body p-2">
+        {% if remains %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Layer</th>
+                    <th>Type</th>
+                    <th>Name</th>
+                    <th>Hominin Group</th>
+                    <th>Reference</th>
+                    <th>Dating</th>
+                    <th>Dating Type</th>
+                    <th>Year of Discovery</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for object in remains %}
+                <tr>
+                    <td nowrap
+                        {% if request.user.is_authenticated %}
+                            style="cursor: pointer;"
+                            class="{{object.layer|yesno:'assigned,unassigned'}}  {{object.layer.culture.classname|default:'sterile'}} modal_open tooltip tooltip-right"
+                            data-tooltip="Update Layer"
+                            hx-get="{% url 'main_modal_get' %}"
+                            hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_layer" }'
+                            hx-target="#modal-blank"
+                        {% else %}
+                            class="{{object.layer|yesno:'assigned,unassigned'}}  {{object.layer.culture.classname|default:'sterile'}}"
+                        {% endif %}>
+                        {% if object.layer %}{{object.layer.name}}{% else %}Unassigned{% endif %}
+                    </td>
+                    <td nowrap
+                    {% if request.user.is_authenticated %}
+                        style="cursor: pointer;"
+                        class="tooltip tooltip-top modal_open"
+                        data-tooltip="Update Sample Type"
+                        hx-get="{% url 'main_modal_get' %}"
+                        hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_base" }'
+                        hx-target="#modal-blank"
+                    {% endif %}>
+                        {{object.type}}
+                    </td>
+                    <td nowrap>{{object.name}}</td>
+                    <td>{{object.hominin_group}}</td>
+                    <td>Reference</td>
+                    <td nowrap>
+                        <a href="#"
+                    {% if request.user.is_authenticated %}
+                        style="cursor: pointer;"
+                        class="tooltip tooltip-top modal_open"
+                        data-tooltip="Update Sample Dating"
+                        hx-get="{% url 'main_modal_get' %}"
+                        hx-vals='{"object":"sample_{{object.pk}}", "type":"dates_list" }'
+                        hx-target="#modal-blank"
+                    {% endif %}>
+                    {{object.age_summary}}
+                        </a>
+                    </td>
+                    <td>
+                        {% if object.date.first %}
+                        Direct
+                        {% else %}
+                        Context
+                        {% endif %}
+                    </td>
+                    <td nowrap
+                    {% if request.user.is_authenticated %}
+                        style="cursor: pointer;"
+                        class="tooltip tooltip-top modal_open"
+                        data-tooltip="Update Year of Collection"
+                        hx-get="{% url 'main_modal_get' %}"
+                        hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_base" }'
+                        hx-target="#modal-blank"
+                    {% endif %}>
+                        {% if object.year_of_collection%}{{object.year_of_collection}}{% endif%}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty">
+            <div class="empty-icon">
+              <i class="icon icon-flag"></i>
+            </div>
+            <p class="empty-title h5">No Human Remains imported</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
