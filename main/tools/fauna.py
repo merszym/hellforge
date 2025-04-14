@@ -136,9 +136,9 @@ def get_fauna_tab(
     if not request.user.is_authenticated:
         try:
             if not site in project.site.all():
-                analyses = [x for x in analyses if len(x.ref) > 0]
+                analyses = [x for x in analyses if x.ref]
         except AttributeError:  # no project selected
-            analyses = [x for x in analyses if len(x.ref) > 0]
+            analyses = [x for x in analyses if x.ref]
 
     # check the reference filter
     if reference != "all":
