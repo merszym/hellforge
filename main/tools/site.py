@@ -389,6 +389,10 @@ def get_site_sample_content(request):
     return render(request, "main/site/site-sample-content.html", context)
 
 
+## The human remains tab
+def get_site_human_content(request, pk):
+    return render(request, "main/site/site-human-content.html" ,{})
+
 ## DNA content
 ## At the moment only quicksand content...
 def get_site_dna_content(request, pk):
@@ -596,6 +600,7 @@ urlpatterns = [
     path("geodata", get_site_geo, name="main_site_geo"),
     path("sample-tab", get_site_sample_content, name="main_site_sample_tab"),
     path("<int:pk>/dna-tab", get_site_dna_content, name="main_site_dna_tab"),
+    path("<int:pk>/human-tab", get_site_human_content, name="main_site_human_get"),
     path("<int:site_id>/culture-css", get_culture_css, name="main_site_culture_css"),
     path("create-batch", samplebatch_create, name="main_samplebatch_create"),
     path(

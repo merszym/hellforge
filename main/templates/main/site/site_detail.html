@@ -140,6 +140,9 @@
                 <li class="tab-item main {% if tab == 'site_layer' %} active {% endif %}" data-group="main">
                     <a style="cursor: pointer;" class="select-block-content" data-select="site_layer"><h4>Stratigraphy</h4></a>
                 </li>
+                <li class="tab-item {% if tab == 'site_human' %} active {% endif %}" data-group="main">
+                    <a style="cursor: pointer;" class="select-block-content" data-select="site_human"><h4>Human Remains</h4></a>
+                </li>
                 <li class="tab-item {% if tab == 'site_fauna' %} active {% endif %}" data-group="main">
                     <a style="cursor: pointer;" class="select-block-content" data-select="site_fauna"><h4>Fauna</h4></a>
                 </li>
@@ -164,6 +167,11 @@
                 hx-get="{% url 'main_profile-tab_get' %}?{{request.GET|getstring}}"
                 hx-trigger="load once"
                 hx-vars="{'site':'site_{{object.pk}}'}">
+                <div class="loading loading-lg m-2"></div>
+            </div>
+            <div class="block-content" id="site_human" style="{% if tab != 'site_human' %} display:none {% endif %}"
+                hx-get="{% url 'main_site_human_get' object.pk %}?{{request.GET|getstring}}"
+                hx-trigger="load once">
                 <div class="loading loading-lg m-2"></div>
             </div>
             <div class="block-content" id="site_fauna" style="{% if tab != 'site_fauna' %} display:none {% endif %}"
