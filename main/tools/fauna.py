@@ -136,14 +136,14 @@ def get_fauna_tab(
     if not request.user.is_authenticated:
         try:
             if not site in project.site.all():
-                analyses = analyses.filter(ref__isnull=False)
+                analyses = [x for x in analyses if len(x.ref) > 0]
         except AttributeError:  # no project selected
-            analyses = analyses.filter(ref__isnull=False)
+            analyses = [x for x in analyses if len(x.ref) > 0]
 
     # check the reference filter
     if reference != "all":
         reference = get_instance_from_string(reference)
-        analyses = analyses.filter(ref=reference)
+        analyses = [x for x in analyses if x.ref == reference]
 
     # now get the faunal results from the remaining analysis objects
     entries = FaunalResults.objects.filter(Q(analysis__in=analyses))
@@ -152,11 +152,13 @@ def get_fauna_tab(
     if type == "small mammals":
         orders = get_small_mammals()
         entries = entries.filter(order__in=orders)
-        analyses = analyses.filter(faunal_results__in=entries).distinct()
+        analyses = [x for x in analyses if x.faunal_results.first() in entries]
+        #analyses = analyses.filter(faunal_results__in=entries).distinct()
     if type == "large mammals":
         orders = get_small_mammals()
         entries = entries.exclude(order__in=orders)
-        analyses = analyses.filter(faunal_results__in=entries).distinct()
+        analyses = [x for x in analyses if x.faunal_results.first() in set(entries)]
+        #analyses = analyses.filter(faunal_results__in=entries).distinct()
 
     # 2. Get the table columns
     # Thats now a bit more complicated, as we need the headers as follows
