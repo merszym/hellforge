@@ -14,7 +14,8 @@
                     <th>Type</th>
                     <th>Name</th>
                     <th>Hominin Type</th>
-                    <th>Year of Discovery</th>
+                    <th>Year Found</th>
+                    <th>Reference</th>
                     <th>Dating</th>
                     <th>Dating Type</th>
                     {% if request.user.is_authenticated %}
@@ -51,9 +52,23 @@
                         {{remain.type}}
                     </td>
                     <td nowrap>{{remain.name}}</td>
-                    <td>{{remain.hominin_group}}</td>
+                    <td nowrap>{{remain.hominin_group}}</td>
                     <td>
                         {% if remain.year_of_collection%}{{remain.year_of_collection}}{% endif%}
+                    </td>
+                    <td>{% if request.user.is_authenticated %}
+                        <a href="#"
+                        style="cursor: pointer;"
+                        class="tooltip tooltip-top modal_open"
+                        data-tooltip="Update Reference"
+                        hx-get="{% url 'main_modal_get' %}"
+                        hx-vals='{"object":"sample_{{remain.pk}}", "type":"update_reference" }'
+                        hx-target="#modal-blank">
+                        {{remain.ref.first.short|default:'No Reference'}}
+                        </a>
+                        {% else %}
+                        {{remain.ref.first.short}}
+                        {% endif %}
                     </td>
                     <td nowrap>
                         <a href="#"
@@ -110,6 +125,16 @@
             </span>
         </form>
         {% endif %}
+        {% if sample_references %}
+        <br>
+        <h5>References</h5>
+        <table class="table table-striped my-2">
+            <tbody id="description-reference-tbody" style="border-top: 1px solid lightgrey;">
+                {% for ref in sample_references %}
+                {% include 'main/reference/reference-tablerow.html' with display=True %}
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
     </div>
-
 </div>

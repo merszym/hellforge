@@ -244,7 +244,10 @@ def update_samplebase(request):
 
         sample.name = request.POST.get("name")
         sample.type = request.POST.get("type", None)
-        sample.year_of_collection = request.POST.get("year_of_collection", None)
+        if request.POST.get("year_of_collection") == "":
+            sample.year_of_collection = None
+        else:
+            sample.year_of_collection = request.POST.get("year_of_collection")
         sample.hominin_group = request.POST.get("hominin_group", None)
 
         sample.save()

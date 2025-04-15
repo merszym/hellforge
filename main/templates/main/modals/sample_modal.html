@@ -32,7 +32,23 @@
         {% endfor %}
     {% endif %}
 
-    {% if type == "edit_layer" %}
+    {% if type == 'update_reference' %}
+
+    {# -------------------- #}
+    {#   REFERENCE EDIT MODAL   #}
+    {# -------------------- #}
+
+    <div class="modal-body">
+        <div class="content">
+            <div id="modal-form">
+                <h6>Update Reference</h6>
+                {% include 'main/reference/reference-chip-display.html' %}
+                {% include 'main/reference/reference-searchinput.html' %}
+            </div>
+        </div>
+    </div>
+
+    {% elif type == "edit_layer" %}
 
     {# -------------------- #}
     {#   LAYER EDIT MODAL   #}

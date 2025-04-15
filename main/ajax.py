@@ -63,6 +63,13 @@ def get_modal_context(object, request):
                 "group_choices": set(Sample.objects.filter(domain='archaeology').values_list('hominin_group', flat=True))
                 }
             )
+        if context["type"] == "edit_provenience":
+            try:
+                provenience = json.loads(object.provenience)
+            except TypeError:
+                # empty provenience array so far
+                provenience = {}
+            context.update({"provenience": provenience})
 
     # Add layer edit context
     if object.model == "layer":
@@ -142,15 +149,7 @@ def get_modal_context(object, request):
             context.update({"connection": connection})
         if context["type"] == "add_profile":
             context.update({"profile_form": ProfileForm})
-    if object.model == "sample":
-        if context["type"] == "edit_provenience":
-            try:
-                provenience = json.loads(object.provenience)
-            except TypeError:
-                # empty provenience array so far
-                provenience = {}
-            context.update({"provenience": provenience})
-
+        
     return context
 
 

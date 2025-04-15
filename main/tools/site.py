@@ -21,7 +21,8 @@ from main.models import (
     Connection,
     QuicksandAnalysis,
     HumanDiagnosticPositions,
-    ProfileLayerJunction
+    ProfileLayerJunction,
+    Reference
 )
 from copy import copy
 import json
@@ -392,8 +393,15 @@ def get_site_sample_content(request):
 ## The human remains tab
 def get_site_human_content(request, pk):
     site = Site.objects.get(pk=int(pk))
-    remains = Sample.objects.filter(site=site, domain="archaeology")
-    context = {"object": site, "remains":remains}
+
+    if request.user.is_authenticated:
+        remains = Sample.objects.filter(site=site, domain="archaeology")
+    else:
+        remains = Sample.objects.filter(site=site, domain="archaeology", ref__isnull=False)
+    
+    sample_references = Reference.objects.filter(sample__in=remains).distinct()
+
+    context = {"object": site, "remains":remains, 'sample_references':sample_references}
     return render(request, "main/site/site-human-content.html", context)
 
 ## DNA content
