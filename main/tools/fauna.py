@@ -399,13 +399,17 @@ def download_faunal_table(request):
         Q(analysis__layer__site=site)
         | Q(analysis__site=site) & Q(analysis__type="Fauna")
     ).order_by("analysis__layer")
+
     
     data = []
     for entry in entries:
         tmp = json.loads(to_table(entry).to_json(orient="records"))
         data.extend(tmp)
     
-    return download_csv(data, name=f"{site.name.replace(' ','_')}_faunal_overview.csv")
+    columns = {}
+    [columns.update(x) for x in data]
+    
+    return download_csv(data, columns=columns.keys(), name=f"{site.name.replace(' ','_')}_faunal_overview.csv")
 
 
 urlpatterns = [

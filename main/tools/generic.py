@@ -241,7 +241,7 @@ class Echo:
     def write(self, value):
         return value
 
-def json_to_csv_rows(data):
+def json_to_csv_rows(data, columns=[]):
     """
     Generator to yield CSV rows from JSON data.
     Assumes 'data' is a generator of dictionaries.
@@ -254,24 +254,27 @@ def json_to_csv_rows(data):
     if not data:
         return  # No data to process
     
-    header = False
-    headers = []
+    if len(columns) == 0:
+        header = False
+    else:
+        yield writer.writerow(columns)
+        header = True
 
     # Write each row
     for row in data:
         # in case the row is a list of entries
         if not header:
-            headers = list(row.keys())
-            yield writer.writerow(headers)
+            columns = list(row.keys())
+            yield writer.writerow(columns)
             header = True
-        yield writer.writerow([row.get(header, "") for header in headers])
+        yield writer.writerow([row.get(col, "") for col in columns])
 
-def download_csv(data, name="download.csv"):
+def download_csv(data, name="download.csv", columns=[]):
 
     today = datetime.strftime(datetime.today(), "%Y%m%d")
 
     return StreamingHttpResponse(
-        json_to_csv_rows(data),
+        json_to_csv_rows(data, columns=columns),
         content_type="text/csv",
         headers={"Content-Disposition": f"attachment; filename={today}_{name}"},
     )
