@@ -49,10 +49,10 @@ def get_modal_context(object, request):
     # Add sample edit context
     if object.model == "sample":
         if context["type"] == "dates_list":
-            context.update({"site_dates": object.layer.site.get_dates()})
+            context.update({"site_dates": object.get_layer.site.get_dates() if object.get_layer else []})
         if context["type"] == "dates":
             context.update({"datingoptions": DatingMethod.objects.all()})
-            context.update({"site_dates": object.layer.site.get_dates()})
+            context.update({"site_dates": object.get_layer.site.get_dates() if object.get_layer else []})
         if context["type"] == "edit_batch":
             context.update(
                 {"site_batches": SampleBatch.objects.filter(site=object.site)}

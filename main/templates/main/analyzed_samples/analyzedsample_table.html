@@ -77,9 +77,9 @@
                     </div>
                 </form>
             </td>
-            <td nowrap class="{% if object.sample %}{{object.sample.layer|yesno:'assigned,unassigned'}}{% endif %}">
+            <td nowrap class="{% if object.sample %}{{object.sample.get_layer|yesno:'assigned,unassigned'}}{% endif %}">
                 {% if object.sample %}
-                    {% if object.sample.layer %}{{object.sample.layer.name}}{% else %}Unassigned{% endif %}
+                    {% if object.sample.get_layer %}{{object.sample.get_layer.name}}{% else %}Unassigned{% endif %}
                 {% else %}
                     -
                 {% endif %}

@@ -391,7 +391,7 @@ class Date(models.Model):
         if self.layer_model:
             return self.layer_model.first()
         # if sample not layer
-        return self.sample_model.first().layer
+        return self.sample_model.first().get_layer
 
     class Meta:
         default_manager_name = "visible_objects"
@@ -630,6 +630,9 @@ class Dateable(models.Model):
             infinite = True  # set inifinite because its bigger than the lower date
             return infinite, upper, lower
 
+        if self.model == 'sample' and self.sample:
+            return self.sample.get_upper_and_lower(calculate_mean=calculate_mean)
+        
         # 3. get the mean of the dates
         # this is most likely wrong...
         if calculate_mean:
@@ -652,7 +655,7 @@ class Dateable(models.Model):
 
         return infinite, upper, lower
 
-    def age_summary(self, export=False):
+    def age_summary(self, export=False):      
         ## first, see if the bounds are set
         if self.set_upper and self.set_lower:
             return Date(upper=self.set_upper, lower=self.set_lower)
@@ -684,8 +687,11 @@ class Dateable(models.Model):
                 return Date(upper=self.mean_upper, lower=self.mean_lower)
 
         ## if no dates, look if there is context
-        if self.model == "sample" and self.layer:
-            return self.layer.age_summary()
+        if self.model == 'sample' and self.sample:
+            return self.sample.age_summary(export=export)
+
+        if self.model == "sample" and self.get_layer:
+            return self.get_layer.age_summary()
 
         ## return "undated"
         else:
@@ -1323,6 +1329,12 @@ class Sample(Dateable):
             return []
 
     @property
+    def get_layer(self):
+        if self.sample:
+            return self.sample.layer
+        return self.layer
+
+    @property
     def model(self):
         return "sample"
 
@@ -1353,22 +1365,23 @@ class Sample(Dateable):
         # dont include layer or project - that is exported with the respective query
         infinite, upper, lower = self.get_upper_and_lower(calculate_mean=True)
         if upper == None and lower == None:
-            if self.layer:
-                infinite, upper, lower = self.layer.get_upper_and_lower(
+            if self.get_layer:
+                infinite, upper, lower = self.get_layer.get_upper_and_lower(
                     calculate_mean=True
                 )
         if infinite:
             upper = None
+        ## Inherit from sample parent
         data = {
-            "Layer Name":self.layer.name if self.layer else None,
-            "Fossil Remain": self.parent.name if self.parent else None,
+            "Layer Name":self.get_layer.name if self.layer else None,
+            "Fossil Remain": self.sample.name if self.sample else None,
             "Sample Name": self.name,
             "Sample Synonyms": ";".join([str(x) for x in self.synonyms.all()]),
             "Sample Type": self.type,
-            "Sample Year of Collection": self.year_of_collection,
+            "Sample Year of Collection": self.year_of_collection if self.year_of_collection else self.sample.year_of_collection if self.sample else None,
             "Sample Provenience": ";".join(
                 [f"{k}:{v}" for k, v in json.loads(self.provenience).items()]
-            ),
+            ) if self.provenience else None,
             "Sample Age": self.age_summary(),
             "Sample Age Upper": upper,
             "Sample Age Lower": lower,

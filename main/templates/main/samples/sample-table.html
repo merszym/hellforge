@@ -20,6 +20,7 @@
         <tr>
             <th>Project</th>
             <th>Layer</th>
+            <th>Fossil</th>
             {% if request.user.is_authenticated %}
             <th>Batch</th>
             {% endif %}
@@ -60,17 +61,20 @@
                 </form>
             </td>
             <td nowrap
-                {% if request.user.is_authenticated %}
+                {% if request.user.is_authenticated and not object.sample %}
                     style="cursor: pointer;"
-                    class="{{object.layer|yesno:'assigned,unassigned'}}  {{object.layer.culture.classname|default:'sterile'}} modal_open tooltip tooltip-right"
+                    class="{{object.get_layer|yesno:'assigned,unassigned'}}  {{object.get_layer.culture.classname|default:'sterile'}} modal_open tooltip tooltip-right"
                     data-tooltip="Update Layer"
                     hx-get="{% url 'main_modal_get' %}"
                     hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_layer" }'
                     hx-target="#modal-blank"
                 {% else %}
-                    class="{{object.layer|yesno:'assigned,unassigned'}}  {{object.layer.culture.classname|default:'sterile'}}"
+                    class="{{object.get_layer|yesno:'assigned,unassigned'}}  {{object.get_layer.culture.classname|default:'sterile'}}"
                 {% endif %}>
-                {% if object.layer %}{{object.layer.name}}{% else %}Unassigned{% endif %}
+                {% if object.get_layer %}{{object.get_layer.name}}{% else %}Unassigned{% endif %}
+            </td>
+            <td>
+                {{object.sample.name|default:""}}
             </td>
             {% if request.user.is_authenticated %}
             <td nowrap

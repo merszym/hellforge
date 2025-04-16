@@ -122,9 +122,9 @@
                 {% for entry in object_list.all %}
                 {% with ana=entry.analyzedsample %}
                 <tr class="dna-tr">
-                    <td nowrap class="{% if ana.sample%}{{ana.sample.layer.culture.classname|default:'sterile'}}{%endif %}">
+                    <td nowrap class="{% if ana.sample%}{{ana.sample.get_layer.culture.classname|default:'sterile'}}{%endif %}">
                         {% if ana.sample %}
-                            {{ana.sample.layer.name|default:'unassigned'}}
+                            {{ana.sample.get_layer.name|default:'unassigned'}}
                         {% else %}
                             Control
                         {% endif %}
