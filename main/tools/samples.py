@@ -60,6 +60,7 @@ def handle_samplebatch_file(request, file):
     site = batch.site
 
     all_layers = [x.name for x in site.layer.all()]
+    all_fossils = [x.name for x in Sample.objects.filter(site=site, domain='archaeology')]
 
     # filter for expected/unexpected columns
     expected = Sample.table_columns()
@@ -78,11 +79,24 @@ def handle_samplebatch_file(request, file):
         (df["Layer Name"].isin(all_layers) == False)
         & (df["Layer Name"] == df["Layer Name"])
     ].copy()
+
+    fossil_wrong = df[
+        (df["Fossil Remain"].isin(all_fossils) == False)
+        & (df["Fossil Remain"] == df["Fossil Remain"])
+    ].copy()
+
+    # remove unknown parents
     if len(layer_wrong) > 0:
         issues.append(
             f"Removed non-existing Layers: {','.join(set(layer_wrong['Layer Name']))}"
         )
         df.drop(layer_wrong.index, inplace=True)
+    
+    if len(fossil_wrong) > 0:
+        issues.append(
+            f"Removed non-existing Fossils: {','.join(set(fossil_wrong['Fossil Remain']))}"
+        )
+        df.drop(fossil_wrong.index, inplace=True)
 
     # add the sample batch
     df.insert(0, "Sample Batch", batch.name)
@@ -118,6 +132,7 @@ def save_verified(request):
 
         for (
             batch,
+            fossil,
             sample,
             synonyms,
             type,
@@ -125,6 +140,7 @@ def save_verified(request):
             provenience,
         ) in zip(
             dat["Sample Batch"],
+            dat["Fossil Remain"],
             dat["Sample Name"],
             dat["Sample Synonyms"],
             dat["Sample Type"],
@@ -134,7 +150,15 @@ def save_verified(request):
             # check if a sample exists already, get it
             s, created = Sample.objects.get_or_create(name=sample, layer=l, site=site)
             # if layer is given: Update the layer
-            s.layer = l
+            if fossil is not None:
+                # we go by the layer of the parent
+                s.layer = None
+            else:
+                s.layer = l
+            # check if we have a fossil
+            if fossil is not None:
+                parent = Sample.objects.get(site=site, domain='archaeology', name=fossil)
+                s.sample = parent
             # get the batch
             batch = SampleBatch.objects.get(site=site, name=batch)
             s.batch = batch

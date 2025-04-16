@@ -194,7 +194,7 @@ def get_timeline_data(site_id, request=False, profile=None):
             except:
                 content = ["test"]
             if len(date.layer_model.all()) == 0:
-                content.append(f"(sample {date.sample_model.first().name})")
+                content.append(f"({date.sample_model.first().name})")
             upper, lower = date.to_ms()
             layerdata = {
                 "start": upper,

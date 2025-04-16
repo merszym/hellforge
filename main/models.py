@@ -1283,8 +1283,8 @@ class Sample(Dateable):
     # case: DNA sample has bone (e.g. Denisova3) as the origin 
     sample = models.ForeignKey(
         'self', 
-        related_name='parent', 
-        verbose_name='sample', 
+        related_name='child', 
+        verbose_name='parent', 
         null=True, 
         blank=True, 
         on_delete=models.PROTECT
@@ -1334,6 +1334,7 @@ class Sample(Dateable):
     def table_columns(self):
         return [
             "Layer Name",
+            "Fossil Remain",
             "Sample Name",
             "Sample Synonyms",
             "Sample Type",
@@ -1360,6 +1361,7 @@ class Sample(Dateable):
             upper = None
         data = {
             "Layer Name":self.layer.name if self.layer else None,
+            "Fossil Remain": self.parent.name if self.parent else None,
             "Sample Name": self.name,
             "Sample Synonyms": ";".join([str(x) for x in self.synonyms.all()]),
             "Sample Type": self.type,
