@@ -91,6 +91,7 @@ def handle_library_file(request, file):
         "main/modals/sample_modal.html",
         {
             "type": "libraries_confirm",
+            "object":batch.sample.first(),
             "dataframe": df.fillna("").to_html(
                 index=False, classes="table table-striped col-12"
             ),
