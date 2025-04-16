@@ -1,5 +1,5 @@
 from main.models import models, Sample
-from main.queries import queries, get_libraries, get_project_samples, get_project_authors
+from main.queries import queries, get_libraries, get_samples, get_project_authors
 from django.http import JsonResponse, HttpResponse, StreamingHttpResponse, FileResponse
 from django.urls import path, reverse
 from django.shortcuts import render
@@ -46,7 +46,12 @@ def get_dataset_df(qs, start, include, append, **kwargs):
                 # if there is a foreign-key relationship .all() fails
                 # in this case, try if an entry exists
                 try:
-                    data.update(getattr(entry, incl, False).get_data())
+                    # thats one _ugly_ hack for the sample origin situation
+                    # because a samples layer could be determined by the sample it derives from...
+                    if incl=='layer':
+                        data.update(getattr(entry, 'get_layer', False).get_data())
+                    else:
+                        data.update(getattr(entry, incl, False).get_data())
                 except AttributeError:
                     # if that fails, add empty lines...
                     empty = {k: None for k in models[incl].table_columns()}
@@ -101,8 +106,8 @@ def get_dataset(request):
     elif unique in ['library', 'analyzedsample']:
         qs = get_libraries(start)
 
-    elif unique=='sample' and start.model == 'project':
-        qs = get_project_samples(start)
+    elif unique=='sample':
+        qs = get_samples(start)
     
     elif unique=='author' and start.model == 'project':
         qs = get_project_authors(start)

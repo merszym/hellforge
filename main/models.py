@@ -387,7 +387,7 @@ class Date(models.Model):
         return "date"
 
     @property
-    def layer(self):
+    def get_layer(self):
         if self.layer_model:
             return self.layer_model.first()
         # if sample not layer
@@ -900,12 +900,6 @@ class Site(models.Model):
 
     def get_absolute_url(self):
         return reverse("site_detail", kwargs={"pk": self.pk})
-
-    @property
-    def layer_hierarchies(self):
-        return sorted(
-            list(set([x.hierarchie for x in self.layer.all() if x.hierarchie > 1]))
-        )
 
     @property
     def cultures(self):
@@ -1484,8 +1478,8 @@ class AnalyzedSample(models.Model):
         return self.sample.site
 
     @property
-    def layer(self):
-        return self.sample.layer
+    def get_layer(self):
+        return self.sample.get_layer
 
     @property
     def samplebatch(self):

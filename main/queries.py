@@ -47,16 +47,22 @@ def get_project_authors(project):
     return qs.distinct()
 
 
-def get_project_samples(project):
+def get_samples(start):
     """
     The more controlled query to get the project_samples query. This is necessary, because the automated one is too buggy...
     """
-    qs = models['sample'].objects.filter(
-            Q(site__project=project)
-            & Q(project=project)
-        )
+    if start.model == 'project':
+        qs = models['sample'].objects.filter(
+                Q(site__project=project)
+                & Q(project=project)
+                & Q(domain='mpi_eva')
+            )
+    if start.model == 'site':
+        qs = models['sample'].objects.filter(
+                Q(site=start)
+                & Q(domain='mpi_eva')
+            )
     return qs
-
 
 def get_libraries(start):
     """
