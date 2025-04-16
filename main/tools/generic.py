@@ -101,7 +101,8 @@ def get_dataset(request):
 
     # now set up the query
     if unique == "date" and column == "site":
-        qs = start.get_dates()
+        #export unpublished dates only if authenticated
+        qs = start.get_dates(without_reference=request.user.is_authenticated)
 
     elif unique in ['library', 'analyzedsample']:
         qs = get_libraries(start)

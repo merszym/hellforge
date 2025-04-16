@@ -388,7 +388,7 @@ class Date(models.Model):
 
     @property
     def get_layer(self):
-        if self.layer_model:
+        if self.layer_model.first():
             return self.layer_model.first()
         # if sample not layer
         return self.sample_model.first().get_layer
@@ -402,6 +402,7 @@ class Date(models.Model):
         # human readable representation of the dates
         return [
             "Layer",
+            "Fossil Remain",
             "Method",
             "Lab Code",
             "Date",
@@ -417,6 +418,7 @@ class Date(models.Model):
     def get_data(self, **kwargs):
         # for an entry, return a dict {'col': data} that is used for the export of the data
         data = {
+            "Sample": self.sample_model.first().name if self.sample_model.first() else None,
             "Method": self.method,
             "Lab Code": self.oxa,
             "Date": self.estimate,
@@ -959,11 +961,14 @@ class Site(models.Model):
         else:
             return {}
 
-    def get_dates(self):
+    def get_dates(self, without_reference=False):
         site_layers = self.layer.all()
-        site_samples = Sample.objects.filter(layer__in=site_layers)
+        site_samples = Sample.objects.filter(site=self)
+        dates = Date.objects.all()
+        if not without_reference:
+            dates = dates.filter(ref__isnull=False)
         return (
-            Date.objects.filter(
+            dates.filter(
                 Q(hidden=False) & Q(layer_model__in=site_layers)
                 | Q(sample_model__in=site_samples)
             )
