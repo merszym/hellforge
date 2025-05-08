@@ -1001,6 +1001,19 @@ class Profile(models.Model):
             "Profile Name": self.name,
         }
         return data
+    
+    @property
+    def max_number_of_parents(self):
+        """
+        get the number of nested parents to reserve accordingly the number of columns in the profile-table
+        """
+        n = 1
+        for junction in self.layer_junction.all():
+            layer = junction.layer
+            if layer.number_of_parents > n:
+                n = layer.number_of_parents
+        return n+1
+
 
     @classmethod
     def table_columns(self):
@@ -1143,13 +1156,12 @@ class Layer(Dateable):
         if self.parent:
             return self.parent.get_highest()
         return self
-
+    
     @property
-    def hierarchie(self):
-        try:
-            return 1 + max([y.hierarchie for y in self.child.all()])
-        except ValueError:
-            return 1
+    def number_of_parents(self):
+        if not self.parent:
+            return 0
+        return 1 + self.parent.number_of_parents
 
     @property
     def in_profile(self):

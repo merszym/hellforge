@@ -1,7 +1,8 @@
 {% load format %}
+<!-- This is the highest hierarchie per layer -->
 <td class="{% if layer.culture %}{{layer.culture.classname}}{% else %}sterile{% endif%}" style="width: 5px;white-space: nowrap;">
     {% if layer.parent %}
-    <span>{{layer.parent.name}}</span><br>
+    <span class="text-italic">{{layer.get_highest.name}}</span><br>
     {% else %}
     <strong>{{layer.name}}</strong>
         {% for syn in layer.synonyms.all %}
@@ -9,15 +10,26 @@
         {% endfor %}
     {% endif %}
 </td>
+<!-- This is for all sub-hierarchies -->
+{% for i in parents %}
 <td class="{% if layer.culture %}{{layer.culture.classname}}{% else %}sterile{% endif%} layer_{{layer.pk}}" style="width: 5px;white-space: nowrap;">
-    {% if layer.parent %}
-    <strong>{{layer.name}}</strong>
-    {% for syn in layer.synonyms.all %}
-    <br><span style="font-size:11pt;">{{syn.name}} ({{syn.type}})</span>
-    {% endfor %}
+    {% if layer.number_of_parents == i %}
+        <strong>{{layer.name}}</strong>
+        {% for syn in layer.synonyms.all %}
+            <br><span style="font-size:11pt;">{{syn.name}} ({{syn.type}})</span>
+        {% endfor %}
+    {% endif %}
+    {% if layer.parent.number_of_parents == i %}
+        <span class="text-italic">{{layer.parent.name}}</span>
     {% endif %}
 </td>
-
+{% endfor %}
+<!--And this is for the Add Layer section-->
+{% if display == 'add_layer' %}
+<td class="{% if layer.culture %}{{layer.culture.classname}}{% else %}sterile{% endif%} layer_{{layer.pk}}" style="width: 5px;white-space: nowrap;">
+        <strong>{{layer.name}}</strong>
+</td>
+{% endif %}
 <!-- colour -->
 <td nowrap
     {% if request.user.is_authenticated %}

@@ -1,6 +1,11 @@
 <th style="width: 5px;">Layer</th>
+{% for i in parents %}
 <th style="width: 5px;"></th>
-<th style="width: 5px;">Colour</th>
+{% endfor %}
+{% if display == 'add_layer '%}
+<th style="width: 5px;"></th>
+{% endif %}
+<th style="width: 5px;">Color</th>
 <th style="width: 5px;"></th>
 <th style="width: 5px;">Texture</th>
 <th>Dating</th>

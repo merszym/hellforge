@@ -8,14 +8,14 @@ from django.contrib.auth.decorators import login_required
 def get_profile_detail(request):
     """
     the content of the profile that is rendered when selecting a profile and on load of the site-stratigraphy section
-    important: profile is in the request.GET as soon as one clicked to profile, so by default, it is the _first_
+    important: profile is in the request.GET as soon as one clicked a profile, so by default, it is the _first_
     """
     try:
         profile = get_instance_from_string(request.GET.get('profile'))
     except AttributeError: #profile is not in the request
         profile = get_instance_from_string(request.GET.get('site')).profile.first()
 
-    return render(request,"main/profile/profile-detail.html", {'object':profile})
+    return render(request,"main/profile/profile-detail.html", {'object':profile, 'parents': range(1, profile.max_number_of_parents)})
 
 
 @login_required

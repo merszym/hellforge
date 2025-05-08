@@ -36,8 +36,10 @@
     </ul>
     <!--Show the selected profile-->
     {% if selected_profile %}
-    <section class="m-2" style="padding-top: 20px;" id="show_profile">
-    {% include 'main/profile/profile-detail.html' with object=selected_profile %}
+    <section class="m-2" style="padding-top: 20px;" id="show_profile"
+        hx-get="{% url 'main_profile_get' %}?profile=profile_{{selected_profile.pk}}"
+        hx-trigger="load once"
+    >
     </section>
     {% else %}
     <div class="empty">
@@ -73,7 +75,7 @@
                 <thead>
                 <tr>
                     <th>Profile</th>
-                    {% include 'main/profile/layer-tablehead.html' %}
+                    {% include 'main/profile/layer-tablehead.html' with display='add_layer' %}
                     <th></th>
                     <th></th>
                 </tr>
@@ -84,7 +86,7 @@
                 {% with layer=junction.layer %}
                     <tr class="layer_search">
                     <td>{{profile.name}}</td>
-                    {% include 'main/profile/layer-tablecells.html'%}
+                    {% include 'main/profile/layer-tablecells.html' with display='add_layer' %}
                     <td>
                         <form>
                             <input id="main_profile_layer_add" type="hidden" name="instance_x" value="profile_{{selected_profile.pk}}">
