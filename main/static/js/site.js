@@ -40,3 +40,18 @@ $('body').on('click', '.select-block-content', function(){
     $('.block-content').hide();
     $(`#${$(this).attr('data-select')}`).show();
 });
+
+// in the sample-batch tab
+$('body').on('click','.batch', function(){
+    add_url_params({
+        'samplebatch':$(this).attr("data-object")
+    })
+    $(this).find("i").toggleClass('icon icon-arrow-down');
+    $(this).find("i").toggleClass('icon icon-arrow-right');
+    var id = $(this).attr('id')
+    $(`#samplebatch-content-${id}`).slideToggle(500)
+})
+$('body').on('click','.gallery-toggle', function(){
+    var element = $(this).attr('data-toggle')
+    $(`#${element}`).slideToggle(500)
+});

@@ -344,13 +344,52 @@ def get_site_geo(request):
 # Site Sample Tab
 ## Main sample-content
 
-
 def get_site_sample_content(request):
-    try:
+    from main.tools.samplebatch import filter_samples
+    if request.method == 'POST':
+        """This means we set filters for the downstream views!"""
+        # now filter the samples
+        layer = request.POST.get("layer", "all")
+        culture = request.POST.get("culture", "all")
+        analyzed = "on" == request.POST.get("analyzed", "")
+        combine = "on" == request.POST.get("combine", "")
+
+        if layer != "all":
+            layer = get_instance_from_string(layer)
+            request.session['filter_layer_pk'] = layer.pk
+            request.session['filter_layer_name'] = layer.name
+        else:
+            try:
+                del request.session['filter_layer_pk']
+                del request.session['filter_layer_name']
+            except KeyError:
+                pass
+
+
+        if culture != "all":
+            culture = get_instance_from_string(culture)
+            request.session['filter_culture_pk'] = culture.pk
+            request.session['filter_culture_name'] = culture.name
+        else:
+            try:
+                del request.session['filter_culture_pk']
+                del request.session['filter_culture_name']
+            except KeyError:
+                pass
+
+        request.session['filter_analyzed'] = True if analyzed else False
+        request.session['filter_combine'] = True if combine else False
+        
+        try:
+            object = Site.objects.get(pk=int(request.POST.get("object")))
+        except:
+            object = get_instance_from_string(request.POST.get('object'))
+
+    else:
         object = get_instance_from_string(request.GET.get("object"))
-    except TypeError:  # object is in POST not GET
-        object = Site.objects.get(pk=int(request.POST.get("object")))
+
     context = {"object": object}
+
     # load the samples and batches
     # first create a batch for the samples that dont have one yet...
     tmp, c = SampleBatch.objects.get_or_create(name="Undefined Batch", site=object)
@@ -358,33 +397,33 @@ def get_site_sample_content(request):
     for sample in nobatch:
         sample.batch = tmp
         sample.save()
-    # The get the number of samples per batch for display in the site-sample-tab
+    
+    # first, get all the samples that we need
+    samples = filter_samples(request, Sample.objects.filter(site=object))
 
-    batches = list(SampleBatch.objects.filter(site=object))
-    batch_samples = defaultdict(int)
+
+    batches = set([x.batch for x in samples])
+    batch_sample_dict = defaultdict(int)
 
     for batch in batches:
         # hide Undefinied batch if empty and other ones exist
         if (
             (len(batches) > 1)
             and (batch.name == "Undefined Batch")
-            and (len(batch.sample.all()) == 0)
+            and (len(samples.filter(batch==batch) == 0))
         ):
             continue
         # create All placeholders
-        batch_samples[batch] = len(batch.sample.all())
+        batch_sample_dict[batch] = len(samples.filter(batch=batch))
 
-    # check if a batch is selected already
-    if selected_batch := request.GET.get("samplebatch", False):
-        selected_batch = get_instance_from_string(selected_batch)
-    else:
-        selected_batch = batches[0]
+    layers = Layer.objects.filter(site=object, sample__isnull=False).distinct()
 
     context.update(
         {
-            "sample": object.sample.first(),
-            "batches": batch_samples,
-            "selected_batch": selected_batch,
+            "sample": samples.first(),
+            "batches": batch_sample_dict,
+            'layers': layers,
+            'cultures': Culture.objects.filter(layer__in=layers).distinct()
         }
     )
     return render(request, "main/site/site-sample-content.html", context)
@@ -427,80 +466,43 @@ def samplebatch_create(request):
 
 ## Samplebatch-TAB
 
-
 def get_site_samplebatch_tab(request, pk):
-    batch = SampleBatch.objects.get(pk=pk)
+    from main.tools.samplebatch import filter_samples
+    # if pk=0, means we want to have all the batches from the site (that we are allowed to see)
+    if pk != 0:
+        batch = SampleBatch.objects.get(pk=pk)
 
-    # get the defaults for display
-    current_project = get_project(request)
+        # get the defaults for display
+        current_project = get_project(request)
 
-    # TODO: move to signals
-    # Create a Gallery for each Batch
-    if not batch.gallery:
-        tmp = Gallery(title=batch.name)
-        tmp.save()
-        batch.gallery = tmp
-        batch.save()
+        # TODO: move to signals
+        # Create a Gallery for each Batch
+        if not batch.gallery:
+            tmp = Gallery(title=batch.name)
+            tmp.save()
+            batch.gallery = tmp
+            batch.save()
 
-    batch_samples = Sample.objects.filter(batch=batch).distinct()
+        batch_samples = Sample.objects.filter(batch=batch).distinct()
 
-    # now filter the samples
-    layer = request.POST.get("layer", "all")
-    profile = request.POST.get("profile", "all")
-    analyzed = "on" == request.POST.get("analyzed", "")
-    all_projects = "on" == request.POST.get("all_projects", "")
+        # make a list of id-synonym keys that are necessary for the sample-table
+        sample_synonyms = list(
+            Synonym.objects.filter(sample__in=batch_samples)
+            .values_list("type", flat=True)
+            .distinct()
+        )
 
-    if layer != "all":
-        layer = get_instance_from_string(layer)
-        batch_samples = batch_samples.filter(layer=layer)
-
-    if profile != "all":
-        profile = get_instance_from_string(profile)
-        batch_samples = batch_samples.filter(layer__profile_junction__profile=profile)
-
-    if analyzed:
-        batch_samples = batch_samples.filter(analyzed_sample__isnull=False)
-
-    if not all_projects and current_project:
-        batch_samples = batch_samples.filter(project=current_project)
+        context = {
+            "object": batch,
+            "sample_synonyms": sample_synonyms,
+            "samples": filter_samples(request,batch_samples)
+        }
     
-
-    # make a list of id-synonym keys that are necessary for the sample-table
-    sample_synonyms = list(
-        Synonym.objects.filter(sample__in=batch_samples)
-        .values_list("type", flat=True)
-        .distinct()
-    )
-
-    layers = Layer.objects.filter(sample__batch=batch).distinct()
-
-    if profile != "all":
-        layers = layers.filter(profile_junction__profile=profile)
-
-    profiles = Profile.objects.filter(layer_junction__layer__sample__batch=batch).distinct()
-
-    if not all_projects and current_project: 
-        analyzedsamples = update_query_for_negatives(
-            AnalyzedSample.objects.filter(sample__in=batch_samples, project=current_project), 
-            project=current_project
-        )
     else:
-        analyzedsamples = update_query_for_negatives(
-            AnalyzedSample.objects.filter(sample__in=batch_samples)
-        )
-
-    context = {
-        "object": batch,
-        "layers": layers,
-        "profiles": profiles,
-        "sample_synonyms": sample_synonyms,
-        "samples": batch_samples,
-        "analyzedsamples": analyzedsamples,
-        "all_projects": all_projects,
-        "analyzed": analyzed,
-        "layer": layer,
-        "profile": profile,
-    }
+        site = get_instance_from_string(request.GET.get('object'))
+        context={
+            'samples' : filter_samples(request,site.sample.filter(domain='mpi_eva'))
+        }
 
     return render(request, "main/samples/sample-batch-tab.html", context)
 

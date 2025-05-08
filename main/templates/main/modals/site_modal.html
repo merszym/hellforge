@@ -25,6 +25,7 @@
         hx-vars="{'site':'site_{{object.pk}}'}"
         hx-target="#site_fauna">
     </div>
+    {% elif type == 'samplebatch_upload_confirm' %}
     {% else %}
     <div
         hx-get="{% url 'main_site_element' %}"
@@ -80,7 +81,7 @@
                 {{dataframe|safe}}
                 <form
                     hx-post="{% url 'ajax_save_verified_samples' %}"
-                    hx-target="#sample-batch-tab_{{batch.pk}}"
+                    hx-target="#samplebatch-content-{{batch.pk}}"
                 >
                     {% csrf_token %}
                     <textarea name="batch-data" type="text" style="display:none;">{{json}}</textarea>

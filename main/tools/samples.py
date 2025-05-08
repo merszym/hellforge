@@ -148,18 +148,16 @@ def save_verified(request):
             dat["Sample Provenience"],
         ):
             # check if a sample exists already, get it
-            s, created = Sample.objects.get_or_create(name=sample, layer=l, site=site)
+            s, created = Sample.objects.get_or_create(name=sample, site=site)
             # if layer is given: Update the layer
-            if fossil is not None:
+            if fossil==fossil:
                 # we go by the layer of the parent
                 s.layer = None
-            else:
-                s.layer = l
-            # check if we have a fossil
-            if fossil is not None:
                 parent = Sample.objects.get(site=site, domain='archaeology', name=fossil)
                 s.sample = parent
-            # get the batch
+            else:
+                s.layer = l
+
             batch = SampleBatch.objects.get(site=site, name=batch)
             s.batch = batch
             # add project

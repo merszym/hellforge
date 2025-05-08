@@ -13,61 +13,108 @@
             </a>
         </button>
     </div>
+    
     <section>
-        <!-- List the sample batches -->
-        <ul class="tab" id="samplebatch-list">
-            {% for batch in batches %}
-            <li id="samplebatch-tab_{{batch.pk}}" class="tab-item {% if batch == selected_batch %} active {% endif %} batch"
-                data-group="sample-batch"
-                data-show="sample-batch-tab_{{batch.pk}}"
-                data-object="samplebatch_{{batch.pk}}">
-                <a class="badge" data-badge="{{batches|lookup:batch}}" style="cursor:pointer;">{{batch.name}}</a>
-            </li>
-            {% endfor %}
-            <script>
-            $('body').on('click','.batch', function(){
-                add_url_params({
-                    'samplebatch':$(this).attr("data-object")
-                })
-            })
-            </script>
-            {% if request.user.is_authenticated %}
-            <li id="before-profile-add">
-                <span style="margin-bottom:5px;" class="btn btn-primary modal_open"
-                        hx-get="{% url 'main_modal_get' %}?"
-                        hx-vals='{"object":"site_{{object.pk}}", "type":"add_samplebatch"}'
-                        hx-target="#modal-blank">
-                        Add Batch
-                </span>
-            </li>
-            {% endif %}
-        </ul>
-        <!-- Now render each batch individually! -->
+        <h3> Filter Samples </h3>
+        <!-- Display the filter -->
+        <form
+        hx-post="{% url 'main_site_sample_tab'%}"
+        hx-target="#site_samples"
+        style="width: 80%;"
+        >
+            {% csrf_token %}
+            <input type="hidden" name="object" value="{{object.pk}}">
+            <div class="input-group">
+                <span class="input-group-addon">Layer</span>
+                <select class="form-select" name="layer">
+                    {% if request.session.filter_layer_pk %}
+                    <option value="layer_{{request.session.filter_layer_pk}}" selected>{{request.session.filter_layer_name}}</option>
+                    <option value="all">All</option>
+                    {% else %}
+                    <option value="all" selected>All</option>
+                    {% endif %}
+                    {% for entry in layers %}
+                    {% if entry.pk %}
+                    <option value="layer_{{entry.pk}}">{{entry.name}}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+                <span class="input-group-addon">Culture</span>
+                <select class="form-select" name="culture">
+                    {% if request.session.filter_culture_pk %}
+                    <option value="culture_{{request.session.filter_culture_pk}}" selected>{{request.session.filter_culture_name}}</option>
+                    <option value="all">All</option>
+                    {% else %}
+                    <option value="all" selected>All</option>
+                    {% endif %}
+                    {% for entry in cultures %}
+                        {% if entry.pk %}
+                        <option value="culture_{{entry.pk}}">{{entry.name}}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                <span class="input-group-addon">Analyzed only</span>
+                <label class="form-switch mx-2">
+                    <input type="checkbox" name="analyzed" {% if request.session.filter_analyzed %}checked{% endif %}><i class="form-icon"></i>
+                </label>
+                <span class="input-group-addon">Combine Batches</span>
+                <label class="form-switch mx-2">
+                    <input type="checkbox" name="combine" {% if request.session.filter_combine %}checked{% endif %}><i class="form-icon"></i>
+                </label>
+                <button class="btn btn-primary input-group-btn">OK</button>
+            </div>
+        </form>
+    </section>
+    <section class="my-2">
+        <h3>Sample Batches</h3>
+
+        {% if not request.session.filter_combine %}
+
         {% for batch in batches %}
-            <div class="tab-panel" id="sample-batch-tab_{{batch.pk}}" data-group="sample-batch"
-                {% if batch != selected_batch %}
-                style="display: none;"
+        <!-- List the sample batches -->
+        <div class="tile tile-centered" id="sample-batch_{{object.pk}}">
+            <div class="tile-icon">
+                <div class="btn btn-primary batch tooltip tooltip-right" data-tooltip="Toggle Sample Batch" id="{{batch.pk}}" data-object="samplebatch_{{batch.pk}}">
+                {% if batch == selected_batch %}
+                <i class="icon icon-arrow-down centered"></i>
+                {% else %}
+                <i class="icon icon-arrow-right centered"></i>
                 {% endif %}
+                </div>
+            </div>
+            <div class="tile-content">
+                <div class="tile-title">{{batch.name}}</div>
+                <small class="tile-subtitle text-gray">Collected samples: {{batches|lookup:batch}}</small>
+            </div>
+        </div>
+
+        <section id="samplebatch-content-{{batch.pk}}" {% if batch != selected_batch %} style="display: none;" {% endif %}>
+            <div class="tab-panel"
                 hx-get="{% url 'main_samplebatch_get' batch.pk %}"
                 hx-trigger="load once">
                 <div class="loading loading-lg m-2"></div>
             </div>
+        </section>
+
         {% endfor %}
+        {% if request.user.is_authenticated %}
+        <span style="margin-bottom:5px;" class="btn modal_open"
+            hx-get="{% url 'main_modal_get' %}?"
+            hx-vals='{"object":"site_{{object.pk}}", "type":"add_samplebatch"}'
+            hx-target="#modal-blank">
+            Add Batch
+        </span>     
+        {% endif %}
+        
+        {% else %}
+
+        <div class="tab-panel"
+            hx-get="{% url 'main_samplebatch_get' 0 %}"
+            hx-trigger="load once">
+            <div class="loading loading-lg m-2"></div>
+        </div>
+        
+        {% endif %}
+
     </section>
 </div>
-{% if sample_references %}
-<h5>References</h5>
-<table class="table table-striped my-2">
-    <tbody id="description-reference-tbody" style="border-top: 1px solid lightgrey;">
-        {% for ref in sample_references %}
-        {% include 'main/reference/reference-tablerow.html' with display=True %}
-        {% endfor %}
-    </tbody>
-</table>
-{% endif %}
-
-
-
-
-
-

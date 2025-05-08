@@ -20,7 +20,7 @@
     <div
         hx-get="{% url 'main_samplebatch_get' object.batch.pk %}"
         hx-trigger="load"
-        hx-target="#sample-batch-tab_{{object.batch.pk}}">
+        hx-target="#samplebatch-content-{{object.batch.pk}}">
     </div>
     {% endif %}
 
@@ -109,7 +109,7 @@
                             </select>
                             <span
                                 hx-post="{% url 'sample-batch-update' %}"
-                                hx-target="#sample-batch-tab_{{object.batch.pk}}"
+                                hx-target="#samplebatch-content-{{object.batch.pk}}"
                                 class="btn btn-primary input-group-btn modal_close"
                             >OK</span>
                         </form>
@@ -174,7 +174,7 @@
                                 >OK
                             </span>
                             <div hx-get="{% url 'main_samplebatch_get' object.batch.pk %}"
-                                hx-target="#sample-batch-tab_{{object.batch.pk}}"
+                                hx-target="#samplebatch-content-{{object.batch.pk}}"
                                 hx-trigger="click from:#provenience-update-trigger, click from:.provenience-update-remove"></div>
                         </div>
                     </form>
@@ -250,7 +250,7 @@
                     {% include 'main/synonyms/synonyms-form.html' %}
                     </form>
                     <div hx-get="{% url 'main_samplebatch_get' object.batch.pk %}"
-                            hx-target="#sample-batch-tab_{{object.batch.pk}}"
+                            hx-target="#samplebatch-content-{{object.batch.pk}}"
                             hx-trigger="click from:.synonym_delete delay:100ms">
                     </div>
                 </div>
@@ -274,7 +274,7 @@
                 {{dataframe|safe}}
                 <form id='sample-batch-verify-form'
                     hx-post="{% url 'ajax_save_verified_analyzedsamples' %}?batch={{batch.pk}}"
-                    hx-target="#sample-batch-tab_{{batch.pk}}"
+                    hx-target="#samplebatch-content-{{batch.pk}}"
                     >
                     {% csrf_token %}
                     <textarea name="batch-data" type="text" style="display:none;">{{json}}</textarea>

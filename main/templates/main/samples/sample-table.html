@@ -21,7 +21,7 @@
             <th>Project</th>
             <th>Layer</th>
             <th>Fossil</th>
-            {% if request.user.is_authenticated %}
+            {% if not batch %}
             <th>Batch</th>
             {% endif %}
             <th>Type</th>
@@ -73,17 +73,20 @@
                 {% endif %}>
                 {% if object.get_layer %}{{object.get_layer.name}}{% else %}Unassigned{% endif %}
             </td>
-            <td>
+            <td nowrap>
                 {{object.sample.name|default:""}}
             </td>
-            {% if request.user.is_authenticated %}
+            {% if not batch %}
             <td nowrap
+                {% if request.user.is_authenticated %}
                 style="cursor: pointer;"
                 class="tooltip tooltip-top modal_open"
                 data-tooltip="Update Sample Synonyms"
                 hx-get="{% url 'main_modal_get' %}"
                 hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_batch" }'
-                hx-target="#modal-blank">
+                hx-target="#modal-blank"
+                {% endif %}
+                >
                 {{object.batch.name}}
             </td>
             {% endif %}

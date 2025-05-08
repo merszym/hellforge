@@ -1330,7 +1330,7 @@ class Sample(Dateable):
     )
 
     class Meta:
-        ordering = ["site", "batch", "layer", "name"]
+        ordering = ["site", "batch", "layer", "sample__layer", "name"]
 
     def get_provenience(self):
         try:
