@@ -1,5 +1,5 @@
 from main.models import models
-from main.models import AnalyzedSample, Sample, Project, SampleBatch
+from main.models import AnalyzedSample, Sample, Project, SampleBatch, Site
 from django.http import JsonResponse, HttpResponse
 from django.urls import path
 from django import forms
@@ -12,6 +12,45 @@ from django.contrib.auth.decorators import (
     login_required,
 )  # this is for now, make smarter later
 from django.contrib import messages
+
+def filter_libraries(request, query):
+    if not request.user.is_authenticated:
+        from main.tools.projects import get_project
+        project = get_project(request)
+        query = query.filter(project=project)
+    if 'filter_batch_pk' in request.session:
+        batch = tools.generic.get_instance_from_string(f"samplebatch_{request.session['filter_batch_pk']}")
+        query = query.filter(
+            Q(sample__batch=batch) 
+        )
+    
+    return query
+
+def get_libraries(request, pk):
+    """
+    from one site, get all the (filtered) samples and display the list of libraries
+    """
+    object = Site.objects.get(pk=pk)
+    samples = tools.samplebatch.filter_samples(request, Sample.objects.filter(site=object))
+
+    if request.method == 'POST':
+        # we want to filter the libraries, so set the cookies for the filter
+        batch = request.POST.get("batch", "all")
+        probe = request.POST.get("probe", "all")
+
+        if batch != 'all':
+            batch = tools.generic.get_instance_from_string(batch)
+            request.session['filter_batch_pk'] = batch.pk
+            request.session['filter_batch_name'] = batch.name
+        else:
+            del request.session['filter_batch_pk']
+            del request.session['filter_batch_name']
+
+
+    query = filter_libraries(request, AnalyzedSample.objects.filter(sample__in=samples))
+
+    return render(request, 'main/analyzed_samples/analyzedsample_table.html', {'object_list':query})
+
 
 def update_query_for_negatives(query, project=False):
     lnc_negatives = set(query.values_list("lnc_batch","probes"))
@@ -224,4 +263,5 @@ urlpatterns = [
         "<int:pk>/update-seqrun", seqrun_update, name="main_analyzedsample_seqrunupdate"
     ),
     path("<int:pk>/update-qc", qc_toggle, name="main_analyzedsample_qctoggle"),
+    path("get-data/<int:pk>", get_libraries, name="main_analyzedsample_getdata")
 ]

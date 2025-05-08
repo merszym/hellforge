@@ -1,7 +1,6 @@
 {% load format %}
 <div class="panel" style="max-height:500px; overflow:scroll;">
 
-<a class="generic_filter text-primary" style="cursor:pointer;" data-term="SP" data-search=".{{batch.classname}}_libtr">Reset sample filter</a>
 
 <style>
     .fail{
@@ -13,17 +12,21 @@
 </style>
 
 <div class="has-icon-left">
-    <input class="form-input" id="{{batch.classname}}-library-search" type="text" placeholder="Filter Libraries" style="width:50%;">
+    <input class="form-input" id="{{batch.classname}}-library-search" type="text" placeholder="Quick Filter" style="width:50%;">
     <i class="form-icon icon icon-search"></i>
 </div>
+<a class="generic_filter text-primary" style="cursor:pointer;" data-term="SP" data-search=".{{batch.classname}}_libtr">Reset sample filter</a>
 
 <table class="table table-striped">
     <thead style="position: sticky; top:0; background-color: white; z-index: 100;">
         <tr>
+            {% if request.user.is_authenticated %}
             <th>Project</th>
             <th>QC</th>
+            {% endif %}
             <th>Layer</th>
             <th>Sample</th>
+            <th>Sample Batch</th>
             <th>Lysate</th>
             <th>ENC Batch</th>
             <th>Library</th>
@@ -46,6 +49,7 @@
         {% with project=request.session.session_project %}
         {% for object in object_list %}
         <tr class="{{batch.classname}}_libtr libsearch" id="tr_analyzedsample_{{object.pk}}">
+            {% if request.user.is_authenticated %}
             <td nowrap>
                 <form>
                     {% csrf_token %}
@@ -77,6 +81,7 @@
                     </div>
                 </form>
             </td>
+            {% endif %}
             <td nowrap class="{% if object.sample %}{{object.sample.get_layer|yesno:'assigned,unassigned'}}{% endif %}">
                 {% if object.sample %}
                     {% if object.sample.get_layer %}{{object.sample.get_layer.name}}{% else %}Unassigned{% endif %}
@@ -85,6 +90,7 @@
                 {% endif %}
             </td>
             <td>{{object.sample|default:"Control"}}</td>
+            <td nowrap>{{object.sample.batch.name|default:''}}</td>
             <td>{{object.lysate|default:""}}</td>
             <td nowrap>{{object.enc_batch|default:""}}</td>
             <td>{{object.library}}</td>
@@ -92,7 +98,7 @@
             <td>{{object.efficiency|stringformat:".2f"}}</td>
             <td>{{object.lnc_batch|default:""}}</td>
             <td>{{object.capture|default:""}}</td>
-            <td>{{object.probes}}</td>
+            <td nowrap>{{object.probes}}</td>
             <td {% if request.user.is_authenticated %}
                 class="modal_open tooltip tooltip-top" data-tooltip="Edit Seqrun"
                 hx-get="{% url 'main_modal_get' %}"

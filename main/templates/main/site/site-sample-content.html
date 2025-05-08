@@ -15,7 +15,7 @@
     </div>
     
     <section>
-        <h3> Filter Samples </h3>
+        <h3>Samples</h3>
         <!-- Display the filter -->
         <form
         hx-post="{% url 'main_site_sample_tab'%}"
@@ -66,10 +66,8 @@
         </form>
     </section>
     <section class="my-2">
-        <h3>Sample Batches</h3>
-
         {% if not request.session.filter_combine %}
-
+        <h4>Sample Batches</h4>
         {% for batch in batches %}
         <!-- List the sample batches -->
         <div class="tile tile-centered" id="sample-batch_{{object.pk}}">
@@ -115,6 +113,51 @@
         </div>
         
         {% endif %}
+
+    </section>
+    <section class="my-2">
+        <h3>DNA Libraries</h3>
+        <form
+        hx-post="{% url 'main_analyzedsample_getdata' object.pk %}"
+        hx-target="#show_libraries"
+        style="width: 80%;"
+        >
+            {% csrf_token %}
+            <div class="input-group">
+                <span class="input-group-addon">Batch</span>
+                <select class="form-select" name="batch">
+                    {% if request.session.filter_batch_pk %}
+                    <option value="samplebatch_{{request.session.filter_batch_pk}}" selected>{{request.session.filter_batch_name}}</option>
+                    <option value="all">All</option>
+                    {% else %}
+                    <option value="all" selected>All</option>
+                    {% endif %}
+                    {% for batch in batches %}
+                    {% if batch.pk %}
+                    <option value="samplebatch_{{batch.pk}}">{{batch.name}}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+                <span class="input-group-addon">Probe</span>
+                <select class="form-select" name="probe">
+                    {% if request.session.filter_probe %}
+                    <option value="{{request.session.filter_probe}}" selected>{{request.session.filter_probe}}</option>
+                    <option value="all">All</option>
+                    {% else %}
+                    <option value="all" selected>All</option>
+                    {% endif %}
+                    {% for probe in probes %}
+                        <option value="{{probe}}">{{probe}}</option>
+                    {% endfor %}
+                </select>
+                <button class="btn btn-primary input-group-btn">OK</button>
+            </div>
+        </form>
+        <div class="tab-panel" id="show_libraries"
+            hx-get="{% url 'main_analyzedsample_getdata' object.pk %}"
+            hx-trigger="load once">
+            <div class="loading loading-lg m-2"></div>
+        </div>
 
     </section>
 </div>
