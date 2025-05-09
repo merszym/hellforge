@@ -6,6 +6,12 @@ from django.contrib import messages
 from main.tools.generic import get_instance_from_string
 from django.db.models import Q
 
+def unset_sample_filters(request):
+    request.session.pop('filter_layer_pk','')
+    request.session.pop('filter_culture_pk','')
+    request.session.pop('filter_analyzed','')
+
+
 def filter_samples(request, query):
     # check if registered, else filter for project only
     if not request.user.is_authenticated:

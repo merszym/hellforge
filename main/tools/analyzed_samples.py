@@ -13,6 +13,24 @@ from django.contrib.auth.decorators import (
 )  # this is for now, make smarter later
 from django.contrib import messages
 
+
+def unset_library_filters(request):
+    request.session.pop('filter_batch_pk','')
+    request.session.pop('filter_probe','')
+    request.session.pop('filter_sample_pk','')
+
+
+def set_sample_cookie(request, pk):
+    sample = Sample.objects.get(pk=pk)
+    # unset library-filters
+    unset_library_filters(request)
+
+    #only filter by sample
+    request.session['filter_sample_pk'] = sample.pk
+
+    return get_libraries(request, sample.site.pk, unset=False)
+
+
 def filter_libraries(request, query):
     if not request.user.is_authenticated:
         from main.tools.projects import get_project
@@ -23,10 +41,20 @@ def filter_libraries(request, query):
         query = query.filter(
             Q(sample__batch=batch) 
         )
-    
+    if 'filter_probe' in request.session:
+        probe = request.session['filter_probe']
+        query = query.filter(
+            Q(probes=probe) 
+        )
+    if 'filter_sample_pk' in request.session:
+        # if this is the case, then only this cookie is set for the library filters!
+        sample = tools.generic.get_instance_from_string(f"sample_{request.session['filter_sample_pk']}")
+        query = query.filter(
+            Q(sample=sample) 
+        )
     return query
 
-def get_libraries(request, pk):
+def get_libraries(request, pk, unset=True):
     """
     from one site, get all the (filtered) samples and display the list of libraries
     """
@@ -34,6 +62,8 @@ def get_libraries(request, pk):
     samples = tools.samplebatch.filter_samples(request, Sample.objects.filter(site=object))
 
     if request.method == 'POST':
+        if unset:
+            unset_library_filters(request)
         # we want to filter the libraries, so set the cookies for the filter
         batch = request.POST.get("batch", "all")
         probe = request.POST.get("probe", "all")
@@ -42,10 +72,9 @@ def get_libraries(request, pk):
             batch = tools.generic.get_instance_from_string(batch)
             request.session['filter_batch_pk'] = batch.pk
             request.session['filter_batch_name'] = batch.name
-        else:
-            del request.session['filter_batch_pk']
-            del request.session['filter_batch_name']
-
+        
+        if probe != 'all':
+            request.session['filter_probe'] = probe
 
     query = filter_libraries(request, AnalyzedSample.objects.filter(sample__in=samples))
 
@@ -263,5 +292,6 @@ urlpatterns = [
         "<int:pk>/update-seqrun", seqrun_update, name="main_analyzedsample_seqrunupdate"
     ),
     path("<int:pk>/update-qc", qc_toggle, name="main_analyzedsample_qctoggle"),
-    path("get-data/<int:pk>", get_libraries, name="main_analyzedsample_getdata")
+    path("get-data/<int:pk>", get_libraries, name="main_analyzedsample_getdata"),
+    path("set-sample-filter/<int:pk>", set_sample_cookie, name='main_analyzedsample_setfilter')
 ]

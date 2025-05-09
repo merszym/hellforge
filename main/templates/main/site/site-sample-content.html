@@ -17,6 +17,7 @@
     <section>
         <h3>Samples</h3>
         <!-- Display the filter -->
+        <small>Filter <strong>Samples</strong></small>
         <form
         hx-post="{% url 'main_site_sample_tab'%}"
         hx-target="#site_samples"
@@ -117,6 +118,7 @@
     </section>
     <section class="my-2">
         <h3>DNA Libraries</h3>
+        <small>Filter <strong>Libraries</strong> (Additional) </small>
         <form
         hx-post="{% url 'main_analyzedsample_getdata' object.pk %}"
         hx-target="#show_libraries"

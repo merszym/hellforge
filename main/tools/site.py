@@ -345,9 +345,16 @@ def get_site_geo(request):
 ## Main sample-content
 
 def get_site_sample_content(request):
-    from main.tools.samplebatch import filter_samples
+    from main.tools.samplebatch import filter_samples, unset_sample_filters
+    from main.tools.analyzed_samples import unset_library_filters
+
+    # unset the library- and sample-level filters
+    # because if we reload the page or go to a different site, we dont want prefiltered data
+    unset_library_filters(request)
+    unset_sample_filters(request)
+
     if request.method == 'POST':
-        """This means we set filters for the downstream views!"""
+        """This means we set filters for the downstream views!"""       
         # now filter the samples
         layer = request.POST.get("layer", "all")
         culture = request.POST.get("culture", "all")
@@ -358,24 +365,11 @@ def get_site_sample_content(request):
             layer = get_instance_from_string(layer)
             request.session['filter_layer_pk'] = layer.pk
             request.session['filter_layer_name'] = layer.name
-        else:
-            try:
-                del request.session['filter_layer_pk']
-                del request.session['filter_layer_name']
-            except KeyError:
-                pass
-
-
+        
         if culture != "all":
             culture = get_instance_from_string(culture)
             request.session['filter_culture_pk'] = culture.pk
             request.session['filter_culture_name'] = culture.name
-        else:
-            try:
-                del request.session['filter_culture_pk']
-                del request.session['filter_culture_name']
-            except KeyError:
-                pass
 
         request.session['filter_analyzed'] = True if analyzed else False
         request.session['filter_combine'] = True if combine else False
@@ -417,13 +411,15 @@ def get_site_sample_content(request):
         batch_sample_dict[batch] = len(samples.filter(batch=batch))
 
     layers = Layer.objects.filter(site=object, sample__isnull=False).distinct()
+    probes = set(AnalyzedSample.objects.filter(sample__in=samples).values_list('probes', flat=True))
 
     context.update(
         {
             "sample": samples.first(),
             "batches": batch_sample_dict,
             'layers': layers,
-            'cultures': Culture.objects.filter(layer__in=layers).distinct()
+            'cultures': Culture.objects.filter(layer__in=layers).distinct(),
+            'probes': probes
         }
     )
     return render(request, "main/site/site-sample-content.html", context)

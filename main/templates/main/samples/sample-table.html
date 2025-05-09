@@ -122,7 +122,11 @@
             </td>
             {% endfor %}
             {% endwith %}
-            <td nowrap class="generic_filter text-primary" style="cursor:pointer;" data-term="{{object}}" data-search=".{{batch.classname}}_libtr">{{object.analyzed_sample.all | length}}
+            <td 
+                hx-get="{% url 'main_analyzedsample_setfilter' object.pk %}"
+                hx-target="#show_libraries"
+                nowrap class="text-primary" style="cursor:pointer;">
+                {{object.analyzed_sample.all | length}}
             </td>
             <td nowrap>
                 <a href="#"
@@ -175,4 +179,8 @@
     </tbody>
 </table>
 </div>
+<div class="m-2">
+    <span><strong>Total: </strong>{{object_list|length}} Samples</span>
+</div>
+
 {% endif %}
