@@ -57,12 +57,11 @@
                 </div>
                 {% endif %}
                 {% endfor %}
+                <input type="hidden" name="object" value="site_{{object.pk}}">
                 <span class="btn btn-primary modal_close"
                     hx-target="#site_sample_content"
                     hx-post="{% url 'main_samplebatch_create' %}?object=site_{{object.pk}}">Add</span>
                 </form>
-                <br>
-                <p class="form-input-hint">The batch 'Human Remains' is used to store famous archaeological remains in the layers</p>
             </div>
         </div>
 

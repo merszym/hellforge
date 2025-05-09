@@ -16,6 +16,34 @@
     <i class="form-icon icon icon-search"></i>
 </div>
 
+<div style="display: flex; gap: 1px;">
+    {% if request.user.is_authenticated %}
+    <span
+        data-url="{% url 'download_header' %}?model=analyzedsample" 
+        class="btn tooltip tooltip-right get-batch-header" 
+        data-tooltip="Download Sheet-Template">
+        <i class="icon icon-download"></i>
+    </span>
+    <form
+        hx-encoding='multipart/form-data'
+        hx-post="{% url 'main_upload' %}?type=libraries"
+        hx-trigger="change from:#library-fileinput-{{object.pk}}"
+        hx-target="#modal-blank"
+        >
+        {% csrf_token %}
+        <label for="library-fileinput-{{object.pk}}" class="modal_open">
+            <span
+                class="btn tooltip tooltip-right modal_open" 
+                data-tooltip="Add Sequenced Libraries">
+                <i class="icon icon-upload"></i>
+            </span>
+        </label>
+        <input id="library-fileinput-{{object.pk}}" type="file" name="file" style="display:none">
+    </form>
+    {% endif %}
+</div>
+
+{% if object_list %}
 <table class="table table-striped">
     <thead style="position: sticky; top:0; background-color: white; z-index: 100;">
         <tr>
@@ -140,10 +168,23 @@
         {% endwith %}
     </tbody>
 </table>
+
+{% else %}
+<div class="empty">
+    <div class="empty-icon">
+        <i class="icon icon-flag"></i>
+    </div>
+    <p class="empty-title h5">No libraries uploaded</p>
+</div>
+{% endif %}
+
+
 </div>
 <div class="m-2">
     <span><strong>Total: </strong>{{object_list|length}} Libraries</span>
 </div>
+
+
 
 <section>
     <h3>DNA Analysis Results</h3>

@@ -377,11 +377,9 @@ def get_site_sample_content(request):
             object = Site.objects.get(pk=int(request.POST.get("object")))
         except:
             object = get_instance_from_string(request.POST.get('object'))
-
+            
     else:
         object = get_instance_from_string(request.GET.get("object"))
-
-    context = {"object": object}
 
     # load the samples and batches
     # first create a batch for the samples that dont have one yet...
@@ -395,32 +393,42 @@ def get_site_sample_content(request):
     samples = filter_samples(request, Sample.objects.filter(site=object))
 
 
-    batches = set([x.batch for x in samples])
+    batches = list(set([x.batch for x in samples]))
+    # for uploading, we need to have the option to add samples to an empty batch...
+    if request.user.is_authenticated:
+        batches.extend([x for x in SampleBatch.objects.filter(Q(site=object)).distinct()])
+        
     batch_sample_dict = defaultdict(int)
 
     for batch in batches:
-        # hide Undefinied batch if empty and other ones exist
-        if (
-            (len(batches) > 1)
-            and (batch.name == "Undefined Batch")
-            and (len(samples.filter(batch==batch) == 0))
-        ):
+        if batch == None: #thats the archaeological remains
             continue
+        # hide Undefined batch if empty and other ones exist
+        try:
+            if (
+                (len(batches) > 1)
+                and (batch.name == "Undefined Batch")
+                and (len(samples.filter(batch==batch) == 0))
+            ):
+                continue
+        except TypeError: #no samples in the batches (e.g. when just creating a batch)
+            pass
+
         # create All placeholders
         batch_sample_dict[batch] = len(samples.filter(batch=batch))
 
     layers = Layer.objects.filter(site=object, sample__isnull=False).distinct()
     probes = set(AnalyzedSample.objects.filter(sample__in=samples).values_list('probes', flat=True))
 
-    context.update(
-        {
-            "sample": samples.first(),
-            "batches": batch_sample_dict,
-            'layers': layers,
-            'cultures': Culture.objects.filter(layer__in=layers).distinct(),
-            'probes': probes
+    context={
+        "sample": samples.first(),
+        "batches": batch_sample_dict,
+        'layers': layers,
+        'cultures': Culture.objects.filter(layer__in=layers).distinct(),
+        'probes': probes,
+        'object':object
         }
-    )
+
     return render(request, "main/site/site-sample-content.html", context)
 
 
@@ -429,9 +437,9 @@ def get_site_human_content(request, pk):
     site = Site.objects.get(pk=int(pk))
 
     if request.user.is_authenticated:
-        remains = Sample.objects.filter(site=site, domain="archaeology").distinct()
+        remains = set(Sample.objects.filter(site=site, domain="archaeology"))
     else:
-        remains = Sample.objects.filter(site=site, domain="archaeology", ref__isnull=False).distinct()
+        remains = set(Sample.objects.filter(site=site, domain="archaeology", ref__isnull=False))
     
     sample_references = Reference.objects.filter(sample__in=remains).distinct()
 

@@ -1,20 +1,11 @@
 {% load format %}
-{% if object_list == "empty" %}
-    <div class="empty">
-        <div class="empty-icon">
-            <i class="icon icon-flag"></i>
-        </div>
-        <p class="empty-title h5">No samples yet</p>
-        <p class="empty-subtitle">please upload the data</p>
-    </div>
-{% else %}
-
 <div class="sample_table panel tab-panel" style="max-height:500px; overflow:scroll;">
 <style>
     .unassigned{
         background-color: rgb(201, 115, 115) !important;
     }
 </style>
+{% if object_list != 'empty' %}
 <table class="table table-striped">
     <thead style="position: sticky; top:0; background-color: white; z-index: 100;">
         <tr>
@@ -127,7 +118,7 @@
             {% endfor %}
             {% endwith %}
             <td 
-                hx-get="{% url 'main_analyzedsample_setfilter' object.pk %}"
+                hx-get="{% url 'main_analyzedsample_setfilter' site.pk %}"
                 hx-target="#show_libraries"
                 nowrap class="text-primary" style="cursor:pointer;">
                 {{object.analyzed_sample.all | length}}

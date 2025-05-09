@@ -94,7 +94,13 @@
                 <div class="loading loading-lg m-2"></div>
             </div>
         </section>
-
+        {% empty %}
+        <div class="empty">
+            <div class="empty-icon">
+                <i class="icon icon-flag"></i>
+            </div>
+            <p class="empty-title h5">No samples uploaded</p>
+        </div>
         {% endfor %}
         {% if request.user.is_authenticated %}
         <span style="margin-bottom:5px;" class="btn modal_open"
