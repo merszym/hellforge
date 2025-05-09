@@ -18,7 +18,9 @@
 <table class="table table-striped">
     <thead style="position: sticky; top:0; background-color: white; z-index: 100;">
         <tr>
+            {% if request.user.is_authenticated %}
             <th>Project</th>
+            {% endif %}
             <th>Layer</th>
             <th>Fossil</th>
             {% if not batch %}
@@ -40,6 +42,7 @@
         {% with project=request.session.session_project %}
         {% for object in object_list %}
         <tr>
+            {% if request.user.is_authenticated %}
             <td nowrap>
                 <form>
                     {% csrf_token %}
@@ -60,6 +63,7 @@
                     </div>
                 </form>
             </td>
+            {% endif %}
             <td nowrap
                 {% if request.user.is_authenticated and not object.sample %}
                     style="cursor: pointer;"
@@ -182,5 +186,4 @@
 <div class="m-2">
     <span><strong>Total: </strong>{{object_list|length}} Samples</span>
 </div>
-
 {% endif %}

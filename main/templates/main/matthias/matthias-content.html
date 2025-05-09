@@ -19,8 +19,11 @@
 
 <div id="matthias-display">
     <div class="p-2">
-        <h3>Human Lineage Assignments</h3>
-        <p>This tab shows the results of the analysis for the diagnostic positions test in the sample</p>
+        <h3>Hominin mitochondrial DNA (mtDNA) Lineage-Analysis</h3>
+        <small>
+            Hominidae sequences were obtained through <a href="https://github.com/mpieva/quicksand">quicksand</a>.
+            Lineages were assigned by comparing diagnostic positions in the mtDNA genome.
+        </small>
     </div>
     <div class="panel-head p-2">
         {% if request.user.is_authenticated %}
@@ -39,26 +42,10 @@
         >
             <input type="hidden" name="object" value="{{object.pk}}">
             <div class="input-group">
-                <span class="input-group-addon"><strong>General</strong></span>
-                <span class="input-group-addon">Probeset</span>
-                <select class="form-select" name="probe">
-                    <option value="{{probe}}" selected>{{probe}}</option>
-                    <option value="all">Show All</option>
-                    <option value="AA163">Human mtDNA (AA163/AA22)</option>
-                    <option value="AA75">Mammalian mtDNA (AA75)</option>
-                    <option value="Shotgun">Shotgun</option>
-                </select>
                 <span class="input-group-addon">Positive only</span>
                 <label class="form-switch mx-2">
                     <input type="checkbox" name="positives" {% if positives %}checked{% endif %}><i class="form-icon"></i>
                 </label>
-                <span class="input-group-addon">Controls</span>
-                <label class="form-switch mx-2">
-                    <input type="checkbox" name="controls" {% if controls %}checked{% endif %}><i class="form-icon"></i>
-                </label>
-            </div>
-            <div class="input-group">
-                <span class="input-group-addon"><strong>Filter</strong></span>
                 <span class="input-group-addon">Deaminated only</span>
                 <label class="form-switch mx-2">
                     <input type="checkbox" name="ancient" {% if ancient %}checked{% endif %}><i class="form-icon"></i>
@@ -73,7 +60,7 @@
                     <input type="checkbox" name="only_project" {% if only_project %}checked{% endif %}><i class="form-icon"></i>
                 </label>
                 {% endif %}
-                <button class="btn btn-primary input-group-btn">Submit</button>
+                <button class="btn btn-primary input-group-btn">OK</button>
             </div>
         </form>
         <div class="has-icon-left">
@@ -89,14 +76,12 @@
                 <tr>
                     <th>Layer</th>
                     <th>Sample</th>
+                    <th>Type</th>
                     <th>Library</th>
                     <th>Capture</th>
-                    {% if probe == "all" %}
                     <th>Probe</th>
-                    {% endif %}
-                    <th>Run ID</th>
+                    <th nowrap>Sequencing Run</th>
                     <th>Tag</th>
-                    <th>QC</th>
                     <th>Ancient</th>
                     <th>Deaminated</th>
                     {% if extended %}
@@ -121,28 +106,32 @@
                 {% for entry in object_list %}
                 {% with ana=entry.analyzedsample %}
                 <tr class="matthias-tr">
-                    <td nowrap class="{% if ana.sample%}{{ana.sample.get_layer.culture.classname|default:'sterile'}}{%endif %}">
+                    <td nowrap class="{{ana.sample.get_layer.culture.classname|default:'sterile'}}">
                         {% if ana.sample %}
                             {{ana.sample.get_layer.name|default:'unassigned'}}
                         {% else %}
-                            Control
+                            -
                         {% endif %}
                     </td>
                     <td nowrap>
                         {% if ana.sample %}
                         {{ana.sample.name}}
                         {% else %}
-                        {{ana.tags}}
+                        Control
+                        {% endif %}
+                    </td>
+                    <td nowrap>
+                        {% if ana.sample %}
+                        {{ana.sample.type}}
+                        {% else %}
+                        -
                         {% endif %}
                     </td>
                     <td nowrap>{{ana.library}}</td>
                     <td nowrap>{{ana.capture|default:""}}</td>
-                    {% if probe == "all" %}
                     <td nowrap>{{ana.probes}}</td>
-                    {% endif %}
-                    <td nowrap>{{ana.seqrun|truncatechars:11}}</td>
+                    <td nowrap>{{ana.seqrun}}</td>
                     <td nowrap>{{ana.tags|default:''}}</td>
-                    <td nowrap>{{ana.qc_pass|yesno:'Pass,Fail'}}</td>
                     <td nowrap>{{results|lookup:entry|lookup:"Ancient"}}</td>
                     <td nowrap>{{results|lookup:entry|lookup:"Deaminated(term3)"}}</td>
                     {% if extended %}

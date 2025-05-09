@@ -2,6 +2,7 @@
 from main.models import AnalyzedSample, HumanDiagnosticPositions, Site
 from main.tools.generic import get_instance_from_string
 from main.tools.projects import get_project
+from main.tools.analyzed_samples import get_libraries
 
 import pandas as pd
 import seaborn as sns
@@ -111,8 +112,6 @@ def prepare_data(
     query,
     ancient=True,
     positives=False,
-    only_project=True,
-    controls=False,
     extended=False
 ):
 
@@ -121,12 +120,6 @@ def prepare_data(
     positive_samples = []
     results = nested_dict()
     project = get_project(request)
-
-    if only_project:
-        query = query.filter(analyzedsample__project=project)
-
-    if controls == False:
-        query = query.exclude(analyzedsample__sample__isnull=True)
 
     for entry in query:
         data = json.loads(entry.data)
@@ -159,8 +152,6 @@ def prepare_data(
         "ancient": ancient,
         "positives": positives,
         "extended": extended,
-        "only_project": only_project,
-        "controls": controls,
     }
 
 
@@ -168,25 +159,14 @@ def get_matthias_tab(request, pk):
     site = Site.objects.get(pk=int(pk))
     context = {"object": site}
 
-        # first, get the objects
-    analyzed_samples = update_query_for_negatives(
-        AnalyzedSample.objects.filter(Q(sample__site=site))
-    )
-    query = HumanDiagnosticPositions.objects.filter(analyzedsample__in=analyzed_samples)
+    # first, get the objects
+    analyzed_samples = get_libraries(request, site.pk, return_query=True, unset=False)
+
+    query = HumanDiagnosticPositions.objects.filter(analyzedsample__in=analyzed_samples).order_by('analyzedsample')
 
     if request.method == "POST":
-        if prset := request.POST.get("probe", False):
-            if prset != "all":
-                if prset == "AA163":  # get all the human mt probesets
-                    query = query.filter(analyzedsample__probes__in=["AA163", "AA22"])
-                else:
-                    query = query.filter(analyzedsample__probes=prset)
-            context.update({"probe": prset})
-
         ancient = "on" == request.POST.get("ancient", "")
         positives = "on" == request.POST.get("positives", "")
-        only_project = "on" == request.POST.get("only_project", "")
-        controls = "on" == request.POST.get("controls", "")
         extended = "on" == request.POST.get("extended", "")
 
         context.update(
@@ -195,14 +175,10 @@ def get_matthias_tab(request, pk):
                 query,
                 ancient=ancient,
                 positives=positives,
-                only_project=only_project,
-                controls=controls,
                 extended=extended
             )
         )
     else:
-        query = query.filter(analyzedsample__probes__in=["AA163", "AA22"])
-        context.update({"probe": "AA163"})
         context.update(prepare_data(request, query))
 
     return render(request, "main/matthias/matthias-content.html", context)

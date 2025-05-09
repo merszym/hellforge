@@ -227,7 +227,6 @@ def add_human_remain(request):
 @login_required
 def update_samplelayer(request):
     if request.method == "POST":
-        print(request.POST)
         sample = Sample.objects.get(pk=int(request.POST.get("object")))
         try:
             layer = Layer.objects.get(pk=int(request.POST.get("layer")))

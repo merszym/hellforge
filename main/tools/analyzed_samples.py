@@ -14,10 +14,21 @@ from django.contrib.auth.decorators import (
 from django.contrib import messages
 
 
+## DNA content
+## At the moment only quicksand content...
+def get_site_dna_content(request, pk):
+    
+    site = Site.objects.get(pk=int(pk))
+    context = {"object": site}
+   
+    return render(request, "main/site/site-dna-content.html", context)
+
+
 def unset_library_filters(request):
     request.session.pop('filter_batch_pk','')
     request.session.pop('filter_probe','')
     request.session.pop('filter_sample_pk','')
+    request.session.pop('filter_controls','')
 
 
 def set_sample_cookie(request, pk):
@@ -54,7 +65,7 @@ def filter_libraries(request, query):
         )
     return query
 
-def get_libraries(request, pk, unset=True):
+def get_libraries(request, pk, unset=True, return_query=False):
     """
     from one site, get all the (filtered) samples and display the list of libraries
     """
@@ -67,6 +78,7 @@ def get_libraries(request, pk, unset=True):
         # we want to filter the libraries, so set the cookies for the filter
         batch = request.POST.get("batch", "all")
         probe = request.POST.get("probe", "all")
+        filter_controls = "on" == request.POST.get("filter_controls", "")
 
         if batch != 'all':
             batch = tools.generic.get_instance_from_string(batch)
@@ -75,10 +87,21 @@ def get_libraries(request, pk, unset=True):
         
         if probe != 'all':
             request.session['filter_probe'] = probe
+        
+        if unset:
+            request.session['filter_controls'] = filter_controls
 
     query = filter_libraries(request, AnalyzedSample.objects.filter(sample__in=samples))
+    try:
+        if not request.session['filter_controls']:
+            query = update_query_for_negatives(query)
+    except KeyError:
+        query = update_query_for_negatives(query)
 
-    return render(request, 'main/analyzed_samples/analyzedsample_table.html', {'object_list':query})
+    if return_query:
+        return query
+
+    return render(request, 'main/analyzed_samples/analyzedsample_table.html', {'object_list':query, 'site':object})
 
 
 def update_query_for_negatives(query, project=False):
@@ -293,5 +316,7 @@ urlpatterns = [
     ),
     path("<int:pk>/update-qc", qc_toggle, name="main_analyzedsample_qctoggle"),
     path("get-data/<int:pk>", get_libraries, name="main_analyzedsample_getdata"),
-    path("set-sample-filter/<int:pk>", set_sample_cookie, name='main_analyzedsample_setfilter')
+    path("set-sample-filter/<int:pk>", set_sample_cookie, name='main_analyzedsample_setfilter'),    
+    path("dna/<int:pk>", get_site_dna_content, name="main_site_dna_tab"),
+
 ]

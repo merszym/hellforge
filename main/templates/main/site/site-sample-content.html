@@ -15,7 +15,7 @@
     </div>
     
     <section>
-        <h3>Samples</h3>
+        <h3>Collected Samples</h3>
         <!-- Display the filter -->
         <small>Filter <strong>Samples</strong></small>
         <form
@@ -152,6 +152,10 @@
                         <option value="{{probe}}">{{probe}}</option>
                     {% endfor %}
                 </select>
+                <span class="input-group-addon">No Controls</span>
+                <label class="form-switch mx-2">
+                    <input type="checkbox" name="filter_controls" {% if request.session.filter_controls %}checked{% endif %}><i class="form-icon"></i>
+                </label>
                 <button class="btn btn-primary input-group-btn">OK</button>
             </div>
         </form>
@@ -160,6 +164,6 @@
             hx-trigger="load once">
             <div class="loading loading-lg m-2"></div>
         </div>
-
+        <!-- The DNA results are loaded in the analyzed samples, to get updated as well, when setting library filters -->
     </section>
 </div>

@@ -7,7 +7,7 @@ from django.urls import path
 from django.db.models import Q
 from main.tools.generic import get_instance_from_string
 from main.tools.projects import get_project
-from main.tools.analyzed_samples import update_query_for_negatives
+from main.tools.analyzed_samples import update_query_for_negatives, get_libraries
 from main.models import QuicksandAnalysis, AnalyzedSample, Site
 import re
 import json
@@ -113,12 +113,10 @@ def prepare_data(
     query,
     column="ReadsDeduped",
     ancient=True,
-    mode="absolute",
     percentage=0.5,
     breadth=0.5,
     positives=False,
     only_project=True,
-    controls=False,
     tableview=False
 ):
 
@@ -131,9 +129,6 @@ def prepare_data(
 
     if only_project:
         query = query.filter(analyzedsample__project=project)
-
-    if controls == False:
-        query = query.exclude(analyzedsample__sample__isnull=True)
 
     for entry in query:
         sum_per_lib[entry] = 0
@@ -173,25 +168,17 @@ def prepare_data(
                 results[entry][family]["raw"] = value
                 families.append(family)
 
-        if mode == "relative":
-            for f, v in results[entry].items():
-                results[entry][f]["display"] = (
-                    round(v["raw"] / sum_per_lib[entry], 4) * 100
-                )
-                results[entry][f]["raw"] = results[entry][f]["display"]
-
         if any_positives:
             positive_samples.append(entry.analyzedsample)
 
-    if mode == "absolute":
-        # get the maximum sum
-        try:
-            maxsum = max([x for x in sum_per_lib.values()])
-            for entry in results.keys():
-                for f, v in results[entry].items():
-                    results[entry][f]["display"] = round(v["raw"] / maxsum, 4) * 100
-        except ValueError:  # empty sequence
-            maxsum = 0
+    # get the maximum sum
+    try:
+        maxsum = max([x for x in sum_per_lib.values()])
+        for entry in results.keys():
+            for f, v in results[entry].items():
+                results[entry][f]["display"] = round(v["raw"] / maxsum, 4) * 100
+    except ValueError:  # empty sequence
+        maxsum = 0
 
     families = set(families)
 
@@ -210,14 +197,12 @@ def prepare_data(
         "quicksand_results": results,
         "object_list": query,
         "colors": colors,
-        "mode": mode,
         "column": column,
         "percentage": percentage,
         "breadth": breadth,
         "ancient": ancient,
         "positives": positives,
         "only_project": only_project,
-        "controls": controls,
         "tableview": tableview
     }
 
@@ -333,32 +318,22 @@ def get_quicksand_tab(request, pk):
     context = {"object": site}
 
     # first, get the objects
-    analyzed_samples = update_query_for_negatives(
-        AnalyzedSample.objects.filter(Q(sample__site=site))
-    )
-    query = QuicksandAnalysis.objects.filter(analyzedsample__in=analyzed_samples)
+    analyzed_samples = get_libraries(request, site.pk, return_query=True, unset=False)
 
+    #order by analyzed sample to match the order of the table above the quicksand tab
+    query = QuicksandAnalysis.objects.filter(analyzedsample__in=analyzed_samples).order_by('analyzedsample')
+
+    # Additional filters
     if request.method == "POST":
-        if prset := request.POST.get("probe", False):
-            if prset != "all":
-                if prset == "AA163":  # get all the human mt probesets
-                    query = query.filter(analyzedsample__probes__in=["AA163", "AA22"])
-                else:
-                    query = query.filter(analyzedsample__probes=prset)
-            context.update({"probe": prset})
-
-        mode = request.POST.get("mode", "absolute")
         column = request.POST.get("column", "ReadsDeduped")
         percentage = float(request.POST.get("percentage", 0.5))
         breadth = float(request.POST.get("breadth", 0.5))
         ancient = "on" == request.POST.get("ancient", "")
         positives = "on" == request.POST.get("positives", "")
         only_project = "on" == request.POST.get("only_project", "")
-        controls = "on" == request.POST.get("controls", "")
         tableview = "on" == request.POST.get("tableview", "")
 
         # column: ReadsDeduped
-        # mode: relative,absolute
         # filter: ancient, breadth, percentage
 
         context.update(
@@ -368,17 +343,13 @@ def get_quicksand_tab(request, pk):
                 column=column,
                 percentage=percentage,
                 breadth=breadth,
-                mode=mode,
                 ancient=ancient,
                 positives=positives,
                 only_project=only_project,
-                controls=controls,
                 tableview=tableview
             )
         )
     else:
-        query = query.filter(analyzedsample__probes="AA75")
-        context.update({"probe": "AA75"})
         context.update(prepare_data(request, query))
     
     return render(request, "main/quicksand/quicksand-content.html", context)

@@ -148,10 +148,7 @@
                 </li>
                 {% if object.id in project_sites %}
                 <li class="tab-item {% if tab == 'site_samples' %} active {% endif %}" data-group="main">
-                    <a style="cursor: pointer;" class="select-block-content" data-select="site_samples"><h4>DNA Samples</h4></a>
-                </li>
-                <li class="tab-item {% if tab == 'site_dna' %} active {% endif %}" data-group="main">
-                    <a style="cursor: pointer;" class="select-block-content" data-select="site_dna"><h4>DNA Results</h4></a>
+                    <a style="cursor: pointer;" class="select-block-content" data-select="site_samples"><h4>DNA Analyses</h4></a>
                 </li>
                 {% endif %}
             </ul>
@@ -182,12 +179,6 @@
             {% if object.id in project_sites %}
             <div class="block-content" id="site_samples" style="{% if tab != 'site_samples' %} display:none {% endif %}"
                 hx-get="{% url 'main_site_sample_tab' %}?{{request.GET|getstring}}"
-                hx-trigger="load once"
-                hx-vars="{'object':'site_{{object.pk}}'}">
-                <div class="loading loading-lg m-2"></div>
-            </div>
-            <div class="block-content" id="site_dna" style="{% if tab != 'site_dna' %} display:none {% endif %}"
-                hx-get="{% url 'main_site_dna_tab' object.pk %}?{{request.GET|getstring}}"
                 hx-trigger="load once"
                 hx-vars="{'object':'site_{{object.pk}}'}">
                 <div class="loading loading-lg m-2"></div>

@@ -81,7 +81,7 @@
                 </form>
             </td>
             {% endif %}
-            <td nowrap class="{% if object.sample %}{{object.sample.get_layer|yesno:'assigned,unassigned'}}{% endif %}">
+            <td nowrap class="{% if object.sample %}{{object.sample.get_layer|yesno:'assigned,unassigned'}}{% endif %} {{object.sample.get_layer.culture.classname|default:'sterile'}}">
                 {% if object.sample %}
                     {% if object.sample.get_layer %}{{object.sample.get_layer.name}}{% else %}Unassigned{% endif %}
                 {% else %}
@@ -144,6 +144,15 @@
 <div class="m-2">
     <span><strong>Total: </strong>{{object_list|length}} Libraries</span>
 </div>
+
+<section>
+    <h3>DNA Analysis Results</h3>
+    <div id="site_dna" 
+        hx-get="{% url 'main_site_dna_tab' site.pk %}"
+        hx-trigger="load once">
+        <div class="loading loading-lg m-2"></div>
+    </div>
+ </section>
 
 <script>
     $('#{{batch.classname}}-library-search').on("keyup", function() {

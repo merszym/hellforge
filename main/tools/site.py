@@ -250,8 +250,6 @@ def get_site_profile_tab(request):
     else:
         selected_profile = object.profile.first()
         
-    #print(selected_profile.layer_junction)
-
     context = {
         "object": object,
         "selected_profile": selected_profile,
@@ -350,6 +348,7 @@ def get_site_sample_content(request):
 
     # unset the library- and sample-level filters
     # because if we reload the page or go to a different site, we dont want prefiltered data
+
     unset_library_filters(request)
     unset_sample_filters(request)
 
@@ -438,15 +437,6 @@ def get_site_human_content(request, pk):
 
     context = {"object": site, "remains":remains, 'sample_references':sample_references}
     return render(request, "main/site/site-human-content.html", context)
-
-## DNA content
-## At the moment only quicksand content...
-def get_site_dna_content(request, pk):
-    site = Site.objects.get(pk=int(pk))
-    context = {"object": site}
-   
-    return render(request, "main/site/site-dna-content.html", context)
-
 
 ### create sample-batch
 
@@ -608,7 +598,6 @@ urlpatterns = [
     path("element", get_site_element, name="main_site_element"),
     path("geodata", get_site_geo, name="main_site_geo"),
     path("sample-tab", get_site_sample_content, name="main_site_sample_tab"),
-    path("<int:pk>/dna-tab", get_site_dna_content, name="main_site_dna_tab"),
     path("<int:pk>/human-tab", get_site_human_content, name="main_site_human_get"),
     path("<int:site_id>/culture-css", get_culture_css, name="main_site_culture_css"),
     path("create-batch", samplebatch_create, name="main_samplebatch_create"),

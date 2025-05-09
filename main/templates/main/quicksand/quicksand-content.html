@@ -10,8 +10,13 @@
 
 <div id="quicksand-display">
     <div class="p-2">
-        <h3>quicksand results</h3>
-        <p>This tab shows the results of the analysis for mammalian mtDNA in the sample</p>
+        <h3>Mammalian mitochondrial DNA (mtDNA) Analysis</h3>
+        <small>
+            This tab shows the results of the analysis for mammalian mtDNA in the sample. 
+            The results were obtained through <a href="https://github.com/mpieva/quicksand">quicksand</a>. 
+            The pipeline was executed with the specified version
+        </small>
+
     </div>
     <div class="panel-head p-2">
         {% if request.user.is_authenticated %}
@@ -37,31 +42,10 @@
                     <option value="ReadsDeduped">ReadsDeduped</option>
                     <option value="ReadsDeam(3term)">ReadsDeam(3term)</option>
                 </select>
-                <span class="input-group-addon">Probeset</span>
-                <select class="form-select" name="probe">
-                    <option value="{{probe}}" selected>{{probe}}</option>
-                    <option value="all">Show All</option>
-                    <option value="AA163">Human mtDNA (AA163/AA22)</option>
-                    <option value="AA75">Mammalian mtDNA (AA75)</option>
-                    <option value="Shotgun">Shotgun</option>
-                </select>
                 <span class="input-group-addon">Positive only</span>
                 <label class="form-switch mx-2">
                     <input type="checkbox" name="positives" {% if positives %}checked{% endif %}><i class="form-icon"></i>
                 </label>
-                <span class="input-group-addon">Controls</span>
-                <label class="form-switch mx-2">
-                    <input type="checkbox" name="controls" {% if controls %}checked{% endif %}><i class="form-icon"></i>
-                </label>
-            </div>
-            <div class="input-group">
-                <span class="input-group-addon"><strong>Display</strong></span>
-                <span class="input-group-addon">Values</span>
-                <select class="form-select" name="mode">
-                    <option value="{{mode}}" selected>{{mode|title}} values</option>
-                    <option value="relative">Relative values</option>
-                    <option value="absolute">Absolute values</option>
-                </select>
                 <span class="input-group-addon">Table-View</span>
                 <label class="form-switch mx-2">
                     <input type="checkbox" name="tableview" {% if tableview %}checked{% endif %}><i class="form-icon"></i>
@@ -83,7 +67,7 @@
                     <input type="checkbox" name="only_project" {% if only_project %}checked{% endif %}><i class="form-icon"></i>
                 </label>
                 {% endif %}
-                <button class="btn btn-primary input-group-btn">Submit</button>
+                <button class="btn btn-primary input-group-btn">OK</button>
             </div>
         </form>
         <div class="has-icon-left">
@@ -99,12 +83,11 @@
                 <tr>
                     <th>Layer</th>
                     <th>Sample</th>
+                    <th>Type</th>
                     <th>Library</th>
                     <th>Capture</th>
-                    {% if probe == "all" %}
                     <th>Probe</th>
-                    {% endif %}
-                    <th>Run ID</th>
+                    <th>Sequencing Run</th>
                     <th>Tag</th>
                     <th>quicksand</th>
                     {% if tableview %}
@@ -114,7 +97,7 @@
                         <th>Results</th>
                         {% endfor %}
                     {% else %}
-                    <th>Results</th>
+                    <th>mtDNA</th>
                     {% endif %}
                 </tr>
             </thead>
@@ -122,26 +105,31 @@
                 {% for entry in object_list.all %}
                 {% with ana=entry.analyzedsample %}
                 <tr class="dna-tr">
-                    <td nowrap class="{% if ana.sample%}{{ana.sample.get_layer.culture.classname|default:'sterile'}}{%endif %}">
+                    <td nowrap class="{{ana.sample.get_layer.culture.classname|default:'sterile'}}">
                         {% if ana.sample %}
                             {{ana.sample.get_layer.name|default:'unassigned'}}
                         {% else %}
-                            Control
+                            -
                         {% endif %}
                     </td>
                     <td nowrap>
                         {% if ana.sample %}
                         {{ana.sample.name}}
                         {% else %}
-                        {{ana.tags}}
+                        Control
+                        {% endif %}
+                    </td>
+                    <td nowrap>
+                        {% if ana.sample %}
+                        {{ana.sample.type}}
+                        {% else %}
+                        Control
                         {% endif %}
                     </td>
                     <td nowrap>{{ana.library}}</td>
                     <td nowrap>{{ana.capture|default:""}}</td>
-                    {% if probe == "all" %}
                     <td nowrap>{{ana.probes}}</td>
-                    {% endif %}
-                    <td nowrap>{{ana.seqrun|truncatechars:11}}</td>
+                    <td nowrap>{{ana.seqrun}}</td>
                     <td nowrap>{{ana.tags|default:''}}</td>
                     <td nowrap>{{entry.version}}</td>
                     {% if tableview %}
@@ -190,9 +178,7 @@
             {% endfor %}
         </div>
         {% endif %}
-        <p class="p-2 form-input-hint">The results were obtained by running the <a href="https://github.com/mpieva/quicksand">quicksand</a> pipeline with the specified version<br>
-        </p>
-
+        
         {% else %}
         <div class="empty">
             <div class="empty-icon">
