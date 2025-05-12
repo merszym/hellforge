@@ -118,7 +118,7 @@
             {% endfor %}
             {% endwith %}
             <td 
-                hx-get="{% url 'main_analyzedsample_setfilter' site.pk %}"
+                hx-get="{% url 'main_analyzedsample_setfilter' object.pk %}"
                 hx-target="#show_libraries"
                 nowrap class="text-primary" style="cursor:pointer;">
                 {{object.analyzed_sample.all | length}}

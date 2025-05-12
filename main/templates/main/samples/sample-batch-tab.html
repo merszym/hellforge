@@ -2,9 +2,9 @@
 
 {% if request.session.filter_combine %}
         {% if samples.first %}
-            {% include 'main/samples/sample-table.html' with object_list=samples site=object.site %}
+            {% include 'main/samples/sample-table.html' with object_list=samples site=site %}
         {% else %}
-            {% include 'main/samples/sample-table.html' with object_list="empty" counter=forloop.counter site=object.site %}
+            {% include 'main/samples/sample-table.html' with object_list="empty" counter=forloop.counter site=site %}
         {% endif %}
 {% else %}
 

@@ -390,25 +390,23 @@ def get_site_sample_content(request):
         sample.save()
     
     # first, get all the samples that we need
-    samples = filter_samples(request, Sample.objects.filter(site=object))
+    samples = filter_samples(request, Sample.objects.filter(site=object).distinct())
 
 
-    batches = list(set([x.batch for x in samples]))
+    batches = list(set([x.batch for x in samples if x.batch != None])) #thats the archaeological remains that have no batch
     # for uploading, we need to have the option to add samples to an empty batch...
     if request.user.is_authenticated:
-        batches.extend([x for x in SampleBatch.objects.filter(Q(site=object)).distinct()])
+        batches.extend([x for x in SampleBatch.objects.filter(Q(site=object)).distinct() if x not in batches])
         
     batch_sample_dict = defaultdict(int)
 
     for batch in batches:
-        if batch == None: #thats the archaeological remains
-            continue
         # hide Undefined batch if empty and other ones exist
         try:
             if (
                 (len(batches) > 1)
                 and (batch.name == "Undefined Batch")
-                and (len(samples.filter(batch==batch) == 0))
+                and (len(batch.sample.all()) == 0)
             ):
                 continue
         except TypeError: #no samples in the batches (e.g. when just creating a batch)
@@ -495,7 +493,8 @@ def get_site_samplebatch_tab(request, pk):
     else:
         site = get_instance_from_string(request.GET.get('object'))
         context={
-            'samples' : filter_samples(request,site.sample.filter(domain='mpi_eva'))
+            'samples' : filter_samples(request,site.sample.filter(domain='mpi_eva').distinct()),
+            'site':site
         }
 
     return render(request, "main/samples/sample-batch-tab.html", context)
