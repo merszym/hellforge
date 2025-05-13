@@ -10,6 +10,7 @@ def unset_sample_filters(request):
     request.session.pop('filter_layer_pk','')
     request.session.pop('filter_culture_pk','')
     request.session.pop('filter_analyzed','')
+    request.session.pop('filter_combine','')
 
 
 def filter_samples(request, query):
@@ -33,9 +34,10 @@ def filter_samples(request, query):
         )
     # filter for analyzed only
     if 'filter_analyzed' in request.session:
-        query = query.filter(
-            Q(analyzed_sample__isnull = False)
-        ).distinct()
+        if request.session['filter_analyzed'] == True:
+            query = query.filter(
+                Q(analyzed_sample__isnull = False)
+            ).distinct()
 
     return query
 

@@ -156,7 +156,6 @@ def handle_library_file(request, file):
     df = pd.read_csv(file, sep=",")
     df.drop_duplicates(inplace=True)
 
-    batch = SampleBatch.objects.get(pk=int(request.GET.get("batch")))
     # filter for expected/unexpected columns
     expected = AnalyzedSample.table_columns()
     issues = []
@@ -177,18 +176,19 @@ def handle_library_file(request, file):
             issues.append(f"Samples not in Database: {','.join(dropped)}")
     df = df[df["Sample Name"].isin(dropped) == False]
 
+    print(Sample.objects.get(name=set(df['Sample Name']).pop()))
+
     return render(
         request,
         "main/modals/sample_modal.html",
         {
             "type": "libraries_confirm",
-            "object":batch.sample.first(),
+            "object":samples.first(),
             "dataframe": df.fillna("").to_html(
                 index=False, classes="table table-striped col-12"
             ),
             "issues": issues,
             "json": df.to_json(),
-            "batch": batch,
         },
     )
 
