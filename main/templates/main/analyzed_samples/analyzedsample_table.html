@@ -210,9 +210,17 @@ style="width: 80%;"
                     {% endif %}
                 </div>
             </td>
-            <td>{% if object.matthias_analysis.first %}
-                {{object.matthias_analysis.first.version}}
-                {% endif %}
+            <td>
+                <div style="display: flex; gap:1px;">
+                    <span>{{object.matthias_analysis.first.version|default:''}}</span>
+                    {% if request.user.is_authenticated %}
+                        <a class="tooltip tooltip-left modal_open"
+                        hx-get="{% url 'main_modal_get' %}"
+                        hx-vals='{"object":"site_{{site.pk}}","type":"matthias_upload", "seqrun":"{{object.seqrun}}", "lane":"{{object.lane}}", "seqpool":"{{object.seqpool}}"}'
+                        hx-target="#modal-blank"
+                        data-tooltip="Add lineage-test analysis"><i class="icon icon-plus"></i></a>
+                    {% endif %}
+                </div>
             </td>
             
             {% if request.user.is_authenticated %}
