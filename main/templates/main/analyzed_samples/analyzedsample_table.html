@@ -118,8 +118,9 @@ style="width: 80%;"
             <th>Sequencing Run</th>
             <th>Lane</th>
             <th>Pool</th>
-            <th>quicksand</th>
             <th>Tag</th>
+            <th>quicksand</th>
+            <th>lineage-test</th>
             {% if request.user.is_authenticated %}
             <th></th>
             {% endif %}
@@ -189,19 +190,31 @@ style="width: 80%;"
             >{{object.seqrun|truncatechars:30}}</td>
             <td>{{object.lane}}</td>
             <td>{{object.seqpool}}</td>
-            <td>{% if object.quicksand_analysis.first %}
-                {{object.quicksand_analysis.first.version}}
-                {% endif %}
-                {% if object.matthias_analysis.first %} (MM) {% endif %}
-            </td>
             <td nowrap {% if request.user.is_authenticated and object.sample %}
-            class="modal_open tooltip tooltip-left" data-tooltip="Edit Tag"
-            hx-get="{% url 'main_modal_get' %}"
-            hx-vals='{"object":"analyzedsample_{{object.pk}}","type":"tags"}'
-            hx-target="#modal-blank"
-            style="cursor: pointer;"
-            {% endif %}
+                class="modal_open tooltip tooltip-left" data-tooltip="Edit Tag"
+                hx-get="{% url 'main_modal_get' %}"
+                hx-vals='{"object":"analyzedsample_{{object.pk}}","type":"tags"}'
+                hx-target="#modal-blank"
+                style="cursor: pointer;"
+                {% endif %}
             >{{object.tags|default:''}}</td>
+            <td>
+                <div style="display: flex; gap:1px;">
+                    <span>{{object.quicksand_analysis.first.version|default:''}}</span>
+                    {% if request.user.is_authenticated %}
+                        <a class="tooltip tooltip-left modal_open"
+                        hx-get="{% url 'main_modal_get' %}"
+                        hx-vals='{"object":"site_{{site.pk}}","type":"quicksand_upload", "seqrun":"{{object.seqrun}}", "lane":"{{object.lane}}", "seqpool":"{{object.seqpool}}"}'
+                        hx-target="#modal-blank"
+                        data-tooltip="Add quicksand analysis"><i class="icon icon-plus"></i></a>
+                    {% endif %}
+                </div>
+            </td>
+            <td>{% if object.matthias_analysis.first %}
+                {{object.matthias_analysis.first.version}}
+                {% endif %}
+            </td>
+            
             {% if request.user.is_authenticated %}
             <td>
                 <form>

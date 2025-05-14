@@ -120,6 +120,9 @@ def get_modal_context(object, request):
         if context["type"] in ["quicksand_upload","matthias_upload"]:
             context.update(
                 {
+                    "seqpool":request.GET.get('seqpool',''),
+                    "seqrun":request.GET.get('seqrun',''),
+                    "lane":request.GET.get('lane',''),
                     "seqruns": sorted(
                         list(
                             set(
@@ -156,6 +159,7 @@ def get_modal_context(object, request):
 # this is for the modals
 # return the rendered html for the requested modal
 def get_modal(request):
+
     obj_string = request.GET.get("object")
     object = get_instance_from_string(obj_string)
     model = object.model
