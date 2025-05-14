@@ -38,6 +38,7 @@ def set_sample_cookie(request, pk):
 
     #only filter by sample
     request.session['filter_sample_pk'] = sample.pk
+    request.session['filter_sample_name'] = sample.name
 
     return get_libraries(request, sample.site.pk, unset=False)
 
@@ -78,6 +79,7 @@ def get_libraries(request, pk, unset=True, return_query=False):
         # we want to filter the libraries, so set the cookies for the filter
         batch = request.POST.get("batch", "all")
         probe = request.POST.get("probe", "all")
+        sample = request.POST.get("sample","all")
         filter_controls = "on" == request.POST.get("filter_controls", "")
 
         if batch != 'all':
@@ -88,10 +90,16 @@ def get_libraries(request, pk, unset=True, return_query=False):
         if probe != 'all':
             request.session['filter_probe'] = probe
         
+        if sample != 'all':
+            sample = tools.generic.get_instance_from_string(sample)
+            request.session['filter_sample_pk'] = sample.pk
+            request.session['filter_sample_name'] = sample.name
+        
         if unset:
             request.session['filter_controls'] = filter_controls
 
     query = filter_libraries(request, AnalyzedSample.objects.filter(sample__in=samples))
+
     try:
         if not request.session['filter_controls']:
             query = update_query_for_negatives(query)
@@ -100,8 +108,21 @@ def get_libraries(request, pk, unset=True, return_query=False):
 
     if return_query:
         return query
-
-    return render(request, 'main/analyzed_samples/analyzedsample_table.html', {'object_list':query, 'site':object})
+    
+    batches = SampleBatch.objects.filter(sample__in=samples).distinct()
+    probes = set(query.values_list('probes', flat=True))
+    
+    return render(
+        request, 
+        'main/analyzed_samples/analyzedsample_table.html', 
+        {
+            'object_list':query, 
+            'site':object,
+            'samples':samples.filter(domain='mpi_eva').distinct(),
+            'batches':batches,
+            'probes':probes
+        }
+    )
 
 
 def update_query_for_negatives(query, project=False):

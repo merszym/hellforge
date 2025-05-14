@@ -1,4 +1,62 @@
 {% load format %}
+<h3>DNA Libraries</h3>
+<small>Filter <strong>Libraries</strong> (Additional) </small>
+<form
+hx-post="{% url 'main_analyzedsample_getdata' site.pk %}"
+hx-target="#show_libraries"
+style="width: 80%;"
+>
+    {% csrf_token %}
+    <div class="input-group">
+        <span class="input-group-addon">Sample</span>
+        <select class="form-select" name="sample">
+            {% if request.session.filter_sample_pk %}
+            <option value="sample_{{request.session.filter_sample_pk}}" selected>{{request.session.filter_sample_name}}</option>
+            <option value="all">All</option>
+            {% else %}
+            <option value="all" selected>All</option>
+            {% endif %}
+            {% for sample in samples %}
+            {% if sample.pk %}
+            <option value="sample_{{sample.pk}}">{{sample.name}}</option>
+            {% endif %}
+            {% endfor %}
+        </select>
+        <span class="input-group-addon">Batch</span>
+        <select class="form-select" name="batch">
+            {% if request.session.filter_batch_pk %}
+            <option value="samplebatch_{{request.session.filter_batch_pk}}" selected>{{request.session.filter_batch_name}}</option>
+            <option value="all">All</option>
+            {% else %}
+            <option value="all" selected>All</option>
+            {% endif %}
+            {% for batch in batches %}
+            {% if batch.pk %}
+            <option value="samplebatch_{{batch.pk}}">{{batch.name}}</option>
+            {% endif %}
+            {% endfor %}
+        </select>
+        <span class="input-group-addon">Probe</span>
+        <select class="form-select" name="probe">
+            {% if request.session.filter_probe %}
+            <option value="{{request.session.filter_probe}}" selected>{{request.session.filter_probe}}</option>
+            <option value="all">All</option>
+            {% else %}
+            <option value="all" selected>All</option>
+            {% endif %}
+            {% for probe in probes %}
+                <option value="{{probe}}">{{probe}}</option>
+            {% endfor %}
+        </select>
+        <span class="input-group-addon">No Controls</span>
+        <label class="form-switch mx-2">
+            <input type="checkbox" name="filter_controls" {% if request.session.filter_controls %}checked{% endif %}><i class="form-icon"></i>
+        </label>
+        <button class="btn btn-primary input-group-btn">OK</button>
+    </div>
+</form>
+
+
 <div class="panel" style="max-height:500px; overflow:scroll;">
 
 
@@ -10,11 +68,6 @@
         color:green
     }
 </style>
-
-<div class="has-icon-left">
-    <input class="form-input" id="{{batch.classname}}-library-search" type="text" placeholder="Quick Filter" style="width:50%;">
-    <i class="form-icon icon icon-search"></i>
-</div>
 
 <div style="display: flex; gap: 1px;">
     {% if request.user.is_authenticated %}
@@ -184,7 +237,7 @@
     <span><strong>Total: </strong>{{object_list|length}} Libraries</span>
 </div>
 
-
+<div class="divider"></div>
 
 <section>
     <h3>DNA Analysis Results</h3>
@@ -194,16 +247,3 @@
         <div class="loading loading-lg m-2"></div>
     </div>
  </section>
-
-<script>
-    $('#{{batch.classname}}-library-search').on("keyup", function() {
-        var value = $("#{{batch.classname}}-library-search").val().toLowerCase();
-        $(".{{batch.classname}}_libtr").filter(function() {
-            if($(this).text().toLowerCase().indexOf(value) > -1){
-                $(this).show()
-            } else {
-                $(this).hide()
-            }
-        });
-    });
-</script>
