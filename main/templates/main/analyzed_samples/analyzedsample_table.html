@@ -112,7 +112,7 @@ style="width: 80%;"
             <th>Library</th>
             <th>qPCR</th>
             <th nowrap>Efficiency (%)</th>
-            <th>LNC Batch</th>
+            <th nowrap>LNC Batch</th>
             <th>Capture</th>
             <th>Capture Probe</th>
             <th>Sequencing Run</th>
@@ -177,7 +177,7 @@ style="width: 80%;"
             <td>{{object.library}}</td>
             <td>{{object.molecules_qpcr|stringformat:".2e"}}</td>
             <td>{{object.efficiency|stringformat:".2f"}}</td>
-            <td>{{object.lnc_batch|default:""}}</td>
+            <td nowrap>{{object.lnc_batch|default:""}}</td>
             <td>{{object.capture|default:""}}</td>
             <td nowrap>{{object.probes}}</td>
             <td {% if request.user.is_authenticated %}
