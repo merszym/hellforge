@@ -53,8 +53,8 @@ def get_samples(start):
     """
     if start.model == 'project':
         qs = models['sample'].objects.filter(
-                Q(site__project=project)
-                & Q(project=project)
+                Q(site__project=start)
+                & Q(project=start)
                 & Q(domain='mpi_eva')
             )
     if start.model == 'site':

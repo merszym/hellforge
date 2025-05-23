@@ -27,6 +27,12 @@
                             <input class="form-input" type="text" id="project-password" name="password" placeholder="Project password"
                             value="{{form.password.value}}">
                         </div>
+                        <div class="form-group">
+                            <label class="form-checkbox">
+                              <input type="checkbox" id="project-published" name="published" {% if form.public.value %} checked {% endif %} >
+                              <i class="form-icon"></i>Published Project?
+                            </label>
+                        </div>
 
                         <br>
                         <button class='btn btn-primary' type="submit">Save Project</button>

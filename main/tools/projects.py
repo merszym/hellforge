@@ -36,7 +36,9 @@ def checkout_project(request, namespace):
     tmp = None
     try:
         tmp = Project.objects.get(namespace=namespace)
-        if (tmp.password != "") and (request.user.is_authenticated == False):
+        if tmp.published:
+            request.session["session_project"] = namespace
+        elif (tmp.password != "") and (request.user.is_authenticated == False):
             # check the link hash
             expected = hashlib.md5(tmp.password.encode()).hexdigest()
             if given := request.GET.get("pw", False):
@@ -89,7 +91,7 @@ class ProjectListView(ListView):
 
 class ProjectUpdateView(LoginRequiredMixin, UpdateView):
     model = Project
-    fields = ["name", "password"]
+    fields = ["name", "password", "published"]
     template_name = "main/project/project_update.html"
 
 
@@ -114,6 +116,7 @@ class ProjectDetailView(DetailView):
             Site.objects.filter(project=project, child=None), key=lambda x: x.country
         )
         context["object_list"] = object_list
+        context["skip_headline"] = True
 
         sample_dict = defaultdict(int) # for the number of collected samples
         analyzedsample_dict = defaultdict() 

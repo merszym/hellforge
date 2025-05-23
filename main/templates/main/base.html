@@ -23,20 +23,16 @@
     <span id="url_generic_setfk" data-url="{% url 'main_generic_setfk' %}"></span>
     <span id="url_generic_unsetfk" data-url="{% url 'main_generic_unsetfk' %}"></span>
     {% csrf_token %}
-    <style>
-        .del{
-            text-decoration: line-through;
-        }
-    </style>
     <section>
+        {% if not skip_headline %}
         <div class="panel-header bg-primary" style="margin-top:-4px; padding: 20px;">
             <div style="display: flex; justify-content: space-between;">
                 <h1>{% block headline %}{% endblock %}</h1>
                 <div hx-get="{% url 'main_project_status' %}" hx-trigger="load"></div>
             </div>
-
             {% block breadcrumps %}{% endblock %}
         </div>
+        {% endif %}
         {% block paddingless %}{% endblock %}
         <div style="padding:1%">
                 {% block body %}{% endblock %}

@@ -5,7 +5,14 @@
 <title>Hellforge | {{object}}</title>
 {% include 'main/editor/editor-head.html' %}
 {% endblock %}
-{% block headline %}<a href="{% url 'main_project_list' %}">All Projects</a>{% endblock %}
+
+{% block paddingless %}
+<div class="hero bg-primary">
+  <div class="hero-body">
+    <h2 class="m-2 p-2">{{object.name}}</h2>
+  </div>
+</div>
+{% endblock %} 
 
 {% block body %}
 <style>
@@ -15,10 +22,10 @@
     }
 </style>
 <span id="get_location_data" data-url="{% url 'main_project_geo' %}?object={{object.pk}}"></span>
-<h1 class="m-0">Project Overview</h1>
+
 <div class='columns'>
-    <div class="column col-4 p-2" style="position:relative;">
-        <h3>Details</h3>
+    <div class="column col-4 col-xl-12 p-2" style="position: relative;">
+        <h3 class="text-center">Details</h3>
         <ul class="tab">
             <li data-group="project" class="tab-item active" style="cursor:pointer;"
                 hx-get="{% url 'main_project_overview' %}"
@@ -35,25 +42,22 @@
             </li>
         </ul>
         <div style="position:absolute; right:5%; top:10px">
+            {% if request.user.is_authenticated %}
             <a class="btn btn-primary tooltip tooltip-left" href="{% url 'main_project_update' object.pk %}" data-tooltip="Edit Project">
                 <i class="icon icon-edit"></i>
             </a>
+            {% endif %}
             <a class="btn btn-primary tooltip tooltip-right" href="{% url 'main_project_close' %}" data-tooltip="Log out">
                 <i class="icon icon-shutdown"></i>
             </a>
         </div>
         <!-- Project Overview Tab -->
-        <div id="project-panel-1" class="panel" style="padding:10px;" >
+        <div id="project-panel-1" class="panel">
         </div>
     </div>
     <div class="column">
         <div id="project-content" class="my-2">
-            <ul class="tab tab-block">
-                <li class="tab-item active" data-group="project-main" data-show="project-sample-overview" style="cursor:pointer;"><a><h4>Site Overview</h4></a></li>
-                <!--
-                <li class="tab-item" data-group="project-main" data-show="project-collab-overview" style="cursor:pointer;"><a><h4>Processed Samples</h4></a></li>
-                -->
-            </ul>
+            <h3 class="text-center">Site Overview</h3>
             <div class="tab-panel m-2 p-2 panel" data-group="project-main" id="project-sample-overview" style="height:720px;overflow: scroll;">
                 <div class="panel-header" style="position: sticky; top: 0;">
                     <div class="has-icon-left">

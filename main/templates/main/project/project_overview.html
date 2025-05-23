@@ -1,5 +1,35 @@
-<h4>{{object.name}}</h4>
+{% if request.user.is_authenticated %}
 {{object.published|yesno:"Public Project,Private Project,NA"}}
+{% endif %}
+<table class="table">
+    <tbody>
+        <tr>
+            <td><strong>Sites</strong></td>
+            <td>{{site_count}}</td>
+        </tr>
+        <tr>
+            <td><strong>Collected Samples</strong></td>
+            <td>{{sample_count}}</td>
+        </tr>
+        <tr>
+            <td><strong>Analyzed Samples</strong></td>
+            <td>{{analyzedsample_count}}</td>
+        </tr>
+        <tr style="border-top: solid silver 2px;">
+            <td><strong>Libraries</strong></td>
+            <td>{{library_count}}</td>
+        </tr>    
+        <tr>
+            <td><strong>Controls</strong></td>
+            <td>{{negatives_count}}</td>
+        </tr>    
+        <tr style="border-top: solid black 2px;">
+            <td><strong>Total</strong></td>
+            <td><strong>{{total}}</strong></td>
+        </tr>
+    </tbody>
+</table>
+
 <div class="my-2">
     <a target="_blank" href="{% url 'get_dataset' %}?from=project_{{object.pk}}&unique=sample&include=site,layer,samplebatch,sample&append=library"
         class="btn tooltip tooltip-right" data-tooltip="Export samples and libraries">
@@ -15,30 +45,6 @@
         <i class="icon icon-link"></i>
     </span>
 </div>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Sites</th>
-            <th>Samples Collected</th>
-            <th>Analyzed</th>
-            <th>Libraries</th>
-            <th>Controls</th>
-            <th>Total</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>{{site_count}}</td>
-            <td>{{sample_count}}</td>
-            <td>{{analyzedsample_count}}</td>
-            <td>{{library_count}}</td>
-            <td>{{negatives_count}}</td>
-            <td>{{total}}</td>
-            <td>
-            </td>
-        </tr>
-    </tbody>
-</table>
 <script>
     $('body').on('click', '.share_button', function(){
         $(this).addClass('btn-success')

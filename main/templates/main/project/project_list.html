@@ -8,10 +8,19 @@
 {% block body %}
 <div class='columns'>
     <div class="column col-5">
-        <h3>Public Projects</h3>
+        <h3>Projects</h3>
         {% for project in public_projects %}
-        <li><a href="{% url 'main_project_checkout' project.namespace %}">Checkout: {{project.name}}</a></li>
-
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title h5">{{project.name}}</div>
+                <div class="card-subtitle text-gray">-->Publication<--</div>
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'main_project_checkout' project.namespace %}">
+                    <button class="btn btn-primary">Go</button>
+                </a>
+            </div>
+        </div>
         {% empty %}
 
         <div class="empty">
