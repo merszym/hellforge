@@ -47,6 +47,9 @@
                 <i class="icon icon-edit"></i>
             </a>
             {% endif %}
+            <span class="share_button btn btn-primary tooltip tooltip-right" onclick="copyClipboard(`{{request.scheme}}://{{request.get_host}}{% url 'main_project_checkout' object.namespace %}?pw={{object.public_password}}`)" data-tooltip="Copy Share Link">
+                <i class="icon icon-link"></i>
+            </span>
             <a class="btn btn-primary tooltip tooltip-right" href="{% url 'main_project_close' %}" data-tooltip="Log out">
                 <i class="icon icon-shutdown"></i>
             </a>
@@ -58,7 +61,7 @@
     <div class="column">
         <div id="project-content" class="my-2">
             <h3 class="text-center">Site Overview</h3>
-            <div class="tab-panel m-2 p-2 panel" data-group="project-main" id="project-sample-overview" style="height:720px;overflow: scroll;">
+            <div class="tab-panel m-2 p-2 panel" data-group="project-main" id="project-sample-overview" style="max-height:720px;overflow: scroll;">
                 <div class="panel-header" style="position: sticky; top: 0;">
                     <div class="has-icon-left">
                         <input class="form-input" id="list-search" type="text" placeholder="Filter" style="width:50%;">
@@ -81,6 +84,17 @@
                             </tr>
                         </thead>
                         <tbody>
+                             <tr style="border-bottom: solid black 2px;">
+                                <td><strong>Total:</strong></td>
+                                <td></td>
+                                <td>{{site_count}}</td>
+                                <td>{{sample_count}}</td>
+                                <td>{{analyzedsample_count}}</td>
+                                <td>{{library_count}}</td>
+                                <td>{{negatives_count}}</td>
+                                <td><strong> = {{total}}</strong></td>
+                                <td></td>
+                            </tr>
                             {% for site in object_list %}
                                 <tr id="site_{{site.pk}}" class="searchable">
                                     <td>{{site.country}}</td>
@@ -107,8 +121,17 @@
                     </table>
                 </div>
             </div>
-            <div class="tab-panel" data-group="project-main" id="project-collab-overview" style="display: none;">
-                This content doesnt exist yet
+            <div class="m-2">
+                <a target="_blank" href="{% url 'get_dataset' %}?from=project_{{object.pk}}&unique=sample&include=site,layer,samplebatch,sample&append=library"
+                    class="btn tooltip tooltip-right" data-tooltip="Export samples and libraries">
+                    <i class="icon icon-download"></i>
+                </a>
+                <a target="_blank" href="{% url 'get_dataset' %}?from=project_{{object.pk}}&unique=contact&include=site" class="btn tooltip tooltip-right" data-tooltip="Export Collaborators">
+                    <i class="icon icon-people"></i>
+                </a>
+                <a target="_blank" class="btn tooltip tooltip-right" href="{% url 'get_dataset' %}?from=project_{{object.pk}}&unique=library&include=site,layer,samplebatch,sample&append=qs,mm" data-tooltip="Export analysis results">
+                    <i class="icon icon-flag"></i>
+                </a>
             </div>
         </div>
     </div>

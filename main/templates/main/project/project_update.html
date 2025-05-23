@@ -29,11 +29,19 @@
                         </div>
                         <div class="form-group">
                             <label class="form-checkbox">
-                              <input type="checkbox" id="project-published" name="published" {% if form.public.value %} checked {% endif %} >
+                              <input type="checkbox" id="project-published" name="published" {% if form.published.value %} checked {% endif %} >
                               <i class="form-icon"></i>Published Project?
                             </label>
                         </div>
-
+                        <div class="form-group">
+                            <label class="form-label" for="project-year_of_publication">Publication Year</label>
+                            <input class="form-input" type="text" id="project-year_of_publication" name="year_of_publication" placeholder="Project password"
+                            value="{{form.year_of_publication.value}}">
+                        </div>
+                        <h6>Edit Reference</h6>
+                            {% include 'main/reference/reference-chip-display.html' %}
+                            {% include 'main/reference/reference-searchinput.html' %}
+                        </div>
                         <br>
                         <button class='btn btn-primary' type="submit">Save Project</button>
                 </div>

@@ -35,6 +35,7 @@ def get_classname(x):
 class Project(models.Model):
     name = models.CharField("name", max_length=500, unique=True)
     published = models.BooleanField("published", default=False)
+    year_of_publication = models.IntegerField('year_of_publication', blank=True, null=True)
     password = models.TextField("password", blank=True, null=True)
     namespace = models.CharField(
         "slug", max_length=300, unique=True, blank=True, null=True

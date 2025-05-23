@@ -10,10 +10,13 @@
     <div class="column col-5">
         <h3>Projects</h3>
         {% for project in public_projects %}
-        <div class="card">
+        <div class="card my-2">
             <div class="card-header">
-                <div class="card-title h5">{{project.name}}</div>
-                <div class="card-subtitle text-gray">-->Publication<--</div>
+                <h5>{{project.year_of_publication}}</h5>
+                <div class="card-title">{{project.name}}</div>
+                {% if project.ref.first %}
+                <div class="card-subtitle text-gray">{{project.ref.first.short}}</div>
+                {% endif %}
             </div>
             <div class="card-footer">
                 <a href="{% url 'main_project_checkout' project.namespace %}">

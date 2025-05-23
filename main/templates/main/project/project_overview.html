@@ -1,55 +1,18 @@
-{% if request.user.is_authenticated %}
-{{object.published|yesno:"Public Project,Private Project,NA"}}
-{% endif %}
-<table class="table">
-    <tbody>
-        <tr>
-            <td><strong>Sites</strong></td>
-            <td>{{site_count}}</td>
-        </tr>
-        <tr>
-            <td><strong>Collected Samples</strong></td>
-            <td>{{sample_count}}</td>
-        </tr>
-        <tr>
-            <td><strong>Analyzed Samples</strong></td>
-            <td>{{analyzedsample_count}}</td>
-        </tr>
-        <tr style="border-top: solid silver 2px;">
-            <td><strong>Libraries</strong></td>
-            <td>{{library_count}}</td>
-        </tr>    
-        <tr>
-            <td><strong>Controls</strong></td>
-            <td>{{negatives_count}}</td>
-        </tr>    
-        <tr style="border-top: solid black 2px;">
-            <td><strong>Total</strong></td>
-            <td><strong>{{total}}</strong></td>
-        </tr>
-    </tbody>
-</table>
-
-<div class="my-2">
-    <a target="_blank" href="{% url 'get_dataset' %}?from=project_{{object.pk}}&unique=sample&include=site,layer,samplebatch,sample&append=library"
-        class="btn tooltip tooltip-right" data-tooltip="Export samples and libraries">
-        <i class="icon icon-download"></i>
-    </a>
-    <a target="_blank" href="{% url 'get_dataset' %}?from=project_{{object.pk}}&unique=contact&include=site" class="btn tooltip tooltip-right" data-tooltip="Export Collaborators">
-        <i class="icon icon-people"></i>
-    </a>
-    <a target="_blank" class="btn tooltip tooltip-right" href="{% url 'get_dataset' %}?from=project_{{object.pk}}&unique=library&include=site,layer,samplebatch,sample&append=qs,mm" data-tooltip="Export analysis results">
-        <i class="icon icon-flag"></i>
-    </a>
-    <span class="share_button btn btn-primary tooltip tooltip-right" onclick="copyClipboard(`{{request.scheme}}://{{request.get_host}}{% url 'main_project_checkout' object.namespace %}?pw={{object.public_password}}`)" data-tooltip="Copy Share Link">
-        <i class="icon icon-link"></i>
-    </span>
+{% if object.ref.first %}
+<div class="m-2">
+    <h5>Project Publication</h5>
+    <table class="table table-striped my-2">
+        <tbody id="description-reference-tbody" style="border-top: 1px solid lightgrey;">
+            {% for ref in object.ref.all %}
+            {% include 'main/reference/reference-tablerow.html' with display=True %}
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
+{% endif %}
+<div style="height: 480px;margin-top: 20px;" id="map"></div>
 <script>
     $('body').on('click', '.share_button', function(){
         $(this).addClass('btn-success')
     });
 </script>
-
-<div style="height: 480px;margin-top: 20px;" id="map"></div>
-<a href="{% url 'site_list' %}" style="margin-bottom: 20px;">All Sites</a>
