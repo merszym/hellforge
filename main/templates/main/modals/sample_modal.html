@@ -60,7 +60,7 @@
                 <div id="modal-form">
                     <h6>Sample {{object}}</h6>
                     <div class="input-group">
-                        <span class="input-group-addon">Layer of Origin</span>
+                        <span class="input-group-addon">Origin</span>
                         <form>
                             <input style="display: none;" name="object" value="{{object.pk}}"></input>
                             <select class="form-select" name="layer">
@@ -69,6 +69,15 @@
                                 {% endif %}
                                 <option value="">---</option>
                                 {% for option in object.site.layer.all %}
+                                <option value="{{option.pk}}">{{option}}</option>
+                                {% endfor %}
+                            </select>
+                            <select class="form-select" name="sample">
+                                {% if object.sample %}
+                                <option value="{{object.sample.pk}}" selected>{{object.sample}}</option>
+                                {% endif %}
+                                <option value="">---</option>
+                                {% for option in fossils %}
                                 <option value="{{option.pk}}">{{option}}</option>
                                 {% endfor %}
                             </select>

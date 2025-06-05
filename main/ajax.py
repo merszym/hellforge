@@ -70,6 +70,11 @@ def get_modal_context(object, request):
                 # empty provenience array so far
                 provenience = {}
             context.update({"provenience": provenience})
+        if context['type'] == 'edit_layer':
+            fossils = Sample.objects.filter(site=object.site, domain='archaeology')
+            context.update({
+                'fossils':fossils
+            })
 
     # Add layer edit context
     if object.model == "layer":

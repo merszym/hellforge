@@ -233,6 +233,12 @@ def update_samplelayer(request):
             sample.layer = layer
         except ValueError:  # no layer pk given
             sample.layer = None
+        try:
+            fossil = Sample.objects.get(pk=int(request.POST.get('sample')))
+            sample.sample = fossil
+            sample.layer = None
+        except:
+            sample.sample = None
         sample.save()
     return render(
         request,
