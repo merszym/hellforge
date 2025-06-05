@@ -56,7 +56,7 @@
             </td>
             {% endif %}
             <td nowrap
-                {% if request.user.is_authenticated and not object.sample %}
+                {% if request.user.is_authenticated %}
                     style="cursor: pointer;"
                     class="{{object.get_layer|yesno:'assigned,unassigned'}}  {{object.get_layer.culture.classname|default:'sterile'}} modal_open tooltip tooltip-right"
                     data-tooltip="Update Layer"
