@@ -27,7 +27,7 @@
   <!--show the global profile id for ajax calls-->
   <input name="profile_id" value="{{object.pk}}" style="display:none;">
   <!--the layers-->
-  <div id="profiledetail_{{object.pk}}">
+  <div id="profiledetail_{{object.pk}}" style="overflow: scroll;">
   {% if object.layer_junction.first %}
   <!-- <div class="panel" style="max-height:720px; overflow: scroll;"> -->
     <style>
