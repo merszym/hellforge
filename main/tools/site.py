@@ -249,10 +249,14 @@ def get_site_profile_tab(request):
         selected_profile = get_instance_from_string(selected_profile)
     else:
         selected_profile = object.profile.first()
+
+    # get the project context
+    project = get_project(request)
         
     context = {
         "object": object,
         "selected_profile": selected_profile,
+        "project_sites": list(project.site.values_list('pk', flat=True)) if project else []
     }
 
     return render(request, "main/site/site-profile-content.html", context)

@@ -1,4 +1,5 @@
 {% extends 'main/base.html' %} 
+{% load static %}
 {% block head %}
 <title>Hellforge</title>
 {% endblock %} 
@@ -11,6 +12,27 @@
 </div>
 {% endblock %} 
 {% block body %}
-<a href="{% url 'site_list' %}" class="btn-link">All Sites</a><br />
-<a href="{% url 'culture_list' %}" class="btn-link">All Cultures</a>
+<div style="display: flex; flex-wrap: wrap; gap: 10px;">
+  <a href="{% url 'site_list' %}" class="btn-link" style="width: 300px;display: block;">
+    <div class="card p-2">
+      <div class="card-image p-2" style="margin: auto;">
+        <img src="{% static 'img/svg/layer.svg' %}" height="100px">
+      </div>
+      <div class="card-body">
+        <h5 class="text-dark text-center">All Sites</h5>
+      </div>  
+    </div>
+  </a>
+  <a href="{% url 'culture_list' %}" class="btn-link" style="width: 300px; display: block;">
+    <div class="card p-2">
+      <div class="card-image p-2" style="margin: auto;">
+        <img src="{% static 'img/svg/culture.svg' %}" height="100px">
+      </div>
+      <div class="card-body">
+        <h5 class="text-dark text-center">All Cultures</h5>
+      </div>  
+    </div>
+  </a>
+</div>
+
 {% endblock %}

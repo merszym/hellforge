@@ -4,6 +4,12 @@
     <h3>{{object.name}}</h3>
     {% if request.user.is_authenticated %}
     <div style="position:absolute; right:5%; top:10px">
+      <span class="btn tooltip tooltip-left {{ object.visible|yesno:'bg-success,bg-error' }}"
+        hx-post="{% url 'main_profile_visibiliy' object.pk %}"
+        hx-target="#show_profile"
+        data-tooltip="Change Visibility">
+          <i class="icon icon-check"></i>
+      </span>
       <span class="btn btn-primary tooltip tooltip-left generic_delete"
         hx-post="{% url 'main_generic_delete' %}"
         hx-vals='{

@@ -984,6 +984,9 @@ class Profile(models.Model):
         Site, verbose_name="site", on_delete=models.CASCADE, related_name="profile"
     )
     type = models.CharField("type", max_length=200, blank=True)
+    visible = models.BooleanField(
+        "visible", default=True
+    )  # to edit the profile without going live... 
 
     def __str__(self):
         return f"{self.site.name}: {self.name}"
@@ -1036,6 +1039,9 @@ class ProfileLayerJunction(models.Model):
         on_delete=models.CASCADE
     )
     position = models.IntegerField('Position', default=1)
+    visible = models.BooleanField(
+        "visible", default=True
+    )  # to edit the junction without going live...
 
     class Meta:
         ordering = ["profile","position"]

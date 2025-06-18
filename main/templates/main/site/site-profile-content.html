@@ -2,6 +2,7 @@
 <div id="site_profile_content">
     <ul class="tab tab-block" id="profile-list">
         {% for profile in object.profile.all %}
+        {% if profile.visible or request.user.is_authenticated or object.id in project_sites %}
         <li id="profile-tab_{{profile.pk}}"
         class="tab-item switch_profile {% if selected_profile == profile %}active{% endif %}"
         data-group="profile"
@@ -16,6 +17,7 @@
         hx-target="#show_profile"
         hx-trigger="click from:#profile-tab_{{profile.pk}}"
         ></span>
+        {% endif %}
         {% endfor %}
         <script>
             $('body').on('click', '.switch_profile', function(){

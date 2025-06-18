@@ -1,8 +1,23 @@
 from django.urls import path
 from django.shortcuts import render
-from main.models import Layer, ProfileLayerJunction
+from main.models import Layer, ProfileLayerJunction, Profile
 from main.tools.generic import get_instance_from_string
 from django.contrib.auth.decorators import login_required
+
+
+@login_required
+def update_visibility(request, pk):
+    profile = Profile.objects.get(pk=pk)
+    profile.visible = not profile.visible
+    profile.save()
+
+    # render the updated profile
+    request.GET._mutable = True
+    request.GET.update(
+        {"profile": f"profile_{profile.pk}"}
+    )
+
+    return get_profile_detail(request)
 
 
 def get_profile_detail(request):
@@ -82,5 +97,6 @@ urlpatterns = [
         add_layer_to_profile,
         name="main_profile_layer_add",
     ),
-    path('get', get_profile_detail ,name='main_profile_get')
+    path('get', get_profile_detail ,name='main_profile_get'),
+    path('visibility/<int:pk>', update_visibility, name='main_profile_visibiliy')
 ]
