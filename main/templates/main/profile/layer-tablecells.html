@@ -6,7 +6,7 @@
     {% else %}
     <strong>{{layer.name}}</strong>
         {% for syn in layer.synonyms.all %}
-        <br><span style="font-size:11pt;">{{syn.name}} ({{syn.type}})</span>
+        <br><span style="font-size:11pt;">{{syn.name}}{% if syn.type %} ({{syn.type}}){% endif %}</span>
         {% endfor %}
     {% endif %}
 </td>
@@ -16,7 +16,7 @@
     {% if layer.number_of_parents == i %}
         <strong>{{layer.name}}</strong>
         {% for syn in layer.synonyms.all %}
-            <br><span style="font-size:11pt;">{{syn.name}} ({{syn.type}})</span>
+            <br><span style="font-size:11pt;">{{syn.name}}{% if syn.type %} ({{syn.type}}){% endif %}</span>
         {% endfor %}
     {% endif %}
     {% if layer.parent.number_of_parents == i %}
