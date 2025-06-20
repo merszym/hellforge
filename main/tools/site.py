@@ -479,7 +479,7 @@ def get_site_samplebatch_tab(request, pk):
             batch.gallery = tmp
             batch.save()
 
-        batch_samples = Sample.objects.filter(batch=batch).distinct()
+        batch_samples = Sample.objects.order_by('name').filter(batch=batch).distinct()
 
         # make a list of id-synonym keys that are necessary for the sample-table
         sample_synonyms = list(
@@ -497,7 +497,7 @@ def get_site_samplebatch_tab(request, pk):
     else:
         site = get_instance_from_string(request.GET.get('object'))
         context={
-            'samples' : filter_samples(request,site.sample.filter(domain='mpi_eva').distinct()),
+            'samples' : filter_samples(request, Sample.objects.order_by('name').filter(domain='mpi_eva', site=site)),
             'site':site
         }
 
