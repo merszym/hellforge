@@ -177,6 +177,8 @@ def handle_library_file(request, file):
     df = pd.read_csv(file, sep=",")
     df.drop_duplicates(inplace=True)
 
+    site=tools.generic.get_instance_from_string(request.POST.get('site'))
+
     # filter for expected/unexpected columns
     expected = AnalyzedSample.table_columns()
     issues = []
@@ -197,20 +199,17 @@ def handle_library_file(request, file):
             issues.append(f"Samples not in Database: {','.join(dropped)}")
     df = df[df["Sample Name"].isin(dropped) == False]
 
-    sample = Sample.objects.get(name=set(df['Sample Name']).pop())
-
     return render(
         request,
         "main/modals/sample_modal.html",
         {
             "type": "libraries_confirm",
-            "object":sample,
+            "site":site,
             "dataframe": df.fillna("").to_html(
                 index=False, classes="table table-striped col-12"
             ),
             "issues": issues,
             "json": df.to_json(),
-            "batch":sample.batch
         },
     )
 
@@ -219,8 +218,8 @@ def save_verified(request):
     df = pd.read_json(request.POST.get("batch-data"))
     df.convert_dtypes()
 
-    batch = SampleBatch.objects.get(pk=int(request.GET.get("batch")))
     project = Project.objects.get(namespace=request.session["session_project"])
+    site = Site.objects.get(pk=int(request.GET.get('site')))
 
     def value_or_none(val):
         if val == "nan" or val != val:
@@ -252,9 +251,8 @@ def save_verified(request):
         object.seqpool = value_or_none(row["Sequencing Pool"])
         object.lane = value_or_none(row["Sequencing Lane"])        
         object.save()
-    from main.tools.site import get_site_samplebatch_tab
-
-    return get_site_samplebatch_tab(request, batch.pk)
+    
+    return get_libraries(request, site.pk)
 
 
 def tags_update(request, pk):

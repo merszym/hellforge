@@ -80,18 +80,19 @@ style="width: 80%;"
     <form
         hx-encoding='multipart/form-data'
         hx-post="{% url 'main_upload' %}?type=libraries"
-        hx-trigger="change from:#library-fileinput-{{object.pk}}"
+        hx-trigger="change from:#library-fileinput-{{site.pk}}"
         hx-target="#modal-blank"
         >
         {% csrf_token %}
-        <label for="library-fileinput-{{object.pk}}" class="modal_open">
+        <label for="library-fileinput-{{site.pk}}" class="modal_open">
             <span
                 class="btn tooltip tooltip-right modal_open" 
                 data-tooltip="Add Sequenced Libraries">
                 <i class="icon icon-upload"></i>
             </span>
         </label>
-        <input id="library-fileinput-{{object.pk}}" type="file" name="file" style="display:none">
+        <input id="library-fileinput-{{site.pk}}" type="file" name="file" style="display:none">
+        <input id="site" type="text" name="site" style="display:none" value="site_{{site.pk}}">
     </form>
     {% endif %}
 </div>

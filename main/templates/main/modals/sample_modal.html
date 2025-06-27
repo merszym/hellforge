@@ -16,6 +16,8 @@
         hx-trigger="load"
         hx-target="#site_human">
     </div>
+    {% elif not object %}
+    <div></div>
     {% else %}
     <div
         hx-get="{% url 'main_samplebatch_get' object.batch.pk %}"
@@ -282,8 +284,8 @@
                 {% endfor %}
                 {{dataframe|safe}}
                 <form id='sample-batch-verify-form'
-                    hx-post="{% url 'ajax_save_verified_analyzedsamples' %}?batch={{batch.pk}}"
-                    hx-target="#samplebatch-content-{{batch.pk}}"
+                    hx-post="{% url 'ajax_save_verified_analyzedsamples' %}?site={{site.pk}}"
+                    hx-target="#show_libraries"
                     >
                     {% csrf_token %}
                     <textarea name="batch-data" type="text" style="display:none;">{{json}}</textarea>
