@@ -66,7 +66,7 @@
     <br><span class="text-gray" style="font-size:11pt;">({{layer.date.all|length}} Dates)</span>
     {% endif %}
 </td>
-<td>{% if layer.culture %}
+<td nowrap>{% if layer.culture %}
     <a class="btn-link" href="{% url 'culture_detail' pk=layer.culture.pk %}">{{layer.culture}}</a>
         {% if layer.additional_cultures.first %}
             {% for cult in layer.additional_cultures.all %}
@@ -75,7 +75,7 @@
         {% endif %}
     {% endif %}
 </td>
-<td>
+<td nowrap>
     {{layer.epoch|default:""}}
     <br><span class="text-gray" style="font-size:11pt;">{{layer.epoch.age_summary}}</span>
 </td>

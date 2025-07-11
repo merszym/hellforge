@@ -47,11 +47,14 @@ def get_fauna_data(entries):
         variables = json.loads(entry.results)
 
         for variable in variables.keys():
-            val = (
-                int(variables[variable])
-                if variables[variable] == variables[variable]
-                else None
-            )
+            try:
+                val = (
+                    int(variables[variable])
+                    if variables[variable] == variables[variable]
+                    else None
+                )
+            except:
+                val = None
             # save all variables to later get the maximum (for displaying the heatmap) and for sorting
             try:
                 data["max"][variable].append(val)
@@ -102,9 +105,11 @@ def get_fauna_data(entries):
         # then, collect the data
         # with the analysis as key, we retain the layer-information
         for var, val in variables.items():
-            data["data"][entry.analysis][spec_key][var] = (
-                int(val) if val == val else None
-            )
+            try:
+                val = int(val)
+            except ValueError:
+                val = None
+            data["data"][entry.analysis][spec_key][var] = val
             try:
                 data["data_collapsed"][entry.analysis][entry.family][var] += val
             except:
