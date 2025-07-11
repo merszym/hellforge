@@ -121,7 +121,7 @@
                 hx-get="{% url 'main_analyzedsample_setfilter' object.pk %}"
                 hx-target="#show_libraries"
                 nowrap class="text-primary" style="cursor:pointer;">
-                {{object.analyzed_sample.all | length}}
+                {{object.library_count}}
             </td>
             <td nowrap>
                 <a href="#"
@@ -152,7 +152,7 @@
                 hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_base" }'
                 hx-target="#modal-blank"
             {% endif %}>
-                {% if object.year_of_collection%}{{object.year_of_collection}}{% endif%}
+                {{object.year_of_collection|default:''}}
             </td>
             <td nowrap
             {% if request.user.is_authenticated %}

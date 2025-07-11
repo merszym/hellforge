@@ -2,7 +2,7 @@ from django.urls import path, reverse
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.views.generic import CreateView, ListView, UpdateView, DetailView
-from django.db.models import Q
+from django.db.models import Q, Count
 from main.forms import ProfileForm, SiteForm, SampleBatchForm
 from main.models import (
     Site,
@@ -349,7 +349,6 @@ def get_site_geo(request):
 def get_site_sample_content(request):
     from main.tools.samplebatch import filter_samples, unset_sample_filters
     from main.tools.analyzed_samples import unset_library_filters
-    from django.db.models import Count
 
     # unset the library- and sample-level filters
     # because if we reload the page or go to a different site, we dont want prefiltered data
@@ -404,39 +403,46 @@ def get_site_sample_content(request):
             'layer__layer__layer',
             'layer__culture',
             'batch'
-    ).prefetch_related('analyzed_sample')
+    ).prefetch_related('analyzed_sample','project')
 
-    samples = filter_samples(request, samples_qs.distinct())
+    samples = filter_samples(request, samples_qs)
 
-    batches = list(SampleBatch.objects.filter(sample__in=samples).distinct())
+    # Build base queryset
+    sample_batch_ids = {sample.batch_id for sample in samples if sample.batch_id}
+    batches_qs = SampleBatch.objects.filter(site=object).annotate(
+        sample_count=Count('sample', filter=Q(sample__in=samples))
+    )
     
     # for uploading, we need to have the option to add samples to an empty batch...
-    if request.user.is_authenticated:
-        batches.extend([x for x in SampleBatch.objects.filter(Q(site=object)).distinct() if x not in batches])
+    # If user is not authenticated, only include batches linked to samples
+    if not request.user.is_authenticated:
+        batches_qs = batches_qs.filter(id__in=sample_batch_ids)
 
-    batch_sample_dict = defaultdict(int)
+    batches_qs = batches_qs.order_by('name')
 
-    for batch in batches:
-        # hide Undefined batch if empty and other ones exist
-        try:
-            if (
-                (len(batches) > 1)
-                and (batch.name == "Undefined Batch")
-                and (len(batch.sample.all()) == 0)
-            ):
-                continue
-        except TypeError: #no samples in the batches (e.g. when just creating a batch)
-            pass
-
-        # create All placeholders
-        batch_sample_dict[batch] = len(set(samples.filter(batch=batch)))
+    # Final batch dictionary
+    batch_sample_dict = {
+        batch: batch.sample_count
+        for batch in batches_qs
+        if not (
+            len(batches_qs) > 1
+            and batch.name == "Undefined Batch"
+            and batch.sample_count == 0
+        )
+    }
 
     layers = Layer.objects.filter(
         Q(site=object, sample__isnull=False)
         | Q(site=object, child__sample__isnull=False)
         | Q(site=object, child__child__sample__isnull=False) # this should work in some other way...
         ).distinct()
-    probes = set(AnalyzedSample.objects.filter(sample__in=samples).values_list('probes', flat=True))
+
+    probes = {
+        analyzed.probes
+        for sample in samples_qs
+        for analyzed in sample.analyzed_sample.all()
+        if analyzed.probes is not None
+    }
 
     context={
         "sample": samples.first(),
@@ -481,56 +487,68 @@ def samplebatch_create(request):
 def get_site_samplebatch_tab(request, pk):
     from main.tools.samplebatch import filter_samples
     # if pk=0, means we want to have all the batches from the site (that we are allowed to see)
-    
+    current_project = get_project(request)
+
     if pk != 0:
-        batch = SampleBatch.objects.get(pk=pk)
+        batch = SampleBatch.objects \
+            .select_related(
+                'site',
+            ) \
+            .prefetch_related(
+                'sample',
+                'sample__synonyms',
+                'sample__sample',
+                'sample__layer',
+                'sample__layer__culture',
+                'sample__analyzed_sample',
+            ) \
+            .get(pk=pk)
 
         # get the defaults for display
-        current_project = get_project(request)
-
-        # TODO: move to signals
-        # Create a Gallery for each Batch
-        if not batch.gallery:
-            tmp = Gallery(title=batch.name)
-            tmp.save()
-            batch.gallery = tmp
-            batch.save()
-
-        batch_samples = Sample.objects.order_by('name').filter(batch=batch).distinct()
+        batch_samples = batch.sample.annotate(
+            library_count=Count('analyzed_sample', filter=Q(analyzed_sample__project=current_project))
+        ).all()
 
         # make a list of id-synonym keys that are necessary for the sample-table
-        sample_synonyms = list(
-            Synonym.objects.filter(sample__in=batch_samples)
-            .values_list("type", flat=True)
-            .distinct()
-        )
+        sample_synonyms = {
+            synonym.type
+            for sample in batch_samples
+            for synonym in sample.synonyms.all()
+        }
 
         context = {
             "object": batch,
             "sample_synonyms": sample_synonyms,
-            "samples": filter_samples(request,batch_samples)
+            "samples": filter_samples(request, batch_samples)
         }
     
     else:
         site = get_instance_from_string(request.GET.get('object'))
-        samples_qs = Sample.objects.filter(site=site) \
+        samples_qs = Sample.objects.filter(site=site, domain='mpi_eva') \
             .select_related(
                 'site',
                 'sample',
                 'sample__layer',
-                'sample__layer__layer',
-                'sample__layer__layer__layer',
                 'layer',
-                'layer__layer',
-                'layer__layer__layer',
                 'layer__culture',
                 'batch'
-        ).prefetch_related('analyzed_sample') \
-        .order_by('name')
+            ).prefetch_related(
+                'analyzed_sample',
+                'synonyms'
+            ) \
+            .annotate(library_count=Count('analyzed_sample', filter=Q(analyzed_sample__project=current_project))) \
+            .order_by('name')
+
+        sample_synonyms = {
+            synonym.type
+            for sample in samples_qs
+            for synonym in sample.synonyms.all()
+        }
 
         context={
-            'samples' : filter_samples(request, samples_qs.filter(domain='mpi_eva')),
-            'site':site
+            'samples' : filter_samples(request, samples_qs),
+            'site':site,
+            "sample_synonyms": sample_synonyms,
         }
 
     return render(request, "main/samples/sample-batch-tab.html", context)

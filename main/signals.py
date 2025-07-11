@@ -10,7 +10,9 @@ from main.models import (
     Description,
     Sample,
     FaunalResults,
-    Reference
+    Reference,
+    SampleBatch,
+    Gallery
 )
 from main.tools import dating
 import json
@@ -151,6 +153,14 @@ def create_description(sender, instance, **kwargs):
             tmp.project.add(instance)
             site.description.add(tmp)
 
+
+@receiver(post_save, sender=SampleBatch)
+def create_gallery(sender, instance, created, **kwargs):
+    batch = instance
+    # Create a Gallery for each Batch
+    if created and not batch.gallery:
+        gallery = Gallery.objects.create(title=batch.name)
+        SampleBatch.objects.filter(pk=batch.pk).update(gallery=gallery)
 
 # after saving a faunalResults, update the order! (I assume that in most cases I dont do that...)
 @receiver(post_save, sender=FaunalResults)
