@@ -46,8 +46,10 @@ def set_sample_cookie(request, pk):
 def filter_libraries(request, query):
     if not request.user.is_authenticated:
         from main.tools.projects import get_project
+
         project = get_project(request)
         query = query.filter(project=project)
+
     if 'filter_batch_pk' in request.session:
         batch = tools.generic.get_instance_from_string(f"samplebatch_{request.session['filter_batch_pk']}")
         query = query.filter(
@@ -71,7 +73,22 @@ def get_libraries(request, pk, unset=True, return_query=False):
     from one site, get all the (filtered) samples and display the list of libraries
     """
     object = Site.objects.get(pk=pk)
-    samples = tools.samplebatch.filter_samples(request, Sample.objects.filter(site=object))
+
+    #first, do the whole shebang with the samples again!
+    samples_qs = Sample.objects.filter(site=object, domain='mpi_eva') \
+        .select_related(
+            'site',
+            'sample',
+            'sample__layer',
+            'layer',
+            'layer__culture',
+            'batch'
+        ).prefetch_related(
+            'analyzed_sample',
+        ) \
+        .order_by('sample__name')
+
+    samples = tools.samplebatch.filter_samples(request, samples_qs)
 
     if request.method == 'POST':
         if unset:
@@ -98,7 +115,18 @@ def get_libraries(request, pk, unset=True, return_query=False):
         if unset:
             request.session['filter_controls'] = filter_controls
 
-    query = filter_libraries(request, AnalyzedSample.objects.filter(sample__in=samples))
+    analyzed_samples = AnalyzedSample.objects.filter(sample__in=samples_qs) \
+        .select_related(
+            'sample',
+            'sample__batch'
+        ).prefetch_related(
+            'project',
+            'quicksand_analysis',
+            'matthias_analysis'
+        ) \
+        .order_by('sample__name')
+   
+    query = filter_libraries(request, analyzed_samples)
 
     try:
         if not request.session['filter_controls']:
@@ -109,7 +137,7 @@ def get_libraries(request, pk, unset=True, return_query=False):
     if return_query:
         return query
     
-    batches = SampleBatch.objects.filter(sample__in=samples).distinct()
+    batches = {sample.batch for sample in samples_qs if sample.batch is not None}
     probes = set(query.values_list('probes', flat=True))
     
     return render(
@@ -118,7 +146,7 @@ def get_libraries(request, pk, unset=True, return_query=False):
         {
             'object_list':query, 
             'site':object,
-            'samples':samples.filter(domain='mpi_eva').distinct(),
+            'samples':samples,
             'batches':batches,
             'probes':probes
         }
