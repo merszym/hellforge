@@ -349,6 +349,7 @@ def get_site_geo(request):
 def get_site_sample_content(request):
     from main.tools.samplebatch import filter_samples, unset_sample_filters
     from main.tools.analyzed_samples import unset_library_filters
+    from django.db.models import Count
 
     # unset the library- and sample-level filters
     # because if we reload the page or go to a different site, we dont want prefiltered data
@@ -388,21 +389,30 @@ def get_site_sample_content(request):
     # load the samples and batches
     # first create a batch for the samples that dont have one yet...
     tmp, c = SampleBatch.objects.get_or_create(name="Undefined Batch", site=object)
-    nobatch = Sample.objects.filter(Q(site=object, batch=None, domain='mpi_eva'))
-    for sample in nobatch:
-        sample.batch = tmp
-        sample.save()
+    Sample.objects.filter(Q(site=object, batch=None, domain='mpi_eva')).update(batch=tmp)
     
     # first, get all the samples that we need
-    samples = filter_samples(request, Sample.objects.filter(site=object).distinct())
+    samples_qs = Sample.objects.filter(site=object) \
+        .select_related(
+            'site',
+            'sample',
+            'sample__layer',
+            'sample__layer__layer',
+            'sample__layer__layer__layer',
+            'layer',
+            'layer__layer',
+            'layer__layer__layer',
+            'layer__culture',
+            'batch'
+    ).prefetch_related('analyzed_sample')
 
+    samples = filter_samples(request, samples_qs.distinct())
 
-    batches = list(set([x.batch for x in samples if x.batch != None])) #thats the archaeological remains that have no batch
+    batches = list(SampleBatch.objects.filter(sample__in=samples).distinct())
+    
     # for uploading, we need to have the option to add samples to an empty batch...
     if request.user.is_authenticated:
         batches.extend([x for x in SampleBatch.objects.filter(Q(site=object)).distinct() if x not in batches])
-
-    batches = sorted(batches, key=lambda x: x.name)
 
     batch_sample_dict = defaultdict(int)
 
@@ -425,7 +435,7 @@ def get_site_sample_content(request):
         Q(site=object, sample__isnull=False)
         | Q(site=object, child__sample__isnull=False)
         | Q(site=object, child__child__sample__isnull=False) # this should work in some other way...
-        ).distinct() 
+        ).distinct()
     probes = set(AnalyzedSample.objects.filter(sample__in=samples).values_list('probes', flat=True))
 
     context={
@@ -471,6 +481,7 @@ def samplebatch_create(request):
 def get_site_samplebatch_tab(request, pk):
     from main.tools.samplebatch import filter_samples
     # if pk=0, means we want to have all the batches from the site (that we are allowed to see)
+    
     if pk != 0:
         batch = SampleBatch.objects.get(pk=pk)
 
@@ -502,8 +513,23 @@ def get_site_samplebatch_tab(request, pk):
     
     else:
         site = get_instance_from_string(request.GET.get('object'))
+        samples_qs = Sample.objects.filter(site=site) \
+            .select_related(
+                'site',
+                'sample',
+                'sample__layer',
+                'sample__layer__layer',
+                'sample__layer__layer__layer',
+                'layer',
+                'layer__layer',
+                'layer__layer__layer',
+                'layer__culture',
+                'batch'
+        ).prefetch_related('analyzed_sample') \
+        .order_by('name')
+
         context={
-            'samples' : filter_samples(request, Sample.objects.order_by('name').filter(domain='mpi_eva', site=site)),
+            'samples' : filter_samples(request, samples_qs.filter(domain='mpi_eva')),
             'site':site
         }
 
