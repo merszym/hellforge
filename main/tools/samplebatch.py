@@ -24,7 +24,7 @@ def filter_samples(request, query):
     if 'filter_layer_pk' in request.session:
         layer = get_instance_from_string(f"layer_{request.session['filter_layer_pk']}")
         query = query.filter(
-            Q(layer=layer) | Q(sample__layer = layer)
+            Q(layer=layer) | Q(sample__layer = layer) | Q(layer__layer=layer) | Q(layer__layer__layer=layer) # NOT ideal, because ony 3 hierarchies...
         )
     # we have the culture filter in request.session
     if 'filter_culture_pk' in request.session:

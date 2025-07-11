@@ -421,7 +421,11 @@ def get_site_sample_content(request):
         # create All placeholders
         batch_sample_dict[batch] = len(set(samples.filter(batch=batch)))
 
-    layers = Layer.objects.filter(site=object, sample__isnull=False).distinct()
+    layers = Layer.objects.filter(
+        Q(site=object, sample__isnull=False)
+        | Q(site=object, child__sample__isnull=False)
+        | Q(site=object, child__child__sample__isnull=False) # this should work in some other way...
+        ).distinct() 
     probes = set(AnalyzedSample.objects.filter(sample__in=samples).values_list('probes', flat=True))
 
     context={

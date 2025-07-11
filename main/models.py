@@ -1153,7 +1153,7 @@ class Layer(Dateable):
     )
 
     class Meta:
-        ordering = ['profile_junction__position']
+        ordering = ['name']
 
     @property
     def parent(self):
