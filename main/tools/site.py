@@ -401,7 +401,9 @@ def get_site_sample_content(request):
     # for uploading, we need to have the option to add samples to an empty batch...
     if request.user.is_authenticated:
         batches.extend([x for x in SampleBatch.objects.filter(Q(site=object)).distinct() if x not in batches])
-        
+
+    batches = sorted(batches, key=lambda x: x.name)
+
     batch_sample_dict = defaultdict(int)
 
     for batch in batches:
@@ -417,7 +419,7 @@ def get_site_sample_content(request):
             pass
 
         # create All placeholders
-        batch_sample_dict[batch] = len(samples.filter(batch=batch))
+        batch_sample_dict[batch] = len(set(samples.filter(batch=batch)))
 
     layers = Layer.objects.filter(site=object, sample__isnull=False).distinct()
     probes = set(AnalyzedSample.objects.filter(sample__in=samples).values_list('probes', flat=True))
