@@ -103,11 +103,17 @@
                             -
                         {% endif %}
                     </td>
-                    <td nowrap>
+                    <td nowrap
                         {% if ana.sample %}
-                        {{ana.sample.name}}
+                        hx-get="{% url 'main_analyzedsample_setfilter' ana.sample.pk %}"
+                        hx-target="#show_libraries"
+                        class="text-primary tooltip tooltip-right" data-tooltip="Show results from this sample" style="cursor:pointer;"
+                        {% endif %}
+                        >
+                        {% if ana.sample %}
+                            {{ana.sample.name}}
                         {% else %}
-                        Control
+                            Control
                         {% endif %}
                     </td>
                     <td nowrap>

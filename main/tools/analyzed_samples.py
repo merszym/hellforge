@@ -116,7 +116,7 @@ def get_libraries(request, pk, unset=True, return_query=False):
         if unset:
             request.session['filter_controls'] = filter_controls
 
-    analyzed_samples = AnalyzedSample.objects.filter(sample__in=samples_qs) \
+    analyzed_samples = AnalyzedSample.objects.filter(sample__in=samples) \
         .select_related(
             'sample',
             'sample__layer',
