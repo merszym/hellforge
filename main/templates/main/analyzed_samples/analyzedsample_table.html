@@ -52,7 +52,8 @@ style="width: 80%;"
         <label class="form-switch mx-2">
             <input type="checkbox" name="filter_controls" {% if request.session.filter_controls %}checked{% endif %}><i class="form-icon"></i>
         </label>
-        <button class="btn btn-primary input-group-btn">OK</button>
+        <input type="hidden" name="page" id="filter-page" value="1">
+        <button id='main-filter-button' class="btn btn-primary input-group-btn">OK</button>
     </div>
 </form>
 
@@ -255,8 +256,50 @@ style="width: 80%;"
 
 
 </div>
-<div class="m-2">
-    <span><strong>Total: </strong>{{object_list|length}} Libraries</span>
+<div class="m-2 columns">
+    <span style="position: absolute;"><strong>Total: </strong>{{total}} Libraries</span>
+    <div class="col col-mx-auto">
+        <ul class="pagination">
+            {% if object_list.has_previous and object_list.number > 2 %}
+            <li class="page-item" data-page="1">
+                <a style="cursor: pointer;" onclick="$('#filter-page').val('1'); $('#main-filter-button').click();">
+                    1
+                </a>
+            </li>
+            <li class="page-item">
+                <span>...</span>
+            </li>
+            {% endif %}
+            {% if object_list.has_previous %}
+            <li class="page-item" data-page="{{object_list.previous_page_number}}">
+                <a style="cursor: pointer;" onclick="$('#filter-page').val('{{object_list.previous_page_number}}'); $('#main-filter-button').click();">
+                    {{object_list.previous_page_number}}
+                </a>
+            </li>
+            {% endif %}
+            <li class="page-item active" data-page="{{ object_list.number }}">
+                <a>{{ object_list.number }}</a>
+            </li>
+            {% if object_list.has_next %}
+            <li class="page-item">
+                <a style="cursor: pointer;" onclick="$('#filter-page').val('{{ object_list.number|add:1}}'); $('#main-filter-button').click();">
+                    {{ object_list.number|add:1}}
+                </a>
+            </li>
+            {% endif %}
+            {% if object_list.paginator.num_pages != object_list.number %}
+            <li class="page-item">
+                <span>...</span>
+            </li>
+            <li class="page-item" data-page="page_obj.paginator.num_pages">
+                <a style="cursor: pointer;" onclick="$('#filter-page').val('{{object_list.paginator.num_pages}}'); $('#main-filter-button').click();">
+                    {{object_list.paginator.num_pages}}
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+    
 </div>
 
 <div class="divider"></div>

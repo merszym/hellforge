@@ -12,7 +12,7 @@ from django.contrib.auth.decorators import (
     login_required,
 )  # this is for now, make smarter later
 from django.contrib import messages
-
+from django.core.paginator import Paginator
 
 ## DNA content
 ## At the moment only quicksand content...
@@ -72,6 +72,7 @@ def get_libraries(request, pk, unset=True, return_query=False):
     """
     from one site, get all the (filtered) samples and display the list of libraries
     """
+
     object = Site.objects.get(pk=pk)
 
     #first, do the whole shebang with the samples again!
@@ -118,6 +119,8 @@ def get_libraries(request, pk, unset=True, return_query=False):
     analyzed_samples = AnalyzedSample.objects.filter(sample__in=samples_qs) \
         .select_related(
             'sample',
+            'sample__layer',
+            'sample__layer__culture',
             'sample__batch'
         ).prefetch_related(
             'project',
@@ -139,16 +142,23 @@ def get_libraries(request, pk, unset=True, return_query=False):
     
     batches = {sample.batch for sample in samples_qs if sample.batch is not None}
     probes = set(query.values_list('probes', flat=True))
-    
+
+    #paginator to improve speed
+    paginator = Paginator(query, 300)
+    page_number = request.POST.get("page", 1)
+    page_obj = paginator.get_page(page_number)
+
     return render(
         request, 
         'main/analyzed_samples/analyzedsample_table.html', 
         {
-            'object_list':query, 
+            'object_list':page_obj, 
             'site':object,
             'samples':samples,
             'batches':batches,
-            'probes':probes
+            'probes':probes,
+            'total':len(query),
+            'page':page_number
         }
     )
 
