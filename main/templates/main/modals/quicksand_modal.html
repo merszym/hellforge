@@ -1,0 +1,20 @@
+<!-- Modal for Site properties -->
+{% load static %}
+{% load format %}
+
+<a href="#close" class="modal-overlay" aria-label="Close"></a>
+<div class="modal-container" style="max-width: 80vw;">
+    <div class="modal-header">
+        <a id="modal-close" class="btn btn-clear float-right modal_close" style="cursor: pointer;" aria-label="Close"></a>
+        <div class="modal-title h5">quicksand</div>
+    </div>
+
+        {% if type == "details" %}
+
+        <div class="modal-body">
+            {{table|safe}}
+        </div>
+
+        {% endif %}
+
+</div>

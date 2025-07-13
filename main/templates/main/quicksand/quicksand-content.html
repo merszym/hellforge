@@ -128,7 +128,14 @@
                     <td nowrap>{{ana.probes}}</td>
                     <td nowrap>{{ana.seqrun}}</td>
                     <td nowrap>{{ana.tags|default:''}}</td>
-                    <td nowrap>{{entry.version}}</td>
+                    <td nowrap
+                        class="tooltip tooltip-left modal_open text-primary"
+                        style="cursor: pointer;"
+                        data-tooltip="Show quicksand details"
+                        hx-get="{% url 'main_modal_get' %}"
+                        hx-vals='{"object":"quicksand_{{entry.pk}}", "type":"details" }'
+                        hx-target="#modal-blank"
+                    >{{entry.version}}</td>
                     {% if tableview %}
                         {% for f,color in colors %}
                         {% with family=quicksand_results|lookup:entry|lookup:f %}

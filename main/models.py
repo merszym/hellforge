@@ -1666,6 +1666,10 @@ class QuicksandAnalysis(models.Model):
     )
     data = models.JSONField("data", blank=True, null=True)
 
+    @property
+    def model(self):
+        return 'quicksand'
+
     def get_data(self, **kwargs):
         from main.tools.quicksand import get_data_for_export
 
@@ -1748,4 +1752,5 @@ models = {
     "faunal_results": FaunalResults,
     "layeranalysis": LayerAnalysis,
     "quicksand_analysis": QuicksandAnalysis,
+    "quicksand": QuicksandAnalysis,
 }

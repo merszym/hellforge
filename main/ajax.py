@@ -23,7 +23,7 @@ import json
 from .models import models
 from main.tools.generic import get_instance_from_string, download_csv
 from main.tools.analyzed_samples import update_query_for_negatives
-
+import pandas as pd
 
 def download_header(request):
     from django.core.files.base import ContentFile
@@ -157,7 +157,22 @@ def get_modal_context(object, request):
             context.update({"connection": connection})
         if context["type"] == "add_profile":
             context.update({"profile_form": ProfileForm})
-        
+    
+    if object.model == 'quicksand':
+        if context["type"] == "details":
+            data = [x[0] for x in json.loads(object.data).values()]
+            table = pd.DataFrame(
+                data
+            )
+            table.drop([
+                'RG','ReadsFiltered',
+                'ExtractLVL','ReadsExtracted','Kmers',
+                'KmerCoverage','KmerDupRate', 'Reference','ProportionMapped'
+                
+            ], axis=1, inplace=True)
+            context.update({
+                'table':table.sort_values('ReadsMapped', ascending=False).to_html(index=False, classes="table table-striped")
+            })
     return context
 
 
