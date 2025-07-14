@@ -164,12 +164,15 @@ def get_modal_context(object, request):
             table = pd.DataFrame(
                 data
             )
-            table.drop([
-                'RG','ReadsFiltered',
-                'ExtractLVL','ReadsExtracted','Kmers',
-                'KmerCoverage','KmerDupRate', 'Reference','ProportionMapped'
-                
-            ], axis=1, inplace=True)
+            for col in [
+                    'RG','ReadsFiltered',
+                    'ExtractLVL','ReadsExtracted','Kmers',
+                    'KmerCoverage','KmerDupRate', 'Reference','ProportionMapped' 
+                ]:
+                try:
+                    table.drop(col, axis=1, inplace=True)
+                except KeyError:
+                    pass
             context.update({
                 'table':table.sort_values('ReadsMapped', ascending=False).to_html(index=False, classes="table table-striped")
             })
