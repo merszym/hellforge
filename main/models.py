@@ -1303,6 +1303,7 @@ class Sample(Dateable):
     )
     # description
     description = GenericRelation(Description, related_query_name="sample")
+    note = models.TextField("note", blank=True, null=True)
     # origin of samples
     # case: DNA sample has bone (e.g. Denisova3) as the origin 
     sample = models.ForeignKey(

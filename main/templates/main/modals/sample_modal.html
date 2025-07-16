@@ -233,6 +233,11 @@
                             <input class="form-input" list="group-choices" name="hominin_group" type="text" id="hominin_group_form" placeholder="Modern Human"
                             value="{{ object.hominin_group }}">
                         </div>
+                        <div class="form-group">
+                            <label class="form-label" for="note_form">Note</label>
+                            <input class="form-input" name="note" type="text" id="note_form" placeholder="Note"
+                            value="{{ object.note|default:'' }}">
+                        </div>
                         {% endif %}
                         <button class="btn btn-primary modal_close" id="sample-update-trigger"
                                 hx-post="{% url 'sample-edit' %}"
