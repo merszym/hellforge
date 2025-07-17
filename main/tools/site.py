@@ -461,9 +461,9 @@ def get_site_human_content(request, pk):
     site = Site.objects.get(pk=int(pk))
 
     if request.user.is_authenticated:
-        remains = set(Sample.objects.filter(site=site, domain="archaeology"))
+        remains = Sample.objects.filter(site=site, domain="archaeology").distinct().order_by('year_of_collection')
     else:
-        remains = set(Sample.objects.filter(site=site, domain="archaeology", ref__isnull=False))
+        remains = Sample.objects.filter(site=site, domain="archaeology", ref__isnull=False).distinct().order_by('year_of_collection')
     
     sample_references = Reference.objects.filter(sample__in=remains).distinct()
 
