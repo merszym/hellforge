@@ -138,13 +138,17 @@ def get_fauna_tab(
             Q(layer__site=site) | Q(site=site) & Q(type="Fauna")
         ))), key=lambda x: (
                 getattr(x.ref, 'short', 'ZZ'), 
-                getattr(x.layer.profile_junction.first(),"position","") if x.layer else 0, 
+                getattr(x.layer.profile_junction.first(),"position","") if len(x.layer.profile_junction.all()) > 0 else 0, 
                 getattr(x,'culture',''),
                 getattr(x,'site','')
             )
         )
-    except AttributeError: # no layer
+    except (AttributeError, TypeError): # no layer
         pass
+        #analyses = LayerAnalysis.objects.filter(
+        #    Q(layer__site=site) | Q(site=site) & Q(type="Fauna")
+        #)
+        
 
     # hide entries without reference if not authenticated or not in project
     if not request.user.is_authenticated:
