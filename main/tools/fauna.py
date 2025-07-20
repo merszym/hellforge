@@ -144,10 +144,9 @@ def get_fauna_tab(
             )
         )
     except (AttributeError, TypeError): # no layer
-        pass
-        #analyses = LayerAnalysis.objects.filter(
-        #    Q(layer__site=site) | Q(site=site) & Q(type="Fauna")
-        #)
+        analyses = LayerAnalysis.objects.filter(
+            Q(layer__site=site) | Q(site=site) & Q(type="Fauna")
+        )
         
 
     # hide entries without reference if not authenticated or not in project
