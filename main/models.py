@@ -1431,6 +1431,13 @@ class Sample(Dateable):
 
 ### The analyzed Sample section
 
+class ProbeTranslationTable(models.Model):
+    probes = models.CharField("probes", max_length=200, blank=True, null=True)
+    content = models.CharField("content", max_length=500, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.probes} ({self.content})"
+
 
 class AnalyzedSample(models.Model):
     sample = models.ForeignKey(
@@ -1536,7 +1543,13 @@ class AnalyzedSample(models.Model):
     @property
     def model(self):
         return "analyzedsample"
-
+    
+    @property
+    def probes_str(self):
+        try:
+            return ProbeTranslationTable.objects.get(probes=self.probes)
+        except:
+            return self.probes
 
 #
 #
