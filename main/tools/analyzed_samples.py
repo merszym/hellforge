@@ -48,7 +48,7 @@ def filter_libraries(request, query):
         from main.tools.projects import get_project
 
         project = get_project(request)
-        query = query.filter(project=project)
+        query = query.filter(project=project, qc_pass=True)
 
     if 'filter_batch_pk' in request.session:
         batch = tools.generic.get_instance_from_string(f"samplebatch_{request.session['filter_batch_pk']}")
@@ -161,6 +161,20 @@ def get_libraries(request, pk, unset=True, return_query=False):
             'page':page_number
         }
     )
+
+def download_selection(request, pk):
+    qs = get_libraries(request, pk, unset=False, return_query=True)
+    site = Site.objects.get(pk=pk)
+    
+    from main.tools.generic import get_dataset_df, download_csv
+    from main.tools.projects import get_project
+
+    project = get_project(request)
+
+    #i need to give the project, because quicksand filter-params are saved in the project
+    data = get_dataset_df(qs, site, project=project)
+    return download_csv(data, name=f"{site}_analyzedsample_selection.csv")
+
 
 
 def update_query_for_negatives(query, project=False):
@@ -376,5 +390,5 @@ urlpatterns = [
     path("get-data/<int:pk>", get_libraries, name="main_analyzedsample_getdata"),
     path("set-sample-filter/<int:pk>", set_sample_cookie, name='main_analyzedsample_setfilter'),    
     path("dna/<int:pk>", get_site_dna_content, name="main_site_dna_tab"),
-
+    path('download_selection/<int:pk>', download_selection, name='main_analyzedsample_downloadselection')
 ]

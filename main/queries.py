@@ -14,69 +14,68 @@ def queries(many, one):
     Example: queries(site, library), we go to site from library via sample --> sample__site
     """
     dict = {
-        ("site", "library"): "sample__site",
-        ("site", "sample"): "site",
         ("site", "layer"): "site",
-        (
-            "site",
-            "date",
-        ): "layer_model__site",  # TODO: make sure that dates added to a sample are added to the layer automatically!
-        ("project", "library"): "project",
-        ("project", "sample"): "project",
         ("project", "site"): "project",
         ("project", "layer"): "site__project",
         ("project", "contact"): "site__project",
-        ("project", "quicksand_analysis"): "analyzedsample__sample__project",
-        ("site", "quicksand_analysis"): "analyzedsample__sample__site",
         ("site", "profilelayerjunction"): "profile__site",
     }
 
     return dict[(many, one)]
 
 
-def get_project_authors(project):
-    """
-    Get project authors (via description)
-    """
-    qs = models['person'].objects.filter(
-        Q(author__description__project=project) |
-        Q(author__description__project_project=project)
-    )
-    # a person can appear multiple times if author on several sites
-    # so return distinct
-    return qs.distinct()
+def get_queryset(start, unique, authenticated=False, project=None):
+    # return for a set of objects for a given start point and value of interest
+    try:
+        filter = {queries(start.model, unique): start}
+        return models[unique].objects.filter(**filter).distinct()
+    except:
+        pass
 
+    # start from a site
+    if start.model == "site":
+        # if not authenticated, restrict to the entries that are part of the project
+        if unique == "date":
+            #export unpublished dates only if authenticated
+            return start.get_dates(without_reference=authenticated)
+        if unique == 'sample':
+            qs = models['sample'].objects.filter(
+                Q(site=start)
+                & Q(domain='mpi_eva')
+            )
+            if not authenticated:
+                qs = qs.filter(project=project)
+            return qs
+        if unique == 'analyzedsample':
+            qs = models['analyzedsample'].objects.filter(sample__site=start)
+            if not authenticated:
+                qs = qs.filter(project=project)
+            return update_query_for_negatives(qs)
 
-def get_samples(start):
-    """
-    The more controlled query to get the project_samples query. This is necessary, because the automated one is too buggy...
-    """
+    # start from a project
     if start.model == 'project':
-        qs = models['sample'].objects.filter(
+        if unique == 'sample':
+            return models['sample'].objects.filter(
                 Q(site__project=start)
                 & Q(project=start)
                 & Q(domain='mpi_eva')
             )
-    if start.model == 'site':
-        qs = models['sample'].objects.filter(
-                Q(site=start)
-                & Q(domain='mpi_eva')
-            )
-    return qs
-
-def get_libraries(start):
-    """
-    The more controlled query to get the libraries query. This is necessary, because the automated one is too buggy...
-    """
-    if start.model == 'site':
-        qs = models['analyzedsample'].objects.filter(sample__site=start)
-        qs = update_query_for_negatives(qs)
-        return qs
-    if start.model == 'project':
-        qs = models['analyzedsample'].objects.filter(
+        if unique == "analyzedsample":
+            qs = models['analyzedsample'].objects.filter(
                 Q(sample__site__project=start)
                 & Q(sample__project=start)
                 & Q(project=start)
             )
-        qs = update_query_for_negatives(qs, project=start)
-        return qs
+            return update_query_for_negatives(qs, project=start)
+        if unique == 'author':
+            # a person can appear multiple times if author on several sites
+            # so return distinct
+            qs = models['person'].objects.filter(
+                Q(author__description__project=start) |
+                Q(author__description__project_project=start)
+            ).distinct()
+            print(qs)
+            return qs
+        # see if the generic queries work
+        filter = {queries(start.model, unique): start}
+        return models[unique].objects.filter(**filter).distinct()

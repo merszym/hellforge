@@ -1,5 +1,5 @@
-from main.models import models, Sample
-from main.queries import queries, get_libraries, get_samples, get_project_authors
+from main.models import models, Project
+from main.queries import get_queryset
 from django.http import JsonResponse, HttpResponse, StreamingHttpResponse, FileResponse
 from django.urls import path, reverse
 from django.shortcuts import render
@@ -26,100 +26,93 @@ def return_next(request, next, object="instance_x"):
 
     return get_modal(request)
 
+# data download from dataframe
+class Echo:
+    """An object that implements just the write method of a json row-object."""
+    def write(self, value):
+        return value
 
-def get_dataset_df(qs, start, include, append, **kwargs):
-    # iterate over the m:1 frame, collect information from models
+def json_to_csv_rows(data, columns=[]):
+    """
+    Generator to yield CSV rows from JSON data.
+    Assumes 'data' is a generator of dictionaries.
+    BUT it sometimes also is a list of dictionaries...
+    """
+    pseudo_buffer = Echo()
+    writer = csv.writer(pseudo_buffer)
+
+    # Extract headers from the first JSON object
+    if not data:
+        return  # No data to process
+    
+    if len(columns) == 0:
+        header = False
+    else:
+        yield writer.writerow(columns)
+        header = True
+
+    # Write each row
+    for row in data:
+        # in case the row is a list of entries
+        if not header:
+            columns = list(row.keys())
+            yield writer.writerow(columns)
+            header = True
+        yield writer.writerow([row.get(col, "") for col in columns])
+
+def download_csv(data, name="download.csv", columns=[]):
+
+    today = datetime.strftime(datetime.today(), "%Y%m%d")
+
+    return StreamingHttpResponse(
+        json_to_csv_rows(data, columns=columns),
+        content_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={today}_{name}"},
+    )
+
+def get_dataset_df(qs, start, **kwargs):
+    # iterate over the objects, collect data, as specified in the models
     # do it as a generator to allow streaming
     for entry in qs:
-        # start is the "1", e.g. project
-        data = start.get_data()
-        for incl in include:
-            if incl == "null":
-                continue
-            # check if there are _multiple entries_ for the incl
-            # these need to be squashed into one line
-            # example person can be contact for multiple sites
-            try:
-                incl_entries = getattr(entry, incl, False).all()
-                data.update(models[incl].squash_data(incl_entries))
-            except AttributeError:
-                # if there is a foreign-key relationship .all() fails
-                # in this case, try if an entry exists
-                try:
-                    # thats one _ugly_ hack for the sample origin situation
-                    # because a samples layer could be determined by the sample it derives from...
-                    if incl=='layer':
-                        data.update(getattr(entry, 'get_layer', False).get_data())
-                    else:
-                        data.update(getattr(entry, incl, False).get_data())
-                except AttributeError:
-                    # if that fails, add empty lines...
-                    empty = {k: None for k in models[incl].table_columns()}
-                    data.update(empty)
-        # check for projects
-        project = None
-        if start.model == "project":
-            project = start
-        entry_data = entry.get_data(append=append, project=project, **kwargs)
+        if start.model == 'project':
+            data = start.get_data()
+        else:
+            data= {}
+        entry_data = entry.get_data(**kwargs)
         # this could now be more than one row,so check if its a list
         if isinstance(entry_data, list):
-            for libdata in entry_data:
+            for subdata in data:
                 tmp = data.copy()
-                tmp.update(libdata)
+                tmp.update(subdata)
                 yield tmp
         # else return a single row as dict
-        else:
-            data.update(entry_data)
-            yield data
-
-
+        data.update(entry_data)
+        yield data
 
 def get_dataset(request):
     """
     Download a Dataset
-    This is the API to get Data out of the Database again.
-
-    This is not yet thought through or finished...
-
     GET request:
     ?start --> site, project
-    ?unique --> which parameter is the unique (m:1) column (library, sample, layer?)
-    ?include --> include intermediate columns (like sample information)
-    ?append ---> for the libraries, append the quicksand or summarystats columns, or for samples, append the libraries
-
-    specifiy at each model(!) or separate queries.py file, how the output columns look like.
-    """
-    # for now, only site works
-    # define the starting point, its the classical model_pk syntax
-    start = get_instance_from_string(request.GET.get("from"))
-    column = start.model
-    unique = request.GET.get("unique")
-    include = request.GET.get("include", "null").split(",")
-    append = request.GET.get("append",0)
-    percentage = float(request.GET.get("percentage",0.5))
-    breadth = float(request.GET.get("breadth",0.5))
-
-    # now set up the query
-    if unique == "date" and column == "site":
-        #export unpublished dates only if authenticated
-        qs = start.get_dates(without_reference=request.user.is_authenticated)
-
-    elif unique in ['library', 'analyzedsample']:
-        qs = get_libraries(start)
-
-    elif unique=='sample':
-        qs = get_samples(start)
+    ?unique --> which parameter is the unique (m:1) column (analyzedsample, sample)
     
-    elif unique=='author' and start.model == 'project':
-        qs = get_project_authors(start)
-
+    I will specify for each Model separately, what to include in the output table
+    """
+    start = get_instance_from_string(request.GET.get("from"))
+    unique = request.GET.get("unique")
+    
+    # First, get the project
+    if namespace := request.session.get("session_project", False):
+        project = Project.objects.get(namespace=namespace)
     else:
-        filter = {queries(column, unique): start}
-        qs = models[unique].objects.filter(**filter).distinct()
+        project = None
 
-    # and get the row generator
-    # it generates a single dict
-    data = get_dataset_df(qs, start, include, append, percentage=percentage, breadth=breadth)
+    qs = get_queryset(start, unique, authenticated=request.user.is_authenticated, project=project)
+
+    # filter for either in the right project OR user is authenticated!
+
+    # and get the generator that yields single rows for download stream
+    data = get_dataset_df(qs, start, project=project)
 
     # download the data
     return download_csv(data, name=f"{start}_{unique}_m_1.csv")
@@ -239,51 +232,6 @@ def delete_x(request, response=True):
         return return_next(request, next)
 
     return JsonResponse({"status": True}) if response else True
-
-
-# data download from dataframe
-class Echo:
-    """An object that implements just the write method of a json row-object."""
-    def write(self, value):
-        return value
-
-def json_to_csv_rows(data, columns=[]):
-    """
-    Generator to yield CSV rows from JSON data.
-    Assumes 'data' is a generator of dictionaries.
-    BUT it sometimes also is a list of dictionaries...
-    """
-    pseudo_buffer = Echo()
-    writer = csv.writer(pseudo_buffer)
-
-    # Extract headers from the first JSON object
-    if not data:
-        return  # No data to process
-    
-    if len(columns) == 0:
-        header = False
-    else:
-        yield writer.writerow(columns)
-        header = True
-
-    # Write each row
-    for row in data:
-        # in case the row is a list of entries
-        if not header:
-            columns = list(row.keys())
-            yield writer.writerow(columns)
-            header = True
-        yield writer.writerow([row.get(col, "") for col in columns])
-
-def download_csv(data, name="download.csv", columns=[]):
-
-    today = datetime.strftime(datetime.today(), "%Y%m%d")
-
-    return StreamingHttpResponse(
-        json_to_csv_rows(data, columns=columns),
-        content_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename={today}_{name}"},
-    )
 
 
 urlpatterns = [

@@ -73,13 +73,13 @@
                         <thead>
                             <tr>
                                 <th>Country</th>
+                                <th>Site ID</th>
                                 <th>Site</th>
-                                <th>Site Name</th>
                                 <th>Samples</th>
                                 <th>Analyzed</th>
                                 <th>Libraries</th>
                                 <th>Controls</th>
-                                <th>Collaborators</th>
+                                <th></th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -122,15 +122,16 @@
                 </div>
             </div>
             <div class="m-2">
-                <a target="_blank" href="{% url 'get_dataset' %}?from=project_{{object.pk}}&unique=sample&include=site,layer,samplebatch,sample&append=library"
-                    class="btn tooltip tooltip-right" data-tooltip="Export samples and libraries">
+                <a target="_blank" href="{% url 'get_dataset' %}?from=project_{{object.pk}}&unique=analyzedsample"
+                    class="btn tooltip tooltip-right" data-tooltip="Export Libraries">
                     <i class="icon icon-download"></i>
                 </a>
-                <a target="_blank" href="{% url 'get_dataset' %}?from=project_{{object.pk}}&unique=contact&include=site" class="btn tooltip tooltip-right" data-tooltip="Export Collaborators">
-                    <i class="icon icon-people"></i>
+                <a target="_blank" href="{% url 'get_dataset' %}?from=project_{{object.pk}}&unique=sample"
+                    class="btn tooltip tooltip-right" data-tooltip="Export Samples">
+                    <i class="icon icon-download"></i>
                 </a>
-                <a target="_blank" class="btn tooltip tooltip-right" href="{% url 'get_dataset' %}?from=project_{{object.pk}}&unique=library&include=site,layer,samplebatch,sample&append=qs,mm" data-tooltip="Export analysis results">
-                    <i class="icon icon-flag"></i>
+                <a target="_blank" href="{% url 'get_dataset' %}?from=project_{{object.pk}}&unique=author" class="btn tooltip tooltip-right" data-tooltip="Export Authors">
+                    <i class="icon icon-people"></i>
                 </a>
             </div>
         </div>

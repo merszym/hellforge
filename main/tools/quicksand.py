@@ -209,7 +209,21 @@ def prepare_data(
     }
 
 
-def get_data_for_export(data, quickv, percentage=0.5, breadth=0.5, **kwargs):
+def get_data_for_export(data, quickv, project=None):
+    #project gets handled via the **kwargs arguments in the generic export
+    if project:
+        params = json.loads(project.parameters) if project.parameters else \
+            {'quicksand_cutoff_percentage': 0.5,
+            'quicksand_cutoff_breadth':0.5
+        }
+    else:
+        params = {
+            'quicksand_cutoff_percentage': 0.5,
+            'quicksand_cutoff_breadth':0.5
+        }
+    percentage = float(params['quicksand_cutoff_percentage'])
+    breadth = float(params['quicksand_cutoff_breadth'])
+
     export = {
         "quicksand version": quickv,
         "ReadsRaw": 0,

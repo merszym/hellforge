@@ -294,7 +294,7 @@ class Person(models.Model):
         data = {
             "Contact Name": self.name,
             "Contact Email": self.email,
-            "Contact Affiliations": ";".join([x.name for x in self.affiliation.all()]),
+            "Contact Affiliations": ";".join([f"({x.position}) {x.affiliation.name}" for x in self.affiliation.all()]),
             "Contact ORCID": self.orcid,
         }
         return data
@@ -1060,7 +1060,7 @@ class ProfileLayerJunction(models.Model):
         # for an entry, return a dict {'col': data} that is used for the export of the data
         data = {
             "Profile": self.profile.name,
-            "Layer Parent": self.layer.parent.name if self.layer.parent else None,
+            "Layer Parent": self.layer.get_highest().name,
             "Layer":self.layer.name,
         }
         return data
@@ -1173,7 +1173,7 @@ class Layer(Dateable):
 
     @property
     def in_profile(self):
-        return ",".join([x.profile.name for x in self.profile_junction.all()])
+        return ",".join(set([x.profile.name for x in self.profile_junction.all()]))
 
     def __str__(self):
         if self.site:
@@ -1189,10 +1189,10 @@ class Layer(Dateable):
 
     def get_data(self, **kwargs):
         # for an entry, return a dict {'col': data} that is used for the export of the data
-        # dont include site or project - that is exported with the respective query
-        data = {
+        data = self.site.get_data()
+        data.update({
             "Layer Name": self.name,
-            "Layer Parent": self.parent.get_highest().name if self.parent else None,
+            "Layer Parent": self.get_highest().name,
             "Layer Profile": self.in_profile,
             "Layer Colour": self.colour_munsell,
             "Layer Texture": self.texture,
@@ -1203,9 +1203,9 @@ class Layer(Dateable):
             "Layer Culture": self.culture.name if self.culture else None,
             "Layer Culture (Mixed)": ",".join([x.name for x in self.additional_cultures.all()]),
             "Layer Epoch": self.epoch.name if self.epoch else None,
-        }
+        })
+        
         return data
-
 
     @classmethod
     def table_columns(self):
@@ -1358,10 +1358,6 @@ class Sample(Dateable):
     def model(self):
         return "sample"
 
-    @property
-    def samplebatch(self):
-        return self.batch
-
     @classmethod
     def table_columns(self):
         return [
@@ -1380,9 +1376,9 @@ class Sample(Dateable):
     def __str__(self):
         return self.name if self.name != None else self
 
-    def get_data(self, append=None, project=None, **kwargs):
+    def get_data(self, project=None, **kwargs):
         # for an entry, return a dict {'col': data} that is used for the export of the data
-        # dont include layer or project - that is exported with the respective query
+        # get the age of the layer
         infinite, upper, lower = self.get_upper_and_lower(calculate_mean=True)
         if upper == None and lower == None:
             if self.get_layer:
@@ -1392,8 +1388,15 @@ class Sample(Dateable):
         if infinite:
             upper = None
         ## Inherit from sample parent
-        data = {
-            "Layer Name":self.get_layer.name if self.layer else None,
+        if layer:= self.get_layer:
+            data = layer.get_data()
+        else:
+            data = self.site.get_data()
+            data.update({
+                x:"" for x in Layer.table_columns()
+            })
+        data.update(self.batch.get_data())
+        data.update({
             "Fossil Remain": self.sample.name if self.sample else None,
             "Sample Name": self.name,
             "Sample Synonyms": ";".join([str(x) for x in self.synonyms.all()]),
@@ -1402,27 +1405,12 @@ class Sample(Dateable):
             "Sample Provenience": ";".join(
                 [f"{k}:{v}" for k, v in json.loads(self.provenience).items()]
             ) if self.provenience else None,
+            "Sample Dating": 'Direct' if self.date.first() else 'Context',
+            "Sample Dates": ",".join([x.oxa for x in self.date.all()]) if self.date.first() else "",
             "Sample Age": self.age_summary(),
             "Sample Age Upper": upper,
             "Sample Age Lower": lower,
-        }
-
-        if append and self.analyzed_sample.first(): # append could be library, mm, qs
-            all_data = []
-            if project: # all libraries. Or check for project!
-                libs = self.analyzed_sample.filter(project=project)
-            else:
-                libs = self.analyzed_sample.all()
-            if len(libs) > 0:
-                for lib in libs: 
-                    tmp = data.copy()
-                    tmp.update(
-                        lib.get_data(append=append)
-                    )
-                    all_data.append(tmp)
-                return all_data
-            # no library in the project, so return only the sample data
-            return data
+        })
         return data
 
     @property
@@ -1471,15 +1459,17 @@ class AnalyzedSample(models.Model):
     class Meta:
         unique_together = [["library", "seqrun", "lane"]]
         ordering = ["seqrun", "library"]
-        # ordering = ["sample__site", "sample__layer", "sample", "seqrun", "probes"]
 
     def __str__(self):
         return f"{self.library}_{self.seqrun}"
 
-    def get_data(self, append=None, **kwargs):
+    def get_data(self, **kwargs):
         # for an entry, return a dict {'col': data} that is used for the export of the data
-        # dont include sample or project - that is exported with the respective query
-        data = {
+        try:
+            data = self.sample.get_data()
+        except: #negative controls
+            data={}
+        data.update({
             "Lysate": self.lysate,
             "ENC Batch": self.enc_batch,
             "Library": self.library,
@@ -1493,30 +1483,24 @@ class AnalyzedSample(models.Model):
             "Sequencing Pool": self.seqpool,
             "Tag": self.tags,
             "QC": "Pass" if self.qc_pass else "Fail",
-        }
-        quicksand_analysis = bool(re.search("qs", str(append)))
-        matthias_analysis = bool(re.search("mm", str(append)))
-        if quicksand_analysis and self.quicksand_analysis.first():
+        })
+        if self.quicksand_analysis.last():
             data.update(
                 self.quicksand_analysis.last().get_data(**kwargs)
             )
-        if matthias_analysis and self.matthias_analysis.first():
+        else:
+            data.update(
+                {x:"" for x in QuicksandAnalysis.table_columns()}
+            )
+        if self.matthias_analysis.last():
             data.update(
                 self.matthias_analysis.last().get_data()
             )
+        else:
+            data.update(
+                {x:"" for x in HumanDiagnosticPositions.table_columns()}
+            )
         return data
-
-    @property
-    def site(self):
-        return self.sample.site
-
-    @property
-    def get_layer(self):
-        return self.sample.get_layer
-
-    @property
-    def samplebatch(self):
-        return self.sample.batch
 
     @classmethod
     def table_columns(self):
@@ -1684,6 +1668,24 @@ class QuicksandAnalysis(models.Model):
     @property
     def model(self):
         return 'quicksand'
+    
+    @classmethod
+    def table_columns(self):
+        return [
+            "quicksand version",
+            "ReadsRaw",
+            "ReadsLengthfiltered",
+            "ReadsIdentified",
+            "ReadsMapped",
+            "ReadsDeduped",
+            "DuplicationRate",
+            "ReadsBedfiltered",
+            "SeqsInAncientTaxa",
+            "Ancient",
+            "AncientTaxa",
+            "OtherTaxa",
+            "Subsitutions"
+            ]
 
     def get_data(self, **kwargs):
         from main.tools.quicksand import get_data_for_export
@@ -1725,6 +1727,11 @@ class HumanDiagnosticPositions(models.Model):
             "analyzedsample__seqrun",
             "analyzedsample__probes",
         ]
+
+    @classmethod
+    def table_columns(self):
+        obj = HumanDiagnosticPositions.objects.first()
+        return obj.get_data().keys()
     
     def get_data(self, **kwargs):
         exclude = [
@@ -1760,7 +1767,6 @@ models = {
     "sample": Sample,
     "samplebatch": SampleBatch,
     "analyzedsample": AnalyzedSample,
-    "library": AnalyzedSample,
     "gallery": Gallery,
     "image": Image,
     "connection": Connection,
