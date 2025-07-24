@@ -11,6 +11,24 @@
 </div>
 {% endif %}
 <div style="height: 480px;margin-top: 20px;" id="map"></div>
+{% if request.user.is_authenticated %}
+<div class="my-2">
+    <h6> Project Parameters </h6>
+    <form
+        hx-post="{% url 'main_project_updateparams' %}"
+        hx-target="#project-panel-1"
+    >
+        {% csrf_token %}
+        {% for entry,val in params.items %}
+        <div class="form-group">
+            <label class="form-label" for="{{entry}}">{{entry}}</label>
+            <input class="form-input" id="{{entry}}" name="{{entry}}" value="{{val}}">
+        </div>
+        {% endfor %}
+        <button class="btn btn-primary">OK</button>
+    </form>
+</div>
+{% endif %}
 <script>
     $('body').on('click', '.share_button', function(){
         $(this).addClass('btn-success')

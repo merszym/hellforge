@@ -46,6 +46,7 @@ class Project(models.Model):
     ref = models.ManyToManyField(
         "Reference", verbose_name="reference", blank=True, related_name="project"
     )
+    parameters = models.JSONField("parameters", blank=True, null=True)
 
     def __str__(self):
         return self.name

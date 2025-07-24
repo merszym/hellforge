@@ -22,6 +22,7 @@ import json
 from django.contrib.auth.decorators import (
     login_required,
 )
+from django.views.decorators.csrf import csrf_exempt
 
 
 def get_project(request):
@@ -190,9 +191,18 @@ def get_project_geo(request):
     return JsonResponse(locations, safe=False)
 
 
-def get_project_overview(request):
-    object = Project.objects.get(pk=int(request.GET.get("object")))
-    context = {"object": object}
+def get_project_overview(request, project=None):
+    if project:
+        object = project
+    else:
+        object = Project.objects.get(pk=int(request.GET.get("object")))
+
+    params = json.loads(object.parameters) if object.parameters else \
+        {'quicksand_cutoff_percentage': 0.5,
+        'quicksand_cutoff_breadth':0.5
+    }
+
+    context = {"object": object, 'params':params}
 
     object_list = sorted(
         Site.objects.filter(project=object, child=None), key=lambda x: x.country
@@ -218,6 +228,16 @@ def toggle_project(request):
         # return the 'Yes' html
         return HttpResponse("<span style='color:green; cursor:pointer;'>Yes</span>")
 
+@csrf_exempt
+def update_project_params(request):
+    project = get_project(request)
+
+    params = {k:v[0] for k,v in dict(request.POST).items() if k != 'csrfmiddlewaretoken' }
+    project.parameters = json.dumps(params)
+    project.save() 
+
+    return get_project_overview(request, project=project)
+
 
 urlpatterns = [
     path("list", ProjectListView.as_view(), name="main_project_list"),
@@ -227,6 +247,7 @@ urlpatterns = [
     path("overview", get_project_overview, name="main_project_overview"),
     path("geodata", get_project_geo, name="main_project_geo"),
     path("toggle", toggle_project, name="main_project_toggle"),
+    path("params", update_project_params, name='main_project_updateparams'),
     path("<str:namespace>", ProjectDetailView.as_view(), name="main_project_detail"),
-    path("<int:pk>/edit", ProjectUpdateView.as_view(), name="main_project_update"),
+    path("<int:pk>/edit", ProjectUpdateView.as_view(), name="main_project_update")
 ]

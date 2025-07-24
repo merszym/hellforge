@@ -127,6 +127,8 @@ def prepare_data(
     project = get_project(request)
     sum_per_lib = {}
 
+    query = query.filter(analyzedsample__qc_pass=True)
+
     if only_project:
         query = query.filter(analyzedsample__project=project)
 
@@ -323,11 +325,18 @@ def get_quicksand_tab(request, pk):
     #order by analyzed sample to match the order of the table above the quicksand tab
     query = QuicksandAnalysis.objects.filter(analyzedsample__in=analyzed_samples).order_by('analyzedsample')
 
+    project = get_project(request)
+    params = json.loads(project.parameters) if project.parameters else \
+        {
+            'quicksand_cutoff_percentage': 0.5,
+            'quicksand_cutoff_breadth':0.5
+        }
+
     # Additional filters
     if request.method == "POST":
         column = request.POST.get("column", "ReadsDeduped")
-        percentage = float(request.POST.get("percentage", 0.5))
-        breadth = float(request.POST.get("breadth", 0.5))
+        percentage = float(request.POST.get("percentage", params['quicksand_cutoff_percentage']))
+        breadth = float(request.POST.get("breadth", params['quicksand_cutoff_breadth']))
         ancient = "on" == request.POST.get("ancient", "")
         positives = "on" == request.POST.get("positives", "")
         only_project = "on" == request.POST.get("only_project", "")
@@ -350,7 +359,9 @@ def get_quicksand_tab(request, pk):
             )
         )
     else:
-        context.update(prepare_data(request, query))
+        percentage=float(params['quicksand_cutoff_percentage'])
+        breadth=float(params['quicksand_cutoff_breadth'])
+        context.update(prepare_data(request, query, breadth=breadth, percentage=percentage))
     
     return render(request, "main/quicksand/quicksand-content.html", context)
 
