@@ -2,7 +2,7 @@
 {% block head %}
 <title>Hellforge: Sites</title>
 {% endblock %}
-{% block headline %}Archaeological Sites{% endblock %}
+{% block headline %}<a href="/" class="text-light">Archaeological Sites</a>{% endblock %}
 {% block body %}
 {% load static %}
 
@@ -11,12 +11,12 @@
     <div class='columns'>
         <div class="column col-6 hide-md">
             <div class="my-2">
-                <div style="height: 80vh;" id="map"></div>
+                <div style="height: 70vh;" id="map"></div>
             </div>
         </div>
         <div class="column col-6 col-md-12">
             <div class="my-2">
-                <div class="panel" style="max-height:80vh">
+                <div class="panel" style="max-height:70vh">
                     <div class="panel-header">
                         {% if request.user.is_authenticated %}
                         <a href="{% url 'main_site_add' %}">New Site</a>
