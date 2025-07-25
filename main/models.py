@@ -1406,7 +1406,7 @@ class Sample(Dateable):
                 [f"{k}:{v}" for k, v in json.loads(self.provenience).items()]
             ) if self.provenience else None,
             "Sample Dating": 'Direct' if self.date.first() else 'Context',
-            "Sample Dates": ",".join([x.oxa for x in self.date.all()]) if self.date.first() else "",
+            "Sample Dates": ",".join([x.oxa or str(x) for x in self.date.all()]) if self.date.first() else "",
             "Sample Age": self.age_summary(),
             "Sample Age Upper": upper,
             "Sample Age Lower": lower,
@@ -1467,8 +1467,8 @@ class AnalyzedSample(models.Model):
         # for an entry, return a dict {'col': data} that is used for the export of the data
         try:
             data = self.sample.get_data()
-        except: #negative controls
-            data={}
+        except: #negative controls, add the headers for the previous hierarchies
+            data={x:'' for x in Sample.objects.first().get_data().keys()}
         data.update({
             "Lysate": self.lysate,
             "ENC Batch": self.enc_batch,
