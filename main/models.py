@@ -1189,6 +1189,11 @@ class Layer(Dateable):
 
     def get_data(self, **kwargs):
         # for an entry, return a dict {'col': data} that is used for the export of the data
+        # get the age of the layer
+        infinite, upper, lower = self.get_upper_and_lower(calculate_mean=True)
+        if infinite:
+            upper = None
+
         data = self.site.get_data()
         data.update({
             "Layer Name": self.name,
@@ -1197,6 +1202,8 @@ class Layer(Dateable):
             "Layer Colour": self.colour_munsell,
             "Layer Texture": self.texture,
             "Layer Age": self.age_summary(export=True),
+            'Layer Upper':upper,
+            'Layer Lower':lower,
             "Layer Umbrella Culture": (
                 self.culture.get_highest().name if self.culture else None
             ),
@@ -1592,7 +1599,7 @@ class LayerAnalysis(models.Model):
 
     def __str__(self):
         return f"{self.layer if self.layer else self.site} / {self.ref}"
-
+    
 
 class FaunalResults(models.Model):
     order = models.CharField("order", max_length=400, blank=True, null=True)
