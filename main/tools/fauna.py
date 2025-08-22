@@ -137,8 +137,8 @@ def get_fauna_tab(
         analyses = sorted(list(set(LayerAnalysis.objects.filter(
             Q(layer__site=site) | Q(site=site) & Q(type="Fauna")
         ))), key=lambda x: (
-                getattr(x.ref, 'short', 'ZZ'), 
                 getattr(x.layer.profile_junction.first(),"position","") if len(x.layer.profile_junction.all()) > 0 else 0, 
+                getattr(x.ref, 'short', 'ZZ'), 
                 getattr(x,'culture',''),
                 getattr(x,'site','')
             )
