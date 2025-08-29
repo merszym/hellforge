@@ -1,4 +1,4 @@
-from main.models import models
+from main.models import models, QuicksandAnalysis
 from main.tools.analyzed_samples import update_query_for_negatives
 from django.db.models import Q
 
@@ -74,8 +74,18 @@ def get_queryset(start, unique, authenticated=False, project=None):
                 Q(author__description__project=start) |
                 Q(author__description__project_project=start)
             ).distinct()
-            print(qs)
             return qs
+
+        if unique == 'quicksand':
+            qs = models['analyzedsample'].objects.filter(
+                Q(sample__site__project=start)
+                & Q(sample__project=start)
+                & Q(project=start)
+            )
+            qs = update_query_for_negatives(qs, project=start)
+            # now get the quicksand tables!
+            return QuicksandAnalysis.objects.filter(analyzedsample__in=qs)
+            
         # see if the generic queries work
         filter = {queries(start.model, unique): start}
         return models[unique].objects.filter(**filter).distinct()

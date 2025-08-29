@@ -1493,7 +1493,7 @@ class AnalyzedSample(models.Model):
         })
         if self.quicksand_analysis.last():
             data.update(
-                self.quicksand_analysis.last().get_data(**kwargs)
+                self.quicksand_analysis.last().get_data(**kwargs, grouped=True)
             )
         else:
             data.update(
@@ -1679,25 +1679,47 @@ class QuicksandAnalysis(models.Model):
     @classmethod
     def table_columns(self):
         return [
-            "quicksand version",
-            "ReadsRaw",
-            "ReadsLengthfiltered",
-            "ReadsIdentified",
-            "ReadsMapped",
-            "ReadsDeduped",
-            "DuplicationRate",
-            "ReadsBedfiltered",
-            "SeqsInAncientTaxa",
-            "Ancient",
-            "AncientTaxa",
-            "OtherTaxa",
-            "Subsitutions"
+                "quicksand version",
+                "ReadsRaw",
+                "ReadsLengthfiltered",
+                "ReadsIdentified",
+                "ReadsMapped",
+                "ReadsDeduped",
+                "DuplicationRate",
+                "ReadsBedfiltered",
+                "SeqsInAncientTaxa",
+                "Ancient",
+                "AncientTaxa",
+                "OtherTaxa",
+                "Subsitutions"
             ]
 
-    def get_data(self, **kwargs):
-        from main.tools.quicksand import get_data_for_export
+    def get_data(self, grouped=False, **kwargs):
+        if grouped: # this is appended to the analyzedsample and grouped by library
+            from main.tools.quicksand import get_data_for_export
 
-        return get_data_for_export(self.data, self.version, **kwargs)
+            return get_data_for_export(self.data, self.version, **kwargs)
+        
+        else:
+            # To get the full unfiltered and ungrouped quicksand-reports
+            # get the data from the analyzed sample (including the grouped quicksand data -.-)
+            # and remove the diagnostic positions and the quicksand-summary columns from the dict
+            cols_qs = QuicksandAnalysis.table_columns()
+            cols_mm = HumanDiagnosticPositions.table_columns()
+            remove = set(cols_qs) | set(cols_mm)
+
+            project_data = {k: v for k, v in self.analyzedsample.get_data().items() if k not in remove}
+
+            #get a list of dicts (one for each line in the report)
+            self_data = [x[0] for x in json.loads(self.data).values()]
+            full_record = []
+
+            for entry in self_data:
+                tmp = project_data.copy()
+                tmp.update(entry)
+                full_record.append(tmp)
+
+            return full_record         
 
     class Meta:
         ordering = [

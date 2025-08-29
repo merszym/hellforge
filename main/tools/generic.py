@@ -81,13 +81,14 @@ def get_dataset_df(qs, start, **kwargs):
         entry_data = entry.get_data(**kwargs)
         # this could now be more than one row,so check if its a list
         if isinstance(entry_data, list):
-            for subdata in data:
+            for subdata in entry_data:
                 tmp = data.copy()
                 tmp.update(subdata)
                 yield tmp
         # else return a single row as dict
-        data.update(entry_data)
-        yield data
+        else:
+            data.update(entry_data)
+            yield data
 
 def get_dataset(request):
     """
