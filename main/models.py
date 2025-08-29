@@ -925,12 +925,13 @@ class Site(models.Model):
             "Site Id": self.coredb_id,
             "Site Country": self.country,
             "Site Coordinates": f"{self.coordinates[0]},{self.coordinates[1]}",
+            "Site Type":self.type
         }
         return data
 
     @classmethod
     def table_columns(self):
-        return ["Site Name", "Site Id", "Site Country", "Site Coordinates"]
+        return ["Site Name", "Site Id", "Site Country", "Site Coordinates","Site Type"]
 
     @classmethod
     def squash_data(self, queryset):
