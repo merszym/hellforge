@@ -12,7 +12,9 @@ from main.models import (
     FaunalResults,
     Reference,
     SampleBatch,
-    Gallery
+    Gallery,
+    ColourName,
+    ColourMunsell
 )
 from main.tools import dating
 import json
@@ -189,6 +191,18 @@ def update_order(sender, instance, **kwargs):
 
 @receiver(pre_save, sender=Layer)
 def update_colour(sender, instance, **kwargs):
+    if instance.colour_munsell and not instance.colour:
+        colour_link = instance.colour_munsell.colour_name.filter(is_default=True)
+        if colour_link.exists():
+            instance.colour = colour_link.first()
+        else:
+            instance.colour = instance.colour_munsell.colour_name.first()
+    elif instance.colour and not instance.colour_munsell:
+        munsell_link = instance.colour.munsell_value.filter(is_default=True)
+        if munsell_link.exists():
+            instance.colour_munsell = munsell_link.first()
+        else:
+            instance.colour_munsell = instance.colour.munsell_value.first()
     # unset the hex-colour
     if instance.colour_munsell == "" or not instance.colour_munsell:
         instance.colour_hex = None
