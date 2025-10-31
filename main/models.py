@@ -1,7 +1,7 @@
 import json
 from django.db import models
 from django.urls import reverse
-from django.db.models import Q
+from django.db.models import Q, CASCADE
 from django.core.validators import RegexValidator
 from django.contrib.contenttypes.fields import GenericForeignKey  # for the description
 from django.contrib.contenttypes.models import ContentType  # for the description
@@ -1083,6 +1083,21 @@ texture_choices = {x:x for x in [
     'Silt'
 ]}
 
+class ColourName(models.Model):
+    name = models.CharField(max_length=64)
+    is_default = models.BooleanField(default=False)
+
+class ColourMunsell(models.Model):
+    colour_munsell = models.CharField(max_length=32)
+    colour_name = models.ManyToManyField(ColourName, related_name="munsell_value")
+    is_default = models.BooleanField(default=False)
+
+class TextureCategory(models.Model):
+    category = models.CharField(max_length=32)
+
+class TextureKeyword(models.Model):
+    texture = models.CharField(max_length=64)
+    texture_category = models.ForeignKey(TextureCategory, on_delete=models.CASCADE, related_name="texture_category")
 
 class Layer(Dateable):
     name = models.CharField("name", max_length=200)
@@ -1130,21 +1145,24 @@ class Layer(Dateable):
         null=True,
     )
     # fields related to geological sediment properties
-    colour = models.CharField("colour",max_length=200, blank=True, null=True) # this is the "informal" name
-    colour_munsell = models.CharField(
-        "colour_munsell", 
-        max_length=200, 
-        validators=[
-            RegexValidator(
-                regex=r'^[0-9]+(\.[0-9]+)?[A-Z]+\s+[1-9](\.[0-9]+)?/[0-9]+(\.[0-9]+)?$',
-                message="Enter a valid Munsell Number in the format 8.75YR 4.5/3",
-                code="invalid_registration",
-            ),
-        ],
-        blank=True, 
-        null=True) # The Munsell Color Code
-    colour_hex = models.CharField("colour_rgb", max_length=200, blank=True, null=True) # The hex value calculated from Munsell
+    #colour = models.CharField("colour",max_length=200, blank=True, null=True) # this is the "informal" name
+    #colour_munsell = models.CharField(
+    #    "colour_munsell",
+    #    max_length=200,
+    #    validators=[
+    #        RegexValidator(
+    #            regex=r'^[0-9]+(\.[0-9]+)?[A-Z]+\s+[1-9](\.[0-9]+)?/[0-9]+(\.[0-9]+)?$',
+    #            message="Enter a valid Munsell Number in the format 8.75YR 4.5/3",
+    #            code="invalid_registration",
+    #        ),
+    #    ],
+    #    blank=True,
+    #    null=True) # The Munsell Color Code
+    colour = models.ForeignKey(ColourName, blank=True, null=True, on_delete=models.SET_NULL, related_name="colour")
+    colour_munsell = models.ForeignKey(ColourMunsell, blank=True, null=True, on_delete=models.SET_NULL, related_name="munsell")
+    #colour_hex = models.CharField("colour_rgb", max_length=200, blank=True, null=True) # The hex value calculated from Munsell
     texture = models.CharField("texture", max_length=200, blank=True, null=True, choices=texture_choices)
+    texture_keyword = models.ForeignKey(TextureKeyword, blank=True, null=True, on_delete=models.SET_NULL, related_name="texture")
 
     #
     ## References
@@ -1774,6 +1792,13 @@ class HumanDiagnosticPositions(models.Model):
             data.pop(k, None)
         new_data = {(f"MM_{k}" if k in duplicates else k):v for k,v in data.items() } # preserve column names in data
         return new_data
+
+#
+#
+# Classes for Colour and Texture Databases
+#
+#
+
 
 
 models = {
