@@ -264,6 +264,13 @@ style="width: 80%;"
                 <i class="icon icon-download"></i>
             </a>
         </button>
+        {% if request.user.is_authenticated %}
+        <button class="btn tooltip tooltip-right" data-tooltip="Download for Upload">
+            <a target="_blank" href="{% url 'main_analyzedsample_downloadselection' site.pk %}?for_upload">
+                <i class="icon icon-download"></i>
+            </a>
+        </button>
+        {% endif %}
     </div>
     <div class="col col-mx-auto">
         <ul class="pagination">

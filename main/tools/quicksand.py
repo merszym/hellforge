@@ -209,7 +209,7 @@ def prepare_data(
     }
 
 
-def get_data_for_export(data, quickv, project=None):
+def get_data_for_export(data, quickv, project=None, **kwargs):
     #project gets handled via the **kwargs arguments in the generic export
     if project:
         params = json.loads(project.parameters) if project.parameters else \

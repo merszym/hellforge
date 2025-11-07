@@ -165,6 +165,8 @@ def get_libraries(request, pk, unset=True, return_query=False):
 def download_selection(request, pk):
     qs = get_libraries(request, pk, unset=False, return_query=True)
     site = Site.objects.get(pk=pk)
+
+    for_upload = 'for_upload' in request.GET.keys()
     
     from main.tools.generic import get_dataset_df, download_csv
     from main.tools.projects import get_project
@@ -172,7 +174,7 @@ def download_selection(request, pk):
     project = get_project(request)
 
     #i need to give the project, because quicksand filter-params are saved in the project
-    data = get_dataset_df(qs, site, project=project)
+    data = get_dataset_df(qs, site, project=project, for_upload=for_upload)
     return download_csv(data, name=f"{site}_analyzedsample_selection.csv")
 
 

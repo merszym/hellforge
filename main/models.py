@@ -1471,12 +1471,27 @@ class AnalyzedSample(models.Model):
     def __str__(self):
         return f"{self.library}_{self.seqrun}"
 
-    def get_data(self, **kwargs):
+    def get_data(self, for_upload=False, **kwargs):
         # for an entry, return a dict {'col': data} that is used for the export of the data
-        try:
-            data = self.sample.get_data()
-        except: #negative controls, add the headers for the previous hierarchies
-            data={x:'' for x in Sample.objects.first().get_data().keys()}
+        # if only for re-upload, include less information and the 'object' column
+        if for_upload: # include object and pk and ommit additional fields
+            try:
+                data = {
+                    'object':f"analyzedsample_{self.pk}",
+                    'Sample Name':self.sample.name
+                }
+            except: #negative control
+                data = {
+                    'object':f"analyzedsample_{self.pk}",
+                    'Sample Name':""
+                }
+        else: #include the full record
+            try:
+                data = self.sample.get_data()
+            except: 
+                #negative controls -> add the headers for the previous hierarchies
+                data={x:'' for x in Sample.objects.first().get_data().keys()}
+        # in each case, add object-level information
         data.update({
             "Lysate": self.lysate,
             "ENC Batch": self.enc_batch,
@@ -1492,22 +1507,23 @@ class AnalyzedSample(models.Model):
             "Tag": self.tags,
             "QC": "Pass" if self.qc_pass else "Fail",
         })
-        if self.quicksand_analysis.last():
-            data.update(
-                self.quicksand_analysis.last().get_data(**kwargs, grouped=True)
-            )
-        else:
-            data.update(
-                {x:"" for x in QuicksandAnalysis.table_columns()}
-            )
-        if self.matthias_analysis.last():
-            data.update(
-                self.matthias_analysis.last().get_data()
-            )
-        else:
-            data.update(
-                {x:"" for x in HumanDiagnosticPositions.table_columns()}
-            )
+        if not for_upload:
+            if self.quicksand_analysis.last():
+                data.update(
+                    self.quicksand_analysis.last().get_data(**kwargs, grouped=True)
+                )
+            else:
+                data.update(
+                    {x:"" for x in QuicksandAnalysis.table_columns()}
+                )
+            if self.matthias_analysis.last():
+                data.update(
+                    self.matthias_analysis.last().get_data()
+                )
+            else:
+                data.update(
+                    {x:"" for x in HumanDiagnosticPositions.table_columns()}
+                )
         return data
 
     @classmethod
