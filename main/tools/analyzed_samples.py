@@ -7,7 +7,7 @@ from django.shortcuts import render
 import main.tools as tools
 from django.db.models import Q
 import pandas as pd
-import json
+import json, io
 from django.contrib.auth.decorators import (
     login_required,
 )  # this is for now, make smarter later
@@ -235,6 +235,7 @@ def handle_library_file(request, file):
 
     # filter for expected/unexpected columns
     expected = AnalyzedSample.table_columns()
+    expected.append('object')
     issues = []
     if dropped := [x for x in df.columns if x not in expected]:
         issues.append(f"Dropped Table Columns: {','.join(dropped)}")
@@ -269,7 +270,7 @@ def handle_library_file(request, file):
 
 
 def save_verified(request):
-    df = pd.read_json(request.POST.get("batch-data"))
+    df = pd.read_json(io.StringIO(request.POST.get("batch-data")))
     df.convert_dtypes()
 
     project = Project.objects.get(namespace=request.session["session_project"])
@@ -286,24 +287,26 @@ def save_verified(request):
             sample = None
         else:
             sample = Sample.objects.get(name=row["Sample Name"])
-        # try if the library already exists
-        object, created = AnalyzedSample.objects.get_or_create(
-            library=row["Library"],
-            seqrun=row["Sequencing Run"],
-            lane=row["Sequencing Lane"],
-        )
+        # update the instance if 'object' is provided
+        if 'object' in row and row['object']:
+            object = tools.generic.get_instance_from_string(row['object'])
+        # or create a new object
+        else:
+            object = AnalyzedSample()
         # set or update
         object.sample = sample
         object.lysate = value_or_none(row["Lysate"])
-        object.capture = value_or_none(row["Capture"])
-        object.probes = value_or_none(row["Capture Probe"])
         object.enc_batch = value_or_none(row["ENC Batch"])
+        object.library = row["Library"]
         object.lnc_batch = value_or_none(row["LNC Batch"])
         object.molecules_qpcr = value_or_none(row["Molecules (qPCR)"])
         object.efficiency = value_or_none(row["Efficiency"])
-        object.tags = value_or_none(row["Tag"])
+        object.capture = value_or_none(row["Capture"])
+        object.probes = value_or_none(row["Capture Probe"])      
         object.seqpool = value_or_none(row["Sequencing Pool"])
-        object.lane = value_or_none(row["Sequencing Lane"])        
+        object.seqrun = value_or_none(row['Sequencing Run'])
+        object.lane = value_or_none(row["Sequencing Lane"])  
+        object.tags = value_or_none(row["Tag"])      
         object.save()
     
     return get_libraries(request, site.pk)
