@@ -112,6 +112,7 @@ style="width: 80%;"
             <th>Lysate</th>
             <th>ENC Batch</th>
             <th>Library</th>
+            <th>Reamp Library</th>
             <th>qPCR</th>
             <th nowrap>Efficiency (%)</th>
             <th nowrap>LNC Batch</th>
@@ -177,6 +178,7 @@ style="width: 80%;"
             <td>{{object.lysate|default:""}}</td>
             <td nowrap>{{object.enc_batch|default:""}}</td>
             <td>{{object.library}}</td>
+            <td>{{object.reamp_library|default:""}}</td>
             <td>{{object.molecules_qpcr|stringformat:".2e"}}</td>
             <td>{{object.efficiency|stringformat:".2f"}}</td>
             <td nowrap>{{object.lnc_batch|default:""}}</td>

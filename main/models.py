@@ -1447,6 +1447,7 @@ class AnalyzedSample(models.Model):
     lysate = models.CharField("Lysate Id", max_length=200, blank=True, null=True)
     enc_batch = models.CharField("ENC Batch", max_length=200, blank=True, null=True)
     library = models.CharField("library", max_length=200, blank=True, null=True)
+    reamp_library = models.CharField("library", max_length=200, blank=True, null=True)
     molecules_qpcr = models.IntegerField("qPCR molecules", blank=True, null=True)
     efficiency = models.FloatField("Library Prep Efficiency", blank=True, null=True)
     lnc_batch = models.CharField("LNC Batch", max_length=200, blank=True, null=True)
@@ -1496,6 +1497,7 @@ class AnalyzedSample(models.Model):
             "Lysate": self.lysate,
             "ENC Batch": self.enc_batch,
             "Library": self.library,
+            "Reamp Library": self.reamp_library,
             "Molecules (qPCR)": self.molecules_qpcr,
             "Efficiency": self.efficiency,
             "LNC Batch": self.lnc_batch,
@@ -1533,6 +1535,7 @@ class AnalyzedSample(models.Model):
             "Lysate",
             "ENC Batch",
             "Library",
+            "Reamp Library",
             "LNC Batch",
             "Molecules (qPCR)",
             "Efficiency",

@@ -298,6 +298,7 @@ def save_verified(request):
         object.lysate = value_or_none(row["Lysate"])
         object.enc_batch = value_or_none(row["ENC Batch"])
         object.library = row["Library"]
+        object.reamp_library = value_or_none(row["Reamp Library"])
         object.lnc_batch = value_or_none(row["LNC Batch"])
         object.molecules_qpcr = value_or_none(row["Molecules (qPCR)"])
         object.efficiency = value_or_none(row["Efficiency"])
