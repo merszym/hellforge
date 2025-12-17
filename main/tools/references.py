@@ -70,6 +70,8 @@ def doi2bib(doi, pk):
     if doi.startswith("10"): 
         content = requests.get(f"https://www.doi.org/{doi}", headers={"Accept":"application/x-bibtex"}).content.decode('UTF-8')
         # replace the tag with the pk, so that it is always unique!
+        if bool(re.search("Not Found", content)):
+            return "{"+f"reference_{pk}, DOI NOT FOUND"+"}"
         return bibtex_replace_key(content, pk)
         
 
