@@ -33,8 +33,8 @@ def update_dates(sender, instance, **kwargs):
 # Get BibTex from DOI and render the HTML citation
 @receiver(post_save, sender=Reference)
 def get_bibtex_and_render_citation(sender, instance, **kwargs):
+    from main.tools.references import doi2bib, bibtex_replace_key, render_single_citation
     if instance.doi.startswith("10") and not instance.bibtex:
-        from main.tools.references import doi2bib, render_single_citation
         bibtex = doi2bib(instance.doi, instance.pk)
         html, short = render_single_citation(bibtex)
         instance.bibtex = bibtex
@@ -42,10 +42,14 @@ def get_bibtex_and_render_citation(sender, instance, **kwargs):
         instance.parsedInline = short
         instance.save()
     if instance.bibtex and not re.search(r"\{(reference_[0-9]+)",instance.bibtex):
-        from main.tools.references import bibtex_replace_key, render_single_citation
         bibtex = bibtex_replace_key(instance.bibtex, instance.pk)
         instance.bibtex = bibtex
         html, short = render_single_citation(bibtex)
+        instance.parsedHTML = html
+        instance.parsedInline = short
+        instance.save()
+    if instance.bibtex and not instance.parsedHTML:
+        html, short = render_single_citation(instance.bibtex)
         instance.parsedHTML = html
         instance.parsedInline = short
         instance.save()

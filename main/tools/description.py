@@ -222,10 +222,20 @@ def render_description(request, pk, tostring=False):
 
     origin = request.GET.get("origin", None)
     description = Description.objects.get(pk=int(pk))
-    # get all the references with bibtex 
-    references = description.ref.filter(bibtex__isnull=False).exclude(bibtex__exact="")
-    remaining_references = description.ref.exclude(id__in=references.values_list('id', flat=True))
-    reference_items, short_dict = write_bibliography(references)
+    # get all references
+    references = description.ref.all()
+    # get all the references with bibtex or already parsed HTML
+    parsed_references = references.filter(parsedHTML__isnull=False)
+    bibtex_references = references.filter(bibtex__isnull=False).exclude(bibtex__exact="").filter(parsedHTML__exact="")
+    remaining_references = references.exclude(id__in=parsed_references.values_list('id', flat=True)).exclude(id__in=bibtex_references.values_list('id', flat=True))
+    reference_items, short_dict = write_bibliography(bibtex_references)
+
+    #update the short_dict with the inlineParse
+    short_dict.update({
+        ref.pk:ref.parsedInline for ref in bibtex_references
+    })
+    reference_items.extend([x.parsedHTML for x in parsed_references])
+    reference_items.sort()
 
     #Render the html in backend instead of frontend, required for pdf-export
     try:

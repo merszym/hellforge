@@ -12,6 +12,11 @@
 {% csrf_token %}
     {{form}}
     <br>
+    {% if form.parsedHTML.value %}
+    <h5> Double Check Section </h5>
+    {{form.parsedHTML.value|safe}}
+    <br><br>
+    {% endif %}
     <button class="btn btn-primary">Send</button>
     <a href="{% url 'ref_add' %}" class="btn">New</a>
 </form>

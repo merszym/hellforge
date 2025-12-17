@@ -36,8 +36,19 @@ def render_single_citation(bibtex):
         cit = Citation([CitationItem(set(bib_source.keys()).pop())])
         bibliography.register(cit)
         short = bibliography.cite(cit, print(""))
+        short = short.replace("(","").replace(")","")
 
-        return str(bibliography.bibliography()[0]), short
+        html = str(bibliography.bibliography()[0])
+        # enclose URL in <a> tags
+        url_pattern = r'(https?://[^\s<]+)(?=\.)'
+
+        result = re.sub(
+            url_pattern,
+            r'<a href="\1" target="_blank">\1</a>',
+            html
+        )
+
+        return result, short
     except KeyError:
         return "Invalid DOI/BIBTEX", "Invalid"
 
