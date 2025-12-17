@@ -70,8 +70,10 @@ def get_queryset(start, unique, authenticated=False, project=None):
         if unique == 'author':
             # a person can appear multiple times if author on several sites
             # so return distinct
+            # A description can be linked to a site that _was_ in a project once, so filter for descriptions of sites that are in the project
+            # instead of description-project link directly
             qs = models['person'].objects.filter(
-                Q(author__description__project=start) |
+                Q(author__description__site__project=start) |
                 Q(author__description__project_project=start)
             ).distinct()
             return qs
