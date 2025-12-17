@@ -309,6 +309,8 @@ class Reference(models.Model):
     tags = models.TextField("tags", blank=True)
     doi = models.CharField("doi", max_length=500)
     bibtex = models.TextField("bibtex", blank=True)
+    parsedInline = models.CharField("parsedInline", max_length=500, blank=True, null=True)
+    parsedHTML = models.TextField("parsedHTML", blank=True)
 
     class Meta:
         ordering = ["short"]

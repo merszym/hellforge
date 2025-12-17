@@ -30,19 +30,25 @@ def update_dates(sender, instance, **kwargs):
         dating.recalculate_mean(instance)
 
 
-# Get BibTex from DOI
+# Get BibTex from DOI and render the HTML citation
 @receiver(post_save, sender=Reference)
-def get_bibtex(sender, instance, **kwargs):
+def get_bibtex_and_render_citation(sender, instance, **kwargs):
     if instance.doi.startswith("10") and not instance.bibtex:
-        from main.tools.references import doi2bib
+        from main.tools.references import doi2bib, render_single_citation
         bibtex = doi2bib(instance.doi, instance.pk)
+        html, short = render_single_citation(bibtex)
         instance.bibtex = bibtex
+        instance.parsedHTML = html
+        instance.parsedInline = short
         instance.save()
     if instance.bibtex and not re.search(r"\{(reference_[0-9]+)",instance.bibtex):
-        from main.tools.references import bibtex_replace_key
-        instance.bibtex = bibtex_replace_key(instance.bibtex, instance.pk)
+        from main.tools.references import bibtex_replace_key, render_single_citation
+        bibtex = bibtex_replace_key(instance.bibtex, instance.pk)
+        instance.bibtex = bibtex
+        html, short = render_single_citation(bibtex)
+        instance.parsedHTML = html
+        instance.parsedInline = short
         instance.save()
-
 
 
 # Date validation

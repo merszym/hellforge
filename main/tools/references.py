@@ -12,20 +12,39 @@ from django.views.generic import CreateView, ListView, UpdateView
 from django.contrib.auth.mixins import (
     LoginRequiredMixin,
 )  # this is for now, make smarter later
+# this function needs citeproc and citeproc_styles
+from io import StringIO
+from citeproc.source.bibtex import BibTeX
+
+# Import the citeproc-py classes we'll use below.
+from citeproc import CitationStylesStyle, CitationStylesBibliography
+from citeproc import formatter
+from citeproc import Citation, CitationItem
+from citeproc_styles import get_style_filepath
+
+
+def render_single_citation(bibtex):
+    # assume, that the reference contains a bibtex field...
+    bib_source = BibTeX(StringIO(bibtex))
+    
+    #get style
+    style_path = get_style_filepath('chicago-author-date')#("apa")
+    bib_style = CitationStylesStyle(style_path)
+    bibliography = CitationStylesBibliography(bib_style, bib_source, formatter.html)
+    
+    try:
+        cit = Citation([CitationItem(set(bib_source.keys()).pop())])
+        bibliography.register(cit)
+        short = bibliography.cite(cit, print(""))
+
+        return str(bibliography.bibliography()[0]), short
+    except KeyError:
+        return "Invalid DOI/BIBTEX", "Invalid"
 
 
 def write_bibliography(references):
     if len(references) == 0:
         return [],{}
-    # this function needs citeproc and citeproc_styles
-    from io import StringIO
-    from citeproc.source.bibtex import BibTeX
-
-    # Import the citeproc-py classes we'll use below.
-    from citeproc import CitationStylesStyle, CitationStylesBibliography
-    from citeproc import formatter
-    from citeproc import Citation, CitationItem
-    from citeproc_styles import get_style_filepath
 
     # I assume, that the references are all containing a bibtex field...
     bibs = "\n".join(x.bibtex for x in references)
