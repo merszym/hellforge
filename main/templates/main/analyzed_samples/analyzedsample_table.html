@@ -122,6 +122,7 @@ style="width: 80%;"
             <th>Lane</th>
             <th>Pool</th>
             <th>Tag</th>
+            <th>ENA Accession ID</th>
             <th>quicksand</th>
             <th>lineage-test</th>
             {% if request.user.is_authenticated %}
@@ -202,6 +203,7 @@ style="width: 80%;"
                 style="cursor: pointer;"
                 {% endif %}
             >{{object.tags|default:''}}</td>
+            <td>{{object.ena_accession|default:''}}</td>
             <td>
                 <div style="display: flex; gap:1px;">
                     <span>{{object.quicksand_analysis.first.version|default:''}}</span>

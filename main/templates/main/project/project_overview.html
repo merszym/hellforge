@@ -8,6 +8,9 @@
             {% endfor %}
         </tbody>
     </table>
+    {% if object.ena_accession %}
+    <span>ENA Accession Id: {{object.ena_accession}}</span>
+    {% endif %}
 </div>
 {% endif %}
 <div style="height: 480px;margin-top: 20px;" id="map"></div>

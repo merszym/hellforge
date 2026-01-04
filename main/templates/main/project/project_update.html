@@ -35,8 +35,13 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="project-year_of_publication">Publication Year</label>
-                            <input class="form-input" type="text" id="project-year_of_publication" name="year_of_publication" placeholder="Project password"
+                            <input class="form-input" type="text" id="project-year_of_publication" name="year_of_publication" placeholder="2022"
                             value="{{form.year_of_publication.value}}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="ena_accession">ENA Accession Id</label>
+                            <input class="form-input" type="text" id="ena_accession" name="ena_accession" placeholder="ENA ACCESSION"
+                            value="{{form.ena_accession.value|default:''}}">
                         </div>
                         <h6>Edit Reference</h6>
                             {% include 'main/reference/reference-chip-display.html' %}

@@ -47,6 +47,7 @@ class Project(models.Model):
         "Reference", verbose_name="reference", blank=True, related_name="project"
     )
     parameters = models.JSONField("parameters", blank=True, null=True)
+    ena_accession = models.CharField("ENA Accession Id", max_length=200, blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -1466,6 +1467,7 @@ class AnalyzedSample(models.Model):
     )  # this is the pool-report
     tags = models.CharField("tags", blank=True, null=True, max_length=100)
     qc_pass = models.BooleanField("qc_pass", default=True)
+    ena_accession = models.CharField("ENA Accession Id", max_length=200, blank=True, null=True)
 
     class Meta:
         unique_together = [["library", "seqrun", "lane"]]
@@ -1510,6 +1512,7 @@ class AnalyzedSample(models.Model):
             "Sequencing Pool": self.seqpool,
             "Tag": self.tags,
             "QC": "Pass" if self.qc_pass else "Fail",
+            "ENA Accession Id": self.ena_accession
         })
         if not for_upload:
             if self.quicksand_analysis.last():
@@ -1548,6 +1551,7 @@ class AnalyzedSample(models.Model):
             "Sequencing Pool",
             "Tag",
             "QC",
+            "ENA Accession Id"
         ]
 
     @property
