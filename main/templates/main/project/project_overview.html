@@ -1,15 +1,16 @@
 {% if object.ref.first %}
 <div class="m-2">
     <h5>Project Publication</h5>
-    <table class="table table-striped my-2">
-        <tbody id="description-reference-tbody" style="border-top: 1px solid lightgrey;">
-            {% for ref in object.ref.all %}
-            {% include 'main/reference/reference-tablerow.html' with display=True %}
-            {% endfor %}
-        </tbody>
-    </table>
+    <p>
+    {% for ref in object.ref.all %}
+        {{ ref.parsedHTML|safe }}
+    {% endfor %}
+    </p>
     {% if object.ena_accession %}
-    <span>ENA Accession Id: {{object.ena_accession}}</span>
+    <h5>European Nucleotide Archive (ENA)</h5>
+    <p>
+    The sequencing data generated for this project are deposited in the ENA under accession number <a target="_blank" href="https://www.ebi.ac.uk/ena/browser/view/{{object.ena_accession}}">{{object.ena_accession}}</a>
+    </p>
     {% endif %}
 </div>
 {% endif %}
