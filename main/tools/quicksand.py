@@ -57,9 +57,15 @@ def handle_quicksand_report(request, file):
     for library, report in df.groupby("RG"):
         try:
             if library.startswith("Lib"):
-                analyzed_sample = AnalyzedSample.objects.get(
-                    library=library, seqrun=runid, seqpool=seqpool
-                )
+                try:
+                    analyzed_sample = AnalyzedSample.objects.get(
+                        library=library, seqrun=runid, seqpool=seqpool
+                    )
+                # could be a reamp library
+                except AnalyzedSample.DoesNotExist:
+                    analyzed_sample = AnalyzedSample.objects.get(
+                        reamp_library=library, seqrun=runid, seqpool=seqpool
+                    )
             elif library.startswith("Cap"):
                 analyzed_sample = AnalyzedSample.objects.get(
                     capture=library, seqrun=runid, seqpool=seqpool

@@ -307,8 +307,11 @@ def save_verified(request):
         object.seqpool = value_or_none(row["Sequencing Pool"])
         object.seqrun = value_or_none(row['Sequencing Run'])
         object.lane = value_or_none(row["Sequencing Lane"])  
-        object.tags = value_or_none(row["Tag"])      
-        object.save()
+        object.tags = value_or_none(row["Tag"])
+        try:      
+            object.save()
+        except: #unique contraint error
+            print(object)
     
     return get_libraries(request, site.pk)
 

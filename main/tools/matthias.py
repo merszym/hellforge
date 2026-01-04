@@ -62,9 +62,14 @@ def handle_file_upload(request, file):
                     capture=data["CapLibIDCoreDB"], seqrun=runid, seqpool=seqpool
                 )
             elif data["IndexLibIDCoreDB"]:
-                analyzed_sample = AnalyzedSample.objects.get(
-                    library=data["IndexLibIDCoreDB"], seqrun=runid, seqpool=seqpool
-                )
+                try:
+                    analyzed_sample = AnalyzedSample.objects.get(
+                        library=data["IndexLibIDCoreDB"], seqrun=runid, seqpool=seqpool
+                    )
+                except AnalyzedSample.DoesNotExist:
+                    analyzed_sample = AnalyzedSample.objects.get(
+                        reamp_library=data["IndexLibIDCoreDB"], seqrun=runid, seqpool=seqpool
+                    )
             else:
                 raise TypeError
             # prepare the data for saving
