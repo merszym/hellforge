@@ -70,6 +70,10 @@ def handle_quicksand_report(request, file):
                 analyzed_sample = AnalyzedSample.objects.get(
                     capture=library, seqrun=runid, seqpool=seqpool
                 )
+            elif library.startswith("ERR"): # published data: ENA ID
+                analyzed_sample = AnalyzedSample.objects.get(
+                    capture=library, seqrun=runid, seqpool=seqpool
+                )
             else:
                 raise TypeError
             # prepare the data for saving
