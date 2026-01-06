@@ -8,22 +8,21 @@
 {% block body %}
 <div class='columns'>
     <div class="column col-5">
-        <h3>Projects</h3>
+        <h3>Published Projects</h3>
         {% for project in public_projects %}
-        <div class="card my-2">
-            <div class="card-header">
-                <h5>{{project.year_of_publication}}</h5>
-                <div class="card-title">{{project.name}}</div>
-                {% if project.ref.first %}
-                <div class="card-subtitle text-gray">{{project.ref.first.short}}</div>
-                {% endif %}
-            </div>
-            <div class="card-footer">
+        <div class="tile tile-centered my-2">
+            <div class="tile-icon">
                 <a href="{% url 'main_project_checkout' project.namespace %}">
-                    <button class="btn btn-primary">Go</button>
-                </a>
+                    <span class="btn btn-primary">{{project.year_of_publication}}</span>
+                </a>      
             </div>
+        <div class="tile-content">
+            <div class="tile-title" style="white-space: wrap;">{{project.name}}</div>
+            {% if project.ref.first %}
+            <small class="tile-subtitle text-gray">{{project.ref.first.parsedInline}}</small>
+            {% endif %}
         </div>
+    </div>
         {% empty %}
 
         <div class="empty">
