@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import (
     login_required,
 )  # this is for now, make smarter later
 from datetime import datetime
-import json, re
+import json, re, hashlib
 import pandas as pd
 import numpy as np
 import csv
@@ -107,6 +107,25 @@ def get_dataset(request):
         project = Project.objects.get(namespace=namespace)
     else:
         project = None
+    
+    #if people want to download the whole project, make sure that they are allowed to access it
+    if start.model == 'project':
+        # first option: authenticated
+        if request.user.is_authenticated:
+            pass
+        # second: project is published
+        elif start.published:
+            pass
+        # third: from within the project
+        elif start == project:
+            pass
+        # third: password is provided
+        elif provided := request.GET.get("pw", False):
+            if hashlib.md5(start.password.encode()).hexdigest() == provided:
+                pass
+        else:
+            from django.http import HttpResponseForbidden
+            return HttpResponseForbidden()
 
     qs = get_queryset(start, unique, authenticated=request.user.is_authenticated, project=project)
 
