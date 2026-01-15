@@ -930,7 +930,10 @@ class Site(models.Model):
             "Site Id": self.coredb_id,
             "Site Country": self.country,
             "Site Coordinates": f"{self.coordinates[0]},{self.coordinates[1]}",
-            "Site Type":self.type
+            "Site Type":self.type,
+            "Site Elevation": self.elevation,
+            "Site Annual Mean Temperature": self.annual_mean_temp,
+            "Site Annual Precipitation Sum": self.annual_precipitation_sum
         }
         return data
 
