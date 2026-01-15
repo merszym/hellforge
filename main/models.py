@@ -864,6 +864,8 @@ class Site(models.Model):
     type = models.CharField("type", max_length=200, blank=True)
     loc = models.ManyToManyField(Location, verbose_name="location")
     elevation = models.IntegerField("elevation", blank=True, null=True)
+    annual_mean_temp = models.FloatField('annual_mean_temp', blank=True, null=True)
+    annual_precipitation_sum = models.FloatField('annual_precipitation_sum', blank=True, null=True)
     description = GenericRelation(Description, related_query_name="site")
     project = models.ManyToManyField("Project", related_name="site", blank=True)
     connections = models.ManyToManyField("Connection", related_name="site", blank=True)

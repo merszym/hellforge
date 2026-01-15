@@ -82,6 +82,18 @@
                             <input class="form-input" type="number" id="site-elevation" name="elevation" placeholder="Site elevation"
                             value="{{form.elevation.value}}">
                         </div>
+                        <div class="form-group">
+                            <label class="form-label" for="annual_mean_temp">Annual Mean Temperature (°C)</label>
+                            <input class="form-input" type="decimal" id="annual_mean_temp" name="annual_mean_temp" placeholder="Site Annual Mean Temperature"
+                            value="{{form.annual_mean_temp.value|default:''}}">
+                            <span class="form-input-hint">Use <a href="https://climatecharts.net" target="_blank">https://climatecharts.net</a> to get the values (CRU Time Series v4.07)</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="annual_precipitation_sum">Annual Precipitation Sum (mm)</label>
+                            <input class="form-input" type="decimal" id="annual_precipitation_sum" name="annual_precipitation_sum" placeholder="Site Annual Mean Temperature"
+                            value="{{form.annual_precipitation_sum.value|default:''}}">
+                            <span class="form-input-hint">Use <a href="https://climatecharts.net" target="_blank">https://climatecharts.net</a> to get the values (CRU Time Series v4.07)</span>
+                        </div>
                         <br>
                         <button class='btn btn-primary' type="submit">Save Site</button>
                 </div>
