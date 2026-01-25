@@ -91,7 +91,8 @@ class SiteForm(forms.ModelForm):
             "lat",
             "long",
             "annual_mean_temp",
-            "annual_precipitation_sum"
+            "annual_precipitation_sum",
+            "climate_class"
         ]
 
     def __init__(self, *args, **kwargs):

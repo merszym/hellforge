@@ -866,6 +866,7 @@ class Site(models.Model):
     elevation = models.IntegerField("elevation", blank=True, null=True)
     annual_mean_temp = models.FloatField('annual_mean_temp', blank=True, null=True)
     annual_precipitation_sum = models.FloatField('annual_precipitation_sum', blank=True, null=True)
+    climate_class = models.CharField("climate_class", max_length=200, blank=True)
     description = GenericRelation(Description, related_query_name="site")
     project = models.ManyToManyField("Project", related_name="site", blank=True)
     connections = models.ManyToManyField("Connection", related_name="site", blank=True)
@@ -933,7 +934,8 @@ class Site(models.Model):
             "Site Type":self.type,
             "Site Elevation": self.elevation,
             "Site Annual Mean Temperature": self.annual_mean_temp,
-            "Site Annual Precipitation Sum": self.annual_precipitation_sum
+            "Site Annual Precipitation Sum": self.annual_precipitation_sum,
+            "Site Climate Class": self.climate_class
         }
         return data
 
