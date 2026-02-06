@@ -1,5 +1,5 @@
 {% load format %}
-<h3>DNA Libraries</h3>
+<h3>DNA Libraries: Runs / Experiments</h3>
 <small>Filter <strong>Libraries</strong> (Additional) </small>
 <form
 hx-post="{% url 'main_analyzedsample_getdata' site.pk %}"
@@ -326,7 +326,7 @@ style="width: 80%;"
 <div class="divider"></div>
 
 <section>
-    <h3>DNA Analysis Results</h3>
+    <h3>DNA Libraries: Analyses</h3>
     <div id="site_dna" 
         hx-get="{% url 'main_site_dna_tab' site.pk %}"
         hx-trigger="load once">
