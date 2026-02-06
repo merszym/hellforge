@@ -360,7 +360,8 @@ def get_site_sample_content(request):
     
     
     # If no project is selected, display the available public projects that contain the site
-    if get_project(request) == None:
+    project = get_project(request)
+    if project == None or object not in project.site.all():
         # get the projects
         projects = Project.objects.filter(Q(published=True)&Q(site=object))
         return render(request, "main/project/public_projects_snippet.html", {'public_projects':projects, 'site_view':True, 'object':object})
