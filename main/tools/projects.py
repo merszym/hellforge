@@ -53,8 +53,13 @@ def checkout_project(request, namespace):
             request.session["session_project"] = namespace
         # jump to a specific site
         if goto_site := request.GET.get("goto_site", False):
+            tab = request.GET.get('tab', None)
             site = Site.objects.get(pk=int(goto_site))
-            return redirect(site)
+            if tab:
+                url = f"{site.get_absolute_url()}?tab={tab}"
+                return redirect(url)
+            else:
+                return redirect(site)
     except:
         return redirect("main_project_list")
     return redirect(tmp)

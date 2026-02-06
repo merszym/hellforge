@@ -4,7 +4,7 @@
     <div class="tile tile-centered my-2">
         <div class="tile-icon">
             {% if site_view %}
-            <a href="{{request.scheme}}://{{request.get_host}}{% url 'main_project_checkout' project.namespace %}?goto_site={{object.pk}}" class="tooltip tooltip-right" data-tooltip="Select Project">
+            <a href="{{request.scheme}}://{{request.get_host}}{% url 'main_project_checkout' project.namespace %}?goto_site={{object.pk}}&tab=site_samples" class="tooltip tooltip-right" data-tooltip="Select Project">
                 <span class="btn btn-primary">{{project.year_of_publication}}</span>
             </a> 
             {% else %}

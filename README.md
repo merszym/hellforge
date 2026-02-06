@@ -1,6 +1,6 @@
 # Hellforge
 
-**Helpfully labeled layers (for geneticists)**
+**Helpfully Labeled Layers (for Geneticists)**
 
 A Webapp/Database for the collection of archaeological context information related to **ancient sedimentary DNA research** projects. The key unit for the database is the "Archaeological Layer"
 
