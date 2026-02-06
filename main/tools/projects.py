@@ -155,7 +155,7 @@ class ProjectDetailView(DetailView):
                 Q(sample__project=project) &
                 Q(project=project)
             )
-            controls = update_query_for_negatives(libs, project=project).filter(sample__isnull=True)
+            controls = update_query_for_negatives(libs, project=project, authenticated=False).filter(sample__isnull=True)
             analyzedsample_count += len(set(libs.values_list("sample", flat=True)))
 
             analyzedsample_dict[site.name]["libraries"] = len(libs)
@@ -170,7 +170,7 @@ class ProjectDetailView(DetailView):
                 Q(sample__project=project) &
                 Q(project=project)
             )
-        all_controls = update_query_for_negatives(all_libs, project=project).filter(sample__isnull=True)
+        all_controls = update_query_for_negatives(all_libs, project=project, authenticated=False).filter(sample__isnull=True)
 
         context["sample_dict"] = sample_dict
         context["analyzedsample_dict"] = analyzedsample_dict

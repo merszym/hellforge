@@ -50,7 +50,7 @@ def get_queryset(start, unique, authenticated=False, project=None):
             qs = models['analyzedsample'].objects.filter(sample__site=start)
             if not authenticated:
                 qs = qs.filter(project=project)
-            return update_query_for_negatives(qs)
+            return update_query_for_negatives(qs, authenticated=authenticated, project=project)
 
     # start from a project
     if start.model == 'project':
@@ -66,7 +66,7 @@ def get_queryset(start, unique, authenticated=False, project=None):
                 & Q(sample__project=start)
                 & Q(project=start)
             )
-            return update_query_for_negatives(qs, project=start)
+            return update_query_for_negatives(qs, project=start, authenticated=authenticated)
         if unique == 'author':
             # a person can appear multiple times if author on several sites
             # so return distinct
@@ -84,7 +84,7 @@ def get_queryset(start, unique, authenticated=False, project=None):
                 & Q(sample__project=start)
                 & Q(project=start)
             )
-            qs = update_query_for_negatives(qs, project=start)
+            qs = update_query_for_negatives(qs, project=start, authenticated=authenticated)
             # now get the quicksand tables!
             return QuicksandAnalysis.objects.filter(analyzedsample__in=qs)
             

@@ -74,6 +74,7 @@ def get_libraries(request, pk, unset=True, return_query=False):
     """
 
     object = Site.objects.get(pk=pk)
+    project = tools.projects.get_project(request)
 
     #first, do the whole shebang with the samples again!
     samples_qs = Sample.objects.filter(site=object, domain='mpi_eva') \
@@ -133,9 +134,9 @@ def get_libraries(request, pk, unset=True, return_query=False):
 
     try:
         if not request.session['filter_controls']:
-            query = update_query_for_negatives(query)
+            query = update_query_for_negatives(query, project=project, authenticated=request.user.is_authenticated)
     except KeyError:
-        query = update_query_for_negatives(query)
+        query = update_query_for_negatives(query, project=project, authenticated=request.user.is_authenticated)
 
     if return_query:
         return query
@@ -179,14 +180,14 @@ def download_selection(request, pk):
 
 
 
-def update_query_for_negatives(query, project=False):
+def update_query_for_negatives(query, project=False, authenticated=False):
     lnc_negatives = set(query.values_list("lnc_batch","probes"))
     all_plates = [x[0] for x in lnc_negatives]
     enc_negatives = set(query.values_list("enc_batch","probes"))
     lnc_ids = []
     enc_ids = []
 
-    if project:
+    if project and not authenticated:
         pre_select = AnalyzedSample.objects.filter(project=project)
     else:
         pre_select = AnalyzedSample.objects.all()
