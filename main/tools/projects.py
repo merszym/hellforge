@@ -18,7 +18,7 @@ from django.contrib.auth.mixins import (
 import hashlib
 from collections import defaultdict
 import pandas as pd
-import json
+import json, re
 from django.contrib.auth.decorators import (
     login_required,
 )
@@ -63,14 +63,22 @@ def checkout_project(request, namespace):
 def close_project(request):
     if "session_project" in request.session:
         del request.session["session_project"]
-    return redirect("main_project_list")
+    
+    referer = request.META.get("HTTP_REFERER")
+    try:
+        if bool(re.search("projects", referer)):
+            return redirect("main_project_list")
+        else: 
+            return redirect(referer) 
+    except TypeError: #no referrer
+        return reverse('main_project_list')
 
 
 def get_project_status_tile(request):
     return render(
         request,
         "main/project/project_status_tile.html",
-        {"project": get_project(request)},
+        {"project": get_project(request), "request":request},
     )
 
 

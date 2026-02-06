@@ -1,0 +1,33 @@
+<div class="column col-5 {% if site_view %} p-2 {% endif %}">
+    <h3>Available Projects</h3>
+    {% for project in public_projects %}
+    <div class="tile tile-centered my-2">
+        <div class="tile-icon">
+            {% if site_view %}
+            <a href="{{request.scheme}}://{{request.get_host}}{% url 'main_project_checkout' project.namespace %}?goto_site={{object.pk}}" class="tooltip tooltip-right" data-tooltip="Select Project">
+                <span class="btn btn-primary">{{project.year_of_publication}}</span>
+            </a> 
+            {% else %}
+            <a href="{% url 'main_project_checkout' project.namespace %}" class="tooltip tooltip-right" data-tooltip="Select Project">
+                <span class="btn btn-primary">{{project.year_of_publication}}</span>
+            </a>    
+            {% endif %}  
+        </div>
+        <div class="tile-content">
+            <div class="tile-title" style="white-space: wrap;">{{project.name}}</div>
+            {% if project.ref.first %}
+            <small class="tile-subtitle text-gray">{{project.ref.first.parsedInline}}</small>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+
+    <div class="empty">
+        <div class="empty-icon">
+        <i class="icon icon-flag"></i>
+        </div>
+        <p class="empty-title h5">No public projects</p>
+        <p class="empty-subtitle"></p>
+    </div>
+    {% endfor %}
+</div>

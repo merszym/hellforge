@@ -350,6 +350,22 @@ def get_site_sample_content(request):
     from main.tools.samplebatch import filter_samples, unset_sample_filters
     from main.tools.analyzed_samples import unset_library_filters
 
+    if request.method == 'POST':
+        try:
+            object = Site.objects.get(pk=int(request.POST.get("object")))
+        except:
+            object = get_instance_from_string(request.POST.get('object'))
+    else:
+        object = get_instance_from_string(request.GET.get("object"))
+    
+    
+    # If no project is selected, display the available public projects that contain the site
+    if get_project(request) == None:
+        # get the projects
+        projects = Project.objects.filter(Q(published=True)&Q(site=object))
+        return render(request, "main/project/public_projects_snippet.html", {'public_projects':projects, 'site_view':True, 'object':object})
+
+
     # unset the library- and sample-level filters
     # because if we reload the page or go to a different site, we dont want prefiltered data
 
@@ -377,13 +393,6 @@ def get_site_sample_content(request):
         request.session['filter_analyzed'] = True if analyzed else False
         request.session['filter_combine'] = True if combine else False
         
-        try:
-            object = Site.objects.get(pk=int(request.POST.get("object")))
-        except:
-            object = get_instance_from_string(request.POST.get('object'))
-            
-    else:
-        object = get_instance_from_string(request.GET.get("object"))
 
     # load the samples and batches
     # first create a batch for the samples that dont have one yet...

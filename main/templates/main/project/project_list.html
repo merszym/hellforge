@@ -7,34 +7,7 @@
 
 {% block body %}
 <div class='columns'>
-    <div class="column col-5">
-        <h3>Published Projects</h3>
-        {% for project in public_projects %}
-        <div class="tile tile-centered my-2">
-            <div class="tile-icon">
-                <a href="{% url 'main_project_checkout' project.namespace %}">
-                    <span class="btn btn-primary">{{project.year_of_publication}}</span>
-                </a>      
-            </div>
-        <div class="tile-content">
-            <div class="tile-title" style="white-space: wrap;">{{project.name}}</div>
-            {% if project.ref.first %}
-            <small class="tile-subtitle text-gray">{{project.ref.first.parsedInline}}</small>
-            {% endif %}
-        </div>
-    </div>
-        {% empty %}
-
-        <div class="empty">
-            <div class="empty-icon">
-            <i class="icon icon-flag"></i>
-            </div>
-            <p class="empty-title h5">No public projects</p>
-            <p class="empty-subtitle"></p>
-        </div>
-
-        {% endfor %}
-    </div>
+    {% include 'main/project/public_projects_snippet.html' %}
     <div class="column col-5">
         {% if request.user.is_authenticated %}
         <h3>Protected Projects</h3>

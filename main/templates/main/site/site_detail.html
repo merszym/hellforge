@@ -146,7 +146,7 @@
                 <li class="tab-item {% if tab == 'site_fauna' %} active {% endif %}" data-group="main">
                     <a style="cursor: pointer;" class="select-block-content" data-select="site_fauna"><h4>Mammalian Remains</h4></a>
                 </li>
-                {% if object.id in project_sites %}
+                {% if object.id in project_sites or object.id in published_sites %}
                 <li class="tab-item {% if tab == 'site_samples' %} active {% endif %}" data-group="main">
                     <a style="cursor: pointer;" class="select-block-content" data-select="site_samples"><h4>DNA Analyses</h4></a>
                 </li>
@@ -176,7 +176,7 @@
                 hx-trigger="load once">
                 <div class="loading loading-lg m-2"></div>
             </div>
-            {% if object.id in project_sites %}
+            {% if object.id in project_sites or object.id in published_sites %}
             <div class="block-content" id="site_samples" style="{% if tab != 'site_samples' %} display:none {% endif %}"
                 hx-get="{% url 'main_site_sample_tab' %}?{{request.GET|getstring}}"
                 hx-trigger="load once"

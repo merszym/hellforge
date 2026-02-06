@@ -20,6 +20,7 @@ class ProjectAwareDetailView(DetailView):
         project = get_project(self.request)
         context["project"] = project
         context["project_sites"] = list(project.site.values_list('pk', flat=True)) if project else []
+        context["published_sites"] = Project.objects.filter(published=True).values_list('site', flat=True)
         return context
 
 

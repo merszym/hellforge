@@ -1,6 +1,9 @@
 <span>
     {% if project %}
-    <a href="{% url 'main_project_detail' project.namespace %}">
+    <a class="btn btn-error tooltip tooltip-bottom" href="/projects/close" data-tooltip="Close Project">
+        <i class="icon icon-shutdown"></i>
+    </a>
+    <a href="{% url 'main_project_detail' project.namespace %}" class="tooltip tooltip-bottom" data-tooltip="Project Page">
         <button class="btn btn-success">{{project|truncatechars:30}}</button>
     </a>
     {% else %}
