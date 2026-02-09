@@ -12,12 +12,14 @@
         {% endif %}
       </div>
       {% for junction in contact.affiliation.all %}
-      <small class="tile-subtitle text-gray">{{junction.affiliation}}</small>
+      <small class="tile-subtitle text-gray">{{junction.affiliation|truncatechars:80}}</small>
       {% endfor %}
     </div>
+    {% if request.user.is_authenticated %}
     <div class="tile-action">
       <button class="btn btn-link" onclick="location.href='mailto:{{contact.email}}';">
         <i class="icon icon-2x icon-mail"></i>
       </button>
     </div>
+    {% endif %}
 </div>
