@@ -74,8 +74,10 @@ def handle_quicksand_report(request, file):
                 analyzed_sample = AnalyzedSample.objects.get(
                     capture=library, seqrun=runid, seqpool=seqpool
                 )
-            else:
-                raise TypeError
+            else: # now this is a random capture identifier
+                analyzed_sample = AnalyzedSample.objects.get(
+                    capture=library, seqrun=runid, seqpool=seqpool
+                )
             # prepare the data for saving
             data = {}
 
