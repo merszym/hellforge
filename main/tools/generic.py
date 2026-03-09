@@ -99,7 +99,10 @@ def get_dataset(request):
     
     I will specify for each Model separately, what to include in the output table
     """
-    start = get_instance_from_string(request.GET.get("from"))
+    try:
+        start = get_instance_from_string(request.GET.get("from"))
+    except:
+        start = Project.objects.get(namespace=request.GET.get("from"))
     unique = request.GET.get("unique")
     
     # First, get the project
