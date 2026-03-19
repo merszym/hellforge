@@ -145,6 +145,14 @@ def set_epoch(request):
 
     return get_modal(request)
 
+@login_required
+def set_tools(request, pk):
+    object = Layer.objects.get(pk=pk)
+    tools = int(request.POST.get('n_tools'))
+    object.n_tools = tools
+    object.save()
+    return JsonResponse({'success':True})
+
 
 # and the respective urlpatterns
 urlpatterns = [
@@ -154,4 +162,5 @@ urlpatterns = [
     path("set-epoch", set_epoch, name="layer-epoch-update"),
     path("clone/<int:pk>", clone, name="main_layer_clone"),
     path("positions/<int:pk>", update_positions, name="main_layer_positionupdate"),
+    path('set-tools/<int:pk>', set_tools, name='layer_set_toolcount')
 ]

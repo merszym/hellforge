@@ -1117,6 +1117,7 @@ class Layer(Dateable):
         blank=True,
         null=True,
     )
+    n_tools = models.IntegerField('Tools', blank=True, null=True)
     culture = models.ForeignKey(
         Culture,
         verbose_name="culture",
@@ -1220,6 +1221,7 @@ class Layer(Dateable):
             ),
             "Layer Culture": self.culture.name if self.culture else None,
             "Layer Culture (Mixed)": ",".join([x.name for x in self.additional_cultures.all()]),
+            "Layer Tools": self.n_tools if self.n_tools else None,
             "Layer Epoch": self.epoch.name if self.epoch else None,
         })
         
@@ -1238,6 +1240,7 @@ class Layer(Dateable):
             "Layer Umbrella Culture",
             "Layer Culture",
             "Layer Culture (Mixed)",
+            "Layer Tools",
             "Layer Epoch",
         ]
 

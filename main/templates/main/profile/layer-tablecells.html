@@ -66,6 +66,20 @@
     <br><span class="text-gray" style="font-size:11pt;">({{layer.date.all|length}} Dates)</span>
     {% endif %}
 </td>
+<td nowrap>
+    {% if request.user.is_authenticated %}
+    <input name="n_tools"
+        value='{{layer.n_tools|default:""}}'
+        type="number"
+        hx-post="{% url 'layer_set_toolcount' layer.pk %}"
+        hx-trigger="change"
+        hx-headers='{"X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value}'
+        hx-swap="none"
+    />
+    {% else %}
+    {{layer.n_tools|default:""}}
+    {% endif %}
+</td>
 <td nowrap>{% if layer.culture %}
     <a class="btn-link" href="{% url 'culture_detail' pk=layer.culture.pk %}">{{layer.culture}}</a>
         {% if layer.additional_cultures.first %}
