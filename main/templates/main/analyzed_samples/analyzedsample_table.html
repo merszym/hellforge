@@ -122,7 +122,8 @@ style="width: 80%;"
             <th>Lane</th>
             <th>Pool</th>
             <th>Tag</th>
-            <th>ENA</th>
+            <th>Archive</th>
+            <th>Accession</th>
             <th>quicksand</th>
             <th>lineage-test</th>
             {% if request.user.is_authenticated %}
@@ -203,8 +204,18 @@ style="width: 80%;"
                 style="cursor: pointer;"
                 {% endif %}
             >{{object.tags|default:''}}</td>
-            <td>{% if object.ena_accession %}
-                <a target="_blank" href="https://www.ebi.ac.uk/ena/browser/view/{{object.ena_accession}}">{{object.ena_accession}}</a>
+            <td>
+                {% if object.ena_genbank %}
+                <span>{{object.ena_genbank}}</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if object.ena_accession %}
+                    {% if object.ena_genbank == 'ENA' %}
+                        <a target="_blank" href="https://www.ebi.ac.uk/ena/browser/view/{{object.ena_accession}}">{{object.ena_accession}}</a>
+                    {% else %}
+                        <span>{{object.ena_accession}}</span>
+                    {% endif %}
                 {% endif %}
             </td>
             <td>

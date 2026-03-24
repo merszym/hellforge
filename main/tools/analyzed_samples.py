@@ -309,7 +309,8 @@ def save_verified(request):
         object.seqrun = value_or_none(row['Sequencing Run'])
         object.lane = value_or_none(row["Sequencing Lane"])  
         object.tags = value_or_none(row["Tag"])
-        object.ena_accession = value_or_none(row["ENA Accession Id"])
+        object.ena_genbank = value_or_none(row["Nucleotide Archive"])
+        object.ena_accession = value_or_none(row["Accession Id"])
         try:      
             object.save()
         except: #unique contraint error

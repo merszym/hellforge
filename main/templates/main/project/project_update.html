@@ -39,7 +39,12 @@
                             value="{{form.year_of_publication.value}}">
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="ena_accession">ENA Accession Id</label>
+                            <label class="form-label" for="ena_genbank">Nucleotide Archive</label>
+                            <input class="form-input" type="text" id="ena_genbank" name="ena_genbank" placeholder="GENBANK"
+                            value="{{form.ena_genbank.value|default:'ENA'}}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="ena_accession">Accession Id</label>
                             <input class="form-input" type="text" id="ena_accession" name="ena_accession" placeholder="ENA ACCESSION"
                             value="{{form.ena_accession.value|default:''}}">
                         </div>

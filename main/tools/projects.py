@@ -105,7 +105,7 @@ class ProjectListView(ListView):
 
 class ProjectUpdateView(LoginRequiredMixin, UpdateView):
     model = Project
-    fields = ["name", "password", "published", "year_of_publication",'ena_accession']
+    fields = ["name", "password", "published", "year_of_publication",'ena_genbank','ena_accession']
     template_name = "main/project/project_update.html"
 
 

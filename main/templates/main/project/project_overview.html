@@ -7,10 +7,16 @@
     {% endfor %}
     </p>
     {% if object.ena_accession %}
-    <h5>European Nucleotide Archive (ENA)</h5>
-    <p>
-    The sequencing data generated for this project are deposited in the ENA under accession number <a target="_blank" href="https://www.ebi.ac.uk/ena/browser/view/{{object.ena_accession}}">{{object.ena_accession}}</a>
-    </p>
+        <h5>Nucleotide Archive</h5>
+        {% if object.ena_genbank == 'ENA' %}
+            <p>
+            The sequencing data generated for this project are deposited in the ENA under accession number <a target="_blank" href="https://www.ebi.ac.uk/ena/browser/view/{{object.ena_accession}}">{{object.ena_accession}}</a>
+            </p>
+        {% else %}
+            <p>
+            The sequencing data generated for this project are deposited in the {{object.ena_genbank}} under accession number {{object.ena_accession}}
+            </p>
+        {% endif %}
     {% endif %}
 </div>
 {% endif %}
