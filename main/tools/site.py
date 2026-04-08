@@ -635,13 +635,15 @@ def handle_stratigraphy(request, file):
 
     for n, (i, data) in enumerate(df.iterrows()):
         profile, _ = Profile.objects.get_or_create(site=site, name=data['Profile'].strip())
+        print(data['Layer'])
         layer, created = Layer.objects.get_or_create(site=site, name=data['Layer'].strip())
 
         #first, check if the parent of the layers exist or if they need to be created as well
         if data['Layer Parent'] == data['Layer Parent']:
             parent_layer, created = Layer.objects.get_or_create(site=site, name=data['Layer Parent'].strip())
-            layer.layer = parent_layer
-            layer.save()
+            if not parent_layer == layer:
+                layer.layer = parent_layer
+                layer.save()
 
         # now get or create the ProfileLayerJunctions for the layer
         junction, _ = ProfileLayerJunction.objects.get_or_create(profile=profile, layer=layer)
