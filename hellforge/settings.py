@@ -120,3 +120,5 @@ MEDIA_URL = "/media/"  # how do we access the media in the browser?
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 LOGIN_URL = "/admin/"
+
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"

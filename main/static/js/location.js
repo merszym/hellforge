@@ -17,7 +17,7 @@ const observer = new MutationObserver((mutationsList, observer) => {
                     scrollWheelZoom: true
                 }).setView([51.3, 12], 5);
                 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 17,
+                    maxZoom: 12,
                     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                 }).addTo(map);
 
