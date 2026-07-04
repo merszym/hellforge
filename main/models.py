@@ -1224,6 +1224,7 @@ class Layer(Dateable):
             "Layer Culture (Mixed)": ",".join([x.name for x in self.additional_cultures.all()]),
             "Layer Tools": self.n_tools if self.n_tools else None,
             "Layer Epoch": self.epoch.name if self.epoch else None,
+            "Layer Order": ";".join(set([f"{x.profile.name}:{x.position}" for x in self.profile_junction.all()]))
         })
         
         return data
