@@ -249,6 +249,20 @@ def get_site_profile_tab(request):
         selected_profile = get_instance_from_string(selected_profile)
     else:
         selected_profile = object.profile.first()
+    
+    from django.db.models import Case, When, Value, IntegerField
+
+    profiles = (
+        object.profile.all()
+        .annotate(
+            main_first=Case(
+                When(name="Main Profile", then=Value(0)),
+                default=Value(1),
+                output_field=IntegerField(),
+            )
+        )
+        .order_by("main_first", "name")
+    )
 
     # get the project context
     project = get_project(request)
@@ -256,6 +270,7 @@ def get_site_profile_tab(request):
     context = {
         "object": object,
         "selected_profile": selected_profile,
+        "profiles":profiles,
         "project_sites": list(project.site.values_list('pk', flat=True)) if project else []
     }
 
