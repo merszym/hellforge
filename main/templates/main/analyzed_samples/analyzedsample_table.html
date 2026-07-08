@@ -107,6 +107,7 @@ style="width: 80%;"
             <th>QC</th>
             {% endif %}
             <th>Layer</th>
+            <th>Layer Parent</th>
             <th>Sample</th>
             <th>Sample Batch</th>
             <th>Lysate</th>
@@ -171,6 +172,13 @@ style="width: 80%;"
             <td nowrap class="{% if object.sample %}{{object.sample.get_layer|yesno:'assigned,unassigned'}}{% endif %} {{object.sample.get_layer.culture.classname|default:'sterile'}}">
                 {% if object.sample %}
                     {% if object.sample.get_layer %}{{object.sample.get_layer.name}}{% else %}Unassigned{% endif %}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+            <td nowrap class="{% if object.sample %}{{object.sample.get_layer|yesno:'assigned,unassigned'}}{% endif %} {{object.sample.get_layer.culture.classname|default:'sterile'}}">
+                {% if object.sample %}
+                    {% if object.sample.get_layer %}{{object.sample.get_layer.layer.name}}{% else %}{% endif %}
                 {% else %}
                     -
                 {% endif %}

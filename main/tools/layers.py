@@ -66,6 +66,39 @@ def clone(request, pk):
 
     return get_profile_detail(request)
 
+@login_required
+def update_inherited_features(request, pk):
+    """
+    from the ProfileLayerJunction, get the layer.
+    inherit the layers parents properties
+    """
+    junction = ProfileLayerJunction.objects.get(pk=pk)
+    profile = junction.profile
+    layer = junction.layer
+
+    if layer.layer:
+        # update date
+        inf, upper, lower = layer.layer.get_upper_and_lower()
+        layer.set_upper = upper
+        layer.set_lower = lower
+        # update culture and epoch
+        layer.culture = layer.layer.culture
+        layer.epoch = layer.layer.epoch
+        # update colour and texture
+        layer.colour = layer.layer.colour
+        layer.texture = layer.layer.texture
+        layer.save()
+
+    #after cloning a layer, the cloned layer has the same position as the original layer within the profile.
+    #So given a profile, reset the position-counts for each junction
+    context = {"profile": f"profile_{profile.pk}"}
+
+    request.GET._mutable = True
+    request.GET.update(context)
+
+    from main.tools.profile import get_profile_detail
+
+    return get_profile_detail(request)
 
 @login_required
 def update_positions(request, pk):
@@ -161,6 +194,7 @@ urlpatterns = [
     path("set-culture", set_culture, name="layer-culture-update"),
     path("set-epoch", set_epoch, name="layer-epoch-update"),
     path("clone/<int:pk>", clone, name="main_layer_clone"),
+    path("inherit/<int:pk>", update_inherited_features, name="main_layer_inherit"),
     path("positions/<int:pk>", update_positions, name="main_layer_positionupdate"),
     path('set-tools/<int:pk>', set_tools, name='layer_set_toolcount')
 ]
