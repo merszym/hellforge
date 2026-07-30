@@ -13,7 +13,7 @@
             <th>Project</th>
             {% endif %}
             <th>Layer</th>
-            <th>Layer 
+            <th>Layer Parent</th> 
             <th>Fossil</th>
             {% if not batch %}
             <th>Batch</th>
@@ -21,7 +21,7 @@
             <th>Type</th>
             <th>Sample</th>
             {% for type in sample_synonyms %}
-            <th>{{type}}</th>
+            <th nowrap>{{type}}</th>
             {% endfor %}
             <th>Libraries</th>
             <th>Sample Dating</th>
@@ -68,6 +68,9 @@
                     class="{{object.get_layer|yesno:'assigned,unassigned'}}  {{object.get_layer.culture.classname|default:'sterile'}}"
                 {% endif %}>
                 {% if object.get_layer %}{{object.get_layer.name}}{% else %}Unassigned{% endif %}
+            </td>
+            <td nowrap>
+                {% if object.get_layer %}{{object.get_layer.layer.name}}{% else %}{% endif %}
             </td>
             <td nowrap>
                 {{object.sample.name|default:""}}
