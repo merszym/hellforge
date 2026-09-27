@@ -1880,4 +1880,5 @@ models = {
     "layeranalysis": LayerAnalysis,
     "quicksand_analysis": QuicksandAnalysis,
     "quicksand": QuicksandAnalysis,
+    'nedflow':NedflowAnalysis
 }

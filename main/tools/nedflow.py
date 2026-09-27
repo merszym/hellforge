@@ -123,13 +123,9 @@ def handle_nedflow_report(request, file):
 def prepare_data(
     request,
     query,
-    column="ReadsDeduped",
-    ancient=True,
-    percentage=0.5,
-    breadth=0.5,
+    ancient='++',
     positives=False,
     only_project=True,
-    tableview=False
 ):
 
     families = []  # for the colors
@@ -151,16 +147,8 @@ def prepare_data(
         for family in data.keys():
             for row in data[family]:
                 # now filters the entries
-                if ancient and "Ancientness" in row.keys():
-                    if not row["Ancientness"] == "++":
-                        continue
-                if percentage > 0 and "FamPercentage" in row.keys():
-                    if not row["FamPercentage"] >= percentage:
-                        continue
-                if breadth > 0 and "ProportionExpectedBreadth" in row.keys():
-                    if row["ProportionExpectedBreadth"] == None:
-                        continue
-                    if not row["ProportionExpectedBreadth"] >= breadth:
+                if ancient and "ancientness" in row.keys():
+                    if not ancient in row["ancientness"]:
                         continue
 
                 any_positives = True
@@ -168,9 +156,8 @@ def prepare_data(
                 if not entry in results:
                     results[entry] = {}
 
-                # TODO: if entries are fixed or rerun, there might be multiple entries here... fix later
                 try:
-                    value = int(row[column])
+                    value = int(row['sum_genus_family'])
                 except:
                     value = 0
 
@@ -211,134 +198,12 @@ def prepare_data(
         "quicksand_results": results,
         "object_list": query,
         "colors": colors,
-        "column": column,
-        "percentage": percentage,
-        "breadth": breadth,
         "ancient": ancient,
         "positives": positives,
         "only_project": only_project,
-        "tableview": tableview
     }
 
-
-def get_data_for_export(data, quickv, project=None, **kwargs):
-    #project gets handled via the **kwargs arguments in the generic export
-    if project:
-        params = json.loads(project.parameters) if project.parameters else \
-            {'quicksand_cutoff_percentage': 0.5,
-            'quicksand_cutoff_breadth':0.5
-        }
-    else:
-        params = {
-            'quicksand_cutoff_percentage': 0.5,
-            'quicksand_cutoff_breadth':0.5
-        }
-    percentage = float(params['quicksand_cutoff_percentage'])
-    breadth = float(params['quicksand_cutoff_breadth'])
-
-    export = {
-        "quicksand version": quickv,
-        "ReadsRaw": 0,
-        "ReadsLengthfiltered": 0,
-        "ReadsIdentified": 0,
-        "ReadsMapped": 0,
-        "ReadsDeduped": 0,
-        "DuplicationRate": 0,
-        "ReadsBedfiltered": 0,
-        "SeqsInAncientTaxa": 0,
-        "Ancient": "-",
-        "AncientTaxa": [],
-        "OtherTaxa": [],
-        "Subsitutions": [],
-    }
-
-    if len(data) == 0:
-        return export
-
-    data = json.loads(data)
-    for family in data:
-        entry = data[family][0]
-
-        # overwrite, but its the same for all
-        export["ReadsRaw"] = entry["ReadsRaw"]
-        export["ReadsLengthfiltered"] = entry["ReadsLengthfiltered"]
-
-        # check filters:
-        if not entry["FamPercentage"] >= percentage:
-            continue
-        if "ProportionExpectedBreadth" in entry.keys():
-            if entry["ProportionExpectedBreadth"] == None:
-                continue
-            if not entry["ProportionExpectedBreadth"] >= breadth:
-                continue
-
-        # Add
-        export["ReadsIdentified"] = export["ReadsIdentified"] + entry["ReadsExtracted"]
-        export["ReadsMapped"] = export["ReadsMapped"] + entry["ReadsMapped"]
-        export["ReadsDeduped"] = export["ReadsDeduped"] + entry["ReadsDeduped"]
-        try:
-            export["DuplicationRate"] = round(
-                export["ReadsMapped"] / export["ReadsDeduped"], 2
-            )
-        except:
-            export["DuplicationRate"] = 0
-        try:
-            export["ReadsBedfiltered"] = export["ReadsBedfiltered"] + int(
-                entry["ReadsBedfiltered"]
-            )
-        except:
-            # some have '-', which should be ignored
-            pass
-        if entry["Ancientness"] == "+":
-            # update the export only if not already marked as ancient
-            if export["Ancient"] == "-":
-                export["Ancient"] = "+"
-        if entry["Ancientness"] == "++":
-            export["SeqsInAncientTaxa"] = (
-                export["SeqsInAncientTaxa"] + entry["ReadsDeduped"]
-            )
-            export["Ancient"] = "++"
-            export["AncientTaxa"].append(
-                f"{family}({entry['ReadsDeduped']}[{entry['FamPercentage']}%])"
-            )
-        if entry["Ancientness"] in ["+", "-"]:
-            export["OtherTaxa"].append(
-                f"{family}({entry['ReadsDeduped']}[{entry['FamPercentage']}%])"
-            )
-
-        # reformat the subsitutions
-        deam5 = (
-            entry["Deam5(95ci)"]
-            .replace(" ", "")
-            .replace(",", "-")
-            .replace("(", "[")
-            .replace(")", "]")
-        )
-        deam3 = (
-            entry["Deam3(95ci)"]
-            .replace(" ", "")
-            .replace(",", "-")
-            .replace("(", "[")
-            .replace(")", "]")
-        )
-
-        export["Subsitutions"].append(f"{family}({deam5},{deam3})")
-
-    # now remove the lists
-    export["AncientTaxa"] = (
-        " ".join(export["AncientTaxa"]) if len(export["AncientTaxa"]) > 0 else "-"
-    )
-    export["OtherTaxa"] = (
-        " ".join(export["OtherTaxa"]) if len(export["OtherTaxa"]) > 0 else "-"
-    )
-    export["Subsitutions"] = (
-        " ".join(export["Subsitutions"]) if len(export["Subsitutions"]) > 0 else "-"
-    )
-
-    return export
-
-
-def get_quicksand_tab(request, pk):
+def get_nedflow_tab(request, pk):
     """
     In the DNA Tab, render the quicksand table and form
     """
@@ -349,49 +214,32 @@ def get_quicksand_tab(request, pk):
     analyzed_samples = get_libraries(request, site.pk, return_query=True, unset=False)
 
     #order by analyzed sample to match the order of the table above the quicksand tab
-    query = QuicksandAnalysis.objects.filter(analyzedsample__in=analyzed_samples).order_by('analyzedsample')
+    query = NedflowAnalysis.objects.filter(analyzedsample__in=analyzed_samples).order_by('analyzedsample')
 
-    project = get_project(request)
-    params = json.loads(project.parameters) if project.parameters else \
-        {
-            'quicksand_cutoff_percentage': 0.5,
-            'quicksand_cutoff_breadth':0.5
-        }
 
-    # Additional filters
+    # Additional filters -> TODO:Adjust to NedFlow
     if request.method == "POST":
-        column = request.POST.get("column", "ReadsDeduped")
-        percentage = float(request.POST.get("percentage", params['quicksand_cutoff_percentage']))
-        breadth = float(request.POST.get("breadth", params['quicksand_cutoff_breadth']))
-        ancient = "on" == request.POST.get("ancient", "")
+        ancient = request.POST.get("ancient")
         positives = "on" == request.POST.get("positives", "")
         only_project = "on" == request.POST.get("only_project", "")
-        tableview = "on" == request.POST.get("tableview", "")
 
         # column: ReadsDeduped
         # filter: ancient, breadth, percentage
-
         context.update(
             prepare_data(
                 request,
                 query,
-                column=column,
-                percentage=percentage,
-                breadth=breadth,
                 ancient=ancient,
                 positives=positives,
                 only_project=only_project,
-                tableview=tableview
             )
         )
     else:
-        percentage=float(params['quicksand_cutoff_percentage'])
-        breadth=float(params['quicksand_cutoff_breadth'])
-        context.update(prepare_data(request, query, breadth=breadth, percentage=percentage))
+        context.update(prepare_data(request, query))
+        
     
-    return render(request, "main/quicksand/quicksand-content.html", context)
-
+    return render(request, "main/nedflow/nedflow-content.html", context)
 
 urlpatterns = [
-    path("get-table/<int:pk>", get_quicksand_tab, name="main_site_getquicksand")
+    path("get-table/<int:pk>", get_nedflow_tab, name="main_site_getnedflow")
 ]

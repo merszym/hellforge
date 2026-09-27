@@ -28,6 +28,7 @@ urlpatterns = [
     path("samplebatches/", include("main.tools.samplebatch")),
     path("analyzed-samples/", include("main.tools.analyzed_samples")),
     path("quicksand/", include("main.tools.quicksand")),
+    path("nedflow/", include("main.tools.nedflow")),
     path("matthias/", include("main.tools.matthias")),
     path("ajax/", include("main.ajax")),
     path("contact/add", ajax.save_contact, name="ajax_contact_add"),

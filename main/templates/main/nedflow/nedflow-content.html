@@ -1,0 +1,197 @@
+{% load format %}
+
+{% for family,color in colors %}
+    <style>
+    .{{family}}{
+        background-color:{{color}};
+    }
+    </style>
+{% endfor %}
+
+<div id="nedflow">
+    <div class="p-2">
+        <h3>Shotgun Analysis</h3>
+        <small>
+            This tab shows the results of the analysis for vertebrate nuclear DNA in the sample. 
+            The results were obtained through Ned-Flow. 
+            The pipeline was executed with the specified version
+        </small>
+
+    </div>
+    <div class="panel-head p-2">
+        <form
+            hx-post="{% url 'main_site_getnedflow' object.pk %}"
+            hx-target="#DNA-tab_NedFlow-content"
+            style="width: 80%;"
+        >
+            <input type="hidden" name="object" value="{{object.pk}}">
+            <div class="input-group">
+                <span class="input-group-addon"><strong>Filter</strong></span>
+                <span class="input-group-addon">Ancientness Filter</span>
+                    <input class="form-input" type="str" name="ancient" value="{{ancient|default:'++'}}">
+                {% if request.user.is_authenticated %}
+                <span class="input-group-addon">In Project</span>
+                <label class="form-switch mx-2">
+                    <input type="checkbox" name="only_project" {% if only_project %}checked{% endif %}><i class="form-icon"></i>
+                </label>
+                <span class="input-group-addon">Positive only</span>
+                <label class="form-switch mx-2">
+                    <input type="checkbox" name="positives" {% if positives %}checked{% endif %}><i class="form-icon"></i>
+                </label>
+                {% endif %}
+                <button class="btn btn-primary input-group-btn">OK</button>
+            </div>
+        </form>
+        <div class="has-icon-left">
+            <input class="form-input" id="nedflow-list-search" type="text" placeholder="Type to filter table by content" style="width:50%;">
+            <i class="form-icon icon icon-search"></i>
+        </div>
+    </div>
+
+    <div class="panel-body p-0">
+        {% if object_list %}
+        <table class="table table-striped">
+            <thead style="position: sticky; top:0; z-index: 100;">
+                <tr>
+                    <th>Layer</th>
+                    <th>Layer Parent</th>
+                    <th>Sample</th>
+                    <th>Type</th>
+                    <th>Library</th>
+                    <th>Capture</th>
+                    <th>Probe</th>
+                    <th>Sequencing Run</th>
+                    <th>Tag</th>
+                    <th>Version</th>
+                    {% if tableview %}
+                        {% for family,color in colors %}
+                        <th style="border-left:solid black 1px;">{{family}}</th>
+                        {% empty %}
+                        <th>Results</th>
+                        {% endfor %}
+                    {% else %}
+                    <th>Results</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in object_list.all %}
+                {% with ana=entry.analyzedsample %}
+                <tr class="dna-tr">
+                    <td nowrap class="{{ana.sample.get_layer.culture.classname|default:'sterile'}}">
+                        {% if ana.sample %}
+                            {{ana.sample.get_layer.name|default:'unassigned'}}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td nowrap class="{% if ana.sample %}{{ana.sample.get_layer|yesno:'assigned,unassigned'}}{% endif %} {{ana.sample.get_layer.culture.classname|default:'sterile'}}">
+                        {% if ana.sample %}
+                            {% if ana.sample.get_layer %}{{ana.sample.get_layer.layer.name}}{% else %}{% endif %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td nowrap
+                        {% if ana.sample %}
+                        hx-get="{% url 'main_analyzedsample_setfilter' ana.sample.pk %}"
+                        hx-target="#show_libraries"
+                        class="text-primary tooltip tooltip-right" data-tooltip="Show results from this sample" style="cursor:pointer;"
+                        {% endif %}
+                        >
+                        {% if ana.sample %}
+                            {{ana.sample.name}}
+                        {% else %}
+                            Control
+                        {% endif %}
+                    </td>
+                    <td nowrap>
+                        {% if ana.sample %}
+                        {{ana.sample.type}}
+                        {% else %}
+                        Control
+                        {% endif %}
+                    </td>
+                    <td nowrap>{{ana.library}}</td>
+                    <td nowrap>{{ana.capture|default:""}}</td>
+                    <td nowrap>{{ana.probes_str}}</td>
+                    <td nowrap>{{ana.seqrun}}</td>
+                    <td nowrap>{{ana.tags|default:''}}</td>
+                    <td nowrap
+                        class="tooltip tooltip-left modal_open text-primary"
+                        style="cursor: pointer;"
+                        data-tooltip="Show NedFlow details"
+                        hx-get="{% url 'main_modal_get' %}"
+                        hx-vals='{"object":"nedflow_{{entry.pk}}", "type":"details" }'
+                        hx-target="#modal-blank"
+                    >{{entry.version}}</td>
+                    {% if tableview %}
+                        {% for f,color in colors %}
+                        {% with family=quicksand_results|lookup:entry|lookup:f %}
+                            <td nowrap 
+                                style="border-left:solid black 1px;"
+                                {% if family %}
+                                class="p-1 tooltip tooltip-left {{f}}"
+                                data-tooltip='{{f}} ({{family|lookup:"raw"|floatformat:"0"}}{% if mode == "relative" %}%{% endif %})'
+                                {% else %}
+                                class="p-1"
+                                {% endif %}   
+                                >
+                                {{quicksand_results|lookup:entry|lookup:f|lookup:'raw'|floatformat:"0"}}{% if mode == 'relative' and family %}%{% endif %}
+                            </td>
+                        {% endwith %}
+                        {% empty %}
+                            <td nowrap ><span class="text-gray">No DNA found</span></td>
+                        {% endfor %}
+                    {% else %}
+                        <td nowrap style="min-width: 300px; display: flex;">
+                            {% for family in quicksand_results|lookup:entry %}
+                            <span 
+                                class="{{family}} p-1 tooltip tooltip-left"
+                                data-tooltip='{{family}} ({{quicksand_results|lookup:entry|lookup:family|lookup:"raw"|floatformat:"0"}}{% if mode == "relative" %}%{% endif %})'
+                                style="width:{{quicksand_results|lookup:entry|lookup:family|lookup:'display'|floatformat:'2'}}%;">
+                                {{quicksand_results|lookup:entry|lookup:family|lookup:'raw'|floatformat:"0"}}{% if mode == 'relative' %}%{% endif %}</span>
+                            {% empty %}
+                                <span class="text-gray">No DNA found</span>
+                            {% endfor %}
+                        </td>
+                    {% endif %}
+                </tr>
+                {% endwith %}
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if colors %}
+        <div style="display:flex; max-width: 100%; flex-wrap: wrap;">
+            {% for family,color in colors %}
+            <div class="p-2" style="display: flex; align-items: center;">
+                <span class="{{family}} p-2" style="width: 10px;height: 10px; display: block;"></span>
+                <span class="p-2" style="display: block;">{{family}}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <div class="empty">
+            <div class="empty-icon">
+                <i class="icon icon-flag"></i>
+            </div>
+            <p class="empty-title h5">No quicksand run imported yet</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    $('#nedflow-list-search').on("keyup", function() {
+        var value = $("#nedflow-list-search").val().toLowerCase();
+        $("tr.dna-tr").filter(function() {
+            if($(this).text().toLowerCase().indexOf(value) > -1){
+                $(this).show()
+            } else {
+                $(this).hide()
+            }
+        });
+    });
+</script>

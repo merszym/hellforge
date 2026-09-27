@@ -13,6 +13,12 @@
         data-object="AA163">
         <a style="cursor:pointer;">Hominin mtDNA</a>
     </li>
+    <li id="DNA-tab_AA163" class="tab-item DNA"
+        data-group="DNA-tab"
+        data-show="DNA-tab_NedFlow-content"
+        data-object="NedFlow">
+        <a style="cursor:pointer;">Vertebrate Nuclear DNA</a>
+    </li>
     <script>
     $('body').on('click','.DNA', function(){
         add_url_params({
@@ -27,5 +33,9 @@
 </div>
 
 <div style="display: none;" class="my-2 panel tab-panel" id="DNA-tab_AA163-content" data-group="DNA-tab" hx-get="{% url 'main_site_getmatthias' object.pk %}" hx-trigger="load once">
+    <div class="loading loading-lg m-2"></div>
+</div>
+
+<div style="display: none;" class="my-2 panel tab-panel" id="DNA-tab_NedFlow-content" data-group="DNA-tab" hx-get="{% url 'main_site_getnedflow' object.pk %}" hx-trigger="load once">
     <div class="loading loading-lg m-2"></div>
 </div>

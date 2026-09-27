@@ -176,6 +176,17 @@ def get_modal_context(object, request):
             context.update({
                 'table':table.sort_values('ReadsMapped', ascending=False).to_html(index=False, classes="table table-striped")
             })
+    
+    if object.model == 'nedflow':
+        if context["type"] == "details":
+            data = [x[0] for x in json.loads(object.data).values()]
+            table = pd.DataFrame(
+                data
+            )
+            table['sum_genus_family'] = table['sum_genus_family'].astype(int)
+            context.update({
+                'table':table.sort_values('sum_genus_family', ascending=False).to_html(index=False, classes="table table-striped")
+            })
     return context
 
 
