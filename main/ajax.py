@@ -122,7 +122,7 @@ def get_modal_context(object, request):
                     }
                 )
     if object.model == "site":
-        if context["type"] in ["quicksand_upload","matthias_upload"]:
+        if context["type"] in ["quicksand_upload","matthias_upload", "nedflow_upload"]:
             context.update(
                 {
                     "seqpool":request.GET.get('seqpool',''),
@@ -251,6 +251,11 @@ def upload(request):
         from main.tools.quicksand import handle_quicksand_report
 
         return handle_quicksand_report(request, file)
+    
+    if type == "nedflow":
+        from main.tools.nedflow import handle_nedflow_report
+
+        return handle_nedflow_report(request, file)
 
     if type == "matthias":
         from main.tools.matthias import handle_file_upload

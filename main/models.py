@@ -1816,6 +1816,42 @@ class HumanDiagnosticPositions(models.Model):
         return new_data
 
 
+class NedflowAnalysis(models.Model):
+    version = models.CharField("Version", max_length=100, blank=True, null=True)
+    analyzedsample = models.ForeignKey(  # [[library, sequencing-run combination]]
+        AnalyzedSample,
+        verbose_name="analyzedsample",
+        related_name="nedflow_analysis",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+    data = models.JSONField("data", blank=True, null=True)
+
+    @property
+    def model(self):
+        return 'nedflow'
+    
+    @classmethod
+    def table_columns(self):
+        return [
+                "NedFlow_Version",
+                "NedFlow_SeqsInAncientTaxa",
+                "Ancient",
+                "AncientTaxa",
+                "OtherTaxa",
+                "Subsitutions"
+            ]
+
+    class Meta:
+        ordering = [
+            "analyzedsample__sample__site",
+            "analyzedsample__sample__layer",
+            "analyzedsample__sample",
+            "analyzedsample__seqrun",
+            "analyzedsample__probes",
+        ]
+
 models = {
     "site": Site,
     "culture": Culture,

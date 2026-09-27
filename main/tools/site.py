@@ -650,7 +650,6 @@ def handle_stratigraphy(request, file):
 
     for n, (i, data) in enumerate(df.iterrows()):
         profile, _ = Profile.objects.get_or_create(site=site, name=data['Profile'].strip())
-        print(data['Layer'])
         layer, created = Layer.objects.get_or_create(site=site, name=data['Layer'].strip())
 
         #first, check if the parent of the layers exist or if they need to be created as well

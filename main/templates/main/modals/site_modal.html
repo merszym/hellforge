@@ -290,6 +290,49 @@
             </div>
         </div>
 
+        {% elif type == "nedflow_upload" %}
+
+        {# ------------------------- #}
+        {#   NEDFLOW MODAL           #}
+        {# ------------------------- #}
+
+        <!-- Modal content for Faunal Upload -->
+        <div class="modal-body">
+            <div class="content my-2">
+                <form
+                    hx-encoding="multipart/form-data"
+                    hx-post="{% url 'main_upload' %}?type=nedflow"
+                    hx-target="#modal-blank"
+                    hx-validate="true">
+                    {% csrf_token %}
+                    <input type="hidden" name="object" value="site_{{object.pk}}">
+                    <label class="form-label" for="sequencing">Sequencing Run</label>
+                    <select class="form-select" id="sequencing" name="sequencing">
+                        {% if seqrun %}
+                        <option value="{{seqrun}}">{{seqrun}}</option>
+                        {% else %}
+                        <option value="">---</option>
+                        {% endif%}
+                        {% for option in seqruns %}
+                            <option value="{{option}}">{{option}}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-group">
+                        <label class="form-label" for="seqpool">Sequenced Pool</label>
+                        <input class="form-input" type="text" id="seqpool" name="seqpool" 
+                        placeholder="P.A.1234" pattern="P\.[A-Z]\.[0-9]+" {% if seqpool %} value="{{seqpool}}" {% endif %}>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="version">Script version</label>
+                        <input class="form-input" type="text" id="version" name="version" placeholder="v2.1" required="" pattern="v[0-9]+(\.[0-9]+)?(\.[0-9]+)?">
+                        <p class="form-input-hint">please follow the pattern v2.1</p>
+                    </div>
+                    <input name="file" type="file" required>
+                    <button class="btn">OK</button>
+                </form>
+            </div>
+        </div>
+
         {% elif type == "matthias_upload" %}
 
         {# ------------------------- #}

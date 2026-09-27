@@ -314,7 +314,7 @@ def save_verified(request):
         try:      
             object.save()
         except: #unique contraint error
-            print(object)
+            print('unique constraint error: ',object)
     
     return get_libraries(request, site.pk)
 
