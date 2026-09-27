@@ -148,7 +148,10 @@ def prepare_data(
             for row in data[family]:
                 # now filters the entries
                 if ancient and "ancientness" in row.keys():
-                    if not ancient in row["ancientness"]:
+                    try:
+                        if not ancient in row["ancientness"]:
+                            continue
+                    except TypeError: #empty ancientness column
                         continue
 
                 any_positives = True
