@@ -318,9 +318,9 @@
                         {% endfor %}
                     </select>
                     <div class="form-group">
-                        <label class="form-label" for="seqpool">Sequenced Pool</label>
-                        <input class="form-input" type="text" id="seqpool" name="seqpool" 
-                        placeholder="P.A.1234" pattern="P\.[A-Z]\.[0-9]+" {% if seqpool %} value="{{seqpool}}" {% endif %}>
+                        <label class="form-label" for="lane">Lane</label>
+                        <input class="form-input" type="text" id="lane" name="lane" 
+                        placeholder="lane1" pattern="lane[0-9]+" {% if lane %} value="{{lane}}" {% endif %}>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="version">Script version</label>

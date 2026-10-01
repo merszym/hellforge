@@ -42,7 +42,7 @@ def handle_nedflow_report(request, file):
     if not runid:
         return return_error("Sequencing ID is missing")
 
-    seqpool = request.POST.get("seqpool", False)
+    lane = request.POST.get("lane", False)
 
     version = request.POST.get("version", False)
     version_format_matches = bool(re.match("v[0-9]+(\.[0-9]+)*", version))
@@ -59,24 +59,24 @@ def handle_nedflow_report(request, file):
             if library.startswith("Lib"):
                 try:
                     analyzed_sample = AnalyzedSample.objects.get(
-                        library=library, seqrun=runid, seqpool=seqpool
+                        library=library, seqrun=runid, lane=lane
                     )
                 # could be a reamp library
                 except AnalyzedSample.DoesNotExist:
                     analyzed_sample = AnalyzedSample.objects.get(
-                        reamp_library=library, seqrun=runid, seqpool=seqpool
+                        reamp_library=library, seqrun=runid, lane=lane
                     )
             elif library.startswith("Cap"):
                 analyzed_sample = AnalyzedSample.objects.get(
-                    capture=library, seqrun=runid, seqpool=seqpool
+                    capture=library, seqrun=runid, lane=lane
                 )
             elif library.startswith("ERR"): # published data: ENA ID
                 analyzed_sample = AnalyzedSample.objects.get(
-                    capture=library, seqrun=runid, seqpool=seqpool
+                    capture=library, seqrun=runid, lane=lane
                 )
             else: # now this is a random library identifier
                 analyzed_sample = AnalyzedSample.objects.get(
-                    library=library, seqrun=runid, seqpool=seqpool
+                    library=library, seqrun=runid, lane=lane
                 )
             # prepare the data for saving
             data = {}
