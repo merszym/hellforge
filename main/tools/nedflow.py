@@ -126,14 +126,18 @@ def prepare_data(
     ancient='++',
     positives=False,
     only_project=True,
+    fampercent=1
 ):
-
-    families = []  # for the colors
     nested_dict = lambda: defaultdict(nested_dict)
     results = nested_dict()
     positive_samples = []
     project = get_project(request)
     sum_per_lib = {}
+
+    try:
+        fampercent = float(fampercent)
+    except (TypeError, ValueError):
+        fampercent = 0
 
     query = query.filter(analyzedsample__qc_pass=True)
 
@@ -144,55 +148,69 @@ def prepare_data(
         sum_per_lib[entry] = 0
         any_positives = False
         data = json.loads(entry.data)
+
         for family in data.keys():
             for row in data[family]:
-                # now filters the entries
+                # filter the entries
                 if ancient and "ancientness" in row.keys():
                     try:
-                        if not ancient in row["ancientness"]:
+                        if ancient not in row["ancientness"]:
                             continue
-                    except TypeError: #empty ancientness column
+                    except TypeError:  # empty ancientness column
                         continue
 
                 any_positives = True
 
-                if not entry in results:
+                if entry not in results:
                     results[entry] = {}
 
                 try:
                     value = int(row['sum_genus_family'])
-                except:
+                except (ValueError, TypeError, KeyError):
                     value = 0
 
                 # calculate for the display
-                sum_per_lib[entry] = sum_per_lib[entry] + value
+                sum_per_lib[entry] += value
 
-                if not family in results[entry]:
+                if family not in results[entry]:
                     results[entry][family] = {}
                 results[entry][family]["raw"] = value
-                families.append(family)
 
         if any_positives:
             positive_samples.append(entry.analyzedsample)
 
-    # get the maximum sum
+    # get the maximum sum and compute display values
     try:
-        maxsum = max([x for x in sum_per_lib.values()])
-        for entry in results.keys():
-            for f, v in results[entry].items():
-                results[entry][f]["display"] = round(v["raw"] / maxsum, 4) * 100
+        maxsum = max(sum_per_lib.values())
     except ValueError:  # empty sequence
         maxsum = 0
 
-    families = set(families)
+    if maxsum:
+        for entry in results:
+            for f, v in results[entry].items():
+                v["display"] = round(v["raw"] / maxsum, 4) * 100
 
-    colors = [
-        (k, v)
-        for k, v in zip(
-            [x for x in sorted(families)],
+    # apply the fampercent filter within each library:
+    # drop families whose share of that library's total is below the threshold
+    if fampercent > 0:
+        for entry in list(results.keys()):
+            lib_total = sum_per_lib[entry]
+            for f in list(results[entry].keys()):
+                share = (results[entry][f]["raw"] / lib_total * 100) if lib_total else 0
+                if share < fampercent:
+                    del results[entry][f]
+            if not results[entry]:  # no families left for this library
+                del results[entry]
+
+    # build the family list / colors only from families that survived
+    families = {f for entry in results for f in results[entry]}
+
+    colors = list(
+        zip(
+            sorted(families),
             sns.color_palette("husl", len(families)).as_hex(),
         )
-    ]
+    )
 
     if positives:
         query = query.filter(analyzedsample__in=positive_samples)
@@ -204,7 +222,9 @@ def prepare_data(
         "ancient": ancient,
         "positives": positives,
         "only_project": only_project,
+        "fampercent": fampercent,
     }
+
 
 def get_nedflow_tab(request, pk):
     """
@@ -225,6 +245,7 @@ def get_nedflow_tab(request, pk):
         ancient = request.POST.get("ancient")
         positives = "on" == request.POST.get("positives", "")
         only_project = "on" == request.POST.get("only_project", "")
+        fampercent = request.POST.get("fampercent", 1)
 
         # column: ReadsDeduped
         # filter: ancient, breadth, percentage
@@ -235,6 +256,7 @@ def get_nedflow_tab(request, pk):
                 ancient=ancient,
                 positives=positives,
                 only_project=only_project,
+                fampercent=fampercent
             )
         )
     else:

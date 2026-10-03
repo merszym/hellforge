@@ -29,6 +29,8 @@
                 <span class="input-group-addon"><strong>Filter</strong></span>
                 <span class="input-group-addon">Ancientness Filter</span>
                     <input class="form-input" type="str" name="ancient" value="{{ancient|default:'++'}}">
+                <span class="input-group-addon">Percentage Cutoff</span>
+                    <input class="form-input" type="float" name="fampercent" value="{{fampercent|default:'1.0'}}">
                 {% if request.user.is_authenticated %}
                 <span class="input-group-addon">In Project</span>
                 <label class="form-switch mx-2">
