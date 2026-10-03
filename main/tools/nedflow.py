@@ -300,7 +300,10 @@ def get_data_for_export(data, nedversion, project=None, **kwargs):
     for family in data:
         entry = data[family][0]
 
-        fam_percentage = float(entry["sum_genus_family"] / total_counts) * 100
+        try:
+            fam_percentage = float(entry["sum_genus_family"] / total_counts) * 100
+        except ZeroDivisionError:
+            continue
         
         if fam_percentage < percentage:
             continue
