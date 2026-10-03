@@ -1545,6 +1545,14 @@ class AnalyzedSample(models.Model):
                 data.update(
                     {x:"" for x in HumanDiagnosticPositions.table_columns()}
                 )
+            if self.nedflow_analysis.last():
+                data.update(
+                    self.nedflow_analysis.last().get_data()
+                )
+            else:
+                data.update(
+                    {x:"" for x in NedflowAnalysis.table_columns()}
+                )
         return data
 
     @classmethod
@@ -1835,13 +1843,20 @@ class NedflowAnalysis(models.Model):
     @classmethod
     def table_columns(self):
         return [
-                "NedFlow_Version",
-                "NedFlow_SeqsInAncientTaxa",
-                "Ancient",
-                "AncientTaxa",
-                "OtherTaxa",
-                "Subsitutions"
+            "NED_version",
+            "NED_SeqsInAncientTaxa",
+            "NED_Ancient",
+            "NED_AncientTaxa",
+            "NED_OtherTaxa",
+            "NED_Subsitutions",
             ]
+
+    def get_data(self, grouped=True, **kwargs):
+        if grouped: # this is appended to the analyzedsample and grouped by library
+            from main.tools.nedflow import get_data_for_export
+
+            return get_data_for_export(self.data, self.version, **kwargs)
+
 
     class Meta:
         ordering = [

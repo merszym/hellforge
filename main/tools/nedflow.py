@@ -265,6 +265,85 @@ def get_nedflow_tab(request, pk):
     
     return render(request, "main/nedflow/nedflow-content.html", context)
 
+def get_data_for_export(data, nedversion, project=None, **kwargs):
+    #project gets handled via the **kwargs arguments in the generic export
+    if project:
+        params = json.loads(project.parameters) if project.parameters else \
+            {
+                'nedflow_cutoff_percentage': 1,
+            }
+    else:
+        params = {
+                'nedflow_cutoff_percentage': 1,
+            }
+
+    percentage = float(params.get('nedflow_cutoff_percentage', 1))
+
+    export = {
+        "NED_version": nedversion,
+        "NED_SeqsInAncientTaxa": 0,
+        "NED_Ancient": "-",
+        "NED_AncientTaxa": [],
+        "NED_OtherTaxa": [],
+        "NED_Subsitutions": [],
+    }
+
+    data = json.loads(data)
+
+    if len(data) == 0:
+        return export
+
+    total_counts = sum(
+        data[fam][0]['sum_genus_family'] for fam in data
+    )
+
+    for family in data:
+        entry = data[family][0]
+
+        fam_percentage = float(entry["sum_genus_family"] / total_counts) * 100
+        
+        if fam_percentage < percentage:
+            continue
+
+        if entry["ancientness"] == "+":
+            # update the export only if not already marked as ancient
+            if export["NED_Ancient"] == "-":
+                export["NED_Ancient"] = "+"
+        if entry["ancientness"] == "++":
+            export["NED_SeqsInAncientTaxa"] = export["NED_SeqsInAncientTaxa"] + entry["sum_genus_family"]
+            export["NED_Ancient"] = "++"
+
+            export["NED_AncientTaxa"].append(
+                f"{family}({entry['sum_genus_family']}[{fam_percentage:.2f}%])"
+            )
+        else:
+            export["NED_OtherTaxa"].append(
+                f"{family}({entry['sum_genus_family']}[{fam_percentage:.2f}%])"
+            )
+
+        # reformat the subsitutions
+        deam5 = (
+            f"{entry['deam5p_pct']}[{entry['deam5p_CI_pct']}]"
+        )
+        deam3 = (
+            f"{entry['deam3p_pct']}[{entry['deam3p_CI_pct']}]"
+        )
+        export["NED_Subsitutions"].append(f"{family}({deam5},{deam3})")
+
+    # now remove the lists
+    export["NED_AncientTaxa"] = (
+        " ".join(export["NED_AncientTaxa"]) if len(export["NED_AncientTaxa"]) > 0 else "-"
+    )
+    export["NED_OtherTaxa"] = (
+        " ".join(export["NED_OtherTaxa"]) if len(export["NED_OtherTaxa"]) > 0 else "-"
+    )
+    export["NED_Subsitutions"] = (
+        " ".join(export["NED_Subsitutions"]) if len(export["NED_Subsitutions"]) > 0 else "-"
+    )
+
+    return export
+
+
 urlpatterns = [
     path("get-table/<int:pk>", get_nedflow_tab, name="main_site_getnedflow")
 ]
