@@ -19,65 +19,6 @@
 
     </div>
     <div class="panel-head p-2">
-        <div class="filter-bar">
-        <details class="filter-menu">
-            <summary class="btn btn-sm"><i class="icon icon-search"></i> Filter Results</summary>
-            <form class="filter-panel" id="ned-filter"
-                hx-post="{% url 'main_site_getnedflow' object.pk %}"
-                hx-target="#DNA-tab_NedFlow-content">
-            <input type="hidden" name="object" value="{{object.pk}}">
-            <div class="form-group">
-                <label class="form-label" for="ned-filter-ancient">Ancientness Filter</label>
-                <input class="form-input" type="str" name="ancient" id="ned-filter-ancient" data-default="++" value="{{ancient|default:''}}">
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="ned-filter-fampercent">Percentage Cutoff</label>
-                <input class="form-input" type="float" name="fampercent" id="ned-filter-fampercent" data-default="1.0" value="{{fampercent}}">
-            </div>
-            {% if request.user.is_authenticated %}
-            <label class="chip-toggle">
-                <input type="checkbox" name="only_project" data-default="checked" {% if only_project %}checked{% endif %}>
-                <span class="chip">In Project</span>
-            </label>
-            {% endif %}
-            <div class="form-group">
-                <label class="form-label" for="ned-filter-per-page">Rows per page</label>
-                <select class="form-select" name="per_page" id="ned-filter-per-page" data-default="{{default_page_size}}">
-                    {% for size in page_sizes %}
-                    <option value="{{size}}" {% if size == per_page %}selected{% endif %}>{% if size %}{{size}}{% else %}All{% endif %}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <!-- set by the page-links, a new filter starts on page 1 -->
-            <input type="hidden" name="page" value="1">
-            <div class="filter-panel-actions">
-                <button type="button" class="btn btn-link filter-reset">Reset</button>
-                <button class="btn btn-primary">Apply</button>
-            </div>
-            </form>
-        </details>
-        <!-- the active filters -->
-        {% if families_selected %}
-        <span class="chip" title="Families: {{families_selected|join:', '}}"><span class="chip-text">Families: {{families_selected|join:', '}}</span></span>
-        {% endif %}
-        {% if per_page != default_page_size %}
-        <span class="chip" title="Rows per page"><span class="chip-text">Rows per page: {% if per_page %}{{per_page}}{% else %}All{% endif %}</span></span>
-        {% endif %}
-        {% if ancient != "++" %}
-        <span class="chip" title="Ancientness: {{ancient|default:'any'}}"><span class="chip-text">Ancientness: {{ancient|default:'any'}}</span></span>
-        {% endif %}
-        {% if fampercent != 1 %}
-        <span class="chip" title="Percentage &ge; {{fampercent}}"><span class="chip-text">Percentage &ge; {{fampercent}}</span></span>
-        {% endif %}
-        {% if request.user.is_authenticated %}
-        {% if only_project %}
-        <span class="chip" title="In Project"><span class="chip-text">In Project</span></span>
-        {% endif %}
-        {% if positives %}
-        <span class="chip" title="Libraries with results in any family"><span class="chip-text">Any family</span></span>
-        {% endif %}
-        {% endif %}
-        </div>
         <div class="has-icon-left">
             <input class="form-input" id="nedflow-list-search" type="text" placeholder="Type to filter table by content" style="width:50%;">
             <i class="form-icon icon icon-search"></i>
@@ -130,13 +71,7 @@
                             -
                         {% endif %}
                     </td>
-                    <td nowrap
-                        {% if ana.sample %}
-                        hx-get="{% url 'main_analyzedsample_setfilter' ana.sample.pk %}"
-                        hx-target="#show_libraries"
-                        class="text-primary tooltip tooltip-right" data-tooltip="Show results from this sample" style="cursor:pointer;"
-                        {% endif %}
-                        >
+                    <td nowrap>
                         {% if ana.sample %}
                             {{ana.sample.name}}
                         {% else %}
@@ -200,7 +135,8 @@
             </tbody>
         </table>
         </div>
-        {% include 'main/common/pagination.html' with page_obj=page_obj form='#ned-filter' %}
+        {% url 'main_site_getnedflow' object.pk as table_url %}
+        {% include 'main/common/pagination.html' with page_obj=page_obj url=table_url target='#DNA-tab_NedFlow-content' %}
         
         {% else %}
         <div class="empty">
@@ -212,14 +148,16 @@
         {% endif %}
         {% if legend_groups %}
         <!-- the families (legend), grouped by the order in the Taxonomy: select one or several to show only the libraries with results in them.
-             the checkboxes belong to the filter-form (form="ned-filter") and apply it directly -->
+             the checkboxes belong to the filter-form of the side-panel (form="dna-filter-form") and apply it directly -->
         <div class="m-2">
             <div style="display: flex; align-items: center; gap: .2rem;">
                 <small class="text-gray" style="min-width: 8rem;">Show only libraries with:</small>
-                <label class="chip-toggle" title="Libraries with results in any family (after the filters)">
-                    <input type="checkbox" name="positives" form="ned-filter" data-default=""
+                <input type="hidden" name="_fields" value="ned_positives" form="dna-filter-form">
+            <input type="hidden" name="_fields" value="ned_family" form="dna-filter-form">
+            <label class="chip-toggle" title="Libraries with results in any family (after the filters)">
+                    <input type="checkbox" name="ned_positives" form="dna-filter-form"
                         {% if positives %}checked{% endif %}
-                        onchange="document.getElementById('ned-filter').requestSubmit()">
+                        onchange="document.getElementById('dna-filter-form').requestSubmit()">
                     <span class="chip">Any</span>
                 </label>
             </div>
@@ -228,9 +166,9 @@
                 <small class="text-bold" style="min-width: 8rem;">{{group}}</small>
                 {% for family,color in entries %}
                 <label class="chip-toggle">
-                    <input type="checkbox" name="family" value="{{family}}" form="ned-filter" data-default=""
+                    <input type="checkbox" name="ned_family" value="{{family}}" form="dna-filter-form"
                         {% if family in families_selected %}checked{% endif %}
-                        onchange="document.getElementById('ned-filter').requestSubmit()">
+                        onchange="document.getElementById('dna-filter-form').requestSubmit()">
                     <span class="chip"><span class="{{family}}" style="display: inline-block; width: .6rem; height: .6rem; margin-right: .3rem;"></span>{{family}}</span>
                 </label>
                 {% endfor %}
@@ -241,7 +179,7 @@
             <form class="input-group mt-2" style="max-width: 36rem;"
                 hx-post="{% url 'main_nedflow_setfamilyorder' %}"
                 hx-swap="none"
-                hx-on::after-request="if(event.detail.successful){document.getElementById('ned-filter').requestSubmit()}">
+                hx-on::after-request="if(event.detail.successful){htmx.trigger('#DNA-tab_NedFlow-content', 'dna-refresh')}">
                 <span class="input-group-addon addon-sm">Set order of</span>
                 <select class="form-select select-sm" name="family">
                     {% for family,color in unknown_families %}
@@ -257,6 +195,21 @@
             {% endif %}
         </div>
         {% endif %}
+        <!-- the libraries of the rows of this table (with all filters of the DNA tab) -->
+        <div class="m-2" style="display: flex; gap: .2rem; align-items: center;">
+            <button class="btn tooltip tooltip-right" data-tooltip="Download Selection">
+                <a target="_blank" href="{% url 'main_analysis_downloadselection' object.pk 'nedflow' %}">
+                    <i class="icon icon-download"></i>
+                </a>
+            </button>
+            {% if request.user.is_authenticated %}
+            <button class="btn tooltip tooltip-right" data-tooltip="Download for Upload">
+                <a target="_blank" href="{% url 'main_analysis_downloadselection' object.pk 'nedflow' %}?for_upload">
+                    <i class="icon icon-download"></i>
+                </a>
+            </button>
+            {% endif %}
+        </div>
     </div>
 </div>
 

@@ -1,0 +1,166 @@
+{% load format %}
+<!-- the filters of the DNA tab: every change is saved directly (main/tools/dna_filters.py).
+     only the fields listed in _fields are updated, the other filters keep their values -->
+<form id="dna-filter-form"
+    hx-post="{% url 'main_dna_filters_update' object.pk %}"
+    hx-target="#dna-filters-samples"
+    hx-trigger="change, submit, input delay:600ms from:.dna-live">
+    {% csrf_token %}
+    <input type="hidden" name="_from_panel" value="1">
+
+    <div style="display: flex; justify-content: flex-end;">
+        <button type="button" class="btn btn-link btn-sm"
+            hx-post="{% url 'main_dna_filters_update' object.pk %}"
+            hx-vals='{"reset": "all"}'
+            hx-target="#dna-filters-samples">Reset all</button>
+    </div>
+
+    <h6 class="dna-filter-heading">Samples</h6>
+    <div class="form-group">
+        <label class="form-label" for="dna-filter-layer">Layer</label>
+        <input type="hidden" name="_fields" value="layer">
+        <select class="form-select select-sm" name="layer" id="dna-filter-layer">
+            <option value="all">All</option>
+            {% for entry in layers %}
+            <option value="layer_{{entry.pk}}" {% if entry.pk == request.session.filter_layer_pk %}selected{% endif %}>{{entry.name}}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <!-- several cultures can be selected, none selected means all -->
+        <label class="form-label">Cultures</label>
+        <input type="hidden" name="_fields" value="culture">
+        {% for entry in cultures %}
+        <label class="chip-toggle">
+            <input type="checkbox" name="culture" value="{{entry.pk}}" {% if entry.pk in selected_cultures %}checked{% endif %}>
+            <span class="chip"><span class="{{entry.classname}} dna-color-dot"></span>{{entry.name}}</span>
+        </label>
+        {% endfor %}
+        {% if has_sterile %}
+        <label class="chip-toggle" title="Samples without culture (or without layer)">
+            <input type="checkbox" name="culture" value="sterile" {% if "sterile" in selected_cultures %}checked{% endif %}>
+            <span class="chip"><span class="sterile dna-color-dot"></span>Sterile</span>
+        </label>
+        {% endif %}
+    </div>
+    <div class="form-group">
+        <label class="form-label" for="dna-filter-batch">Batch</label>
+        <input type="hidden" name="_fields" value="batch">
+        <select class="form-select select-sm" name="batch" id="dna-filter-batch">
+            <option value="all">All</option>
+            {% for batch in sample_batches %}
+            <option value="samplebatch_{{batch.pk}}" {% if batch.pk == request.session.filter_batch_pk %}selected{% endif %}>{{batch.name}}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <details class="dna-advanced" {% if request.session.filter_analyzed or request.session.filter_combine %}open{% endif %}>
+        <summary class="text-gray text-small">Advanced</summary>
+        <input type="hidden" name="_fields" value="analyzed">
+        <input type="hidden" name="_fields" value="combine">
+        <label class="chip-toggle">
+            <input type="checkbox" name="analyzed" {% if request.session.filter_analyzed %}checked{% endif %}>
+            <span class="chip">Analyzed only</span>
+        </label>
+        <label class="chip-toggle">
+            <input type="checkbox" name="combine" {% if request.session.filter_combine %}checked{% endif %}>
+            <span class="chip">Combine Batches</span>
+        </label>
+    </details>
+
+    <h6 class="dna-filter-heading">Libraries</h6>
+    <div class="form-group">
+        <label class="form-label" for="filter-search">Search</label>
+        <input type="hidden" name="_fields" value="search">
+        <input type="text" class="form-input input-sm dna-live" name="search" id="filter-search"
+            placeholder="Sample, run, library, ..." autocomplete="off"
+            value="{{request.session.filter_search|default:''}}">
+    </div>
+    <div class="form-group">
+        <!-- several probes can be selected, none selected means all probes -->
+        <label class="form-label">Probes</label>
+        <input type="hidden" name="_fields" value="probe">
+        {% for probe in probes %}
+        <label class="chip-toggle" title="{{probe}}">
+            <input type="checkbox" name="probe" value="{{probe}}" {% if probe in request.session.filter_probe %}checked{% endif %}>
+            <span class="chip">{{probe}}</span>
+        </label>
+        {% endfor %}
+    </div>
+    <input type="hidden" name="_fields" value="controls">
+    <label class="chip-toggle">
+        <input type="checkbox" name="controls" {% if request.session.filter_controls %}checked{% endif %}>
+        <span class="chip">No Controls</span>
+    </label>
+
+    <h6 class="dna-filter-heading">Results</h6>
+    <!-- the settings of the analysis that is open (see data-analysis of the dna-layout) -->
+    {% for analysis, name, prefix, settings in analyses %}
+    <div class="dna-analysis-settings" data-analysis="{{analysis}}">
+        <div class="text-gray text-small mb-1">{{name}}</div>
+        {% if analysis == "quicksand" %}
+        <div class="form-group">
+            <label class="form-label" for="qs-column">Values</label>
+            <input type="hidden" name="_fields" value="qs_column">
+            <select class="form-select select-sm" name="qs_column" id="qs-column">
+                <option value="ReadsDeduped" {% if settings.column == "ReadsDeduped" %}selected{% endif %}>ReadsDeduped</option>
+                <option value="ReadsDeam(3term)" {% if settings.column == "ReadsDeam(3term)" %}selected{% endif %}>ReadsDeam(3term)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="qs-percentage">Percentage Cutoff</label>
+            <input type="hidden" name="_fields" value="qs_percentage">
+            <input class="form-input input-sm dna-live" type="text" inputmode="decimal" name="qs_percentage" id="qs-percentage" value="{{settings.percentage}}">
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="qs-breadth">Expected Breadth Cutoff</label>
+            <input type="hidden" name="_fields" value="qs_breadth">
+            <input class="form-input input-sm dna-live" type="text" inputmode="decimal" name="qs_breadth" id="qs-breadth" value="{{settings.breadth}}">
+        </div>
+        <input type="hidden" name="_fields" value="qs_ancient">
+        <input type="hidden" name="_fields" value="qs_tableview">
+        <label class="chip-toggle">
+            <input type="checkbox" name="qs_ancient" {% if settings.ancient %}checked{% endif %}>
+            <span class="chip">Ancient only</span>
+        </label>
+        <label class="chip-toggle">
+            <input type="checkbox" name="qs_tableview" {% if settings.tableview %}checked{% endif %}>
+            <span class="chip">Table-View</span>
+        </label>
+        {% elif analysis == "matthias" %}
+        <input type="hidden" name="_fields" value="mm_ancient">
+        <input type="hidden" name="_fields" value="mm_positives">
+        <input type="hidden" name="_fields" value="mm_extended">
+        <label class="chip-toggle">
+            <input type="checkbox" name="mm_ancient" {% if settings.ancient %}checked{% endif %}>
+            <span class="chip">Deaminated only</span>
+        </label>
+        <label class="chip-toggle">
+            <input type="checkbox" name="mm_positives" {% if settings.positives %}checked{% endif %}>
+            <span class="chip">Positive only</span>
+        </label>
+        <label class="chip-toggle">
+            <input type="checkbox" name="mm_extended" {% if settings.extended %}checked{% endif %}>
+            <span class="chip">Extended</span>
+        </label>
+        {% elif analysis == "nedflow" %}
+        <div class="form-group">
+            <label class="form-label" for="ned-ancient">Ancientness Filter</label>
+            <input type="hidden" name="_fields" value="ned_ancient">
+            <input class="form-input input-sm dna-live" type="text" name="ned_ancient" id="ned-ancient" value="{{settings.ancient}}">
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="ned-fampercent">Percentage Cutoff</label>
+            <input type="hidden" name="_fields" value="ned_fampercent">
+            <input class="form-input input-sm dna-live" type="text" inputmode="decimal" name="ned_fampercent" id="ned-fampercent" value="{{settings.fampercent}}">
+        </div>
+        {% endif %}
+        {% if request.user.is_authenticated %}
+        <input type="hidden" name="_fields" value="{{prefix}}_only_project">
+        <label class="chip-toggle">
+            <input type="checkbox" name="{{prefix}}_only_project" {% if settings.only_project %}checked{% endif %}>
+            <span class="chip">In Project</span>
+        </label>
+        {% endif %}
+    </div>
+    {% endfor %}
+</form>

@@ -26,64 +26,6 @@
         </small>
     </div>
     <div class="panel-head p-2">
-        <div class="filter-bar">
-        <details class="filter-menu">
-            <summary class="btn btn-sm"><i class="icon icon-search"></i> Filter Results</summary>
-            <form class="filter-panel" id="mm-filter"
-                hx-post="{% url 'main_site_getmatthias' object.pk %}"
-                hx-target="#DNA-tab_AA163-content">
-            <input type="hidden" name="object" value="{{object.pk}}">
-            <label class="chip-toggle">
-                <input type="checkbox" name="ancient" data-default="checked" {% if ancient %}checked{% endif %}>
-                <span class="chip">Deaminated only</span>
-            </label>
-            <label class="chip-toggle">
-                <input type="checkbox" name="positives" data-default="" {% if positives %}checked{% endif %}>
-                <span class="chip">Positive only</span>
-            </label>
-            <label class="chip-toggle">
-                <input type="checkbox" name="extended" data-default="" {% if extended %}checked{% endif %}>
-                <span class="chip">Extended</span>
-            </label>
-            {% if request.user.is_authenticated %}
-            <label class="chip-toggle">
-                <input type="checkbox" name="only_project" data-default="checked" {% if only_project %}checked{% endif %}>
-                <span class="chip">In Project</span>
-            </label>
-            {% endif %}
-            <div class="form-group">
-                <label class="form-label" for="mm-filter-per-page">Rows per page</label>
-                <select class="form-select" name="per_page" id="mm-filter-per-page" data-default="{{default_page_size}}">
-                    {% for size in page_sizes %}
-                    <option value="{{size}}" {% if size == per_page %}selected{% endif %}>{% if size %}{{size}}{% else %}All{% endif %}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <!-- set by the page-links, a new filter starts on page 1 -->
-            <input type="hidden" name="page" value="1">
-            <div class="filter-panel-actions">
-                <button type="button" class="btn btn-link filter-reset">Reset</button>
-                <button class="btn btn-primary">Apply</button>
-            </div>
-            </form>
-        </details>
-        <!-- the active filters -->
-        {% if per_page != default_page_size %}
-        <span class="chip" title="Rows per page"><span class="chip-text">Rows per page: {% if per_page %}{{per_page}}{% else %}All{% endif %}</span></span>
-        {% endif %}
-        {% if ancient %}
-        <span class="chip" title="Deaminated only"><span class="chip-text">Deaminated only</span></span>
-        {% endif %}
-        {% if positives %}
-        <span class="chip" title="Positive only"><span class="chip-text">Positive only</span></span>
-        {% endif %}
-        {% if extended %}
-        <span class="chip" title="Extended"><span class="chip-text">Extended</span></span>
-        {% endif %}
-        {% if only_project and request.user.is_authenticated %}
-        <span class="chip" title="In Project"><span class="chip-text">In Project</span></span>
-        {% endif %}
-        </div>
         <div class="has-icon-left">
             <input class="form-input" id="matthias-list-search" type="text" placeholder="Type to filter table by content" style="width:50%;">
             <i class="form-icon icon icon-search"></i>
@@ -188,7 +130,8 @@
             </tbody>
         </table>
         </div>
-        {% include 'main/common/pagination.html' with page_obj=page_obj form='#mm-filter' %}
+        {% url 'main_site_getmatthias' object.pk as table_url %}
+        {% include 'main/common/pagination.html' with page_obj=page_obj url=table_url target='#DNA-tab_AA163-content' %}
         
         {% else %}
         <div class="empty">
@@ -198,6 +141,21 @@
             <p class="empty-title h5">No Results for diagnostic positions imported</p>
         </div>
         {% endif %}
+        <!-- the libraries of the rows of this table (with all filters of the DNA tab) -->
+        <div class="m-2" style="display: flex; gap: .2rem; align-items: center;">
+            <button class="btn tooltip tooltip-right" data-tooltip="Download Selection">
+                <a target="_blank" href="{% url 'main_analysis_downloadselection' object.pk 'matthias' %}">
+                    <i class="icon icon-download"></i>
+                </a>
+            </button>
+            {% if request.user.is_authenticated %}
+            <button class="btn tooltip tooltip-right" data-tooltip="Download for Upload">
+                <a target="_blank" href="{% url 'main_analysis_downloadselection' object.pk 'matthias' %}?for_upload">
+                    <i class="icon icon-download"></i>
+                </a>
+            </button>
+            {% endif %}
+        </div>
     </div>
 </div>
 

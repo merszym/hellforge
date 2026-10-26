@@ -4,39 +4,53 @@
     <li id="DNA-tab_AA75" class="tab-item active DNA"
         data-group="DNA-tab"
         data-show="site_dna_content"
-        data-object="AA75">
+        data-object="AA75"
+        data-analysis="quicksand">
         <a style="cursor:pointer;">Mammalian mtDNA</a>
     </li>
     <li id="DNA-tab_AA163" class="tab-item DNA"
         data-group="DNA-tab"
         data-show="DNA-tab_AA163-content"
-        data-object="AA163">
+        data-object="AA163"
+        data-analysis="matthias">
         <a style="cursor:pointer;">Hominin mtDNA</a>
     </li>
-    <li id="DNA-tab_AA163" class="tab-item DNA"
+    <li id="DNA-tab_NedFlow" class="tab-item DNA"
         data-group="DNA-tab"
         data-show="DNA-tab_NedFlow-content"
-        data-object="NedFlow">
+        data-object="NedFlow"
+        data-analysis="nedflow">
         <a style="cursor:pointer;">Vertebrate Nuclear DNA</a>
     </li>
     <script>
-    // this template is reloaded with the library filters, bind only once
     $('body').off('click.dnatab').on('click.dnatab', '.DNA', function(){
         add_url_params({
             'DNA-tab':$(this).attr("data-object")
         })
+        // the side-panel shows the settings of this analysis
+        $('#dna-layout').attr('data-analysis', $(this).attr('data-analysis'))
+        // reload the table, if the filters changed while it was hidden
+        var panel = document.getElementById($(this).attr('data-show'))
+        if(panel && panel.dataset.stale){
+            delete panel.dataset.stale
+            htmx.trigger(panel, 'dna-refresh')
+        }
     })
     </script>
 </ul>
 
-<div class="my-2 panel tab-panel" id="site_dna_content" data-group="DNA-tab" hx-get="{% url 'main_site_getquicksand' object.pk %}" hx-trigger="load once">
+<!-- the analysis tables: loaded when shown, reloaded (dna-refresh) when the filters change -->
+<div class="my-2 panel tab-panel dna-analysis-panel" id="site_dna_content" data-group="DNA-tab" data-analysis="quicksand"
+    hx-get="{% url 'main_site_getquicksand' object.pk %}" hx-trigger="load once, dna-refresh">
     <div class="loading loading-lg m-2"></div>
 </div>
 
-<div style="display: none;" class="my-2 panel tab-panel" id="DNA-tab_AA163-content" data-group="DNA-tab" hx-get="{% url 'main_site_getmatthias' object.pk %}" hx-trigger="intersect once">
+<div style="display: none;" class="my-2 panel tab-panel dna-analysis-panel" id="DNA-tab_AA163-content" data-group="DNA-tab" data-analysis="matthias"
+    hx-get="{% url 'main_site_getmatthias' object.pk %}" hx-trigger="intersect once, dna-refresh">
     <div class="loading loading-lg m-2"></div>
 </div>
 
-<div style="display: none;" class="my-2 panel tab-panel" id="DNA-tab_NedFlow-content" data-group="DNA-tab" hx-get="{% url 'main_site_getnedflow' object.pk %}" hx-trigger="intersect once">
+<div style="display: none;" class="my-2 panel tab-panel dna-analysis-panel" id="DNA-tab_NedFlow-content" data-group="DNA-tab" data-analysis="nedflow"
+    hx-get="{% url 'main_site_getnedflow' object.pk %}" hx-trigger="intersect once, dna-refresh">
     <div class="loading loading-lg m-2"></div>
 </div>

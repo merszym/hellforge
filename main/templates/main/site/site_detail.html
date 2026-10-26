@@ -22,10 +22,19 @@
     .sterile{
         background-color: rgb(117, 117, 117);
     }
+    /* full width (e.g. the DNA tab): the column with the site information is hidden */
+    #site-columns.site-wide #mobile{
+        display: none;
+    }
+    #site-columns.site-wide #content-part{
+        flex: 0 0 100%;
+        max-width: 100%;
+        width: 100%;
+    }
     </style>
 </div>
 <span id="get_location_data" data-url="{% url 'main_site_geo' %}?object={{object.pk}}"></span>
-<div class='columns' style="padding:10px;">
+<div class='columns {% if tab == "site_samples" %}site-wide{% endif %}' id="site-columns" style="padding:10px;">
     <!--This spans are used by ajax to reload the site panels-->
     <span id="site_info_update_click" style="display: none;" class="generic_reload" data-reload="mobile"></span>
     <span id="layers_update_click" style="display: none;" class="generic_reload" data-reload="site_layer"></span>
@@ -88,10 +97,14 @@
     <div id="content-part" class="column col-8">
         <button class="btn tooltip tooltip-right" id="resize-content" data-tooltip="Toggle Full Width"><i class="icon icon-resize-horiz"></i></button>
         <script>
-            $("body").on('click',"#resize-content", function(){
-                $('#content-part').toggleClass('col-8')
-                $('#content-part').toggleClass('col-12')
-                $('#mobile').toggle()
+            // full width: set explicitly (instead of toggling classes), the DNA tab is full width by default
+            function setSiteWide(wide){
+                $('#site-columns').toggleClass('site-wide', wide)
+                // the map has to recalculate its size, when it is shown again
+                window.dispatchEvent(new Event('resize'))
+            }
+            $('#resize-content').on('click', function(){
+                setSiteWide(!$('#site-columns').hasClass('site-wide'))
             });
         </script>
 
@@ -157,6 +170,7 @@
                     add_url_params({
                         'tab':$(this).attr('data-select')
                     })
+                    setSiteWide($(this).attr('data-select') === 'site_samples')
                 })
             </script>
 

@@ -1,113 +1,4 @@
 {% load format %}
-<h3>DNA Libraries: Runs / Experiments</h3>
-<div class="filter-bar">
-    <details class="filter-menu">
-        <summary class="btn btn-sm"><i class="icon icon-search"></i> Filter Libraries</summary>
-        <form class="filter-panel"
-            hx-post="{% url 'main_analyzedsample_getdata' site.pk %}"
-            hx-target="#show_libraries">
-            {% csrf_token %}
-            <div class="form-group">
-                <label class="form-label" for="filter-search">Search</label>
-                <input type="text" class="form-input" name="search" id="filter-search" data-default=""
-                    placeholder="Text in any library field, e.g. a sequencing run" autocomplete="off"
-                    value="{{request.session.filter_search|default:''}}">
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="filter-sample-search">Sample</label>
-                <!-- search-as-you-type, the picked sample is submitted via the hidden input -->
-                <div style="position: relative;">
-                    <input type="hidden" name="sample" id="filter-sample" data-default="all"
-                        value="{% if request.session.filter_sample_pk %}sample_{{request.session.filter_sample_pk}}{% else %}all{% endif %}">
-                    <input type="text" class="form-input" name="sample_search" id="filter-sample-search" data-default=""
-                        placeholder="All (type to search)" autocomplete="off"
-                        value="{% if request.session.filter_sample_pk %}{{request.session.filter_sample_name}}{% endif %}"
-                        hx-get="{% url 'main_analyzedsample_samplesearch' site.pk %}"
-                        hx-trigger="input changed delay:200ms, click"
-                        hx-target="#sample-search-results">
-                    <div id="sample-search-results"></div>
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="filter-batch">Batch</label>
-                <select class="form-select" name="batch" id="filter-batch" data-default="all">
-                    {% if request.session.filter_batch_pk %}
-                    <option value="samplebatch_{{request.session.filter_batch_pk}}" selected>{{request.session.filter_batch_name}}</option>
-                    <option value="all">All</option>
-                    {% else %}
-                    <option value="all" selected>All</option>
-                    {% endif %}
-                    {% for batch in batches %}
-                    {% if batch.pk %}
-                    <option value="samplebatch_{{batch.pk}}">{{batch.name}}</option>
-                    {% endif %}
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-group">
-                <!-- several probes can be selected, none selected means all probes -->
-                <label class="form-label">Probes</label>
-                {% for probe in probes %}
-                <label class="chip-toggle" title="{{probe_names|lookup:probe|default:probe}}">
-                    <input type="checkbox" name="probe" value="{{probe}}" data-default="" {% if probe in request.session.filter_probe %}checked{% endif %}>
-                    <span class="chip">{{probe}}</span>
-                </label>
-                {% endfor %}
-            </div>
-            <label class="chip-toggle">
-                <input type="checkbox" name="filter_controls" data-default="" {% if request.session.filter_controls %}checked{% endif %}>
-                <span class="chip">No Controls</span>
-            </label>
-            <input type="hidden" name="page" id="filter-page" value="1">
-            <input type="hidden" name="paginate" id="filter-paginate" value="">
-            <div class="filter-panel-actions">
-                <button type="button" class="btn btn-link filter-reset">Reset</button>
-                <button id='main-filter-button' class="btn btn-primary">Apply</button>
-            </div>
-        </form>
-    </details>
-    <!-- the active filters -->
-    {% if request.session.filter_search %}
-    <span class="chip" title="Search: {{request.session.filter_search}}"><span class="chip-text">Search: {{request.session.filter_search}}</span></span>
-    {% endif %}
-    {% if request.session.filter_sample_pk %}
-    <span class="chip" title="Sample: {{request.session.filter_sample_name}}"><span class="chip-text">Sample: {{request.session.filter_sample_name}}</span></span>
-    {% endif %}
-    {% if request.session.filter_batch_pk %}
-    <span class="chip" title="Batch: {{request.session.filter_batch_name}}"><span class="chip-text">Batch: {{request.session.filter_batch_name}}</span></span>
-    {% endif %}
-    {% if request.session.filter_probe %}
-    <span class="chip" title="Probes: {{request.session.filter_probe|join:', '}}"><span class="chip-text">Probes: {{request.session.filter_probe|join:', '}}</span></span>
-    {% endif %}
-    {% if request.session.filter_controls %}
-    <span class="chip" title="No Controls"><span class="chip-text">No Controls</span></span>
-    {% endif %}
-</div>
-<script>
-    // sample search: typing invalidates the picked sample until a new one is picked
-    $('#filter-sample-search').on('input', function(){
-        $('#filter-sample').val('all')
-    }).on('keydown', function(e){
-        // escape closes the search results first, then (generic.js) the filter-panel
-        if(e.key === 'Escape' && $('#sample-search-results').children().length){
-            $('#sample-search-results').empty()
-            e.stopPropagation()
-        }
-        // enter picks the first match, if nothing was picked yet
-        if(e.key === 'Enter' && $(this).val() && $('#filter-sample').val() === 'all'){
-            $('#sample-search-results .pick-sample:not([data-value=all])').first().trigger('mousedown')
-        }
-    }).on('blur', function(){
-        $('#sample-search-results').empty()
-    })
-    // mousedown instead of click, so it fires before the blur above
-    $('#sample-search-results').on('mousedown', '.pick-sample', function(e){
-        e.preventDefault()
-        $('#filter-sample').val($(this).attr('data-value'))
-        $('#filter-sample-search').val($(this).attr('data-name'))
-        $('#sample-search-results').empty()
-    })
-</script>
 
 
 <div class="panel" style="max-height:500px; overflow:scroll;">
@@ -324,7 +215,7 @@
     <div class="empty-icon">
         <i class="icon icon-flag"></i>
     </div>
-    <p class="empty-title h5">No libraries uploaded</p>
+    <p class="empty-title h5">{% if request.session.filter_search or request.session.filter_probe or request.session.filter_layer_pk or request.session.filter_culture or request.session.filter_batch_pk or request.session.filter_analyzed %}No libraries match the filters{% else %}No libraries uploaded{% endif %}</p>
 </div>
 {% endif %}
 
@@ -347,45 +238,8 @@
         {% endif %}
     </div>
     <div class="col col-mx-auto">
-        <ul class="pagination">
-            {% if object_list.has_previous and object_list.number > 2 %}
-            <li class="page-item" data-page="1">
-                <a style="cursor: pointer;" onclick="$('#filter-paginate').val('1'); $('#filter-page').val('1'); $('#main-filter-button').click();">
-                    1
-                </a>
-            </li>
-            <li class="page-item">
-                <span>...</span>
-            </li>
-            {% endif %}
-            {% if object_list.has_previous %}
-            <li class="page-item" data-page="{{object_list.previous_page_number}}">
-                <a style="cursor: pointer;" onclick="$('#filter-paginate').val('1'); $('#filter-page').val('{{object_list.previous_page_number}}'); $('#main-filter-button').click();">
-                    {{object_list.previous_page_number}}
-                </a>
-            </li>
-            {% endif %}
-            <li class="page-item active" data-page="{{ object_list.number }}">
-                <a>{{ object_list.number }}</a>
-            </li>
-            {% if object_list.has_next %}
-            <li class="page-item">
-                <a style="cursor: pointer;" onclick="$('#filter-paginate').val('1'); $('#filter-page').val('{{ object_list.number|add:1}}'); $('#main-filter-button').click();">
-                    {{ object_list.number|add:1}}
-                </a>
-            </li>
-            {% endif %}
-            {% if object_list.paginator.num_pages != object_list.number %}
-            <li class="page-item">
-                <span>...</span>
-            </li>
-            <li class="page-item" data-page="page_obj.paginator.num_pages">
-                <a style="cursor: pointer;" onclick="$('#filter-paginate').val('1'); $('#filter-page').val('{{object_list.paginator.num_pages}}'); $('#main-filter-button').click();">
-                    {{object_list.paginator.num_pages}}
-                </a>
-            </li>
-            {% endif %}
-        </ul>
+        {% url 'main_analyzedsample_getdata' site.pk as table_url %}
+        {% include 'main/common/pagination.html' with page_obj=object_list url=table_url target='#show_libraries' %}
     </div>
     
 </div>

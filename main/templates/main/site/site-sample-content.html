@@ -1,165 +1,120 @@
 {% load format %}
+<style>
+    /* the DNA tab: retractable filter side-panel and the content */
+    .dna-layout { display: flex; align-items: flex-start; gap: .8rem; }
+    .dna-sidebar { flex: 0 0 auto; position: sticky; top: .5rem; }
+    .dna-sidebar .dna-sidebar-body { display: none; width: 18rem; max-height: calc(100vh - 4rem); overflow-y: auto; padding-right: 1rem; }
+    .dna-layout.filters-open .dna-sidebar .dna-sidebar-body { display: block; }
+    .dna-sidebar-toggle { margin-bottom: .4rem; }
+    #dna-filter-count:empty { display: none; }
+    .dna-main { flex: 1 1 auto; min-width: 0; }
+    .dna-filter-heading { margin: .8rem 0 .3rem 0; border-bottom: 1px solid #dadee4; padding-bottom: .1rem; }
+    #dna-filter-form .form-group { margin-bottom: .4rem; }
+    #dna-filter-form .chip-toggle { margin: .1rem; }
+    #dna-filter-form .form-input, #dna-filter-form .form-select { box-sizing: border-box; width: 100%; }
+    #dna-filter-form .dna-color-dot { display: inline-block; width: .6rem; height: .6rem; margin-right: .3rem; }
+    #dna-filter-form .dna-advanced > summary { cursor: pointer; margin: .3rem 0; }
+    /* only the settings of the open analysis are shown */
+    .dna-analysis-settings { display: none; }
+    .dna-layout[data-analysis=quicksand] .dna-analysis-settings[data-analysis=quicksand],
+    .dna-layout[data-analysis=matthias] .dna-analysis-settings[data-analysis=matthias],
+    .dna-layout[data-analysis=nedflow] .dna-analysis-settings[data-analysis=nedflow] { display: block; }
+</style>
 
-<div class="my-2" id="site_sample_content">
-    <section>
-        <h3>Sample Overview</h3>
-        <!-- Display the filter -->
-        <div class="filter-bar">
-        <details class="filter-menu">
-            <summary class="btn btn-sm"><i class="icon icon-search"></i> Filter Samples</summary>
-            <form class="filter-panel"
-                hx-post="{% url 'main_site_sample_tab'%}"
-                hx-target="#site_samples">
-            {% csrf_token %}
-            <input type="hidden" name="object" value="{{object.pk}}">
-            <div class="form-group">
-                <label class="form-label" for="smp-filter-layer">Layer</label>
-                <select class="form-select" name="layer" id="smp-filter-layer" data-default="all">
-                    {% if request.session.filter_layer_pk %}
-                    <option value="layer_{{request.session.filter_layer_pk}}" selected>{{request.session.filter_layer_name}}</option>
-                    <option value="all">All</option>
-                    {% else %}
-                    <option value="all" selected>All</option>
-                    {% endif %}
-                    {% for entry in layers %}
-                    {% if entry.pk %}
-                    <option value="layer_{{entry.pk}}">{{entry.name}}</option>
-                    {% endif %}
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="smp-filter-culture">Culture</label>
-                <select class="form-select" name="culture" id="smp-filter-culture" data-default="all">
-                    {% if request.session.filter_culture_pk %}
-                    <option value="culture_{{request.session.filter_culture_pk}}" selected>{{request.session.filter_culture_name}}</option>
-                    <option value="all">All</option>
-                    {% else %}
-                    <option value="all" selected>All</option>
-                    {% endif %}
-                    {% for entry in cultures %}
-                        {% if entry.pk %}
-                        <option value="culture_{{entry.pk}}">{{entry.name}}</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
-            </div>
-            <label class="chip-toggle">
-                <input type="checkbox" name="analyzed" data-default="" {% if request.session.filter_analyzed %}checked{% endif %}>
-                <span class="chip">Analyzed only</span>
-            </label>
-            <label class="chip-toggle">
-                <input type="checkbox" name="combine" data-default="" {% if request.session.filter_combine %}checked{% endif %}>
-                <span class="chip">Combine Batches</span>
-            </label>
-            <div class="filter-panel-actions">
-                <button type="button" class="btn btn-link filter-reset">Reset</button>
-                <button class="btn btn-primary">Apply</button>
-            </div>
-            </form>
-        </details>
-        <!-- the active filters -->
-        {% if request.session.filter_layer_pk %}
-        <span class="chip" title="Layer: {{request.session.filter_layer_name}}"><span class="chip-text">Layer: {{request.session.filter_layer_name}}</span></span>
-        {% endif %}
-        {% if request.session.filter_culture_pk %}
-        <span class="chip" title="Culture: {{request.session.filter_culture_name}}"><span class="chip-text">Culture: {{request.session.filter_culture_name}}</span></span>
-        {% endif %}
-        {% if request.session.filter_analyzed %}
-        <span class="chip" title="Analyzed only"><span class="chip-text">Analyzed only</span></span>
-        {% endif %}
-        {% if request.session.filter_combine %}
-        <span class="chip" title="Combine Batches"><span class="chip-text">Combine Batches</span></span>
-        {% endif %}
+<div class="dna-layout my-2" id="dna-layout" data-analysis="quicksand">
+    <aside class="dna-sidebar">
+        <button type="button" class="btn btn-sm dna-sidebar-toggle" id="dna-sidebar-toggle" title="Show/hide the filters">
+            <i class="icon icon-menu"></i> Filters
+            <span class="label label-rounded label-primary" id="dna-filter-count">{% if active_count %}{{active_count}}{% endif %}</span>
+        </button>
+        <div id="dna-filter-panel" class="dna-sidebar-body">
+            {% include 'main/site/dna-filter-panel.html' %}
         </div>
-    </section>
-    <section class="my-2">
-        {% if not request.session.filter_combine %}
-        <h4>Sample Batches</h4>
-        {% for batch in batches %}
-        <!-- List the sample batches -->
-        <div class="tile tile-centered" id="sample-batch_{{batch.pk}}">
-            <div class="tile-icon">
-                <div class="btn btn-primary batch tooltip tooltip-right" data-tooltip="Toggle Sample Batch" id="{{batch.pk}}" data-object="samplebatch_{{batch.pk}}">
-                {% if batch == selected_batch %}
-                <i class="icon icon-arrow-down centered"></i>
-                {% else %}
-                <i class="icon icon-arrow-right centered"></i>
-                {% endif %}
-                </div>
-            </div>
-            <div class="tile-content">
-                <div class="tile-title">{{batch.name}}</div>
-                <small class="tile-subtitle text-gray">Number of samples: {{batches|lookup:batch}}</small>
-            </div>
-        </div>
+    </aside>
 
-        <section id="samplebatch-content-{{batch.pk}}" {% if batch != selected_batch %} style="display: none;" {% endif %}>
-            {% if batch == selected_batch %}
-            <div class="tab-panel"
-                hx-get="{% url 'main_samplebatch_get' batch.pk %}"
-                hx-trigger="load once">
+    <div class="dna-main" id="site_sample_content">
+        <!-- above each section: the active filters of this section (updated by main_dna_filters_update) -->
+        <section>
+            <h3>Sample Overview</h3>
+            <div class="filter-bar" id="dna-filters-samples">
+                {% include 'main/site/dna-section-filters.html' with section='samples' labels=active_filters.samples %}
+            </div>
+            <div id="dna-batches" hx-get="{% url 'main_site_batches' object.pk %}" hx-trigger="load, dna-refresh">
                 <div class="loading loading-lg m-2"></div>
             </div>
-            {% else %}
-            <div class="tab-panel"
-                hx-get="{% url 'main_samplebatch_get' batch.pk %}"
-                hx-trigger="click from:#sample-batch_{{batch.pk}} once">
-                <div class="loading loading-lg m-2"></div>
-            </div>
-            {% endif %}
         </section>
-        {% empty %}
-        <div class="empty">
-            <div class="empty-icon">
-                <i class="icon icon-flag"></i>
+
+        <div class="divider"></div>
+
+        <section class="my-2">
+            <h3>DNA Libraries: Runs / Experiments</h3>
+            <div class="filter-bar" id="dna-filters-libraries">
+                {% include 'main/site/dna-section-filters.html' with section='libraries' labels=active_filters.libraries %}
             </div>
-            <p class="empty-title h5">No samples uploaded</p>
-        </div>
-        {% endfor %}
-        {% else %}
+            <div id="show_libraries" hx-get="{% url 'main_analyzedsample_getdata' object.pk %}" hx-trigger="load, dna-refresh">
+                <div class="loading loading-lg m-2"></div>
+            </div>
+        </section>
 
-        <div class="tab-panel"
-            hx-get="{% url 'main_samplebatch_get' 0 %}"
-            hx-trigger="load once">
-            <div class="loading loading-lg m-2"></div>
-        </div>
-        
-        {% endif %}
+        <div class="divider"></div>
 
-        <div class="my-2" style="display: flex; gap: .2rem; align-items: center;">
-            {% if request.user.is_authenticated and not request.session.filter_combine %}
-            <span class="btn modal_open"
-                hx-get="{% url 'main_modal_get' %}?"
-                hx-vals='{"object":"site_{{object.pk}}", "type":"add_samplebatch"}'
-                hx-target="#modal-blank">
-                Add Batch
-            </span>
-            {% endif %}
-            <button class="btn tooltip tooltip-right" data-tooltip="Download all Samples">
-                <a target="_blank" href="{% url 'get_dataset' %}?from=site_{{object.pk}}&unique=sample">
-                    <i class="icon icon-download"></i>
-                </a>
-            </button>
-        </div>
-    </section>
-
-    <div class="divider"></div>
-
-    <section class="my-2" id="show_libraries" hx-get="{% url 'main_analyzedsample_getdata' object.pk %}"
-            hx-trigger="load once">
-            <div class="loading loading-lg m-2"></div>
-    </section>
-
-    <div class="divider"></div>
-
-    <!-- reloaded by the library table, when the library filters change -->
-    <section>
-        <h3>DNA Libraries: Analyses</h3>
-        <div id="site_dna"
-            hx-get="{% url 'main_site_dna_tab' object.pk %}"
-            hx-trigger="load once, libraries-filtered from:body">
-            <div class="loading loading-lg m-2"></div>
-        </div>
-    </section>
+        <section>
+            <h3>DNA Libraries: Analyses</h3>
+            <div class="filter-bar" id="dna-filters-results">
+                {% include 'main/site/dna-section-filters.html' with section='results' labels=active_filters.results %}
+            </div>
+            <div id="site_dna" hx-get="{% url 'main_site_dna_tab' object.pk %}" hx-trigger="load once">
+                <div class="loading loading-lg m-2"></div>
+            </div>
+        </section>
+    </div>
 </div>
+
+<script>
+    // the side-panel is closed by default, the state is remembered in the browser
+    (function(){
+        var layout = document.getElementById('dna-layout')
+        try {
+            if(localStorage.getItem('dna-filters-open') === '1'){ layout.classList.add('filters-open') }
+        } catch(e) {}
+        $('#dna-sidebar-toggle').on('click', function(){
+            layout.classList.toggle('filters-open')
+            try { localStorage.setItem('dna-filters-open', layout.classList.contains('filters-open') ? '1' : '0') } catch(e) {}
+        })
+    })()
+
+    // after a filter changed (HX-Trigger of main_dna_filters_update), reload what depends on it:
+    // samples -> batches, libraries, analyses | libraries -> libraries, analyses | analyses -> all analysis tables
+    // quicksand/matthias/nedflow -> only this table. hidden analysis tables are reloaded when they are opened
+    function dnaRefreshAnalyses(only){
+        document.querySelectorAll('.dna-analysis-panel').forEach(function(panel){
+            if(only && panel.dataset.analysis !== only){ return }
+            if(panel.offsetParent !== null){
+                htmx.trigger(panel, 'dna-refresh')
+            } else if(panel.dataset.loaded){
+                panel.dataset.stale = '1'
+                // the outdated legend (e.g. selected families) must not be posted with the filter-form anymore
+                panel.querySelectorAll('[form=dna-filter-form]').forEach(function(field){ field.disabled = true })
+            }
+        })
+    }
+    $(document.body).off('dna-filter-changed.dna').on('dna-filter-changed.dna', function(e){
+        var levels = (e.originalEvent.detail || {}).levels || []
+        var has = function(level){ return levels.indexOf(level) > -1 }
+        if(has('samples')){ htmx.trigger('#dna-batches', 'dna-refresh') }
+        if(has('samples') || has('libraries')){ htmx.trigger('#show_libraries', 'dna-refresh') }
+        if(has('samples') || has('libraries') || has('analyses')){
+            dnaRefreshAnalyses()
+        } else {
+            ['quicksand', 'matthias', 'nedflow'].forEach(function(analysis){
+                if(has(analysis)){ dnaRefreshAnalyses(analysis) }
+            })
+        }
+    })
+    $(document.body).off('htmx:afterSwap.dna').on('htmx:afterSwap.dna', function(e){
+        if(e.target.classList && e.target.classList.contains('dna-analysis-panel')){
+            e.target.dataset.loaded = '1'
+            delete e.target.dataset.stale
+        }
+    })
+</script>

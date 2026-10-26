@@ -1,0 +1,70 @@
+{% load format %}
+<!-- the sample batches of the DNA tab, with the sample-filters of the side-panel -->
+{% if not request.session.filter_combine %}
+<h4>Sample Batches</h4>
+{% for batch in batches %}
+<!-- List the sample batches -->
+<div class="tile tile-centered" id="sample-batch_{{batch.pk}}">
+    <div class="tile-icon">
+        <div class="btn btn-primary batch tooltip tooltip-right" data-tooltip="Toggle Sample Batch" id="{{batch.pk}}" data-object="samplebatch_{{batch.pk}}">
+        {% if batch == selected_batch %}
+        <i class="icon icon-arrow-down centered"></i>
+        {% else %}
+        <i class="icon icon-arrow-right centered"></i>
+        {% endif %}
+        </div>
+    </div>
+    <div class="tile-content">
+        <div class="tile-title">{{batch.name}}</div>
+        <small class="tile-subtitle text-gray">Number of samples: {{batches|lookup:batch}}</small>
+    </div>
+</div>
+
+<section id="samplebatch-content-{{batch.pk}}" {% if batch != selected_batch %} style="display: none;" {% endif %}>
+    {% if batch == selected_batch %}
+    <div class="tab-panel"
+        hx-get="{% url 'main_samplebatch_get' batch.pk %}"
+        hx-trigger="load once">
+        <div class="loading loading-lg m-2"></div>
+    </div>
+    {% else %}
+    <div class="tab-panel"
+        hx-get="{% url 'main_samplebatch_get' batch.pk %}"
+        hx-trigger="click from:#sample-batch_{{batch.pk}} once">
+        <div class="loading loading-lg m-2"></div>
+    </div>
+    {% endif %}
+</section>
+{% empty %}
+<div class="empty">
+    <div class="empty-icon">
+        <i class="icon icon-flag"></i>
+    </div>
+    <p class="empty-title h5">{% if filtered %}No samples match the filters{% else %}No samples uploaded{% endif %}</p>
+</div>
+{% endfor %}
+{% else %}
+
+<div class="tab-panel"
+    hx-get="{% url 'main_samplebatch_get' 0 %}"
+    hx-trigger="load once">
+    <div class="loading loading-lg m-2"></div>
+</div>
+
+{% endif %}
+
+<div class="my-2" style="display: flex; gap: .2rem; align-items: center;">
+    {% if request.user.is_authenticated and not request.session.filter_combine %}
+    <span class="btn modal_open"
+        hx-get="{% url 'main_modal_get' %}?"
+        hx-vals='{"object":"site_{{object.pk}}", "type":"add_samplebatch"}'
+        hx-target="#modal-blank">
+        Add Batch
+    </span>
+    {% endif %}
+    <button class="btn tooltip tooltip-right" data-tooltip="Download all Samples">
+        <a target="_blank" href="{% url 'get_dataset' %}?from=site_{{object.pk}}&unique=sample">
+            <i class="icon icon-download"></i>
+        </a>
+    </button>
+</div>

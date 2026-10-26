@@ -1,6 +1,6 @@
 {% load format %}
 
-{% if request.session.filter_combine %}
+{% if combined %}
         {% if samples.first %}
             {% include 'main/samples/sample-table.html' with object_list=samples site=site %}
         {% else %}

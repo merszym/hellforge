@@ -11,6 +11,7 @@ from django.db.models import Q
 from main.tools.generic import get_instance_from_string
 from main.tools.projects import get_project
 from main.tools.analyzed_samples import update_query_for_negatives, get_libraries, LIBRARY_LAYER_RELATED, probe_translations, paginate_rows
+from main.tools.dna_filters import get_analysis_settings
 from main.models import NedflowAnalysis, AnalyzedSample, Site, Taxonomy
 import re
 import json
@@ -252,6 +253,8 @@ def prepare_data(
             sns.color_palette("husl", len(families)).as_hex(),
         )
     )
+    # selected families without (filtered) results stay in the legend (grey), so they can be deselected
+    colors += [(family, "#bbbbbb") for family in families_selected or [] if family not in families]
     legend_groups, known_orders = group_families(colors)
 
     if positives:
@@ -280,15 +283,12 @@ def prepare_data(
     }
 
 
-def get_nedflow_tab(request, pk):
+def table_rows(request, site):
     """
-    In the DNA Tab, render the quicksand table and form
+    the (filtered) rows of the nedflow table, for the table and the download of the selection
     """
-    site = Site.objects.get(pk=int(pk))
-    context = {"object": site, "probe_names": probe_translations()}
-
     # first, get the objects
-    analyzed_samples = get_libraries(request, site.pk, return_query=True, unset=False)
+    analyzed_samples = get_libraries(request, site.pk, return_query=True)
 
     #order by analyzed sample to match the order of the table above the quicksand tab
     query = NedflowAnalysis.objects.filter(analyzedsample__in=analyzed_samples).order_by('analyzedsample').select_related(
@@ -296,31 +296,28 @@ def get_nedflow_tab(request, pk):
     )
 
 
-    # Additional filters -> TODO:Adjust to NedFlow
-    if request.method == "POST":
-        ancient = request.POST.get("ancient")
-        positives = "on" == request.POST.get("positives", "")
-        only_project = "on" == request.POST.get("only_project", "")
-        fampercent = request.POST.get("fampercent", 1)
-        families_selected = request.POST.getlist("family")
+    # the settings are set in the side-panel of the DNA tab (main/tools/dna_filters.py)
+    settings = get_analysis_settings(request, "nedflow")
+    return prepare_data(
+        request,
+        query,
+        ancient=settings["ancient"],
+        positives=settings["positives"],
+        only_project=settings["only_project"],
+        fampercent=settings["fampercent"],
+        families_selected=settings["family"],
+    )
 
-        # column: ReadsDeduped
-        # filter: ancient, breadth, percentage
-        context.update(
-            prepare_data(
-                request,
-                query,
-                ancient=ancient,
-                positives=positives,
-                only_project=only_project,
-                fampercent=fampercent,
-                families_selected=families_selected
-            )
-        )
-    else:
-        context.update(prepare_data(request, query))
-        
-    
+
+def get_nedflow_tab(request, pk):
+    """
+    In the DNA Tab, render the NED-Flow table
+    """
+    site = Site.objects.get(pk=int(pk))
+    context = {"object": site, "probe_names": probe_translations()}
+
+    context.update(table_rows(request, site))
+
     # only the rows of the table are paginated, the colors etc. are calculated from all rows
     context.update(paginate_rows(request, context["object_list"]))
 

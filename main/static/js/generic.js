@@ -41,49 +41,6 @@ $('body').on('click','.tab-item', function(){
     $(`.${$(this).attr("data-show")}`).show()
 });
 
-// filter menus (see .filter-menu in base.html)
-// close an open filter-panel when clicking outside of it, or with escape
-$(document).on('click', function(e){
-    $('details.filter-menu[open]').each(function(){
-        if(!this.contains(e.target)){
-            this.open = false
-        }
-    })
-});
-$(document).on('keydown', function(e){
-    if(e.key === 'Escape'){
-        $('details.filter-menu[open]').prop('open', false)
-    }
-});
-
-// set a filter-field back to its data-default (checkboxes: 'checked' or empty)
-function resetFilterField(field){
-    var value = field.attr('data-default') || ''
-    if(field.is(':checkbox')){
-        field.prop('checked', value === 'checked')
-    }else{
-        field.val(value)
-    }
-}
-
-// reset all the fields of a filter-form and apply it
-$('body').on('click', '.filter-panel .filter-reset', function(){
-    var form = $(this).closest('form.filter-panel')
-    // form.elements also contains the fields outside of the form (with form="id")
-    $(form[0].elements).filter('[data-default]').each(function(){
-        resetFilterField($(this))
-    })
-    form[0].requestSubmit()
-});
-
-// pagination of tables with a filter-form (see main/common/pagination.html)
-// the page-link submits the filter-form with the page, so the filters are kept
-$('body').on('click', '.pagination[data-form] [data-page]', function(){
-    var form = $($(this).closest('.pagination').attr('data-form'))
-    form.find('[name=page]').val($(this).attr('data-page'))
-    form[0].requestSubmit()
-});
-
 // generic modal handling
 $('body').on('click','.modal_open', function(){
     var element = $("#modal-blank")

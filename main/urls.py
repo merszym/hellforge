@@ -14,6 +14,7 @@ urlpatterns = [
     path("profile/", include("main.tools.profile")),
     path("synonym/", include("main.tools.synonym")),
     path("site/", include("main.tools.site")),
+    path("dna-filters/", include("main.tools.dna_filters")),
     path("culture/", include("main.tools.culture")),
     path("epoch/", include("main.tools.epoch")),
     path("date/", include("main.tools.dating")),

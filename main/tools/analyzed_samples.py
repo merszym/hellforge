@@ -35,26 +35,6 @@ def get_site_dna_content(request, pk):
     return render(request, "main/site/site-dna-content.html", context)
 
 
-def unset_library_filters(request):
-    request.session.pop('filter_batch_pk','')
-    request.session.pop('filter_probe','')
-    request.session.pop('filter_sample_pk','')
-    request.session.pop('filter_controls','')
-    request.session.pop('filter_search','')
-
-
-def set_sample_cookie(request, pk):
-    sample = Sample.objects.get(pk=pk)
-    # unset library-filters
-    unset_library_filters(request)
-
-    #only filter by sample
-    request.session['filter_sample_pk'] = sample.pk
-    request.session['filter_sample_name'] = sample.name
-
-    return get_libraries(request, sample.site.pk, unset=False, filters_changed=True)
-
-
 # the related objects needed to display the layer/culture of a library (see Sample.get_layer)
 # prefix with 'analyzedsample__' for the analysis models
 LIBRARY_LAYER_RELATED = [
@@ -77,35 +57,23 @@ def probe_translations():
     return {k: v[0] for k, v in translations.items() if len(v) == 1}
 
 
-# rows per page of the analysis tables (0: all rows)
-PAGE_SIZES = [100, 300, 1000, 0]
-DEFAULT_PAGE_SIZE = 300
-
-
 def paginate_rows(request, object_list):
     """
     paginate the rows of an analysis table (quicksand etc.)
-    page and per_page come from the filter-form, see main/common/pagination.html
+    the rows per page are set in the filters of the DNA tab, the page comes from the page-links (?page=)
     """
-    try:
-        per_page = int(request.POST.get("per_page", DEFAULT_PAGE_SIZE))
-    except ValueError:
-        per_page = DEFAULT_PAGE_SIZE
+    from main.tools.dna_filters import get_per_page
+
+    per_page = get_per_page(request)
     paginator = Paginator(object_list, per_page or max(len(object_list), 1))
-    page = paginator.get_page(request.POST.get("page", 1))
-    return {
-        "object_list": page,
-        "page_obj": page,
-        "per_page": per_page,
-        "page_sizes": PAGE_SIZES,
-        "default_page_size": DEFAULT_PAGE_SIZE,
-    }
+    page = paginator.get_page(request.GET.get("page", 1))
+    return {"object_list": page, "page_obj": page}
 
 
-# the text-fields of a library that are searched by the free-text filter
+# the text-fields of a library (and the sample name) that are searched by the free-text filter
 LIBRARY_SEARCH_FIELDS = [
     "lysate", "enc_batch", "library", "reamp_library", "lnc_batch", "capture", "probes",
-    "seqrun", "lane", "seqpool", "tags", "ena_genbank", "ena_accession",
+    "seqrun", "lane", "seqpool", "tags", "ena_genbank", "ena_accession", "sample__name",
 ]
 
 
@@ -119,19 +87,14 @@ def search_libraries(query, text):
     return query.filter(condition)
 
 
-def filter_libraries(request, query, filter_probes=True):
+def filter_libraries(request, query):
     if not request.user.is_authenticated:
         from main.tools.projects import get_project
 
         project = get_project(request)
         query = query.filter(project=project, qc_pass=True)
 
-    if 'filter_batch_pk' in request.session:
-        batch = tools.generic.get_instance_from_string(f"samplebatch_{request.session['filter_batch_pk']}")
-        query = query.filter(
-            Q(sample__batch=batch) 
-        )
-    if filter_probes and 'filter_probe' in request.session:
+    if 'filter_probe' in request.session:
         # several probes can be selected
         probes = request.session['filter_probe']
         if isinstance(probes, str):  # sessions from before the multi-select
@@ -141,15 +104,9 @@ def filter_libraries(request, query, filter_probes=True):
         )
     if request.session.get('filter_search'):
         query = search_libraries(query, request.session['filter_search'])
-    if 'filter_sample_pk' in request.session:
-        # if this is the case, then only this cookie is set for the library filters!
-        sample = tools.generic.get_instance_from_string(f"sample_{request.session['filter_sample_pk']}")
-        query = query.filter(
-            Q(sample=sample) 
-        )
     return query
 
-def get_libraries(request, pk, unset=True, return_query=False, filters_changed=False):
+def get_libraries(request, pk, return_query=False):
     """
     from one site, get all the (filtered) samples and display the list of libraries
     """
@@ -163,35 +120,7 @@ def get_libraries(request, pk, unset=True, return_query=False, filters_changed=F
 
     samples = tools.samplebatch.filter_samples(request, samples_qs)
 
-    if request.method == 'POST':
-        if unset:
-            unset_library_filters(request)
-        # we want to filter the libraries, so set the cookies for the filter
-        batch = request.POST.get("batch", "all")
-        probes = [x for x in request.POST.getlist("probe") if x != 'all']
-        sample = request.POST.get("sample","all")
-        filter_controls = "on" == request.POST.get("filter_controls", "")
-        search = request.POST.get("search", "").strip()
-
-        if batch != 'all':
-            batch = tools.generic.get_instance_from_string(batch)
-            request.session['filter_batch_pk'] = batch.pk
-            request.session['filter_batch_name'] = batch.name
-        
-        if probes:
-            request.session['filter_probe'] = probes
-        
-        if sample != 'all':
-            sample = tools.generic.get_instance_from_string(sample)
-            request.session['filter_sample_pk'] = sample.pk
-            request.session['filter_sample_name'] = sample.name
-        
-        if search:
-            request.session['filter_search'] = search
-
-        if unset:
-            request.session['filter_controls'] = filter_controls
-
+    # the filters are set in the side-panel of the DNA tab (main/tools/dna_filters.py)
     analyzed_samples = AnalyzedSample.objects.filter(sample__in=samples)
    
     query = filter_libraries(request, analyzed_samples)
@@ -217,20 +146,9 @@ def get_libraries(request, pk, unset=True, return_query=False, filters_changed=F
         Prefetch('nedflow_analysis', queryset=NedflowAnalysis.objects.order_by('pk').defer('data')),
     )
     
-    # for the filter-dropdowns, only pk and name are needed
-    batches = SampleBatch.objects.filter(sample__in=samples_qs).distinct().order_by('name')
-    # all the probes to choose from, independent of the probes that are already selected
-    probes = sorted(
-        filter_libraries(request, analyzed_samples, filter_probes=False)
-        .exclude(probes=None)
-        .order_by()
-        .values_list('probes', flat=True)
-        .distinct()
-    )
-
     #paginator to improve speed
     paginator = Paginator(query, 300)
-    page_number = request.POST.get("page", 1)
+    page_number = request.GET.get("page", 1)
     page_obj = paginator.get_page(page_number)
 
     response = render(
@@ -239,41 +157,15 @@ def get_libraries(request, pk, unset=True, return_query=False, filters_changed=F
         {
             'object_list':page_obj, 
             'site':object,
-            'batches':batches,
-            'probes':probes,
             'probe_names':probe_translations(),
             'total':paginator.count,
             'page':page_number
         }
     )
-    # the analyses-section (quicksand etc.) listens to this event and reloads.
-    # Not needed when only switching pages of the table
-    if filters_changed or (request.method == 'POST' and not request.POST.get('paginate')):
-        response['HX-Trigger'] = 'libraries-filtered'
     return response
 
-def search_samples(request, pk):
-    """
-    search-as-you-type for the sample-filter of the library table
-    """
-    limit = 20
-    keyword = request.GET.get("sample_search", "").strip()
-    samples = tools.samplebatch.filter_samples(
-        request, Sample.objects.filter(site__pk=pk, domain='mpi_eva')
-    )
-    if keyword:
-        samples = samples.filter(name__icontains=keyword)
-    samples = list(samples.order_by('name').values('pk', 'name')[:limit + 1])
-
-    return render(
-        request,
-        'main/analyzed_samples/sample-searchresults.html',
-        {'samples': samples[:limit], 'more': len(samples) > limit}
-    )
-
-
 def download_selection(request, pk):
-    qs = get_libraries(request, pk, unset=False, return_query=True)
+    qs = get_libraries(request, pk, return_query=True)
     site = Site.objects.get(pk=pk)
 
     for_upload = 'for_upload' in request.GET.keys()
@@ -287,6 +179,34 @@ def download_selection(request, pk):
     data = get_dataset_df(qs, site, project=project, for_upload=for_upload)
     return download_csv(data, name=f"{site}_analyzedsample_selection.csv")
 
+
+
+def download_analysis_selection(request, pk, analysis):
+    """
+    download the libraries of an analysis table (quicksand, matthias, nedflow) with all filters of the DNA tab:
+    the libraries of the rows of the table, in the order of the table
+    """
+    from django.http import Http404
+    from main.tools import quicksand, matthias, nedflow
+    from main.tools.generic import get_dataset_df, download_csv
+    from main.tools.projects import get_project
+
+    tables = {"quicksand": quicksand, "matthias": matthias, "nedflow": nedflow}
+    if analysis not in tables:
+        raise Http404("unknown analysis")
+    site = Site.objects.get(pk=pk)
+
+    rows = tables[analysis].table_rows(request, site)["object_list"]
+    order = {pk: n for n, pk in enumerate(dict.fromkeys(entry.analyzedsample_id for entry in rows))}
+    libraries = sorted(
+        AnalyzedSample.objects.filter(pk__in=order).select_related(*LIBRARY_LAYER_RELATED),
+        key=lambda library: order[library.pk],
+    )
+
+    for_upload = 'for_upload' in request.GET.keys()
+    #i need to give the project, because quicksand filter-params are saved in the project
+    data = get_dataset_df(libraries, site, project=get_project(request), for_upload=for_upload)
+    return download_csv(data, name=f"{site}_{analysis}_selection.csv")
 
 
 def get_controls(project=False, authenticated=False):
@@ -523,8 +443,7 @@ urlpatterns = [
     ),
     path("<int:pk>/update-qc", qc_toggle, name="main_analyzedsample_qctoggle"),
     path("get-data/<int:pk>", get_libraries, name="main_analyzedsample_getdata"),
-    path("set-sample-filter/<int:pk>", set_sample_cookie, name='main_analyzedsample_setfilter'),    
-    path("sample-search/<int:pk>", search_samples, name='main_analyzedsample_samplesearch'),
     path("dna/<int:pk>", get_site_dna_content, name="main_site_dna_tab"),
-    path('download_selection/<int:pk>', download_selection, name='main_analyzedsample_downloadselection')
+    path('download_selection/<int:pk>', download_selection, name='main_analyzedsample_downloadselection'),
+    path('download_selection/<int:pk>/<str:analysis>', download_analysis_selection, name='main_analysis_downloadselection')
 ]

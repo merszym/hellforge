@@ -25,28 +25,8 @@
         .chip-toggle input:checked + .chip::before { content: "\2713"; margin-right: .25rem; }
         .chip-toggle input:focus-visible + .chip { outline: 2px solid rgba(50, 182, 67, .5); outline-offset: 1px; }
 
-        /* filter menu: a 'Filter' button opening a panel with the form, active filters shown as chips
-           <div class="filter-bar">
-               <details class="filter-menu"><summary class="btn btn-sm">Filter</summary><form class="filter-panel">...</form></details>
-               <span class="chip"><span class="chip-text">Batch: X</span></span>
-           </div>
-           the generic behaviour (closing, reset) is in generic.js */
+        /* active filters shown as chips: <div class="filter-bar"><span class="chip"><span class="chip-text">Batch: X</span></span></div> */
         .filter-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .2rem; margin: .4rem 0; }
-        .filter-menu { position: relative; }
-        .filter-menu > summary { list-style: none; }
-        .filter-menu > summary::-webkit-details-marker { display: none; }
-        .filter-menu[open] > summary { background: #f1f1fc; }
-        .filter-panel {
-            position: absolute; top: calc(100% + .2rem); left: 0; z-index: 300;
-            width: 26rem; max-width: 90vw; padding: .6rem .8rem;
-            background: #fff; border: 1px solid #dadee4; border-radius: .2rem;
-            box-shadow: 0 .2rem .6rem rgba(48, 55, 66, .2);
-        }
-        /* the fields are width:100%, include their padding/border so they stay inside the panel */
-        .filter-panel, .filter-panel * { box-sizing: border-box; }
-        .filter-panel .form-group { margin-bottom: .5rem; }
-        .filter-panel .chip-toggle { margin: .1rem; }
-        .filter-panel-actions { display: flex; justify-content: flex-end; gap: .3rem; margin-top: .6rem; }
         .filter-bar > .chip { margin: 0; max-width: 24rem; }
         /* long names (e.g. batches): shorten the text, the full text is in the title */
         .filter-bar > .chip .chip-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }

@@ -404,8 +404,10 @@ def get_site_geo(request):
 ## Main sample-content
 
 def get_site_sample_content(request):
-    from main.tools.samplebatch import filter_samples, unset_sample_filters
-    from main.tools.analyzed_samples import unset_library_filters
+    """
+    the DNA tab: the filter side-panel and the (separately loaded) batches, libraries and analyses
+    """
+    from main.tools.dna_filters import reset_dna_filters, panel_context, filter_context
 
     if request.method == 'POST':
         try:
@@ -423,62 +425,34 @@ def get_site_sample_content(request):
         projects = Project.objects.filter(Q(published=True)&Q(site=object))
         return render(request, "main/project/public_projects_snippet.html", {'public_projects':projects, 'site_view':True, 'object':object})
 
+    # a new page starts without filters
+    # (POST: e.g. after adding a batch, keep the filters)
+    if request.method == 'GET':
+        reset_dna_filters(request)
 
-    # unset the library- and sample-level filters
-    # because if we reload the page or go to a different site, we dont want prefiltered data
-
-    unset_library_filters(request)
-    unset_sample_filters(request)
-
-    if request.method == 'POST':
-        """This means we set filters for the downstream views!"""       
-        # now filter the samples
-        layer = request.POST.get("layer", "all")
-        culture = request.POST.get("culture", "all")
-        analyzed = "on" == request.POST.get("analyzed", "")
-        combine = "on" == request.POST.get("combine", "")
-
-        if layer != "all":
-            layer = get_instance_from_string(layer)
-            request.session['filter_layer_pk'] = layer.pk
-            request.session['filter_layer_name'] = layer.name
-        
-        if culture != "all":
-            culture = get_instance_from_string(culture)
-            request.session['filter_culture_pk'] = culture.pk
-            request.session['filter_culture_name'] = culture.name
-
-        request.session['filter_analyzed'] = True if analyzed else False
-        request.session['filter_combine'] = True if combine else False
-        
-
-    # load the samples and batches
     # first create a batch for the samples that dont have one yet...
     # only write if necessary: samples without a batch, or no batch at all (needed to upload samples)
     unbatched = Sample.objects.filter(Q(site=object, batch=None, domain='mpi_eva'))
     if unbatched.exists() or not SampleBatch.objects.filter(site=object).exists():
         tmp, c = SampleBatch.objects.get_or_create(name="Undefined Batch", site=object)
         unbatched.update(batch=tmp)
-    
-    # first, get all the samples that we need
-    samples_qs = Sample.objects.filter(site=object) \
-        .select_related(
-            'site',
-            'sample',
-            'sample__layer',
-            'sample__layer__layer',
-            'sample__layer__layer__layer',
-            'layer',
-            'layer__layer',
-            'layer__layer__layer',
-            'layer__culture',
-            'batch'
-    )
 
-    samples = filter_samples(request, samples_qs)
+    context = panel_context(request, object)
+    context.update(filter_context(request, object))
+    return render(request, "main/site/site-sample-content.html", context)
+
+
+def get_site_batches(request, pk):
+    """
+    the sample batches of the DNA tab (with the sample-filters of the side-panel)
+    """
+    from main.tools.samplebatch import filter_samples
+
+    object = Site.objects.get(pk=pk)
+    samples = filter_samples(request, Sample.objects.filter(site=object))
 
     # Build base queryset
-    sample_batch_ids = {sample.batch_id for sample in samples if sample.batch_id}
+    sample_batch_ids = set(samples.order_by().values_list("batch_id", flat=True))
     batches_qs = SampleBatch.objects.filter(site=object).annotate(
         sample_count=Count('sample', filter=Q(sample__in=samples))
     )
@@ -490,6 +464,9 @@ def get_site_sample_content(request):
 
     batches_qs = batches_qs.order_by('name')
 
+    # with sample-filters, only the batches with matching samples are shown
+    filtered = any(request.session.get(key) for key in ["filter_layer_pk", "filter_culture", "filter_batch_pk", "filter_analyzed"])
+
     # Final batch dictionary
     batch_sample_dict = {
         batch: batch.sample_count
@@ -499,31 +476,15 @@ def get_site_sample_content(request):
             and batch.name == "Undefined Batch"
             and batch.sample_count == 0
         )
+        and not (filtered and batch.sample_count == 0)
     }
 
-    layers = Layer.objects.filter(
-        Q(site=object, sample__isnull=False)
-        | Q(site=object, child__sample__isnull=False)
-        | Q(site=object, child__child__sample__isnull=False) # this should work in some other way...
-        ).distinct()
-
-    probes = set(
-        AnalyzedSample.objects.filter(sample__in=samples_qs, probes__isnull=False)
-        .order_by()
-        .values_list('probes', flat=True)
-        .distinct()
-    )
-
-    context={
-        "sample": samples.first(),
+    context = {
         "batches": batch_sample_dict,
-        'layers': layers,
-        'cultures': Culture.objects.filter(layer__in=layers).distinct(),
-        'probes': probes,
-        'object':object
-        }
-
-    return render(request, "main/site/site-sample-content.html", context)
+        "object": object,
+        "filtered": filtered,
+    }
+    return render(request, "main/site/site-sample-batches.html", context)
 
 
 ## The human remains tab
@@ -619,6 +580,8 @@ def get_site_samplebatch_tab(request, pk):
             'samples' : filter_samples(request, samples_qs),
             'site':site,
             "sample_synonyms": sample_synonyms,
+            # all batches combined (Combine Batches in the filters of the DNA tab)
+            "combined": True,
         }
 
     return render(request, "main/samples/sample-batch-tab.html", context)
@@ -731,6 +694,7 @@ urlpatterns = [
     path("element", get_site_element, name="main_site_element"),
     path("geodata", get_site_geo, name="main_site_geo"),
     path("sample-tab", get_site_sample_content, name="main_site_sample_tab"),
+    path("<int:pk>/dna-batches", get_site_batches, name="main_site_batches"),
     path("<int:pk>/human-tab", get_site_human_content, name="main_site_human_get"),
     path("<int:site_id>/culture-css", get_culture_css, name="main_site_culture_css"),
     path("create-batch", samplebatch_create, name="main_samplebatch_create"),

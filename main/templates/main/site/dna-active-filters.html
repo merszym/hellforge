@@ -1,0 +1,15 @@
+<!-- the response of main_dna_filters_update: the active filters of the samples-section (target),
+     the other sections, the filter-count and (if needed) the side-panel are swapped out-of-band -->
+{% include 'main/site/dna-section-filters.html' with section='samples' labels=active_filters.samples %}
+<div id="dna-filters-libraries" class="filter-bar" hx-swap-oob="true">
+    {% include 'main/site/dna-section-filters.html' with section='libraries' labels=active_filters.libraries %}
+</div>
+<div id="dna-filters-results" class="filter-bar" hx-swap-oob="true">
+    {% include 'main/site/dna-section-filters.html' with section='results' labels=active_filters.results %}
+</div>
+<span class="label label-rounded label-primary" id="dna-filter-count" hx-swap-oob="true">{% if active_count %}{{active_count}}{% endif %}</span>
+{% if refresh_panel %}
+<div id="dna-filter-panel" class="dna-sidebar-body" hx-swap-oob="true">
+    {% include 'main/site/dna-filter-panel.html' %}
+</div>
+{% endif %}

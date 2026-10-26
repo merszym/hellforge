@@ -1,0 +1,10 @@
+<!-- the active filters of a section of the DNA tab: include with section='samples|libraries|results' labels=[...] -->
+{% for label in labels %}
+<span class="chip" title="{{label}}"><span class="chip-text">{{label}}</span></span>
+{% endfor %}
+{% if labels %}
+<button type="button" class="btn btn-link btn-sm"
+    hx-post="{% url 'main_dna_filters_update' object.pk %}"
+    hx-vals='{"reset": "{{section}}"}'
+    hx-target="#dna-filters-samples">Reset</button>
+{% endif %}

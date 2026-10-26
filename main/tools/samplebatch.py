@@ -6,13 +6,6 @@ from django.contrib import messages
 from main.tools.generic import get_instance_from_string
 from django.db.models import Q
 
-def unset_sample_filters(request):
-    request.session.pop('filter_layer_pk','')
-    request.session.pop('filter_culture_pk','')
-    request.session.pop('filter_analyzed','')
-    request.session.pop('filter_combine','')
-
-
 def filter_samples(request, query):
     # check if registered, else filter for project only
     if not request.user.is_authenticated:
@@ -31,12 +24,19 @@ def filter_samples(request, query):
             Q(layer__layer=layer) | 
             Q(layer__layer__layer=layer) # NOT ideal, because ony 3 hierarchies...
         )
-    # we have the culture filter in request.session
-    if 'filter_culture_pk' in request.session:
-        culture = get_instance_from_string(f"culture_{request.session['filter_culture_pk']}")
-        query = query.filter(
-            Q(layer__culture=culture) | Q(sample__layer__culture = culture)
-        )
+    # the cultures (several can be selected): culture pks, 'sterile' for samples without culture
+    if cultures := request.session.get('filter_culture'):
+        condition = Q()
+        pks = [x for x in cultures if x != 'sterile']
+        if pks:
+            condition |= Q(layer__culture__in=pks) | Q(sample__layer__culture__in=pks)
+        if 'sterile' in cultures:
+            # as Sample.get_layer: the layer of the parent sample, else the own layer (or no layer at all)
+            condition |= (Q(sample__isnull=True) & Q(layer__culture__isnull=True)) \
+                | (Q(sample__isnull=False) & Q(sample__layer__culture__isnull=True))
+        query = query.filter(condition)
+    if 'filter_batch_pk' in request.session:
+        query = query.filter(Q(batch__pk=request.session['filter_batch_pk']))
     # filter for analyzed only
     if 'filter_analyzed' in request.session:
         if request.session['filter_analyzed'] == True:

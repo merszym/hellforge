@@ -8,6 +8,7 @@ from django.db.models import Q
 from main.tools.generic import get_instance_from_string
 from main.tools.projects import get_project
 from main.tools.analyzed_samples import update_query_for_negatives, get_libraries, LIBRARY_LAYER_RELATED, probe_translations, paginate_rows
+from main.tools.dna_filters import get_analysis_settings
 from main.models import QuicksandAnalysis, AnalyzedSample, Site
 import re
 import json
@@ -204,6 +205,8 @@ def prepare_data(
             sns.color_palette("husl", len(families)).as_hex(),
         )
     ]
+    # selected families without (filtered) results stay in the legend (grey), so they can be deselected
+    colors += [(family, "#bbbbbb") for family in families_selected or [] if family not in families]
 
     if positives:
         query = query.filter(analyzedsample__in=positive_samples)
@@ -348,66 +351,43 @@ def get_data_for_export(data, quickv, project=None, **kwargs):
     return export
 
 
-def get_quicksand_tab(request, pk):
+def table_rows(request, site):
     """
-    In the DNA Tab, render the quicksand table and form
+    the (filtered) rows of the quicksand table, for the table and the download of the selection
     """
-    site = Site.objects.get(pk=int(pk))
-    context = {"object": site, "probe_names": probe_translations()}
-
     # first, get the objects
-    analyzed_samples = get_libraries(request, site.pk, return_query=True, unset=False)
+    analyzed_samples = get_libraries(request, site.pk, return_query=True)
 
     #order by analyzed sample to match the order of the table above the quicksand tab
     query = QuicksandAnalysis.objects.filter(analyzedsample__in=analyzed_samples).order_by('analyzedsample').select_related(
         *[f'analyzedsample__{x}' for x in LIBRARY_LAYER_RELATED]
     )
 
-    project = get_project(request)
-    params = json.loads(project.parameters) if project.parameters else \
-        {
-            'quicksand_cutoff_percentage': 0.5,
-            'quicksand_cutoff_breadth':0.5
-        }
-    # the defaults, for resetting the filter-form
-    context.update({
-        "default_percentage": float(params['quicksand_cutoff_percentage']),
-        "default_breadth": float(params['quicksand_cutoff_breadth']),
-    })
+    # the settings are set in the side-panel of the DNA tab (main/tools/dna_filters.py)
+    settings = get_analysis_settings(request, "quicksand")
+    return prepare_data(
+        request,
+        query,
+        column=settings["column"],
+        percentage=settings["percentage"],
+        breadth=settings["breadth"],
+        ancient=settings["ancient"],
+        positives=settings["positives"],
+        only_project=settings["only_project"],
+        tableview=settings["tableview"],
+        families_selected=settings["family"],
+    )
 
-    # Additional filters
-    if request.method == "POST":
-        column = request.POST.get("column", "ReadsDeduped")
-        percentage = float(request.POST.get("percentage", params['quicksand_cutoff_percentage']))
-        breadth = float(request.POST.get("breadth", params['quicksand_cutoff_breadth']))
-        ancient = "on" == request.POST.get("ancient", "")
-        positives = "on" == request.POST.get("positives", "")
-        only_project = "on" == request.POST.get("only_project", "")
-        tableview = "on" == request.POST.get("tableview", "")
-        families_selected = request.POST.getlist("family")
 
-        # column: ReadsDeduped
-        # filter: ancient, breadth, percentage
+def get_quicksand_tab(request, pk):
+    """
+    In the DNA Tab, render the quicksand table
+    """
+    site = Site.objects.get(pk=int(pk))
+    context = {"object": site, "probe_names": probe_translations()}
 
-        context.update(
-            prepare_data(
-                request,
-                query,
-                column=column,
-                percentage=percentage,
-                breadth=breadth,
-                ancient=ancient,
-                positives=positives,
-                only_project=only_project,
-                tableview=tableview,
-                families_selected=families_selected
-            )
-        )
-    else:
-        percentage=float(params['quicksand_cutoff_percentage'])
-        breadth=float(params['quicksand_cutoff_breadth'])
-        context.update(prepare_data(request, query, breadth=breadth, percentage=percentage))
-    
+    context.update(table_rows(request, site))
+
     # only the rows of the table are paginated, the colors etc. are calculated from all rows
     context.update(paginate_rows(request, context["object_list"]))
 

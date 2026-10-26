@@ -3,6 +3,7 @@ from main.models import AnalyzedSample, HumanDiagnosticPositions, Site
 from main.tools.generic import get_instance_from_string
 from main.tools.projects import get_project
 from main.tools.analyzed_samples import get_libraries, LIBRARY_LAYER_RELATED, probe_translations, paginate_rows
+from main.tools.dna_filters import get_analysis_settings
 
 import pandas as pd
 import seaborn as sns
@@ -167,36 +168,34 @@ def prepare_data(
     }
 
 
-def get_matthias_tab(request, pk):
-    site = Site.objects.get(pk=int(pk))
-    context = {"object": site, "probe_names": probe_translations()}
-
+def table_rows(request, site):
+    """
+    the (filtered) rows of the matthias table, for the table and the download of the selection
+    """
     # first, get the objects
-    analyzed_samples = get_libraries(request, site.pk, return_query=True, unset=False)
+    analyzed_samples = get_libraries(request, site.pk, return_query=True)
 
     query = HumanDiagnosticPositions.objects.filter(analyzedsample__in=analyzed_samples).order_by('analyzedsample').select_related(
         *[f'analyzedsample__{x}' for x in LIBRARY_LAYER_RELATED]
     )
 
-    if request.method == "POST":
-        ancient = "on" == request.POST.get("ancient", "")
-        positives = "on" == request.POST.get("positives", "")
-        extended = "on" == request.POST.get("extended", "")
-        # only logged-in users can see results of libraries outside of the project
-        only_project = "on" == request.POST.get("only_project", "") or not request.user.is_authenticated
+    # the settings are set in the side-panel of the DNA tab (main/tools/dna_filters.py)
+    settings = get_analysis_settings(request, "matthias")
+    return prepare_data(
+        request,
+        query,
+        ancient=settings["ancient"],
+        positives=settings["positives"],
+        extended=settings["extended"],
+        only_project=settings["only_project"],
+    )
 
-        context.update(
-            prepare_data(
-                request,
-                query,
-                ancient=ancient,
-                positives=positives,
-                extended=extended,
-                only_project=only_project
-            )
-        )
-    else:
-        context.update(prepare_data(request, query))
+
+def get_matthias_tab(request, pk):
+    site = Site.objects.get(pk=int(pk))
+    context = {"object": site, "probe_names": probe_translations()}
+
+    context.update(table_rows(request, site))
 
     # only the rows of the table are paginated, the colors etc. are calculated from all rows
     context.update(paginate_rows(request, context["object_list"]))
