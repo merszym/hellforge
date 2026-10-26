@@ -69,9 +69,18 @@ function resetFilterField(field){
 // reset all the fields of a filter-form and apply it
 $('body').on('click', '.filter-panel .filter-reset', function(){
     var form = $(this).closest('form.filter-panel')
-    form.find('[data-default]').each(function(){
+    // form.elements also contains the fields outside of the form (with form="id")
+    $(form[0].elements).filter('[data-default]').each(function(){
         resetFilterField($(this))
     })
+    form[0].requestSubmit()
+});
+
+// pagination of tables with a filter-form (see main/common/pagination.html)
+// the page-link submits the filter-form with the page, so the filters are kept
+$('body').on('click', '.pagination[data-form] [data-page]', function(){
+    var form = $($(this).closest('.pagination').attr('data-form'))
+    form.find('[name=page]').val($(this).attr('data-page'))
     form[0].requestSubmit()
 });
 

@@ -2,7 +2,7 @@
 from main.models import AnalyzedSample, HumanDiagnosticPositions, Site
 from main.tools.generic import get_instance_from_string
 from main.tools.projects import get_project
-from main.tools.analyzed_samples import get_libraries, LIBRARY_LAYER_RELATED, probe_translations
+from main.tools.analyzed_samples import get_libraries, LIBRARY_LAYER_RELATED, probe_translations, paginate_rows
 
 import pandas as pd
 import seaborn as sns
@@ -197,6 +197,9 @@ def get_matthias_tab(request, pk):
         )
     else:
         context.update(prepare_data(request, query))
+
+    # only the rows of the table are paginated, the colors etc. are calculated from all rows
+    context.update(paginate_rows(request, context["object_list"]))
 
     return render(request, "main/matthias/matthias-content.html", context)
 

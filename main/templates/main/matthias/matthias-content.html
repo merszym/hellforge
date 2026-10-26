@@ -29,7 +29,7 @@
         <div class="filter-bar">
         <details class="filter-menu">
             <summary class="btn btn-sm"><i class="icon icon-search"></i> Filter Results</summary>
-            <form class="filter-panel"
+            <form class="filter-panel" id="mm-filter"
                 hx-post="{% url 'main_site_getmatthias' object.pk %}"
                 hx-target="#DNA-tab_AA163-content">
             <input type="hidden" name="object" value="{{object.pk}}">
@@ -51,6 +51,16 @@
                 <span class="chip">In Project</span>
             </label>
             {% endif %}
+            <div class="form-group">
+                <label class="form-label" for="mm-filter-per-page">Rows per page</label>
+                <select class="form-select" name="per_page" id="mm-filter-per-page" data-default="{{default_page_size}}">
+                    {% for size in page_sizes %}
+                    <option value="{{size}}" {% if size == per_page %}selected{% endif %}>{% if size %}{{size}}{% else %}All{% endif %}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- set by the page-links, a new filter starts on page 1 -->
+            <input type="hidden" name="page" value="1">
             <div class="filter-panel-actions">
                 <button type="button" class="btn btn-link filter-reset">Reset</button>
                 <button class="btn btn-primary">Apply</button>
@@ -58,6 +68,9 @@
             </form>
         </details>
         <!-- the active filters -->
+        {% if per_page != default_page_size %}
+        <span class="chip" title="Rows per page"><span class="chip-text">Rows per page: {% if per_page %}{{per_page}}{% else %}All{% endif %}</span></span>
+        {% endif %}
         {% if ancient %}
         <span class="chip" title="Deaminated only"><span class="chip-text">Deaminated only</span></span>
         {% endif %}
@@ -79,8 +92,10 @@
 
     <div class="panel-body p-0">
         {% if object_list %}
+        <!-- scrollable table with sticky header, the pagination below stays visible (as the library table) -->
+        <div class="panel" style="max-height:500px; overflow:scroll;">
         <table class="table table-striped">
-            <thead style="position: sticky; top:0; z-index: 100;">
+            <thead style="position: sticky; top:0; background-color: white; z-index: 100;">
                 <tr>
                     <th>Layer</th>
                     <th>Sample</th>
@@ -172,6 +187,8 @@
                 {% endfor %}
             </tbody>
         </table>
+        </div>
+        {% include 'main/common/pagination.html' with page_obj=page_obj form='#mm-filter' %}
         
         {% else %}
         <div class="empty">

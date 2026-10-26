@@ -7,7 +7,7 @@ from django.urls import path
 from django.db.models import Q
 from main.tools.generic import get_instance_from_string
 from main.tools.projects import get_project
-from main.tools.analyzed_samples import update_query_for_negatives, get_libraries, LIBRARY_LAYER_RELATED, probe_translations
+from main.tools.analyzed_samples import update_query_for_negatives, get_libraries, LIBRARY_LAYER_RELATED, probe_translations, paginate_rows
 from main.models import NedflowAnalysis, AnalyzedSample, Site
 import re
 import json
@@ -265,6 +265,9 @@ def get_nedflow_tab(request, pk):
         context.update(prepare_data(request, query))
         
     
+    # only the rows of the table are paginated, the colors etc. are calculated from all rows
+    context.update(paginate_rows(request, context["object_list"]))
+
     return render(request, "main/nedflow/nedflow-content.html", context)
 
 def get_data_for_export(data, nedversion, project=None, **kwargs):

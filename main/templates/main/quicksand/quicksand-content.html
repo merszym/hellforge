@@ -22,7 +22,7 @@
         <div class="filter-bar">
         <details class="filter-menu">
             <summary class="btn btn-sm"><i class="icon icon-search"></i> Filter Results</summary>
-            <form class="filter-panel"
+            <form class="filter-panel" id="qs-filter"
                 hx-post="{% url 'main_site_getquicksand' object.pk %}"
                 hx-target="#site_dna_content">
             <input type="hidden" name="object" value="{{object.pk}}">
@@ -60,6 +60,16 @@
                 <span class="chip">In Project</span>
             </label>
             {% endif %}
+            <div class="form-group">
+                <label class="form-label" for="qs-filter-per-page">Rows per page</label>
+                <select class="form-select" name="per_page" id="qs-filter-per-page" data-default="{{default_page_size}}">
+                    {% for size in page_sizes %}
+                    <option value="{{size}}" {% if size == per_page %}selected{% endif %}>{% if size %}{{size}}{% else %}All{% endif %}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- set by the page-links, a new filter starts on page 1 -->
+            <input type="hidden" name="page" value="1">
             <div class="filter-panel-actions">
                 <button type="button" class="btn btn-link filter-reset">Reset</button>
                 <button class="btn btn-primary">Apply</button>
@@ -67,6 +77,12 @@
             </form>
         </details>
         <!-- the active filters -->
+        {% if families_selected %}
+        <span class="chip" title="Families: {{families_selected|join:', '}}"><span class="chip-text">Families: {{families_selected|join:', '}}</span></span>
+        {% endif %}
+        {% if per_page != default_page_size %}
+        <span class="chip" title="Rows per page"><span class="chip-text">Rows per page: {% if per_page %}{{per_page}}{% else %}All{% endif %}</span></span>
+        {% endif %}
         {% if column != "ReadsDeduped" %}
         <span class="chip" title="Values: {{column}}"><span class="chip-text">Values: {{column}}</span></span>
         {% endif %}
@@ -97,8 +113,10 @@
 
     <div class="panel-body p-0">
         {% if object_list %}
+        <!-- scrollable table with sticky header, the pagination below stays visible (as the library table) -->
+        <div class="panel" style="max-height:500px; overflow:scroll;">
         <table class="table table-striped">
-            <thead style="position: sticky; top:0; z-index: 100;">
+            <thead style="position: sticky; top:0; background-color: white; z-index: 100;">
                 <tr>
                     <th>Layer</th>
                     <th>Sample</th>
@@ -200,16 +218,8 @@
                 {% endfor %}
             </tbody>
         </table>
-        {% if colors %}
-        <div style="display:flex; max-width: 100%; flex-wrap: wrap;">
-            {% for family,color in colors %}
-            <div class="p-2" style="display: flex; align-items: center;">
-                <span class="{{family}} p-2" style="width: 10px;height: 10px; display: block;"></span>
-                <span class="p-2" style="display: block;">{{family}}</span>
-            </div>
-            {% endfor %}
         </div>
-        {% endif %}
+        {% include 'main/common/pagination.html' with page_obj=page_obj form='#qs-filter' %}
         
         {% else %}
         <div class="empty">
@@ -217,6 +227,21 @@
                 <i class="icon icon-flag"></i>
             </div>
             <p class="empty-title h5">No quicksand run imported yet</p>
+        </div>
+        {% endif %}
+        {% if colors %}
+        <!-- the families (legend): select one or several to show only the libraries with results in them.
+             the checkboxes belong to the filter-form (form="qs-filter") and apply it directly -->
+        <div class="m-2" style="display: flex; flex-wrap: wrap; align-items: center; gap: .2rem;">
+            <small class="text-gray mr-2">Show only libraries with:</small>
+            {% for family,color in colors %}
+            <label class="chip-toggle">
+                <input type="checkbox" name="family" value="{{family}}" form="qs-filter" data-default=""
+                    {% if family in families_selected %}checked{% endif %}
+                    onchange="document.getElementById('qs-filter').requestSubmit()">
+                <span class="chip"><span class="{{family}}" style="display: inline-block; width: .6rem; height: .6rem; margin-right: .3rem;"></span>{{family}}</span>
+            </label>
+            {% endfor %}
         </div>
         {% endif %}
     </div>

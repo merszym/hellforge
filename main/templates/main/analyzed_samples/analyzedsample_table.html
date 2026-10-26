@@ -8,6 +8,12 @@
             hx-target="#show_libraries">
             {% csrf_token %}
             <div class="form-group">
+                <label class="form-label" for="filter-search">Search</label>
+                <input type="text" class="form-input" name="search" id="filter-search" data-default=""
+                    placeholder="Text in any library field, e.g. a sequencing run" autocomplete="off"
+                    value="{{request.session.filter_search|default:''}}">
+            </div>
+            <div class="form-group">
                 <label class="form-label" for="filter-sample-search">Sample</label>
                 <!-- search-as-you-type, the picked sample is submitted via the hidden input -->
                 <div style="position: relative;">
@@ -61,6 +67,9 @@
         </form>
     </details>
     <!-- the active filters -->
+    {% if request.session.filter_search %}
+    <span class="chip" title="Search: {{request.session.filter_search}}"><span class="chip-text">Search: {{request.session.filter_search}}</span></span>
+    {% endif %}
     {% if request.session.filter_sample_pk %}
     <span class="chip" title="Sample: {{request.session.filter_sample_name}}"><span class="chip-text">Sample: {{request.session.filter_sample_name}}</span></span>
     {% endif %}

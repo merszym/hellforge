@@ -1,0 +1,28 @@
+<!-- pagination for a table with a filter-form: include with page_obj=... form='#id-of-the-filter-form'
+     the form needs a hidden input name="page", the page-links submit the form (see generic.js) -->
+<div class="columns col-gapless m-2" style="align-items: center;">
+    <small class="col-auto text-gray">
+        Rows {{page_obj.start_index}}&ndash;{{page_obj.end_index}} of {{page_obj.paginator.count}}
+    </small>
+    {% if page_obj.paginator.num_pages > 1 %}
+    <ul class="pagination col col-mx-auto" data-form="{{form}}" style="justify-content: center;">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a style="cursor: pointer;" data-page="{{page_obj.previous_page_number}}">Previous</a></li>
+        {% if page_obj.number > 2 %}
+        <li class="page-item"><a style="cursor: pointer;" data-page="1">1</a></li>
+        {% if page_obj.number > 3 %}<li class="page-item"><span>...</span></li>{% endif %}
+        {% endif %}
+        <li class="page-item"><a style="cursor: pointer;" data-page="{{page_obj.previous_page_number}}">{{page_obj.previous_page_number}}</a></li>
+        {% endif %}
+        <li class="page-item active"><a>{{page_obj.number}}</a></li>
+        {% if page_obj.has_next %}
+        <li class="page-item"><a style="cursor: pointer;" data-page="{{page_obj.next_page_number}}">{{page_obj.next_page_number}}</a></li>
+        {% if page_obj.next_page_number < page_obj.paginator.num_pages %}
+        {% if page_obj.next_page_number|add:1 < page_obj.paginator.num_pages %}<li class="page-item"><span>...</span></li>{% endif %}
+        <li class="page-item"><a style="cursor: pointer;" data-page="{{page_obj.paginator.num_pages}}">{{page_obj.paginator.num_pages}}</a></li>
+        {% endif %}
+        <li class="page-item"><a style="cursor: pointer;" data-page="{{page_obj.next_page_number}}">Next</a></li>
+        {% endif %}
+    </ul>
+    {% endif %}
+</div>

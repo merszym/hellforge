@@ -40,6 +40,7 @@ def unset_library_filters(request):
     request.session.pop('filter_probe','')
     request.session.pop('filter_sample_pk','')
     request.session.pop('filter_controls','')
+    request.session.pop('filter_search','')
 
 
 def set_sample_cookie(request, pk):
@@ -76,6 +77,48 @@ def probe_translations():
     return {k: v[0] for k, v in translations.items() if len(v) == 1}
 
 
+# rows per page of the analysis tables (0: all rows)
+PAGE_SIZES = [100, 300, 1000, 0]
+DEFAULT_PAGE_SIZE = 300
+
+
+def paginate_rows(request, object_list):
+    """
+    paginate the rows of an analysis table (quicksand etc.)
+    page and per_page come from the filter-form, see main/common/pagination.html
+    """
+    try:
+        per_page = int(request.POST.get("per_page", DEFAULT_PAGE_SIZE))
+    except ValueError:
+        per_page = DEFAULT_PAGE_SIZE
+    paginator = Paginator(object_list, per_page or max(len(object_list), 1))
+    page = paginator.get_page(request.POST.get("page", 1))
+    return {
+        "object_list": page,
+        "page_obj": page,
+        "per_page": per_page,
+        "page_sizes": PAGE_SIZES,
+        "default_page_size": DEFAULT_PAGE_SIZE,
+    }
+
+
+# the text-fields of a library that are searched by the free-text filter
+LIBRARY_SEARCH_FIELDS = [
+    "lysate", "enc_batch", "library", "reamp_library", "lnc_batch", "capture", "probes",
+    "seqrun", "lane", "seqpool", "tags", "ena_genbank", "ena_accession",
+]
+
+
+def search_libraries(query, text):
+    """
+    keep the libraries that contain the text in any of their fields (case-insensitive)
+    """
+    condition = Q()
+    for field in LIBRARY_SEARCH_FIELDS:
+        condition |= Q(**{f"{field}__icontains": text})
+    return query.filter(condition)
+
+
 def filter_libraries(request, query, filter_probes=True):
     if not request.user.is_authenticated:
         from main.tools.projects import get_project
@@ -96,6 +139,8 @@ def filter_libraries(request, query, filter_probes=True):
         query = query.filter(
             Q(probes__in=probes)
         )
+    if request.session.get('filter_search'):
+        query = search_libraries(query, request.session['filter_search'])
     if 'filter_sample_pk' in request.session:
         # if this is the case, then only this cookie is set for the library filters!
         sample = tools.generic.get_instance_from_string(f"sample_{request.session['filter_sample_pk']}")
@@ -126,6 +171,7 @@ def get_libraries(request, pk, unset=True, return_query=False, filters_changed=F
         probes = [x for x in request.POST.getlist("probe") if x != 'all']
         sample = request.POST.get("sample","all")
         filter_controls = "on" == request.POST.get("filter_controls", "")
+        search = request.POST.get("search", "").strip()
 
         if batch != 'all':
             batch = tools.generic.get_instance_from_string(batch)
@@ -140,6 +186,9 @@ def get_libraries(request, pk, unset=True, return_query=False, filters_changed=F
             request.session['filter_sample_pk'] = sample.pk
             request.session['filter_sample_name'] = sample.name
         
+        if search:
+            request.session['filter_search'] = search
+
         if unset:
             request.session['filter_controls'] = filter_controls
 

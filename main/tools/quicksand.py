@@ -7,7 +7,7 @@ from django.urls import path
 from django.db.models import Q
 from main.tools.generic import get_instance_from_string
 from main.tools.projects import get_project
-from main.tools.analyzed_samples import update_query_for_negatives, get_libraries, LIBRARY_LAYER_RELATED, probe_translations
+from main.tools.analyzed_samples import update_query_for_negatives, get_libraries, LIBRARY_LAYER_RELATED, probe_translations, paginate_rows
 from main.models import QuicksandAnalysis, AnalyzedSample, Site
 import re
 import json
@@ -129,7 +129,8 @@ def prepare_data(
     breadth=0.5,
     positives=False,
     only_project=True,
-    tableview=False
+    tableview=False,
+    families_selected=None
 ):
 
     families = []  # for the colors
@@ -207,6 +208,14 @@ def prepare_data(
     if positives:
         query = query.filter(analyzedsample__in=positive_samples)
 
+    # only the libraries with (filtered) results in any of the selected families
+    families_selected = families_selected or []
+    if families_selected:
+        query = [
+            entry for entry in query
+            if any(family in results.get(entry, {}) for family in families_selected)
+        ]
+
     return {
         "quicksand_results": results,
         "object_list": query,
@@ -217,7 +226,8 @@ def prepare_data(
         "ancient": ancient,
         "positives": positives,
         "only_project": only_project,
-        "tableview": tableview
+        "tableview": tableview,
+        "families_selected": families_selected,
     }
 
 
@@ -374,6 +384,7 @@ def get_quicksand_tab(request, pk):
         positives = "on" == request.POST.get("positives", "")
         only_project = "on" == request.POST.get("only_project", "")
         tableview = "on" == request.POST.get("tableview", "")
+        families_selected = request.POST.getlist("family")
 
         # column: ReadsDeduped
         # filter: ancient, breadth, percentage
@@ -388,7 +399,8 @@ def get_quicksand_tab(request, pk):
                 ancient=ancient,
                 positives=positives,
                 only_project=only_project,
-                tableview=tableview
+                tableview=tableview,
+                families_selected=families_selected
             )
         )
     else:
@@ -396,6 +408,9 @@ def get_quicksand_tab(request, pk):
         breadth=float(params['quicksand_cutoff_breadth'])
         context.update(prepare_data(request, query, breadth=breadth, percentage=percentage))
     
+    # only the rows of the table are paginated, the colors etc. are calculated from all rows
+    context.update(paginate_rows(request, context["object_list"]))
+
     return render(request, "main/quicksand/quicksand-content.html", context)
 
 
