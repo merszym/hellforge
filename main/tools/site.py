@@ -45,6 +45,7 @@ from main.tools.generic import (
 from main.tools.projects import get_project
 from main.tools.quicksand import prepare_data
 from main.tools.analyzed_samples import update_query_for_negatives
+from main.tools.profile import layers_for_table
 
 
 ## Sites
@@ -86,7 +87,8 @@ class SiteListView(ProjectAwareListView):
 
 def get_culture_css(request, site_id):
     site = Site.objects.get(pk=site_id)
-    layers = Layer.objects.filter(Q(site=site))
+    # cultures are loaded in bulk (additional_cultures.first() below uses the prefetched, ordered list)
+    layers = Layer.objects.filter(Q(site=site)).select_related("culture").prefetch_related("additional_cultures")
 
     cultures = {}
     context = {}
@@ -119,17 +121,36 @@ def get_culture_css(request, site_id):
 
 
 def get_timeline_data(site_id, request=False, profile=None):
-    if request:
-        project = get_project(request)
+    project = get_project(request) if request else None
     data = {}
     site = Site.objects.get(pk=site_id)
 
     if profile:
         layers = Layer.objects.filter(
             Q(site=site) & Q(profile_junction__profile=profile)
-        ).prefetch_related("date")
+        )
     else:
-        layers = Layer.objects.filter(Q(site=site)).prefetch_related("date")
+        layers = Layer.objects.filter(Q(site=site))
+    # everything that is displayed, in bulk instead of per layer/date
+    layers = layers.select_related("culture", "date_upper", "date_lower").prefetch_related(
+        "date__ref",
+        "date__layer_model",
+        "sample__date__ref",
+        "sample__date__layer_model",
+        "sample__date__sample_model",
+    )
+
+    # the position of the layers in the profile (without a profile: the first position in any profile)
+    junctions = ProfileLayerJunction.objects.filter(layer__in=layers)
+    if profile:
+        junctions = junctions.filter(profile=profile)
+    positions = {}
+    for layer_id, position in junctions.values_list("layer_id", "position"):
+        positions.setdefault(layer_id, position)
+
+    # these are the same for all layers
+    in_project = bool(project) and project.site.filter(pk=site.pk).exists()
+    authenticated = request.user.is_authenticated
 
     unique_groups = set(layers)
     groups = [
@@ -137,7 +158,7 @@ def get_timeline_data(site_id, request=False, profile=None):
             "id": layer.name.lower(),
             "content": layer.name,
             "treeLevel": 2,
-            "order": ProfileLayerJunction.objects.filter(layer=layer, profile=profile).first().position,
+            "order": positions.get(layer.pk, 0),
         }
         for layer in unique_groups
     ]
@@ -170,23 +191,25 @@ def get_timeline_data(site_id, request=False, profile=None):
         if len(background) > 0:
             dates.append(background)
         # now for the dates
-        if (project and site in project.site.all()) or (request.user.is_authenticated):
+        if in_project or authenticated:
             tmp_dates = list(layer.date.all())
         else:
             # if not in project and view-only dont display unpublished dates
             tmp_dates = [x for x in list(layer.date.all()) if len(x.ref.all()) > 0]
 
         # now add the dates from the samples that are NOT also in the layers
-        sample_dates = Date.objects.filter(
-            Q(sample_model__in=layer.sample.all()) & Q(layer_model__isnull=True)
-        )
+        sample_dates = [
+            date
+            for sample in layer.sample.all()
+            for date in sample.date.all()
+            if len(date.layer_model.all()) == 0
+        ]
 
-        if not (project and site in project.site.all()) or not (
-            request.user.is_authenticated
-        ):
-            sample_dates = sample_dates.filter(ref__isnull=False)
+        if not in_project or not authenticated:
+            sample_dates = [x for x in sample_dates if len(x.ref.all()) > 0]
 
-        tmp_dates.extend(list(sample_dates))
+        # same order as the Date model
+        tmp_dates.extend(sorted(sample_dates, key=lambda x: (x.upper is not None, x.upper or 0)))
 
         for date in tmp_dates:
             try:
@@ -275,6 +298,25 @@ def get_site_profile_tab(request):
     }
 
     return render(request, "main/site/site-profile-content.html", context)
+
+
+@login_required
+def get_site_other_layers(request):
+    """
+    all layers of the site, to add them to the selected profile (stratigraphy tab, loaded when opened)
+    """
+    object = get_instance_from_string(request.GET.get("site"))
+    if profile := request.GET.get("profile"):
+        selected_profile = get_instance_from_string(profile)
+    else:
+        selected_profile = object.profile.first()
+
+    context = {
+        "object": object,
+        "selected_profile": selected_profile,
+        "layers": layers_for_table(object.layer.all()),
+    }
+    return render(request, "main/profile/other-layers.html", context)
 
 
 @login_required
@@ -412,8 +454,11 @@ def get_site_sample_content(request):
 
     # load the samples and batches
     # first create a batch for the samples that dont have one yet...
-    tmp, c = SampleBatch.objects.get_or_create(name="Undefined Batch", site=object)
-    Sample.objects.filter(Q(site=object, batch=None, domain='mpi_eva')).update(batch=tmp)
+    # only write if necessary: samples without a batch, or no batch at all (needed to upload samples)
+    unbatched = Sample.objects.filter(Q(site=object, batch=None, domain='mpi_eva'))
+    if unbatched.exists() or not SampleBatch.objects.filter(site=object).exists():
+        tmp, c = SampleBatch.objects.get_or_create(name="Undefined Batch", site=object)
+        unbatched.update(batch=tmp)
     
     # first, get all the samples that we need
     samples_qs = Sample.objects.filter(site=object) \
@@ -678,6 +723,7 @@ def handle_stratigraphy(request, file):
 urlpatterns = [
     path("add-profile/<int:site_id>", add_profile, name="main_site_profile_create"),
     path("get-profile", get_site_profile_tab, name="main_profile-tab_get"),
+    path("other-layers", get_site_other_layers, name="main_site_otherlayers"),
     path("create", site_create_update, name="main_site_add"),
     path("edit/<int:pk>", site_create_update, name="main_site_update"),
     path("list", SiteListView.as_view(), name="site_list"),

@@ -34,7 +34,7 @@
   <input name="profile_id" value="{{object.pk}}" style="display:none;">
   <!--the layers-->
   <div id="profiledetail_{{object.pk}}" style="overflow: scroll;">
-  {% if object.layer_junction.first %}
+  {% if junctions %}
   <!-- <div class="panel" style="max-height:720px; overflow: scroll;"> -->
     <style>
       td{
@@ -57,7 +57,7 @@
         </tr>
       </thead>
       <tbody>
-        {% for junction in object.layer_junction.all %}
+        {% for junction in junctions %}
         {% with layer=junction.layer %}
         <tr class="table_row" id="profilelayerjunction_{{junction.pk}}" data-pos="{{junction.position}}">
           {% if request.user.is_authenticated %}

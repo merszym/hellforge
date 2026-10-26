@@ -474,6 +474,16 @@ class Date(models.Model):
             raw = [
                 (x, round((y - lower) / base * 100, 3) + 100) for (x, y) in raw
             ]  # 0% is highest, 100% is lowest
+        # the curves have up to several thousand points, but ~200 are enough for the display.
+        # keep the highest probability (lowest y) per section of the x-axis, so the peaks are preserved
+        max_points = 200
+        if len(raw) > max_points:
+            sections = {}
+            for x, y in raw:
+                section = min(int(x / 100 * max_points), max_points - 1)
+                if section not in sections or y < sections[section][1]:
+                    sections[section] = (x, y)
+            raw = [sections[section] for section in sorted(sections)]
         # append a 0 point at start and end to have an even bottomline
         raw.insert(0, (0, 100))
         raw.append((100, 100))

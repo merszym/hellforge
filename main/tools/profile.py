@@ -20,6 +20,21 @@ def update_visibility(request, pk):
     return get_profile_detail(request)
 
 
+# what the layer rows (layer-tablecells.html) display, loaded in bulk instead of per row.
+# layer__layer__layer are the parents for the hierarchy columns (layers are nested up to 3 levels)
+LAYER_ROW_RELATED = ["culture", "epoch", "date_upper", "date_lower", "layer__layer__layer"]
+LAYER_ROW_PREFETCH = ["synonyms", "date", "additional_cultures"]
+
+
+def layers_for_table(queryset, prefix=""):
+    """
+    add the related objects of the layer-table rows to a Layer (or with prefix='layer__' a ProfileLayerJunction) queryset
+    """
+    return queryset.select_related(*[prefix + x for x in LAYER_ROW_RELATED]).prefetch_related(
+        *[prefix + x for x in LAYER_ROW_PREFETCH]
+    )
+
+
 def get_profile_detail(request):
     """
     the content of the profile that is rendered when selecting a profile and on load of the site-stratigraphy section
@@ -30,7 +45,15 @@ def get_profile_detail(request):
     except AttributeError: #profile is not in the request
         profile = get_instance_from_string(request.GET.get('site')).profile.first()
 
-    return render(request,"main/profile/profile-detail.html", {'object':profile, 'parents': range(1, profile.max_number_of_parents)})
+    junctions = list(layers_for_table(profile.layer_junction.all(), prefix="layer__"))
+    # the number of nested parents reserves the columns in the profile-table (as Profile.max_number_of_parents)
+    max_parents = max([1] + [junction.layer.number_of_parents for junction in junctions]) + 1
+
+    return render(
+        request,
+        "main/profile/profile-detail.html",
+        {'object': profile, 'junctions': junctions, 'parents': range(1, max_parents)},
+    )
 
 
 @login_required

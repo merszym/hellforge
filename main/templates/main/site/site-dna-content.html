@@ -20,7 +20,8 @@
         <a style="cursor:pointer;">Vertebrate Nuclear DNA</a>
     </li>
     <script>
-    $('body').on('click','.DNA', function(){
+    // this template is reloaded with the library filters, bind only once
+    $('body').off('click.dnatab').on('click.dnatab', '.DNA', function(){
         add_url_params({
             'DNA-tab':$(this).attr("data-object")
         })

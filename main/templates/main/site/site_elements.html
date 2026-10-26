@@ -71,7 +71,7 @@
             </td>
             {% endif %}
             <script>
-                $('body').on('click', '.share_button', function(){
+                $('body').off('click.sharebutton').on('click.sharebutton', '.share_button', function(){
                     $(this).addClass('btn-success')
                 });
             </script>

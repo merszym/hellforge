@@ -118,6 +118,10 @@ def get_fauna_data(entries):
     return data
 
 
+# what the sorting and the table use of an analysis, loaded in bulk
+ANALYSIS_RELATED = ["layer__culture", "ref", "culture", "site"]
+
+
 def get_fauna_tab(
     request, pk, type="all", reference="all", collapse=True, by_layer=True
 ):
@@ -135,8 +139,8 @@ def get_fauna_tab(
     # 1. Get all the analyses (layer+reference)
     try:
         analyses = sorted(list(set(LayerAnalysis.objects.filter(
-            Q(layer__site=site) | Q(site=site) & Q(type="Fauna")
-        ))), key=lambda x: (
+            (Q(layer__site=site) | Q(site=site)) & Q(type="Fauna")
+        ).select_related(*ANALYSIS_RELATED).prefetch_related("layer__profile_junction"))), key=lambda x: (
                 getattr(x.layer.profile_junction.first(),"position","") if len(x.layer.profile_junction.all()) > 0 else 0, 
                 getattr(x.ref, 'short', 'ZZ'), 
                 getattr(x,'culture',''),
@@ -145,8 +149,8 @@ def get_fauna_tab(
         )
     except (AttributeError, TypeError): # no layer
         analyses = LayerAnalysis.objects.filter(
-            Q(layer__site=site) | Q(site=site) & Q(type="Fauna")
-        )
+            (Q(layer__site=site) | Q(site=site)) & Q(type="Fauna")
+        ).select_related(*ANALYSIS_RELATED).prefetch_related("layer__profile_junction")
         
 
     # hide entries without reference if not authenticated or not in project
@@ -163,7 +167,7 @@ def get_fauna_tab(
         analyses = [x for x in analyses if x.ref == reference]
 
     # now get the faunal results from the remaining analysis objects
-    entries = FaunalResults.objects.filter(Q(analysis__in=analyses))
+    entries = FaunalResults.objects.filter(Q(analysis__in=analyses)).select_related("analysis")
 
     # check the filters for small or big mammals
     if type == "small mammals":
@@ -222,8 +226,8 @@ def get_fauna_tab(
 
     # this is for the filters in the view
     all_refs = Reference.objects.filter(
-        Q(layer_analysis__layer__site=site)
-        | Q(layer_analysis__site=site) & Q(layer_analysis__type="Fauna")
+        (Q(layer_analysis__layer__site=site) | Q(layer_analysis__site=site))
+        & Q(layer_analysis__type="Fauna")
     ).distinct()
 
     return render(
