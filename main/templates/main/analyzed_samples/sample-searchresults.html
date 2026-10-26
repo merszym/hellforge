@@ -1,0 +1,15 @@
+<ul class="menu" style="position: absolute; top: 100%; left: 0; right: 0; z-index: 200; max-height: 300px; overflow-y: auto;">
+    <li class="menu-item">
+        <a style="cursor: pointer;" class="pick-sample" data-value="all" data-name="">All</a>
+    </li>
+    {% for sample in samples %}
+    <li class="menu-item">
+        <a style="cursor: pointer;" class="pick-sample" data-value="sample_{{sample.pk}}" data-name="{{sample.name}}">{{sample.name}}</a>
+    </li>
+    {% empty %}
+    <li class="menu-item text-gray">No matching samples</li>
+    {% endfor %}
+    {% if more %}
+    <li class="menu-item text-gray"><small>More samples found, keep typing to narrow down</small></li>
+    {% endif %}
+</ul>

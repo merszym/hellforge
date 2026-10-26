@@ -1,61 +1,108 @@
 {% load format %}
 <h3>DNA Libraries: Runs / Experiments</h3>
-<small>Filter <strong>Libraries</strong> (Additional) </small>
-<form
-hx-post="{% url 'main_analyzedsample_getdata' site.pk %}"
-hx-target="#show_libraries"
-style="width: 80%;"
->
-    {% csrf_token %}
-    <div class="input-group">
-        <span class="input-group-addon">Sample</span>
-        <select class="form-select" name="sample">
-            {% if request.session.filter_sample_pk %}
-            <option value="sample_{{request.session.filter_sample_pk}}" selected>{{request.session.filter_sample_name}}</option>
-            <option value="all">All</option>
-            {% else %}
-            <option value="all" selected>All</option>
-            {% endif %}
-            {% for sample in samples %}
-            {% if sample.pk %}
-            <option value="sample_{{sample.pk}}">{{sample.name}}</option>
-            {% endif %}
-            {% endfor %}
-        </select>
-        <span class="input-group-addon">Batch</span>
-        <select class="form-select" name="batch">
-            {% if request.session.filter_batch_pk %}
-            <option value="samplebatch_{{request.session.filter_batch_pk}}" selected>{{request.session.filter_batch_name}}</option>
-            <option value="all">All</option>
-            {% else %}
-            <option value="all" selected>All</option>
-            {% endif %}
-            {% for batch in batches %}
-            {% if batch.pk %}
-            <option value="samplebatch_{{batch.pk}}">{{batch.name}}</option>
-            {% endif %}
-            {% endfor %}
-        </select>
-        <span class="input-group-addon">Probe</span>
-        <select class="form-select" name="probe">
-            {% if request.session.filter_probe %}
-            <option value="{{request.session.filter_probe}}" selected>{{request.session.filter_probe}}</option>
-            <option value="all">All</option>
-            {% else %}
-            <option value="all" selected>All</option>
-            {% endif %}
-            {% for probe in probes %}
-                <option value="{{probe}}">{{probe}}</option>
-            {% endfor %}
-        </select>
-        <span class="input-group-addon">No Controls</span>
-        <label class="form-switch mx-2">
-            <input type="checkbox" name="filter_controls" {% if request.session.filter_controls %}checked{% endif %}><i class="form-icon"></i>
-        </label>
-        <input type="hidden" name="page" id="filter-page" value="1">
-        <button id='main-filter-button' class="btn btn-primary input-group-btn">OK</button>
-    </div>
-</form>
+<div class="filter-bar">
+    <details class="filter-menu">
+        <summary class="btn btn-sm"><i class="icon icon-search"></i> Filter Libraries</summary>
+        <form class="filter-panel"
+            hx-post="{% url 'main_analyzedsample_getdata' site.pk %}"
+            hx-target="#show_libraries">
+            {% csrf_token %}
+            <div class="form-group">
+                <label class="form-label" for="filter-sample-search">Sample</label>
+                <!-- search-as-you-type, the picked sample is submitted via the hidden input -->
+                <div style="position: relative;">
+                    <input type="hidden" name="sample" id="filter-sample" data-default="all"
+                        value="{% if request.session.filter_sample_pk %}sample_{{request.session.filter_sample_pk}}{% else %}all{% endif %}">
+                    <input type="text" class="form-input" name="sample_search" id="filter-sample-search" data-default=""
+                        placeholder="All (type to search)" autocomplete="off"
+                        value="{% if request.session.filter_sample_pk %}{{request.session.filter_sample_name}}{% endif %}"
+                        hx-get="{% url 'main_analyzedsample_samplesearch' site.pk %}"
+                        hx-trigger="input changed delay:200ms, click"
+                        hx-target="#sample-search-results">
+                    <div id="sample-search-results"></div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="filter-batch">Batch</label>
+                <select class="form-select" name="batch" id="filter-batch" data-default="all">
+                    {% if request.session.filter_batch_pk %}
+                    <option value="samplebatch_{{request.session.filter_batch_pk}}" selected>{{request.session.filter_batch_name}}</option>
+                    <option value="all">All</option>
+                    {% else %}
+                    <option value="all" selected>All</option>
+                    {% endif %}
+                    {% for batch in batches %}
+                    {% if batch.pk %}
+                    <option value="samplebatch_{{batch.pk}}">{{batch.name}}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="filter-probe">Probe</label>
+                <select class="form-select" name="probe" id="filter-probe" data-default="all">
+                    {% if request.session.filter_probe %}
+                    <option value="{{request.session.filter_probe}}" selected>{{request.session.filter_probe}}</option>
+                    <option value="all">All</option>
+                    {% else %}
+                    <option value="all" selected>All</option>
+                    {% endif %}
+                    {% for probe in probes %}
+                        <option value="{{probe}}">{{probe}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <label class="chip-toggle">
+                <input type="checkbox" name="filter_controls" data-default="" {% if request.session.filter_controls %}checked{% endif %}>
+                <span class="chip">No Controls</span>
+            </label>
+            <input type="hidden" name="page" id="filter-page" value="1">
+            <input type="hidden" name="paginate" id="filter-paginate" value="">
+            <div class="filter-panel-actions">
+                <button type="button" class="btn btn-link filter-reset">Reset</button>
+                <button id='main-filter-button' class="btn btn-primary">Apply</button>
+            </div>
+        </form>
+    </details>
+    <!-- the active filters -->
+    {% if request.session.filter_sample_pk %}
+    <span class="chip" title="Sample: {{request.session.filter_sample_name}}"><span class="chip-text">Sample: {{request.session.filter_sample_name}}</span></span>
+    {% endif %}
+    {% if request.session.filter_batch_pk %}
+    <span class="chip" title="Batch: {{request.session.filter_batch_name}}"><span class="chip-text">Batch: {{request.session.filter_batch_name}}</span></span>
+    {% endif %}
+    {% if request.session.filter_probe %}
+    <span class="chip" title="Probe: {{probe_names|lookup:request.session.filter_probe|default:request.session.filter_probe}}"><span class="chip-text">Probe: {{probe_names|lookup:request.session.filter_probe|default:request.session.filter_probe}}</span></span>
+    {% endif %}
+    {% if request.session.filter_controls %}
+    <span class="chip" title="No Controls"><span class="chip-text">No Controls</span></span>
+    {% endif %}
+</div>
+<script>
+    // sample search: typing invalidates the picked sample until a new one is picked
+    $('#filter-sample-search').on('input', function(){
+        $('#filter-sample').val('all')
+    }).on('keydown', function(e){
+        // escape closes the search results first, then (generic.js) the filter-panel
+        if(e.key === 'Escape' && $('#sample-search-results').children().length){
+            $('#sample-search-results').empty()
+            e.stopPropagation()
+        }
+        // enter picks the first match, if nothing was picked yet
+        if(e.key === 'Enter' && $(this).val() && $('#filter-sample').val() === 'all'){
+            $('#sample-search-results .pick-sample:not([data-value=all])').first().trigger('mousedown')
+        }
+    }).on('blur', function(){
+        $('#sample-search-results').empty()
+    })
+    // mousedown instead of click, so it fires before the blur above
+    $('#sample-search-results').on('mousedown', '.pick-sample', function(e){
+        e.preventDefault()
+        $('#filter-sample').val($(this).attr('data-value'))
+        $('#filter-sample-search').val($(this).attr('data-name'))
+        $('#sample-search-results').empty()
+    })
+</script>
 
 
 <div class="panel" style="max-height:500px; overflow:scroll;">
@@ -134,40 +181,25 @@ style="width: 80%;"
         </tr>
     </thead>
     <tbody>
+        {% url 'main_modal_get' as modal_url %}
+        {% url 'main_project_toggle' as toggle_url %}
+        {% url 'main_generic_delete' as delete_url %}
         {% with project=request.session.session_project %}
+        {% spaceless %}
         {% for object in object_list %}
         <tr class="{{batch.classname}}_libtr libsearch" id="tr_analyzedsample_{{object.pk}}">
             {% if request.user.is_authenticated %}
             <td nowrap>
-                <form>
-                    {% csrf_token %}
-                    <input type="hidden" name="instance_x" value="analyzedsample_{{object.pk}}">
-                    <div
-                        {% if request.user.is_authenticated %}
-                        hx-post="{% url 'main_project_toggle' %}"
-                        {% endif %}
-                        >
-                        {% if project|isin:object.project_namespaces %}
-                        <span style="color:green; cursor: pointer;">
-                            Yes
-                        </span>
-                        {% else %}
-                        <span style="color:red; cursor: pointer;">No
-                        </span>
-                        {% endif %}
-                    </div>
-                </form>
+                <div hx-post="{{toggle_url}}" hx-vals='{"instance_x":"analyzedsample_{{object.pk}}"}'>
+                    {% if project|isin:object.project_namespaces %}
+                    <span style="color:green; cursor: pointer;">Yes</span>
+                    {% else %}
+                    <span style="color:red; cursor: pointer;">No</span>
+                    {% endif %}
+                </div>
             </td>
             <td class='{{object.qc_pass|yesno:"pass,fail"}}'>
-                <form>
-                    {% csrf_token %}
-                    <div
-                        {% if request.user.is_authenticated %}
-                        hx-post="{% url 'main_analyzedsample_qctoggle' object.pk %}"
-                        {% endif %}
-                        >{{object.qc_pass|yesno:"Pass,Fail"}}
-                    </div>
-                </form>
+                <div hx-post="{% url 'main_analyzedsample_qctoggle' object.pk %}">{{object.qc_pass|yesno:"Pass,Fail"}}</div>
             </td>
             {% endif %}
             <td nowrap class="{% if object.sample %}{{object.sample.get_layer|yesno:'assigned,unassigned'}}{% endif %} {{object.sample.get_layer.culture.classname|default:'sterile'}}">
@@ -197,7 +229,7 @@ style="width: 80%;"
             <td nowrap>{{probe_names|lookup:object.probes|default:object.probes}}</td>
             <td {% if request.user.is_authenticated %}
                 class="modal_open tooltip tooltip-top" data-tooltip="Edit Seqrun"
-                hx-get="{% url 'main_modal_get' %}"
+                hx-get="{{modal_url}}"
                 hx-vals='{"object":"analyzedsample_{{object.pk}}","type":"edit_seqrun"}'
                 hx-target="#modal-blank"
                 style="cursor: pointer;"
@@ -207,7 +239,7 @@ style="width: 80%;"
             <td>{{object.seqpool}}</td>
             <td nowrap {% if request.user.is_authenticated and object.sample %}
                 class="modal_open tooltip tooltip-left" data-tooltip="Edit Tag"
-                hx-get="{% url 'main_modal_get' %}"
+                hx-get="{{modal_url}}"
                 hx-vals='{"object":"analyzedsample_{{object.pk}}","type":"tags"}'
                 hx-target="#modal-blank"
                 style="cursor: pointer;"
@@ -232,7 +264,7 @@ style="width: 80%;"
                     <span>{{object.quicksand_analysis.first.version|default:''}}</span>
                     {% if request.user.is_authenticated %}
                         <a class="tooltip tooltip-left modal_open"
-                        hx-get="{% url 'main_modal_get' %}"
+                        hx-get="{{modal_url}}"
                         hx-vals='{"object":"site_{{site.pk}}","type":"quicksand_upload", "seqrun":"{{object.seqrun}}", "lane":"{{object.lane}}", "seqpool":"{{object.seqpool}}"}'
                         hx-target="#modal-blank"
                         data-tooltip="Add quicksand analysis"><i class="icon icon-plus"></i></a>
@@ -244,7 +276,7 @@ style="width: 80%;"
                     <span>{{object.matthias_analysis.first.version|default:''}}</span>
                     {% if request.user.is_authenticated %}
                         <a class="tooltip tooltip-left modal_open"
-                        hx-get="{% url 'main_modal_get' %}"
+                        hx-get="{{modal_url}}"
                         hx-vals='{"object":"site_{{site.pk}}","type":"matthias_upload", "seqrun":"{{object.seqrun}}", "lane":"{{object.lane}}", "seqpool":"{{object.seqpool}}"}'
                         hx-target="#modal-blank"
                         data-tooltip="Add lineage-test analysis"><i class="icon icon-plus"></i></a>
@@ -256,7 +288,7 @@ style="width: 80%;"
                     <span>{{object.nedflow_analysis.first.version|default:''}}</span>
                     {% if request.user.is_authenticated %}
                         <a class="tooltip tooltip-left modal_open"
-                        hx-get="{% url 'main_modal_get' %}"
+                        hx-get="{{modal_url}}"
                         hx-vals='{"object":"site_{{site.pk}}","type":"nedflow_upload", "seqrun":"{{object.seqrun}}", "lane":"{{object.lane}}", "seqpool":"{{object.seqpool}}"}'
                         hx-target="#modal-blank"
                         data-tooltip="Add NedFlow analysis (Matthias' summary)"><i class="icon icon-plus"></i></a>
@@ -266,20 +298,18 @@ style="width: 80%;"
             
             {% if request.user.is_authenticated %}
             <td>
-                <form>
-                    {% csrf_token %}
-                    <input type="hidden" name="instance_x" value="analyzedsample_{{object.pk}}">
-                    <a class="tooltip tooltip-left"
-                    hx-post="{% url 'main_generic_delete' %}"
-                    hx-confirm="Delete the Library"
-                    hx-target="#tr_analyzedsample_{{object.pk}}"
-                    hx-swap="delete"
-                    data-tooltip="Delete AnalyzedSample Entry"><i class="icon icon-delete"></i></a>
-                </form>
+                <a class="tooltip tooltip-left"
+                hx-post="{{delete_url}}"
+                hx-vals='{"instance_x":"analyzedsample_{{object.pk}}"}'
+                hx-confirm="Delete the Library"
+                hx-target="#tr_analyzedsample_{{object.pk}}"
+                hx-swap="delete"
+                data-tooltip="Delete AnalyzedSample Entry"><i class="icon icon-delete"></i></a>
             </td>
             {% endif %}
         </tr>
         {% endfor %}
+        {% endspaceless %}
         {% endwith %}
     </tbody>
 </table>
@@ -315,7 +345,7 @@ style="width: 80%;"
         <ul class="pagination">
             {% if object_list.has_previous and object_list.number > 2 %}
             <li class="page-item" data-page="1">
-                <a style="cursor: pointer;" onclick="$('#filter-page').val('1'); $('#main-filter-button').click();">
+                <a style="cursor: pointer;" onclick="$('#filter-paginate').val('1'); $('#filter-page').val('1'); $('#main-filter-button').click();">
                     1
                 </a>
             </li>
@@ -325,7 +355,7 @@ style="width: 80%;"
             {% endif %}
             {% if object_list.has_previous %}
             <li class="page-item" data-page="{{object_list.previous_page_number}}">
-                <a style="cursor: pointer;" onclick="$('#filter-page').val('{{object_list.previous_page_number}}'); $('#main-filter-button').click();">
+                <a style="cursor: pointer;" onclick="$('#filter-paginate').val('1'); $('#filter-page').val('{{object_list.previous_page_number}}'); $('#main-filter-button').click();">
                     {{object_list.previous_page_number}}
                 </a>
             </li>
@@ -335,7 +365,7 @@ style="width: 80%;"
             </li>
             {% if object_list.has_next %}
             <li class="page-item">
-                <a style="cursor: pointer;" onclick="$('#filter-page').val('{{ object_list.number|add:1}}'); $('#main-filter-button').click();">
+                <a style="cursor: pointer;" onclick="$('#filter-paginate').val('1'); $('#filter-page').val('{{ object_list.number|add:1}}'); $('#main-filter-button').click();">
                     {{ object_list.number|add:1}}
                 </a>
             </li>
@@ -345,7 +375,7 @@ style="width: 80%;"
                 <span>...</span>
             </li>
             <li class="page-item" data-page="page_obj.paginator.num_pages">
-                <a style="cursor: pointer;" onclick="$('#filter-page').val('{{object_list.paginator.num_pages}}'); $('#main-filter-button').click();">
+                <a style="cursor: pointer;" onclick="$('#filter-paginate').val('1'); $('#filter-page').val('{{object_list.paginator.num_pages}}'); $('#main-filter-button').click();">
                     {{object_list.paginator.num_pages}}
                 </a>
             </li>
@@ -354,14 +384,3 @@ style="width: 80%;"
     </div>
     
 </div>
-
-<div class="divider"></div>
-
-<section>
-    <h3>DNA Libraries: Analyses</h3>
-    <div id="site_dna" 
-        hx-get="{% url 'main_site_dna_tab' site.pk %}"
-        hx-trigger="load once">
-        <div class="loading loading-lg m-2"></div>
-    </div>
- </section>

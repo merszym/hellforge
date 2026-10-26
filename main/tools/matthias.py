@@ -117,7 +117,8 @@ def prepare_data(
     query,
     ancient=True,
     positives=False,
-    extended=False
+    extended=False,
+    only_project=True
 ):
 
     lineages = []  # for the colors
@@ -125,6 +126,11 @@ def prepare_data(
     positive_samples = []
     results = nested_dict()
     project = get_project(request)
+
+    query = query.filter(analyzedsample__qc_pass=True)
+
+    if only_project:
+        query = query.filter(analyzedsample__project=project)
 
     for entry in query:
         data = json.loads(entry.data)
@@ -157,6 +163,7 @@ def prepare_data(
         "ancient": ancient,
         "positives": positives,
         "extended": extended,
+        "only_project": only_project,
     }
 
 
@@ -175,6 +182,8 @@ def get_matthias_tab(request, pk):
         ancient = "on" == request.POST.get("ancient", "")
         positives = "on" == request.POST.get("positives", "")
         extended = "on" == request.POST.get("extended", "")
+        # only logged-in users can see results of libraries outside of the project
+        only_project = "on" == request.POST.get("only_project", "") or not request.user.is_authenticated
 
         context.update(
             prepare_data(
@@ -182,7 +191,8 @@ def get_matthias_tab(request, pk):
                 query,
                 ancient=ancient,
                 positives=positives,
-                extended=extended
+                extended=extended,
+                only_project=only_project
             )
         )
     else:

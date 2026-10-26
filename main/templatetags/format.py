@@ -28,6 +28,11 @@ def lookup(dictionary, key):
 
 
 @register.filter
+def count_char(value, char):
+    return str(value).count(char)
+
+
+@register.filter
 def isin(key, collection):
     return key in collection
 

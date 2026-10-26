@@ -41,6 +41,40 @@ $('body').on('click','.tab-item', function(){
     $(`.${$(this).attr("data-show")}`).show()
 });
 
+// filter menus (see .filter-menu in base.html)
+// close an open filter-panel when clicking outside of it, or with escape
+$(document).on('click', function(e){
+    $('details.filter-menu[open]').each(function(){
+        if(!this.contains(e.target)){
+            this.open = false
+        }
+    })
+});
+$(document).on('keydown', function(e){
+    if(e.key === 'Escape'){
+        $('details.filter-menu[open]').prop('open', false)
+    }
+});
+
+// set a filter-field back to its data-default (checkboxes: 'checked' or empty)
+function resetFilterField(field){
+    var value = field.attr('data-default') || ''
+    if(field.is(':checkbox')){
+        field.prop('checked', value === 'checked')
+    }else{
+        field.val(value)
+    }
+}
+
+// reset all the fields of a filter-form and apply it
+$('body').on('click', '.filter-panel .filter-reset', function(){
+    var form = $(this).closest('form.filter-panel')
+    form.find('[data-default]').each(function(){
+        resetFilterField($(this))
+    })
+    form[0].requestSubmit()
+});
+
 // generic modal handling
 $('body').on('click','.modal_open', function(){
     var element = $("#modal-blank")

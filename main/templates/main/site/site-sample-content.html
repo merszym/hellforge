@@ -12,17 +12,17 @@
     <section>
         <h3>Sample Overview</h3>
         <!-- Display the filter -->
-        <small>Filter <strong>Samples</strong></small>
-        <form
-        hx-post="{% url 'main_site_sample_tab'%}"
-        hx-target="#site_samples"
-        style="width: 80%;"
-        >
+        <div class="filter-bar">
+        <details class="filter-menu">
+            <summary class="btn btn-sm"><i class="icon icon-search"></i> Filter Samples</summary>
+            <form class="filter-panel"
+                hx-post="{% url 'main_site_sample_tab'%}"
+                hx-target="#site_samples">
             {% csrf_token %}
             <input type="hidden" name="object" value="{{object.pk}}">
-            <div class="input-group">
-                <span class="input-group-addon">Layer</span>
-                <select class="form-select" name="layer">
+            <div class="form-group">
+                <label class="form-label" for="smp-filter-layer">Layer</label>
+                <select class="form-select" name="layer" id="smp-filter-layer" data-default="all">
                     {% if request.session.filter_layer_pk %}
                     <option value="layer_{{request.session.filter_layer_pk}}" selected>{{request.session.filter_layer_name}}</option>
                     <option value="all">All</option>
@@ -35,8 +35,10 @@
                     {% endif %}
                     {% endfor %}
                 </select>
-                <span class="input-group-addon">Culture</span>
-                <select class="form-select" name="culture">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="smp-filter-culture">Culture</label>
+                <select class="form-select" name="culture" id="smp-filter-culture" data-default="all">
                     {% if request.session.filter_culture_pk %}
                     <option value="culture_{{request.session.filter_culture_pk}}" selected>{{request.session.filter_culture_name}}</option>
                     <option value="all">All</option>
@@ -49,17 +51,35 @@
                         {% endif %}
                     {% endfor %}
                 </select>
-                <span class="input-group-addon">Analyzed only</span>
-                <label class="form-switch mx-2">
-                    <input type="checkbox" name="analyzed" {% if request.session.filter_analyzed %}checked{% endif %}><i class="form-icon"></i>
-                </label>
-                <span class="input-group-addon">Combine Batches</span>
-                <label class="form-switch mx-2">
-                    <input type="checkbox" name="combine" {% if request.session.filter_combine %}checked{% endif %}><i class="form-icon"></i>
-                </label>
-                <button class="btn btn-primary input-group-btn">OK</button>
             </div>
-        </form>
+            <label class="chip-toggle">
+                <input type="checkbox" name="analyzed" data-default="" {% if request.session.filter_analyzed %}checked{% endif %}>
+                <span class="chip">Analyzed only</span>
+            </label>
+            <label class="chip-toggle">
+                <input type="checkbox" name="combine" data-default="" {% if request.session.filter_combine %}checked{% endif %}>
+                <span class="chip">Combine Batches</span>
+            </label>
+            <div class="filter-panel-actions">
+                <button type="button" class="btn btn-link filter-reset">Reset</button>
+                <button class="btn btn-primary">Apply</button>
+            </div>
+            </form>
+        </details>
+        <!-- the active filters -->
+        {% if request.session.filter_layer_pk %}
+        <span class="chip" title="Layer: {{request.session.filter_layer_name}}"><span class="chip-text">Layer: {{request.session.filter_layer_name}}</span></span>
+        {% endif %}
+        {% if request.session.filter_culture_pk %}
+        <span class="chip" title="Culture: {{request.session.filter_culture_name}}"><span class="chip-text">Culture: {{request.session.filter_culture_name}}</span></span>
+        {% endif %}
+        {% if request.session.filter_analyzed %}
+        <span class="chip" title="Analyzed only"><span class="chip-text">Analyzed only</span></span>
+        {% endif %}
+        {% if request.session.filter_combine %}
+        <span class="chip" title="Combine Batches"><span class="chip-text">Combine Batches</span></span>
+        {% endif %}
+        </div>
     </section>
     <section class="my-2">
         {% if not request.session.filter_combine %}
@@ -131,5 +151,17 @@
     <section class="my-2" id="show_libraries" hx-get="{% url 'main_analyzedsample_getdata' object.pk %}"
             hx-trigger="load once">
             <div class="loading loading-lg m-2"></div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- reloaded by the library table, when the library filters change -->
+    <section>
+        <h3>DNA Libraries: Analyses</h3>
+        <div id="site_dna"
+            hx-get="{% url 'main_site_dna_tab' object.pk %}"
+            hx-trigger="load once, libraries-filtered from:body">
+            <div class="loading loading-lg m-2"></div>
+        </div>
     </section>
 </div>

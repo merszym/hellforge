@@ -19,48 +19,76 @@
 
     </div>
     <div class="panel-head p-2">
-        <form
-            hx-post="{% url 'main_site_getquicksand' object.pk %}"
-            hx-target="#site_dna_content"
-            style="width: 80%;"
-        >
+        <div class="filter-bar">
+        <details class="filter-menu">
+            <summary class="btn btn-sm"><i class="icon icon-search"></i> Filter Results</summary>
+            <form class="filter-panel"
+                hx-post="{% url 'main_site_getquicksand' object.pk %}"
+                hx-target="#site_dna_content">
             <input type="hidden" name="object" value="{{object.pk}}">
-            <div class="input-group">
-                <span class="input-group-addon"><strong>General</strong></span>
-                <span class="input-group-addon">Values</span>
-                <select class="form-select" name="column">
+            <div class="form-group">
+                <label class="form-label" for="qs-filter-column">Values</label>
+                <select class="form-select" name="column" id="qs-filter-column" data-default="ReadsDeduped">
                     <option value="{{column}}" selected>{{column}}</option>
                     <option value="ReadsDeduped">ReadsDeduped</option>
                     <option value="ReadsDeam(3term)">ReadsDeam(3term)</option>
                 </select>
-                <span class="input-group-addon">Positive only</span>
-                <label class="form-switch mx-2">
-                    <input type="checkbox" name="positives" {% if positives %}checked{% endif %}><i class="form-icon"></i>
-                </label>
-                <span class="input-group-addon">Table-View</span>
-                <label class="form-switch mx-2">
-                    <input type="checkbox" name="tableview" {% if tableview %}checked{% endif %}><i class="form-icon"></i>
-                </label>
             </div>
-            <div class="input-group">
-                <span class="input-group-addon"><strong>Filter</strong></span>
-                <span class="input-group-addon">Percentage Cutoff</span>
-                <input class="form-input" type="float" name="percentage" value="{{percentage}}">
-                <span class="input-group-addon">Expected Breadth Cutoff</span>
-                <input class="form-input" type="float" name="breadth" value="{{breadth}}">
-                <span class="input-group-addon">Ancient only</span>
-                <label class="form-switch mx-2">
-                    <input type="checkbox" name="ancient" {% if ancient %}checked{% endif %}><i class="form-icon"></i>
-                </label>
-                {% if request.user.is_authenticated %}
-                <span class="input-group-addon">In Project</span>
-                <label class="form-switch mx-2">
-                    <input type="checkbox" name="only_project" {% if only_project %}checked{% endif %}><i class="form-icon"></i>
-                </label>
-                {% endif %}
-                <button class="btn btn-primary input-group-btn">OK</button>
+            <div class="form-group">
+                <label class="form-label" for="qs-filter-percentage">Percentage Cutoff</label>
+                <input class="form-input" type="float" name="percentage" id="qs-filter-percentage" data-default="{{default_percentage}}" value="{{percentage}}">
             </div>
-        </form>
+            <div class="form-group">
+                <label class="form-label" for="qs-filter-breadth">Expected Breadth Cutoff</label>
+                <input class="form-input" type="float" name="breadth" id="qs-filter-breadth" data-default="{{default_breadth}}" value="{{breadth}}">
+            </div>
+            <label class="chip-toggle">
+                <input type="checkbox" name="ancient" data-default="checked" {% if ancient %}checked{% endif %}>
+                <span class="chip">Ancient only</span>
+            </label>
+            <label class="chip-toggle">
+                <input type="checkbox" name="positives" data-default="" {% if positives %}checked{% endif %}>
+                <span class="chip">Positive only</span>
+            </label>
+            <label class="chip-toggle">
+                <input type="checkbox" name="tableview" data-default="" {% if tableview %}checked{% endif %}>
+                <span class="chip">Table-View</span>
+            </label>
+            {% if request.user.is_authenticated %}
+            <label class="chip-toggle">
+                <input type="checkbox" name="only_project" data-default="checked" {% if only_project %}checked{% endif %}>
+                <span class="chip">In Project</span>
+            </label>
+            {% endif %}
+            <div class="filter-panel-actions">
+                <button type="button" class="btn btn-link filter-reset">Reset</button>
+                <button class="btn btn-primary">Apply</button>
+            </div>
+            </form>
+        </details>
+        <!-- the active filters -->
+        {% if column != "ReadsDeduped" %}
+        <span class="chip" title="Values: {{column}}"><span class="chip-text">Values: {{column}}</span></span>
+        {% endif %}
+        {% if percentage != default_percentage %}
+        <span class="chip" title="Percentage &ge; {{percentage}}"><span class="chip-text">Percentage &ge; {{percentage}}</span></span>
+        {% endif %}
+        {% if breadth != default_breadth %}
+        <span class="chip" title="Breadth &ge; {{breadth}}"><span class="chip-text">Breadth &ge; {{breadth}}</span></span>
+        {% endif %}
+        {% if ancient %}
+        <span class="chip" title="Ancient only"><span class="chip-text">Ancient only</span></span>
+        {% endif %}
+        {% if positives %}
+        <span class="chip" title="Positive only"><span class="chip-text">Positive only</span></span>
+        {% endif %}
+        {% if tableview %}
+        <span class="chip" title="Table-View"><span class="chip-text">Table-View</span></span>
+        {% endif %}
+        {% if only_project and request.user.is_authenticated %}
+        <span class="chip" title="In Project"><span class="chip-text">In Project</span></span>
+        {% endif %}
+        </div>
         <div class="has-icon-left">
             <input class="form-input" id="dna-list-search" type="text" placeholder="Type to filter table by content" style="width:50%;">
             <i class="form-icon icon icon-search"></i>

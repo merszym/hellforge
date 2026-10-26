@@ -359,6 +359,11 @@ def get_quicksand_tab(request, pk):
             'quicksand_cutoff_percentage': 0.5,
             'quicksand_cutoff_breadth':0.5
         }
+    # the defaults, for resetting the filter-form
+    context.update({
+        "default_percentage": float(params['quicksand_cutoff_percentage']),
+        "default_breadth": float(params['quicksand_cutoff_breadth']),
+    })
 
     # Additional filters
     if request.method == "POST":

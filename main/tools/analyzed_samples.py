@@ -51,7 +51,7 @@ def set_sample_cookie(request, pk):
     request.session['filter_sample_pk'] = sample.pk
     request.session['filter_sample_name'] = sample.name
 
-    return get_libraries(request, sample.site.pk, unset=False)
+    return get_libraries(request, sample.site.pk, unset=False, filters_changed=True)
 
 
 # the related objects needed to display the layer/culture of a library (see Sample.get_layer)
@@ -101,7 +101,7 @@ def filter_libraries(request, query):
         )
     return query
 
-def get_libraries(request, pk, unset=True, return_query=False):
+def get_libraries(request, pk, unset=True, return_query=False, filters_changed=False):
     """
     from one site, get all the (filtered) samples and display the list of libraries
     """
@@ -111,14 +111,6 @@ def get_libraries(request, pk, unset=True, return_query=False):
 
     #first, do the whole shebang with the samples again!
     samples_qs = Sample.objects.filter(site=object, domain='mpi_eva') \
-        .select_related(
-            'site',
-            'sample',
-            'sample__layer',
-            'layer',
-            'layer__culture',
-            'batch'
-        ) \
         .order_by('sample__name')
 
     samples = tools.samplebatch.filter_samples(request, samples_qs)
@@ -173,7 +165,8 @@ def get_libraries(request, pk, unset=True, return_query=False):
         Prefetch('nedflow_analysis', queryset=NedflowAnalysis.objects.order_by('pk').defer('data')),
     )
     
-    batches = {sample.batch for sample in samples_qs if sample.batch is not None}
+    # for the filter-dropdowns, only pk and name are needed
+    batches = SampleBatch.objects.filter(sample__in=samples_qs).distinct().order_by('name')
     probes = set(query.order_by().values_list('probes', flat=True).distinct())
 
     #paginator to improve speed
@@ -181,13 +174,12 @@ def get_libraries(request, pk, unset=True, return_query=False):
     page_number = request.POST.get("page", 1)
     page_obj = paginator.get_page(page_number)
 
-    return render(
+    response = render(
         request, 
         'main/analyzed_samples/analyzedsample_table.html', 
         {
             'object_list':page_obj, 
             'site':object,
-            'samples':samples,
             'batches':batches,
             'probes':probes,
             'probe_names':probe_translations(),
@@ -195,6 +187,31 @@ def get_libraries(request, pk, unset=True, return_query=False):
             'page':page_number
         }
     )
+    # the analyses-section (quicksand etc.) listens to this event and reloads.
+    # Not needed when only switching pages of the table
+    if filters_changed or (request.method == 'POST' and not request.POST.get('paginate')):
+        response['HX-Trigger'] = 'libraries-filtered'
+    return response
+
+def search_samples(request, pk):
+    """
+    search-as-you-type for the sample-filter of the library table
+    """
+    limit = 20
+    keyword = request.GET.get("sample_search", "").strip()
+    samples = tools.samplebatch.filter_samples(
+        request, Sample.objects.filter(site__pk=pk, domain='mpi_eva')
+    )
+    if keyword:
+        samples = samples.filter(name__icontains=keyword)
+    samples = list(samples.order_by('name').values('pk', 'name')[:limit + 1])
+
+    return render(
+        request,
+        'main/analyzed_samples/sample-searchresults.html',
+        {'samples': samples[:limit], 'more': len(samples) > limit}
+    )
+
 
 def download_selection(request, pk):
     qs = get_libraries(request, pk, unset=False, return_query=True)
@@ -433,6 +450,7 @@ urlpatterns = [
     path("<int:pk>/update-qc", qc_toggle, name="main_analyzedsample_qctoggle"),
     path("get-data/<int:pk>", get_libraries, name="main_analyzedsample_getdata"),
     path("set-sample-filter/<int:pk>", set_sample_cookie, name='main_analyzedsample_setfilter'),    
+    path("sample-search/<int:pk>", search_samples, name='main_analyzedsample_samplesearch'),
     path("dna/<int:pk>", get_site_dna_content, name="main_site_dna_tab"),
     path('download_selection/<int:pk>', download_selection, name='main_analyzedsample_downloadselection')
 ]
