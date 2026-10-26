@@ -1,14 +1,6 @@
 {% load format %}
 
 <div class="my-2" id="site_sample_content">
-    <div class="my-2" style="display:flex;">
-        <button class="btn tooltip tooltip-right" data-tooltip="Download all Samples">
-            <a target="_blank" href="{% url 'get_dataset' %}?from=site_{{object.pk}}&unique=sample">
-                <i class="icon icon-download"></i>
-            </a>
-        </button>
-    </div>
-    
     <section>
         <h3>Sample Overview</h3>
         <!-- Display the filter -->
@@ -125,15 +117,6 @@
             <p class="empty-title h5">No samples uploaded</p>
         </div>
         {% endfor %}
-        {% if request.user.is_authenticated %}
-        <span style="margin-bottom:5px;" class="btn modal_open"
-            hx-get="{% url 'main_modal_get' %}?"
-            hx-vals='{"object":"site_{{object.pk}}", "type":"add_samplebatch"}'
-            hx-target="#modal-blank">
-            Add Batch
-        </span>     
-        {% endif %}
-        
         {% else %}
 
         <div class="tab-panel"
@@ -144,6 +127,21 @@
         
         {% endif %}
 
+        <div class="my-2" style="display: flex; gap: .2rem; align-items: center;">
+            {% if request.user.is_authenticated and not request.session.filter_combine %}
+            <span class="btn modal_open"
+                hx-get="{% url 'main_modal_get' %}?"
+                hx-vals='{"object":"site_{{object.pk}}", "type":"add_samplebatch"}'
+                hx-target="#modal-blank">
+                Add Batch
+            </span>
+            {% endif %}
+            <button class="btn tooltip tooltip-right" data-tooltip="Download all Samples">
+                <a target="_blank" href="{% url 'get_dataset' %}?from=site_{{object.pk}}&unique=sample">
+                    <i class="icon icon-download"></i>
+                </a>
+            </button>
+        </div>
     </section>
 
     <div class="divider"></div>

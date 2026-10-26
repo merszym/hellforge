@@ -1,8 +1,8 @@
 from django.views.generic import ListView, DetailView, UpdateView
 from django.urls import path, reverse
-from django.db.models import Q
-from main.models import Project, Description, Site, Sample, AnalyzedSample
-from main.tools.analyzed_samples import update_query_for_negatives
+from django.db.models import Q, Count, Prefetch
+from main.models import Project, Description, Site, Sample, AnalyzedSample, Location
+from main.tools.analyzed_samples import update_query_for_negatives, get_controls, match_negatives
 from django.http import JsonResponse, HttpResponse
 from main.tools.generic import (
     add_x_to_y_m2m,
@@ -118,7 +118,7 @@ class ProjectDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super(ProjectDetailView, self).get_context_data(**kwargs)
         # this is quick and dirty - create a description if non exists for a project
-        project = self.get_object()
+        project = self.object
 
         # this is only because I am too lazy to make it into a signal
         if not project.project_description.first():
@@ -127,7 +127,8 @@ class ProjectDetailView(DetailView):
 
         # display the project sites
         object_list = sorted(
-            Site.objects.filter(project=project, child=None), key=lambda x: x.country
+            Site.objects.filter(project=project, child=None).prefetch_related("contact"),
+            key=lambda x: x.country,
         )
         context["object_list"] = object_list
         context["skip_headline"] = True
@@ -137,30 +138,45 @@ class ProjectDetailView(DetailView):
 
         # get summary data
         site_count = len(object_list)        
-        
+        site_ids = [site.pk for site in object_list]
+
+        # the counts per site in bulk instead of per site
+        samples_per_site = dict(
+            Sample.objects.filter(Q(site__in=site_ids) & Q(project=project))
+            .order_by()
+            .values("site")
+            .annotate(n=Count("pk"))
+            .values_list("site", "n")
+        )
+        libraries_per_site = defaultdict(list)
+        for row in AnalyzedSample.objects.filter(
+            Q(sample__site__in=site_ids) &
+            Q(sample__project=project) &
+            Q(project=project)
+        ).order_by().values_list("sample__site", "sample", "lnc_batch", "enc_batch", "probes"):
+            libraries_per_site[row[0]].append(row[1:])
+
+        # the controls are matched to the libraries of each site (see update_query_for_negatives)
+        controls = get_controls(project, authenticated=False)
+
         sample_count = 0
         analyzedsample_count = 0
 
         for site in object_list:
-            qs = Sample.objects.filter(
-                    Q(site=site) & Q(project=project)
-                )
-            sample_count += len(qs)
-            sample_dict[site.name] = len(qs)
+            sample_count += samples_per_site.get(site.pk, 0)
+            sample_dict[site.name] = samples_per_site.get(site.pk, 0)
 
             analyzedsample_dict[site.name] = defaultdict()
             
-            libs = AnalyzedSample.objects.filter(
-                Q(sample__site=site) &
-                Q(sample__project=project) &
-                Q(project=project)
-            )
-            controls = update_query_for_negatives(libs, project=project, authenticated=False).filter(sample__isnull=True)
-            analyzedsample_count += len(set(libs.values_list("sample", flat=True)))
+            libs = libraries_per_site[site.pk]
+            lnc_negatives = {(lnc_batch, probes) for _, lnc_batch, _, probes in libs}
+            enc_negatives = {(enc_batch, probes) for _, _, enc_batch, probes in libs}
+            samples = {sample for sample, _, _, _ in libs}
+            analyzedsample_count += len(samples)
 
             analyzedsample_dict[site.name]["libraries"] = len(libs)
-            analyzedsample_dict[site.name]["controls"] = len(controls)
-            analyzedsample_dict[site.name]["samples"] = len(set(libs.values_list("sample", flat=True)))
+            analyzedsample_dict[site.name]["controls"] = len(match_negatives(lnc_negatives, enc_negatives, controls))
+            analyzedsample_dict[site.name]["samples"] = len(samples)
         
         # summary stats
         # I cant just summarize the negative controls, because there overlap for multiple sites
@@ -169,31 +185,39 @@ class ProjectDetailView(DetailView):
                 Q(sample__site__project=project) &
                 Q(sample__project=project) &
                 Q(project=project)
-            )
-        all_controls = update_query_for_negatives(all_libs, project=project, authenticated=False).filter(sample__isnull=True)
+            ).order_by()
+        all_controls = match_negatives(
+            set(all_libs.values_list("lnc_batch", "probes").distinct()),
+            set(all_libs.values_list("enc_batch", "probes").distinct()),
+            controls,
+        )
+        library_count = all_libs.count()
 
         context["sample_dict"] = sample_dict
         context["analyzedsample_dict"] = analyzedsample_dict
         context["site_count"] = site_count
         context["sample_count"] = sample_count
         context["analyzedsample_count"] = analyzedsample_count
-        context["library_count"] = len(all_libs)
+        context["library_count"] = library_count
         context["negatives_count"] = len(all_controls)
-        context["total"] = len(all_libs) + len(all_controls)
+        context["total"] = library_count + len(all_controls)
         return context
 
 
 def get_project_geo(request):
     object = Project.objects.get(pk=int(request.GET.get("object")))
     locations = []
-    for site in object.site.all():
+    # the locations in bulk, ordered as loc.first()
+    sites = object.site.prefetch_related(Prefetch("loc", queryset=Location.objects.order_by("pk")))
+    for site in sites:
+        loc = next(iter(site.loc.all()), None)
+        if loc is None:  # no location found (skip, instead of reusing the location of the previous site)
+            continue
         try:
-            geo = json.loads(site.loc.first().geo)
+            geo = json.loads(loc.geo)
         except TypeError:
             # apparently some objects are not saved as json, but as dict???
-            geo = site.loc.first().geo
-        except AttributeError:  # no location found
-            pass
+            geo = loc.geo
         if geo:
             site_view_url = reverse("site_detail", kwargs={"pk": site.pk})
             geo["features"][0]["properties"][

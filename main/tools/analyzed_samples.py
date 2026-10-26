@@ -289,22 +289,28 @@ def download_selection(request, pk):
 
 
 
-def update_query_for_negatives(query, project=False, authenticated=False):
-    lnc_negatives = set(query.order_by().values_list("lnc_batch","probes").distinct())
-    all_plates = {x[0] for x in lnc_negatives if x[0] is not None}
-    enc_negatives = set(query.order_by().values_list("enc_batch","probes").distinct())
-    lnc_ids = set()
-    enc_candidates = defaultdict(list)
-
+def get_controls(project=False, authenticated=False):
+    """
+    all the negative controls (LNC, ENC) as (pk, tag, lnc_batch, enc_batch, probes)
+    """
     if project and not authenticated:
         pre_select = AnalyzedSample.objects.filter(project=project)
     else:
         pre_select = AnalyzedSample.objects.all()
 
-    # fetch all the controls at once and match them to the batches/probes here
-    controls = pre_select.filter(
+    return list(pre_select.filter(
         Q(sample__isnull=True) & Q(tags__in=["LNC", "ENC"])
-    ).values_list("pk", "tags", "lnc_batch", "enc_batch", "probes")
+    ).values_list("pk", "tags", "lnc_batch", "enc_batch", "probes"))
+
+
+def match_negatives(lnc_negatives, enc_negatives, controls):
+    """
+    the pks of the controls (see get_controls) that belong to libraries with
+    the (lnc_batch, probes) and (enc_batch, probes) combinations
+    """
+    all_plates = {x[0] for x in lnc_negatives if x[0] is not None}
+    lnc_ids = set()
+    enc_candidates = defaultdict(list)
 
     for pk, tag, lnc_batch, enc_batch, probe in controls:
         if tag == "LNC" and (lnc_batch, probe) in lnc_negatives:
@@ -319,12 +325,21 @@ def update_query_for_negatives(query, project=False, authenticated=False):
         # if non exist - fetch from other plates as well
         enc_ids.update(same_plate or [pk for pk, _ in candidates])
 
+    return lnc_ids | enc_ids
+
+
+def update_query_for_negatives(query, project=False, authenticated=False):
+    lnc_negatives = set(query.order_by().values_list("lnc_batch","probes").distinct())
+    enc_negatives = set(query.order_by().values_list("enc_batch","probes").distinct())
+
+    # fetch all the controls at once and match them to the batches/probes here
+    control_ids = match_negatives(lnc_negatives, enc_negatives, get_controls(project, authenticated))
+
     # got the ENC and LNC entries, now update the analyzedsamples query again to include LNC and ENC
 
     updated_query = AnalyzedSample.objects.filter(
         Q(pk__in=query.values_list("pk", flat=True))
-        | Q(pk__in=lnc_ids)
-        | Q(pk__in=enc_ids)
+        | Q(pk__in=control_ids)
     )
 
     return updated_query
