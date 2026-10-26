@@ -47,10 +47,6 @@
                 <span class="chip">Ancient only</span>
             </label>
             <label class="chip-toggle">
-                <input type="checkbox" name="positives" data-default="" {% if positives %}checked{% endif %}>
-                <span class="chip">Positive only</span>
-            </label>
-            <label class="chip-toggle">
                 <input type="checkbox" name="tableview" data-default="" {% if tableview %}checked{% endif %}>
                 <span class="chip">Table-View</span>
             </label>
@@ -96,7 +92,7 @@
         <span class="chip" title="Ancient only"><span class="chip-text">Ancient only</span></span>
         {% endif %}
         {% if positives %}
-        <span class="chip" title="Positive only"><span class="chip-text">Positive only</span></span>
+        <span class="chip" title="Libraries with results in any family"><span class="chip-text">Any family</span></span>
         {% endif %}
         {% if tableview %}
         <span class="chip" title="Table-View"><span class="chip-text">Table-View</span></span>
@@ -234,6 +230,12 @@
              the checkboxes belong to the filter-form (form="qs-filter") and apply it directly -->
         <div class="m-2" style="display: flex; flex-wrap: wrap; align-items: center; gap: .2rem;">
             <small class="text-gray mr-2">Show only libraries with:</small>
+            <label class="chip-toggle" title="Libraries with results in any family (after the filters)">
+                <input type="checkbox" name="positives" form="qs-filter" data-default=""
+                    {% if positives %}checked{% endif %}
+                    onchange="document.getElementById('qs-filter').requestSubmit()">
+                <span class="chip">Any</span>
+            </label>
             {% for family,color in colors %}
             <label class="chip-toggle">
                 <input type="checkbox" name="family" value="{{family}}" form="qs-filter" data-default=""

@@ -32,16 +32,12 @@
             </div>
             <div class="form-group">
                 <label class="form-label" for="ned-filter-fampercent">Percentage Cutoff</label>
-                <input class="form-input" type="float" name="fampercent" id="ned-filter-fampercent" data-default="1.0" value="{{fampercent|default:'1.0'}}">
+                <input class="form-input" type="float" name="fampercent" id="ned-filter-fampercent" data-default="1.0" value="{{fampercent}}">
             </div>
             {% if request.user.is_authenticated %}
             <label class="chip-toggle">
                 <input type="checkbox" name="only_project" data-default="checked" {% if only_project %}checked{% endif %}>
                 <span class="chip">In Project</span>
-            </label>
-            <label class="chip-toggle">
-                <input type="checkbox" name="positives" data-default="" {% if positives %}checked{% endif %}>
-                <span class="chip">Positive only</span>
             </label>
             {% endif %}
             <div class="form-group">
@@ -61,6 +57,9 @@
             </form>
         </details>
         <!-- the active filters -->
+        {% if families_selected %}
+        <span class="chip" title="Families: {{families_selected|join:', '}}"><span class="chip-text">Families: {{families_selected|join:', '}}</span></span>
+        {% endif %}
         {% if per_page != default_page_size %}
         <span class="chip" title="Rows per page"><span class="chip-text">Rows per page: {% if per_page %}{{per_page}}{% else %}All{% endif %}</span></span>
         {% endif %}
@@ -75,7 +74,7 @@
         <span class="chip" title="In Project"><span class="chip-text">In Project</span></span>
         {% endif %}
         {% if positives %}
-        <span class="chip" title="Positive only"><span class="chip-text">Positive only</span></span>
+        <span class="chip" title="Libraries with results in any family"><span class="chip-text">Any family</span></span>
         {% endif %}
         {% endif %}
         </div>
@@ -202,16 +201,6 @@
         </table>
         </div>
         {% include 'main/common/pagination.html' with page_obj=page_obj form='#ned-filter' %}
-        {% if colors %}
-        <div style="display:flex; max-width: 100%; flex-wrap: wrap;">
-            {% for family,color in colors %}
-            <div class="p-2" style="display: flex; align-items: center;">
-                <span class="{{family}} p-2" style="width: 10px;height: 10px; display: block;"></span>
-                <span class="p-2" style="display: block;">{{family}}</span>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
         
         {% else %}
         <div class="empty">
@@ -219,6 +208,53 @@
                 <i class="icon icon-flag"></i>
             </div>
             <p class="empty-title h5">No quicksand run imported yet</p>
+        </div>
+        {% endif %}
+        {% if legend_groups %}
+        <!-- the families (legend), grouped by the order in the Taxonomy: select one or several to show only the libraries with results in them.
+             the checkboxes belong to the filter-form (form="ned-filter") and apply it directly -->
+        <div class="m-2">
+            <div style="display: flex; align-items: center; gap: .2rem;">
+                <small class="text-gray" style="min-width: 8rem;">Show only libraries with:</small>
+                <label class="chip-toggle" title="Libraries with results in any family (after the filters)">
+                    <input type="checkbox" name="positives" form="ned-filter" data-default=""
+                        {% if positives %}checked{% endif %}
+                        onchange="document.getElementById('ned-filter').requestSubmit()">
+                    <span class="chip">Any</span>
+                </label>
+            </div>
+            {% for group, entries in legend_groups %}
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: .2rem; margin-top: .3rem;">
+                <small class="text-bold" style="min-width: 8rem;">{{group}}</small>
+                {% for family,color in entries %}
+                <label class="chip-toggle">
+                    <input type="checkbox" name="family" value="{{family}}" form="ned-filter" data-default=""
+                        {% if family in families_selected %}checked{% endif %}
+                        onchange="document.getElementById('ned-filter').requestSubmit()">
+                    <span class="chip"><span class="{{family}}" style="display: inline-block; width: .6rem; height: .6rem; margin-right: .3rem;"></span>{{family}}</span>
+                </label>
+                {% endfor %}
+            </div>
+            {% endfor %}
+            {% if unknown_families and request.user.is_authenticated %}
+            <!-- add the missing order to the Taxonomy, then reload the tab with the same filters -->
+            <form class="input-group mt-2" style="max-width: 36rem;"
+                hx-post="{% url 'main_nedflow_setfamilyorder' %}"
+                hx-swap="none"
+                hx-on::after-request="if(event.detail.successful){document.getElementById('ned-filter').requestSubmit()}">
+                <span class="input-group-addon addon-sm">Set order of</span>
+                <select class="form-select select-sm" name="family">
+                    {% for family,color in unknown_families %}
+                    <option value="{{family}}">{{family}}</option>
+                    {% endfor %}
+                </select>
+                <input class="form-input input-sm" name="order" list="ned-known-orders" placeholder="Order, e.g. Chiroptera" required autocomplete="off">
+                <datalist id="ned-known-orders">
+                    {% for order in known_orders %}<option value="{{order}}">{% endfor %}
+                </datalist>
+                <button class="btn btn-sm input-group-btn">Save</button>
+            </form>
+            {% endif %}
         </div>
         {% endif %}
     </div>

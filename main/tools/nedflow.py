@@ -4,14 +4,54 @@ import seaborn as sns
 from django.contrib import messages
 from django.shortcuts import render
 from django.urls import path
+from django.http import HttpResponse, HttpResponseBadRequest
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.db.models import Q
 from main.tools.generic import get_instance_from_string
 from main.tools.projects import get_project
 from main.tools.analyzed_samples import update_query_for_negatives, get_libraries, LIBRARY_LAYER_RELATED, probe_translations, paginate_rows
-from main.models import NedflowAnalysis, AnalyzedSample, Site
+from main.models import NedflowAnalysis, AnalyzedSample, Site, Taxonomy
 import re
 import json
 from collections import defaultdict
+
+# the Taxonomy only links family -> order, these are the mammalian orders to group the legend
+MAMMALIAN_ORDERS = [
+    "Afrosoricida", "Artiodactyla", "Carnivora", "Cetacea", "Cetartiodactyla", "Chiroptera",
+    "Cingulata", "Dasyuromorphia", "Dermoptera", "Didelphimorphia", "Diprotodontia", "Erinaceomorpha",
+    "Eulipotyphla", "Hyracoidea", "Lagomorpha", "Macroscelidea", "Microbiotheria", "Monotremata",
+    "Notoryctemorphia", "Paucituberculata", "Peramelemorphia", "Perissodactyla", "Pholidota", "Pilosa",
+    "Primates", "Proboscidea", "Rodentia", "Scandentia", "Sirenia", "Soricomorpha", "Tubulidentata",
+]
+UNKNOWN_ORDER = "Unknown order"
+
+
+def get_family_orders():
+    """
+    the {family: order} dict of the Taxonomy (stored as json-string)
+    """
+    taxonomy = Taxonomy.objects.filter(type="family_order").first()
+    if not taxonomy or not taxonomy.data:
+        return {}
+    return json.loads(taxonomy.data) if isinstance(taxonomy.data, str) else taxonomy.data
+
+
+def group_families(colors):
+    """
+    group the (family, color) legend-entries into mammals, other vertebrates and families without an order
+    """
+    orders = get_family_orders()
+    groups = {"Mammals": [], "Other vertebrates": [], UNKNOWN_ORDER: []}
+    for family, color in colors:
+        order = orders.get(family)
+        if not order or order == "Unassigned":
+            groups[UNKNOWN_ORDER].append((family, color))
+        elif order in MAMMALIAN_ORDERS:
+            groups["Mammals"].append((family, color))
+        else:
+            groups["Other vertebrates"].append((family, color))
+    return [(group, entries) for group, entries in groups.items() if entries], sorted(set(orders.values()))
 
 
 def handle_nedflow_report(request, file):
@@ -126,7 +166,8 @@ def prepare_data(
     ancient='++',
     positives=False,
     only_project=True,
-    fampercent=1
+    fampercent=1,
+    families_selected=None
 ):
     nested_dict = lambda: defaultdict(nested_dict)
     results = nested_dict()
@@ -211,9 +252,18 @@ def prepare_data(
             sns.color_palette("husl", len(families)).as_hex(),
         )
     )
+    legend_groups, known_orders = group_families(colors)
 
     if positives:
         query = query.filter(analyzedsample__in=positive_samples)
+
+    # only the libraries with (filtered) results in any of the selected families
+    families_selected = families_selected or []
+    if families_selected:
+        query = [
+            entry for entry in query
+            if any(family in results.get(entry, {}) for family in families_selected)
+        ]
 
     return {
         "quicksand_results": results,
@@ -223,6 +273,10 @@ def prepare_data(
         "positives": positives,
         "only_project": only_project,
         "fampercent": fampercent,
+        "families_selected": families_selected,
+        "legend_groups": legend_groups,
+        "unknown_families": dict(legend_groups).get(UNKNOWN_ORDER, []),
+        "known_orders": known_orders,
     }
 
 
@@ -248,6 +302,7 @@ def get_nedflow_tab(request, pk):
         positives = "on" == request.POST.get("positives", "")
         only_project = "on" == request.POST.get("only_project", "")
         fampercent = request.POST.get("fampercent", 1)
+        families_selected = request.POST.getlist("family")
 
         # column: ReadsDeduped
         # filter: ancient, breadth, percentage
@@ -258,7 +313,8 @@ def get_nedflow_tab(request, pk):
                 ancient=ancient,
                 positives=positives,
                 only_project=only_project,
-                fampercent=fampercent
+                fampercent=fampercent,
+                families_selected=families_selected
             )
         )
     else:
@@ -352,6 +408,27 @@ def get_data_for_export(data, nedversion, project=None, **kwargs):
     return export
 
 
+@login_required
+@require_POST
+def set_family_order(request):
+    """
+    set the order of a family in the Taxonomy (from the legend of the NED-Flow tab)
+    """
+    family = request.POST.get("family", "").strip()
+    order = request.POST.get("order", "").strip()
+    if not family or not order:
+        return HttpResponseBadRequest("family and order are required")
+
+    # the same entry as in get_family_orders
+    taxonomy = Taxonomy.objects.filter(type="family_order").first() or Taxonomy(type="family_order")
+    data = get_family_orders()
+    data[family] = order
+    taxonomy.data = json.dumps(data)
+    taxonomy.save()
+    return HttpResponse(status=204)
+
+
 urlpatterns = [
-    path("get-table/<int:pk>", get_nedflow_tab, name="main_site_getnedflow")
+    path("get-table/<int:pk>", get_nedflow_tab, name="main_site_getnedflow"),
+    path("family-order", set_family_order, name="main_nedflow_setfamilyorder"),
 ]
