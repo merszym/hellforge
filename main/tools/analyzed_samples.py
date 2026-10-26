@@ -76,7 +76,7 @@ def probe_translations():
     return {k: v[0] for k, v in translations.items() if len(v) == 1}
 
 
-def filter_libraries(request, query):
+def filter_libraries(request, query, filter_probes=True):
     if not request.user.is_authenticated:
         from main.tools.projects import get_project
 
@@ -88,10 +88,13 @@ def filter_libraries(request, query):
         query = query.filter(
             Q(sample__batch=batch) 
         )
-    if 'filter_probe' in request.session:
-        probe = request.session['filter_probe']
+    if filter_probes and 'filter_probe' in request.session:
+        # several probes can be selected
+        probes = request.session['filter_probe']
+        if isinstance(probes, str):  # sessions from before the multi-select
+            probes = [probes]
         query = query.filter(
-            Q(probes=probe) 
+            Q(probes__in=probes)
         )
     if 'filter_sample_pk' in request.session:
         # if this is the case, then only this cookie is set for the library filters!
@@ -120,7 +123,7 @@ def get_libraries(request, pk, unset=True, return_query=False, filters_changed=F
             unset_library_filters(request)
         # we want to filter the libraries, so set the cookies for the filter
         batch = request.POST.get("batch", "all")
-        probe = request.POST.get("probe", "all")
+        probes = [x for x in request.POST.getlist("probe") if x != 'all']
         sample = request.POST.get("sample","all")
         filter_controls = "on" == request.POST.get("filter_controls", "")
 
@@ -129,8 +132,8 @@ def get_libraries(request, pk, unset=True, return_query=False, filters_changed=F
             request.session['filter_batch_pk'] = batch.pk
             request.session['filter_batch_name'] = batch.name
         
-        if probe != 'all':
-            request.session['filter_probe'] = probe
+        if probes:
+            request.session['filter_probe'] = probes
         
         if sample != 'all':
             sample = tools.generic.get_instance_from_string(sample)
@@ -167,7 +170,14 @@ def get_libraries(request, pk, unset=True, return_query=False, filters_changed=F
     
     # for the filter-dropdowns, only pk and name are needed
     batches = SampleBatch.objects.filter(sample__in=samples_qs).distinct().order_by('name')
-    probes = set(query.order_by().values_list('probes', flat=True).distinct())
+    # all the probes to choose from, independent of the probes that are already selected
+    probes = sorted(
+        filter_libraries(request, analyzed_samples, filter_probes=False)
+        .exclude(probes=None)
+        .order_by()
+        .values_list('probes', flat=True)
+        .distinct()
+    )
 
     #paginator to improve speed
     paginator = Paginator(query, 300)

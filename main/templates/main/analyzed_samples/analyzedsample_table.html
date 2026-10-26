@@ -39,18 +39,14 @@
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-label" for="filter-probe">Probe</label>
-                <select class="form-select" name="probe" id="filter-probe" data-default="all">
-                    {% if request.session.filter_probe %}
-                    <option value="{{request.session.filter_probe}}" selected>{{request.session.filter_probe}}</option>
-                    <option value="all">All</option>
-                    {% else %}
-                    <option value="all" selected>All</option>
-                    {% endif %}
-                    {% for probe in probes %}
-                        <option value="{{probe}}">{{probe}}</option>
-                    {% endfor %}
-                </select>
+                <!-- several probes can be selected, none selected means all probes -->
+                <label class="form-label">Probes</label>
+                {% for probe in probes %}
+                <label class="chip-toggle" title="{{probe_names|lookup:probe|default:probe}}">
+                    <input type="checkbox" name="probe" value="{{probe}}" data-default="" {% if probe in request.session.filter_probe %}checked{% endif %}>
+                    <span class="chip">{{probe}}</span>
+                </label>
+                {% endfor %}
             </div>
             <label class="chip-toggle">
                 <input type="checkbox" name="filter_controls" data-default="" {% if request.session.filter_controls %}checked{% endif %}>
@@ -72,7 +68,7 @@
     <span class="chip" title="Batch: {{request.session.filter_batch_name}}"><span class="chip-text">Batch: {{request.session.filter_batch_name}}</span></span>
     {% endif %}
     {% if request.session.filter_probe %}
-    <span class="chip" title="Probe: {{probe_names|lookup:request.session.filter_probe|default:request.session.filter_probe}}"><span class="chip-text">Probe: {{probe_names|lookup:request.session.filter_probe|default:request.session.filter_probe}}</span></span>
+    <span class="chip" title="Probes: {{request.session.filter_probe|join:', '}}"><span class="chip-text">Probes: {{request.session.filter_probe|join:', '}}</span></span>
     {% endif %}
     {% if request.session.filter_controls %}
     <span class="chip" title="No Controls"><span class="chip-text">No Controls</span></span>
