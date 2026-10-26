@@ -194,7 +194,7 @@ style="width: 80%;"
             <td>{{object.efficiency|stringformat:".2f"}}</td>
             <td nowrap>{{object.lnc_batch|default:""}}</td>
             <td>{{object.capture|default:""}}</td>
-            <td nowrap>{{object.probes_str}}</td>
+            <td nowrap>{{probe_names|lookup:object.probes|default:object.probes}}</td>
             <td {% if request.user.is_authenticated %}
                 class="modal_open tooltip tooltip-top" data-tooltip="Edit Seqrun"
                 hx-get="{% url 'main_modal_get' %}"

@@ -428,7 +428,7 @@ def get_site_sample_content(request):
             'layer__layer__layer',
             'layer__culture',
             'batch'
-    ).prefetch_related('analyzed_sample','project')
+    )
 
     samples = filter_samples(request, samples_qs)
 
@@ -462,12 +462,12 @@ def get_site_sample_content(request):
         | Q(site=object, child__child__sample__isnull=False) # this should work in some other way...
         ).distinct()
 
-    probes = {
-        analyzed.probes
-        for sample in samples_qs
-        for analyzed in sample.analyzed_sample.all()
-        if analyzed.probes is not None
-    }
+    probes = set(
+        AnalyzedSample.objects.filter(sample__in=samples_qs, probes__isnull=False)
+        .order_by()
+        .values_list('probes', flat=True)
+        .distinct()
+    )
 
     context={
         "sample": samples.first(),

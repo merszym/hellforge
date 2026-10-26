@@ -1,11 +1,22 @@
 from main.models import models
-from main.models import AnalyzedSample, Sample, Project, SampleBatch, Site
+from main.models import (
+    AnalyzedSample,
+    Sample,
+    Project,
+    SampleBatch,
+    Site,
+    ProbeTranslationTable,
+    QuicksandAnalysis,
+    HumanDiagnosticPositions,
+    NedflowAnalysis,
+)
 from django.http import JsonResponse, HttpResponse
 from django.urls import path
 from django import forms
 from django.shortcuts import render
 import main.tools as tools
-from django.db.models import Q
+from django.db.models import Q, Prefetch
+from collections import defaultdict
 import pandas as pd
 import json, io
 from django.contrib.auth.decorators import (
@@ -41,6 +52,28 @@ def set_sample_cookie(request, pk):
     request.session['filter_sample_name'] = sample.name
 
     return get_libraries(request, sample.site.pk, unset=False)
+
+
+# the related objects needed to display the layer/culture of a library (see Sample.get_layer)
+# prefix with 'analyzedsample__' for the analysis models
+LIBRARY_LAYER_RELATED = [
+    'sample__batch',
+    'sample__layer__culture',
+    'sample__layer__layer',
+    'sample__sample__layer__culture',
+    'sample__sample__layer__layer',
+]
+
+
+def probe_translations():
+    """
+    {probes: display-string} for the ProbeTranslationTable, to avoid one query per row
+    """
+    translations = defaultdict(list)
+    for entry in ProbeTranslationTable.objects.all():
+        translations[entry.probes].append(str(entry))
+    # same as AnalyzedSample.probes_str: ambiguous translations are ignored
+    return {k: v[0] for k, v in translations.items() if len(v) == 1}
 
 
 def filter_libraries(request, query):
@@ -85,8 +118,6 @@ def get_libraries(request, pk, unset=True, return_query=False):
             'layer',
             'layer__culture',
             'batch'
-        ).prefetch_related(
-            'analyzed_sample',
         ) \
         .order_by('sample__name')
 
@@ -117,18 +148,7 @@ def get_libraries(request, pk, unset=True, return_query=False):
         if unset:
             request.session['filter_controls'] = filter_controls
 
-    analyzed_samples = AnalyzedSample.objects.filter(sample__in=samples) \
-        .select_related(
-            'sample',
-            'sample__layer',
-            'sample__layer__culture',
-            'sample__batch'
-        ).prefetch_related(
-            'project',
-            'quicksand_analysis',
-            'matthias_analysis'
-        ) \
-        .order_by('sample__name')
+    analyzed_samples = AnalyzedSample.objects.filter(sample__in=samples)
    
     query = filter_libraries(request, analyzed_samples)
 
@@ -138,11 +158,23 @@ def get_libraries(request, pk, unset=True, return_query=False):
     except KeyError:
         query = update_query_for_negatives(query, project=project, authenticated=request.user.is_authenticated)
 
+    # load the sample/layer information in bulk instead of per row
+    query = query.select_related(*LIBRARY_LAYER_RELATED)
+
     if return_query:
         return query
+
+    # for the table only: the analyses are ordered, so that .first in the template uses
+    # the prefetched data, and the large data-field is not needed for the display
+    query = query.prefetch_related(
+        'project',
+        Prefetch('quicksand_analysis', queryset=QuicksandAnalysis.objects.order_by('pk').defer('data')),
+        Prefetch('matthias_analysis', queryset=HumanDiagnosticPositions.objects.defer('data')),
+        Prefetch('nedflow_analysis', queryset=NedflowAnalysis.objects.order_by('pk').defer('data')),
+    )
     
     batches = {sample.batch for sample in samples_qs if sample.batch is not None}
-    probes = set(query.values_list('probes', flat=True))
+    probes = set(query.order_by().values_list('probes', flat=True).distinct())
 
     #paginator to improve speed
     paginator = Paginator(query, 300)
@@ -158,7 +190,8 @@ def get_libraries(request, pk, unset=True, return_query=False):
             'samples':samples,
             'batches':batches,
             'probes':probes,
-            'total':len(query),
+            'probe_names':probe_translations(),
+            'total':paginator.count,
             'page':page_number
         }
     )
@@ -181,35 +214,34 @@ def download_selection(request, pk):
 
 
 def update_query_for_negatives(query, project=False, authenticated=False):
-    lnc_negatives = set(query.values_list("lnc_batch","probes"))
-    all_plates = [x[0] for x in lnc_negatives]
-    enc_negatives = set(query.values_list("enc_batch","probes"))
-    lnc_ids = []
-    enc_ids = []
+    lnc_negatives = set(query.order_by().values_list("lnc_batch","probes").distinct())
+    all_plates = {x[0] for x in lnc_negatives if x[0] is not None}
+    enc_negatives = set(query.order_by().values_list("enc_batch","probes").distinct())
+    lnc_ids = set()
+    enc_candidates = defaultdict(list)
 
     if project and not authenticated:
         pre_select = AnalyzedSample.objects.filter(project=project)
     else:
         pre_select = AnalyzedSample.objects.all()
-    
-    for batch, probe in lnc_negatives:
-        lnc_query = pre_select.filter(
-            Q(sample__isnull=True) & Q(lnc_batch=batch) & Q(tags="LNC") & Q(probes=probe)
-        )
-        lnc_ids.extend(list(lnc_query.values_list("pk", flat=True)))
 
-    for batch, probe in enc_negatives:
+    # fetch all the controls at once and match them to the batches/probes here
+    controls = pre_select.filter(
+        Q(sample__isnull=True) & Q(tags__in=["LNC", "ENC"])
+    ).values_list("pk", "tags", "lnc_batch", "enc_batch", "probes")
+
+    for pk, tag, lnc_batch, enc_batch, probe in controls:
+        if tag == "LNC" and (lnc_batch, probe) in lnc_negatives:
+            lnc_ids.add(pk)
+        if tag == "ENC" and (enc_batch, probe) in enc_negatives:
+            enc_candidates[(enc_batch, probe)].append((pk, lnc_batch))
+
+    enc_ids = set()
+    for candidates in enc_candidates.values():
         # try to fetch only the ones on the same library plate
-        enc_query = pre_select.filter(
-            Q(sample__isnull=True) & Q(enc_batch=batch) & Q(tags="ENC") & Q(probes=probe) & Q(lnc_batch__in=all_plates)
-        )
+        same_plate = [pk for pk, plate in candidates if plate in all_plates]
         # if non exist - fetch from other plates as well
-        if len(enc_query)==0:
-            enc_query = pre_select.filter(
-                Q(sample__isnull=True) & Q(enc_batch=batch) & Q(tags="ENC") & Q(probes=probe)
-            )
-
-        enc_ids.extend(list(enc_query.values_list("pk", flat=True)))
+        enc_ids.update(same_plate or [pk for pk, _ in candidates])
 
     # got the ENC and LNC entries, now update the analyzedsamples query again to include LNC and ENC
 

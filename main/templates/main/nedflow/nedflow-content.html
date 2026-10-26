@@ -77,7 +77,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for entry in object_list.all %}
+                {% for entry in object_list %}
                 {% with ana=entry.analyzedsample %}
                 <tr class="dna-tr">
                     <td nowrap class="{{ana.sample.get_layer.culture.classname|default:'sterile'}}">
@@ -116,7 +116,7 @@
                     </td>
                     <td nowrap>{{ana.library}}</td>
                     <td nowrap>{{ana.capture|default:""}}</td>
-                    <td nowrap>{{ana.probes_str}}</td>
+                    <td nowrap>{{probe_names|lookup:ana.probes|default:ana.probes}}</td>
                     <td nowrap>{{ana.seqrun}}</td>
                     <td nowrap>{{ana.tags|default:''}}</td>
                     <td nowrap

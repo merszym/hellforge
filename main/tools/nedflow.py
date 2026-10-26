@@ -7,7 +7,7 @@ from django.urls import path
 from django.db.models import Q
 from main.tools.generic import get_instance_from_string
 from main.tools.projects import get_project
-from main.tools.analyzed_samples import update_query_for_negatives, get_libraries
+from main.tools.analyzed_samples import update_query_for_negatives, get_libraries, LIBRARY_LAYER_RELATED, probe_translations
 from main.models import NedflowAnalysis, AnalyzedSample, Site
 import re
 import json
@@ -231,13 +231,15 @@ def get_nedflow_tab(request, pk):
     In the DNA Tab, render the quicksand table and form
     """
     site = Site.objects.get(pk=int(pk))
-    context = {"object": site}
+    context = {"object": site, "probe_names": probe_translations()}
 
     # first, get the objects
     analyzed_samples = get_libraries(request, site.pk, return_query=True, unset=False)
 
     #order by analyzed sample to match the order of the table above the quicksand tab
-    query = NedflowAnalysis.objects.filter(analyzedsample__in=analyzed_samples).order_by('analyzedsample')
+    query = NedflowAnalysis.objects.filter(analyzedsample__in=analyzed_samples).order_by('analyzedsample').select_related(
+        *[f'analyzedsample__{x}' for x in LIBRARY_LAYER_RELATED]
+    )
 
 
     # Additional filters -> TODO:Adjust to NedFlow

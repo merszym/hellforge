@@ -2,7 +2,7 @@
 from main.models import AnalyzedSample, HumanDiagnosticPositions, Site
 from main.tools.generic import get_instance_from_string
 from main.tools.projects import get_project
-from main.tools.analyzed_samples import get_libraries
+from main.tools.analyzed_samples import get_libraries, LIBRARY_LAYER_RELATED, probe_translations
 
 import pandas as pd
 import seaborn as sns
@@ -162,12 +162,14 @@ def prepare_data(
 
 def get_matthias_tab(request, pk):
     site = Site.objects.get(pk=int(pk))
-    context = {"object": site}
+    context = {"object": site, "probe_names": probe_translations()}
 
     # first, get the objects
     analyzed_samples = get_libraries(request, site.pk, return_query=True, unset=False)
 
-    query = HumanDiagnosticPositions.objects.filter(analyzedsample__in=analyzed_samples).order_by('analyzedsample')
+    query = HumanDiagnosticPositions.objects.filter(analyzedsample__in=analyzed_samples).order_by('analyzedsample').select_related(
+        *[f'analyzedsample__{x}' for x in LIBRARY_LAYER_RELATED]
+    )
 
     if request.method == "POST":
         ancient = "on" == request.POST.get("ancient", "")
