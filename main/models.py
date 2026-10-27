@@ -1526,7 +1526,6 @@ class AnalyzedSample(models.Model):
     )
 
     class Meta:
-        unique_together = [["library", "seqrun", "lane"]]
         ordering = ["seqrun", "library"]
 
     def __str__(self):
