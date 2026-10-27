@@ -117,6 +117,7 @@ def handle_samplebatch_file(request, file):
     )
 
 
+@login_required
 def save_verified(request):
     df = pd.read_json(request.POST.get("batch-data"))
     site = Site.objects.get(pk=int(request.POST.get("site")))

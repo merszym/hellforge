@@ -94,7 +94,21 @@
         </label>
         {% endfor %}
     </div>
+    {% if project_tags %}
+    <div class="form-group">
+        <!-- the tags of the active project (several can be selected: libraries with any of them) -->
+        <label class="form-label">Project Tags</label>
+        <input type="hidden" name="_fields" value="project_tag">
+        {% for tag in project_tags %}
+        <label class="chip-toggle">
+            <input type="checkbox" name="project_tag" value="{{tag.pk}}" {% if tag.pk in selected_project_tags %}checked{% endif %}>
+            <span class="chip">{{tag.name}}</span>
+        </label>
+        {% endfor %}
+    </div>
+    {% endif %}
     <input type="hidden" name="_fields" value="controls">
+    <label class="form-label">Controls</label>
     <label class="chip-toggle">
         <input type="checkbox" name="controls" {% if request.session.filter_controls %}checked{% endif %}>
         <span class="chip">No Controls</span>

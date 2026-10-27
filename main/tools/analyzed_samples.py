@@ -9,6 +9,7 @@ from main.models import (
     QuicksandAnalysis,
     HumanDiagnosticPositions,
     NedflowAnalysis,
+    ProjectTag,
 )
 from django.http import JsonResponse, HttpResponse
 from django.urls import path, reverse
@@ -120,15 +121,25 @@ def filter_libraries(request, query):
     if request.session.get('filter_search'):
         query = search_libraries(query, request.session['filter_search'])
     query = filter_missing_analyses(request, query)
+    # the project-tags (several can be selected, libraries with any of them), only tags of the active project
+    if tag_pks := request.session.get('filter_project_tags'):
+        from main.tools.projects import get_project
+        tags = ProjectTag.objects.filter(pk__in=tag_pks, project=get_project(request))
+        if tags:
+            query = query.filter(
+                Q(pk__in=AnalyzedSample.project_tags.through.objects.filter(projecttag__in=tags).values("analyzedsample"))
+            )
     return query
 
-def prefetch_for_table(query):
+def prefetch_for_table(query, project=None):
     """
     for the library-table only: the analyses are ordered, so that .first in the template uses
-    the prefetched data, and the large data-field is not needed for the display
+    the prefetched data, and the large data-field is not needed for the display.
+    the project-tags of the active project are in active_project_tags
     """
     return query.prefetch_related(
         'project',
+        Prefetch('project_tags', queryset=ProjectTag.objects.filter(project=project), to_attr='active_project_tags'),
         Prefetch('quicksand_analysis', queryset=QuicksandAnalysis.objects.order_by('pk').defer('data')),
         Prefetch('matthias_analysis', queryset=HumanDiagnosticPositions.objects.defer('data')),
         Prefetch('nedflow_analysis', queryset=NedflowAnalysis.objects.order_by('pk').defer('data')),
@@ -146,7 +157,7 @@ def library_rows_context(request, library):
             Q(seqrun=library.seqrun) & Q(seqpool=library.seqpool) & Q(lane=library.lane) & Q(sample__site=library.sample.site)
         )
     return {
-        "libraries": prefetch_for_table(libraries.select_related(*LIBRARY_LAYER_RELATED)),
+        "libraries": prefetch_for_table(libraries.select_related(*LIBRARY_LAYER_RELATED), project=tools.projects.get_project(request)),
         "site": library.sample.site if library.sample else None,
         "request": request,
         "probe_names": probe_translations(),
@@ -189,7 +200,7 @@ def get_libraries(request, pk, return_query=False):
     if return_query:
         return query
 
-    query = prefetch_for_table(query)
+    query = prefetch_for_table(query, project=project)
     
     #paginator to improve speed
     paginator = Paginator(query, 300)
@@ -210,7 +221,7 @@ def get_libraries(request, pk, return_query=False):
     return response
 
 def download_selection(request, pk):
-    qs = get_libraries(request, pk, return_query=True)
+    qs = get_libraries(request, pk, return_query=True).prefetch_related("project_tags")
     site = Site.objects.get(pk=pk)
 
     for_upload = 'for_upload' in request.GET.keys()
@@ -244,7 +255,7 @@ def download_analysis_selection(request, pk, analysis):
     rows = tables[analysis].table_rows(request, site)["object_list"]
     order = {pk: n for n, pk in enumerate(dict.fromkeys(entry.analyzedsample_id for entry in rows))}
     libraries = sorted(
-        AnalyzedSample.objects.filter(pk__in=order).select_related(*LIBRARY_LAYER_RELATED),
+        AnalyzedSample.objects.filter(pk__in=order).select_related(*LIBRARY_LAYER_RELATED).prefetch_related("project_tags"),
         key=lambda library: order[library.pk],
     )
 
@@ -358,6 +369,21 @@ def handle_library_file(request, file):
     )
 
 
+def set_project_tags(library, project, value):
+    """
+    set the tags of a library in a project from the upload-sheet ('tag1;tag2'), the tags of other projects stay.
+    new tag-names are created, existing ones are found case-insensitive
+    """
+    names = list(dict.fromkeys(x.strip() for x in str(value or "").split(";") if x.strip()))
+    tags = []
+    for name in names:
+        tag = ProjectTag.objects.filter(project=project, name__iexact=name).first()
+        tags.append(tag or ProjectTag.objects.create(project=project, name=name))
+    library.project_tags.remove(*library.project_tags.filter(project=project))
+    library.project_tags.add(*tags)
+
+
+@login_required
 def save_verified(request):
     df = pd.read_json(io.StringIO(request.POST.get("batch-data")))
     df.convert_dtypes()
@@ -403,10 +429,15 @@ def save_verified(request):
             object.save()
         except: #unique contraint error
             print('unique constraint error: ',object)
+            continue
+        # the column is optional (older sheets): if it is there, the library has exactly these tags (in this project)
+        if "Project Tags" in row.index:
+            set_project_tags(object, project, value_or_none(row["Project Tags"]))
     
     return get_libraries(request, site.pk)
 
 
+@login_required
 def tags_update(request, pk):
     object = AnalyzedSample.objects.get(pk=pk)
     val = request.POST.get("tags", None)
@@ -429,6 +460,27 @@ def tags_update(request, pk):
     return get_modal(request)
 
 
+@login_required
+def project_tags_update(request, pk):
+    """
+    set the project-tags of a library in the active project (from the tag-modal): the selected and the new ones
+    """
+    object = AnalyzedSample.objects.get(pk=pk)
+    project = tools.projects.get_project(request)
+    if project and request.method == "POST":
+        names = request.POST.getlist("project_tag") + [request.POST.get("new_tags", "")]
+        set_project_tags(object, project, ";".join(names))
+        messages.add_message(request, messages.SUCCESS, "Update of project tags successful")
+
+    request.GET._mutable = True
+    request.GET.update({"object": f"{object.model}_{object.pk}", "type": "tags"})
+
+    from main.ajax import get_modal
+
+    return get_modal(request)
+
+
+@login_required
 def seqrun_update(request, pk):
     object = AnalyzedSample.objects.get(pk=pk)
     # in case we want to update all
@@ -468,6 +520,7 @@ def seqrun_update(request, pk):
     return get_modal(request)
 
 
+@login_required
 def qc_toggle(request, pk):
     object = AnalyzedSample.objects.get(pk=pk)
 
@@ -483,6 +536,7 @@ def qc_toggle(request, pk):
 urlpatterns = [
     path("save", save_verified, name="ajax_save_verified_analyzedsamples"),
     path("<int:pk>/update-tags", tags_update, name="main_analyzedsample_tagupdate"),
+    path("<int:pk>/update-project-tags", project_tags_update, name="main_analyzedsample_projecttagupdate"),
     path(
         "<int:pk>/update-seqrun", seqrun_update, name="main_analyzedsample_seqrunupdate"
     ),

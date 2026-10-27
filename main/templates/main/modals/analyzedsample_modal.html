@@ -54,6 +54,27 @@
                             >OK</span>
                         </form>
                     </div>
+                    {% if project %}
+                    <!-- the project-tags in the active project: select existing ones, add new ones (separated by ;) -->
+                    <h6 class="mt-2">Project Tags <small class="text-gray">({{project.name}})</small></h6>
+                    <form>
+                        {% for tag in project_tag_options %}
+                        <label class="chip-toggle">
+                            <input type="checkbox" name="project_tag" value="{{tag.name}}" {% if tag.pk in selected_project_tags %}checked{% endif %}>
+                            <span class="chip">{{tag.name}}</span>
+                        </label>
+                        {% endfor %}
+                        <div class="input-group mt-1">
+                            <span class="input-group-addon">New</span>
+                            <input class="form-input" type="text" name="new_tags" placeholder="tag 1; tag 2" autocomplete="off">
+                            <span
+                                hx-post="{% url 'main_analyzedsample_projecttagupdate' object.pk %}"
+                                hx-target="#modal-blank"
+                                class="btn btn-primary input-group-btn"
+                            >OK</span>
+                        </div>
+                    </form>
+                    {% endif %}
                 </div>
             </div>
         </div>

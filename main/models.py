@@ -2,6 +2,7 @@ import json
 from django.db import models
 from django.urls import reverse
 from django.db.models import Q
+from django.db.models.functions import Lower
 from django.core.validators import RegexValidator
 from django.contrib.contenttypes.fields import GenericForeignKey  # for the description
 from django.contrib.contenttypes.models import ContentType  # for the description
@@ -1461,6 +1462,35 @@ class ProbeTranslationTable(models.Model):
         return f"{self.probes} ({self.content})"
 
 
+class ProjectTag(models.Model):
+    """
+    a tag for libraries within a project (e.g. 'resequence'), several tags per library.
+    only the tags of the active project are shown, filtered and exported
+    """
+    project = models.ForeignKey(
+        Project, verbose_name="project", related_name="library_tags", on_delete=models.CASCADE
+    )
+    # ';' separates the tags in the upload-sheet and the download
+    name = models.CharField(
+        "name",
+        max_length=250,
+        validators=[
+            RegexValidator(regex=r"^[^;]*$", message="Tag names cannot contain ';' (it separates the tags)", code="invalid_tagname"),
+        ],
+    )
+
+    class Meta:
+        ordering = ["name"]
+        constraints = [
+            # one tag-name per project, case-insensitive
+            models.UniqueConstraint(Lower("name"), "project", name="unique_projecttag_name"),
+            models.CheckConstraint(check=~Q(name__contains=";"), name="projecttag_name_without_semicolon"),
+        ]
+
+    def __str__(self):
+        return self.name
+
+
 class AnalyzedSample(models.Model):
     sample = models.ForeignKey(
         Sample,
@@ -1491,6 +1521,9 @@ class AnalyzedSample(models.Model):
     qc_pass = models.BooleanField("qc_pass", default=True)
     ena_genbank = models.CharField("Genbank", max_length=200, blank=True, null=True)
     ena_accession = models.CharField("ENA Accession Id", max_length=200, blank=True, null=True)
+    project_tags = models.ManyToManyField(
+        ProjectTag, blank=True, verbose_name="project tags", related_name="analyzedsamples"
+    )
 
     class Meta:
         unique_together = [["library", "seqrun", "lane"]]
@@ -1536,7 +1569,8 @@ class AnalyzedSample(models.Model):
             "Tag": self.tags,
             "QC": "Pass" if self.qc_pass else "Fail",
             "Nucleotide Archive": self.ena_genbank,
-            "Accession Id": self.ena_accession
+            "Accession Id": self.ena_accession,
+            "Project Tags": ";".join(self.project_tag_names(kwargs.get("project"))),
         })
         if not for_upload:
             if self.quicksand_analysis.last():
@@ -1584,8 +1618,17 @@ class AnalyzedSample(models.Model):
             "Tag",
             "QC",
             "Nucleotide Archive",
-            "Accession Id"
+            "Accession Id",
+            "Project Tags",
         ]
+
+    def project_tag_names(self, project):
+        """
+        the names of the tags of the library in a project (the active one)
+        """
+        if not project:
+            return []
+        return [tag.name for tag in self.project_tags.all() if tag.project_id == project.pk]
 
     @property
     def project_namespaces(self):

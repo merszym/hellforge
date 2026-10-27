@@ -249,6 +249,7 @@ def get_project_overview(request, project=None):
     return render(request, "main/project/project_overview.html", context)
 
 
+@login_required
 def toggle_project(request):
     project = get_project(request)
     instance = get_instance_from_string(request.POST.get("instance_x"))
@@ -265,6 +266,7 @@ def toggle_project(request):
         # return the 'Yes' html
         return HttpResponse("<span style='color:green; cursor:pointer;'>Yes</span>")
 
+@login_required
 @csrf_exempt
 def update_project_params(request):
     project = get_project(request)

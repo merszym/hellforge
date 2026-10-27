@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required
 from .forms import ReferenceForm, DateForm, ContactForm, SampleBatchForm, ProfileForm, LayerColourForm
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
@@ -14,7 +15,8 @@ from .models import (
     Date,
     AnalyzedSample,
     SampleBatch,
-    Sample
+    Sample,
+    ProjectTag,
 )
 from django.db.models import Q
 from django.urls import reverse, path
@@ -45,6 +47,17 @@ def get_modal_context(object, request):
     }
     if context["errors"] == "[]":
         context.update({"errors": None})
+
+    # the project-tags of a library (in the active project)
+    if object.model == "analyzedsample" and context["type"] == "tags":
+        from main.tools.projects import get_project
+        project = get_project(request)
+        if project:
+            context.update({
+                "project": project,
+                "project_tag_options": ProjectTag.objects.filter(project=project),
+                "selected_project_tags": object.project_tags.filter(project=project).values_list("pk", flat=True),
+            })
 
     # Add sample edit context
     if object.model == "sample":
@@ -209,6 +222,7 @@ def get_modal(request):
 #
 
 
+@login_required
 @csrf_exempt
 def upload(request):
     """

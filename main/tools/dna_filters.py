@@ -12,7 +12,7 @@ from django.shortcuts import render
 from django.urls import path
 from django.views.decorators.http import require_POST
 from django.db.models import Q
-from main.models import Site, Layer, Culture, Sample, SampleBatch, AnalyzedSample
+from main.models import Site, Layer, Culture, Sample, SampleBatch, AnalyzedSample, ProjectTag
 from main.tools.generic import get_instance_from_string
 from main.tools.projects import get_project
 
@@ -31,6 +31,7 @@ LIBRARY_FIELDS = {
     "probe": ["filter_probe"],
     "controls": ["filter_controls"],
     "missing": ["filter_missing"],
+    "project_tag": ["filter_project_tags"],
 }
 # the filters for admins only (logged-in users)
 ADMIN_FIELDS = ["no_layer", "missing"]
@@ -155,6 +156,13 @@ def set_filter(request, field):
             request.session["filter_search"] = search
         else:
             request.session.pop("filter_search", None)
+    elif field == "project_tag":
+        # the project-tags (pks, several can be selected)
+        tags = [int(x) for x in post.getlist("project_tag") if x.isdigit()]
+        if tags:
+            request.session["filter_project_tags"] = tags
+        else:
+            request.session.pop("filter_project_tags", None)
     elif field == "missing":
         # libraries without results in any of these analyses
         missing = [x for x in post.getlist("missing") if x in ANALYSIS_DEFAULTS]
@@ -215,6 +223,10 @@ def active_filters(request):
         libraries.append(f"Search: {session['filter_search']}")
     if session.get("filter_probe"):
         libraries.append(f"Probes: {', '.join(session['filter_probe'])}")
+    if session.get("filter_project_tags"):
+        names = ProjectTag.objects.filter(pk__in=session["filter_project_tags"], project=get_project(request)).values_list("name", flat=True)
+        if names:
+            libraries.append(f"Tags: {', '.join(names)}")
     if session.get("filter_controls"):
         libraries.append("No controls")
     if session.get("filter_missing") and request.user.is_authenticated:
@@ -284,6 +296,9 @@ def panel_context(request, site):
         "has_sterile": has_sterile,
         "selected_cultures": request.session.get("filter_culture", []),
         "missing_options": [(analysis, ANALYSIS_NAMES[analysis]) for analysis in ANALYSIS_DEFAULTS],
+        # the tags of the active project, that are used by libraries of the site
+        "project_tags": ProjectTag.objects.filter(project=project, analyzedsamples__sample__site=site).distinct(),
+        "selected_project_tags": request.session.get("filter_project_tags", []),
         "selected_missing": request.session.get("filter_missing", []),
         "sample_batches": SampleBatch.objects.filter(sample__site=site, sample__domain="mpi_eva").distinct().order_by("name"),
         "probes": sorted(libraries.exclude(probes=None).order_by().values_list("probes", flat=True).distinct()),
