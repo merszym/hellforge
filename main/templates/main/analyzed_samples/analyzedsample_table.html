@@ -49,10 +49,10 @@
             <th>Project</th>
             <th>QC</th>
             {% endif %}
-            <th>Layer</th>
+            {% include 'main/analyzed_samples/sort-header.html' with key='layer' label='Layer' site_pk=site.pk %}
             <th>Layer Parent</th>
             <th>Sample</th>
-            <th>Sample Batch</th>
+            {% include 'main/analyzed_samples/sort-header.html' with key='batch' label='Sample Batch' site_pk=site.pk %}
             <th>Lysate</th>
             <th>ENC Batch</th>
             <th>Library</th>
@@ -62,9 +62,9 @@
             <th nowrap>LNC Batch</th>
             <th>Capture</th>
             <th>Capture Probe</th>
-            <th>Sequencing Run</th>
+            {% include 'main/analyzed_samples/sort-header.html' with key='seqrun' label='Sequencing Run' site_pk=site.pk %}
             <th>Lane</th>
-            <th>Pool</th>
+            {% include 'main/analyzed_samples/sort-header.html' with key='pool' label='Pool' site_pk=site.pk %}
             <th>Tag</th>
             <th nowrap>Project Tags</th>
             <th>Archive</th>

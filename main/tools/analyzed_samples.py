@@ -10,13 +10,16 @@ from main.models import (
     HumanDiagnosticPositions,
     NedflowAnalysis,
     ProjectTag,
+    Profile,
+    ProfileLayerJunction,
 )
 from django.http import JsonResponse, HttpResponse
 from django.urls import path, reverse
 from django import forms
 from django.shortcuts import render
 import main.tools as tools
-from django.db.models import Q, Prefetch
+from django.db.models import Q, Prefetch, F, OuterRef, Subquery, Case, When
+from django.db.models.functions import Coalesce
 from collections import defaultdict
 import pandas as pd
 import json, io
@@ -86,6 +89,50 @@ def search_libraries(query, text):
     for field in LIBRARY_SEARCH_FIELDS:
         condition |= Q(**{f"{field}__icontains": text})
     return query.filter(condition)
+
+
+# the order of the libraries (and of the analysis results), set in the table-headers
+LIBRARY_SORTS = ["batch", "seqrun", "pool", "layer"]
+DEFAULT_LIBRARY_SORT = "seqrun"
+
+
+def main_profile(site):
+    """
+    the profile for the order of the layers: the 'Main Profile', else the first profile of the site
+    """
+    profiles = Profile.objects.filter(site=site)
+    return profiles.filter(name="Main Profile").first() or profiles.order_by("pk").first()
+
+
+def sort_libraries(request, query, site, prefix=""):
+    """
+    order the libraries (prefix='' ) or the analysis results (prefix='analyzedsample__') by the sort of the DNA tab:
+    batch, seqrun (sequencing run and lane), pool or layer (position in the main profile).
+    controls (without sample) are last when sorting by batch or layer
+    """
+    sort = request.session.get("filter_sort", DEFAULT_LIBRARY_SORT)
+    f = lambda field: F(prefix + field).asc(nulls_last=True)
+    run = [f("seqrun"), f("lane"), f("library")]
+    if sort == "batch":
+        return query.order_by(f("sample__batch__name"), f("sample__name"), f("library"), f("seqrun"), f("lane"))
+    if sort == "pool":
+        return query.order_by(f("seqpool"), *run)
+    if sort == "layer":
+        profile = main_profile(site)
+
+        def position(layer):
+            # the position of the layer in the profile, or of its parent layers (sub-layers are not always in the profile)
+            return Coalesce(*[
+                Subquery(ProfileLayerJunction.objects.filter(profile=profile, layer=OuterRef(layer + parents)).values("position")[:1])
+                for parents in ["", "__layer", "__layer__layer"]
+            ])
+        # as Sample.get_layer: the layer of the parent sample, else the own layer
+        query = query.annotate(layer_position=Case(
+            When(**{prefix + "sample__sample__isnull": False}, then=position(prefix + "sample__sample__layer")),
+            default=position(prefix + "sample__layer"),
+        ))
+        return query.order_by(F("layer_position").asc(nulls_last=True), f("sample__name"), *run)
+    return query.order_by(*run)
 
 
 def filter_missing_analyses(request, query):
@@ -195,7 +242,7 @@ def get_libraries(request, pk, return_query=False):
         query = update_query_for_negatives(query, project=project, authenticated=request.user.is_authenticated)
 
     # load the sample/layer information in bulk instead of per row
-    query = query.select_related(*LIBRARY_LAYER_RELATED)
+    query = sort_libraries(request, query.select_related(*LIBRARY_LAYER_RELATED), object)
 
     if return_query:
         return query

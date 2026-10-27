@@ -10,7 +10,7 @@ from django.views.decorators.http import require_POST
 from django.db.models import Q
 from main.tools.generic import get_instance_from_string
 from main.tools.projects import get_project
-from main.tools.analyzed_samples import update_query_for_negatives, get_libraries, LIBRARY_LAYER_RELATED, probe_translations, paginate_rows
+from main.tools.analyzed_samples import update_query_for_negatives, get_libraries, LIBRARY_LAYER_RELATED, probe_translations, paginate_rows, sort_libraries
 from main.tools.dna_filters import get_analysis_settings
 from main.models import NedflowAnalysis, AnalyzedSample, Site, Taxonomy
 import re
@@ -291,9 +291,11 @@ def table_rows(request, site):
     analyzed_samples = get_libraries(request, site.pk, return_query=True)
 
     #order by analyzed sample to match the order of the table above the quicksand tab
-    query = NedflowAnalysis.objects.filter(analyzedsample__in=analyzed_samples).order_by('analyzedsample').select_related(
+    query = NedflowAnalysis.objects.filter(analyzedsample__in=analyzed_samples).select_related(
         *[f'analyzedsample__{x}' for x in LIBRARY_LAYER_RELATED]
     )
+    # the same order as the library-table
+    query = sort_libraries(request, query, site, prefix="analyzedsample__")
 
 
     # the settings are set in the side-panel of the DNA tab (main/tools/dna_filters.py)

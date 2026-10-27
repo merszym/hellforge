@@ -32,13 +32,13 @@
         <table class="table table-striped">
             <thead style="position: sticky; top:0; background-color: white; z-index: 100;">
                 <tr>
-                    <th>Layer</th>
+                    {% include 'main/analyzed_samples/sort-header.html' with key='layer' label='Layer' site_pk=object.pk %}
                     <th>Sample</th>
                     <th>Type</th>
                     <th>Library</th>
                     <th>Capture</th>
                     <th>Probe</th>
-                    <th>Sequencing Run</th>
+                    {% include 'main/analyzed_samples/sort-header.html' with key='seqrun' label='Sequencing Run' site_pk=object.pk %}
                     <th>Tag</th>
                     <th>quicksand</th>
                     {% if tableview %}

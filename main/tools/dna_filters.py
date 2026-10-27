@@ -32,6 +32,8 @@ LIBRARY_FIELDS = {
     "controls": ["filter_controls"],
     "missing": ["filter_missing"],
     "project_tag": ["filter_project_tags"],
+    # not a filter: the order of the libraries and analysis results (set in the table-headers)
+    "sort": ["filter_sort"],
 }
 # the filters for admins only (logged-in users)
 ADMIN_FIELDS = ["no_layer", "missing"]
@@ -156,6 +158,10 @@ def set_filter(request, field):
             request.session["filter_search"] = search
         else:
             request.session.pop("filter_search", None)
+    elif field == "sort":
+        from main.tools.analyzed_samples import LIBRARY_SORTS
+        if post.get("sort") in LIBRARY_SORTS:
+            request.session["filter_sort"] = post.get("sort")
     elif field == "project_tag":
         # the project-tags (pks, several can be selected)
         tags = [int(x) for x in post.getlist("project_tag") if x.isdigit()]

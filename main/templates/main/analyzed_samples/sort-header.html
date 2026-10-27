@@ -1,0 +1,5 @@
+{# a table-header that sorts the libraries and analysis results: include with key='batch|seqrun|pool|layer' label='...' site_pk=... #}
+<th nowrap style="cursor: pointer;" class="tooltip tooltip-bottom" data-tooltip="Sort by {{label}}"
+    hx-post="{% url 'main_dna_filters_update' site_pk %}"
+    hx-vals='{"_from_panel": "1", "_fields": "sort", "sort": "{{key}}"}'
+    hx-target="#dna-filters-samples">{{label}}{% if request.session.filter_sort|default:"seqrun" == key %} &#9660;{% endif %}</th>
