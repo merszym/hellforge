@@ -374,48 +374,6 @@ class AnalyzedSampleForm(forms.ModelForm):
         fields = ["seqrun", "seqpool", "lane"]
 
 
-def handle_library_file(request, file):
-    df = pd.read_csv(file, sep=",")
-    df.drop_duplicates(inplace=True)
-
-    site=tools.generic.get_instance_from_string(request.POST.get('site'))
-
-    # filter for expected/unexpected columns
-    expected = AnalyzedSample.table_columns()
-    expected.append('object')
-    issues = []
-    if dropped := [x for x in df.columns if x not in expected]:
-        issues.append(f"Dropped Table Columns: {','.join(dropped)}")
-    df = df[[x for x in df.columns if x in expected]]
-
-    # check if sample parents exist
-    samples = Sample.objects.values("name")
-
-    if dropped := [
-        x for x in df["Sample Name"] if len(samples.filter(name=x)) == 0
-    ]:
-        dropped = [
-            x for x in dropped if x == x
-        ]  # ignore empty samples, as they are negative controls
-        if len(dropped) > 0:
-            issues.append(f"Samples not in Database: {','.join(dropped)}")
-    df = df[df["Sample Name"].isin(dropped) == False]
-
-    return render(
-        request,
-        "main/modals/sample_modal.html",
-        {
-            "type": "libraries_confirm",
-            "site":site,
-            "dataframe": df.fillna("").to_html(
-                index=False, classes="table table-striped col-12"
-            ),
-            "issues": issues,
-            "json": df.to_json(),
-        },
-    )
-
-
 def set_project_tags(library, project, value):
     """
     set the tags of a library in a project from the upload-sheet ('tag1;tag2'), the tags of other projects stay.
@@ -430,58 +388,232 @@ def set_project_tags(library, project, value):
     library.project_tags.add(*tags)
 
 
+# the upload of libraries: both stages (check and save) use validate_library_sheet,
+# rows with errors block the whole upload, the save is all-or-nothing
+LIBRARY_SHEET_REQUIRED = ["Sample Name", "Library", "Sequencing Run", "Sequencing Lane", "Tag"]
+# sheet-column -> model-field (text values)
+LIBRARY_SHEET_TEXT = {
+    "Lysate": "lysate", "ENC Batch": "enc_batch", "Library": "library", "Reamp Library": "reamp_library",
+    "LNC Batch": "lnc_batch", "Capture": "capture", "Capture Probe": "probes", "Sequencing Run": "seqrun",
+    "Sequencing Lane": "lane", "Sequencing Pool": "seqpool", "Tag": "tags",
+    "Nucleotide Archive": "ena_genbank", "Accession Id": "ena_accession",
+}
+CONTROL_TAGS = ["LNC", "ENC"]
+
+
+def read_library_sheet(file):
+    """
+    the rows of the sheet as list of dicts of text (no type-guessing by pandas, empty cells are '')
+    """
+    df = pd.read_csv(file, sep=",", dtype=str, keep_default_na=False)
+    df.columns = [str(x).strip() for x in df.columns]
+    return [{k: str(v).strip() for k, v in row.items()} for row in df.to_dict(orient="records")]
+
+
+def validate_library_sheet(rows, site):
+    """
+    check all rows of the upload-sheet. returns (checked rows, sheet-issues, number of errors)
+    each checked row: {'row': n, 'data': {...}, 'status': 'new|update|skip|error', 'errors': [...], 'notes': [...], 'values': {...}}
+    """
+    columns = list(rows[0].keys()) if rows else []
+    sheet_issues, error_count = [], 0
+    known = AnalyzedSample.table_columns() + ["object"]
+    if missing := [x for x in LIBRARY_SHEET_REQUIRED if x not in columns]:
+        sheet_issues.append(f"Missing columns: {', '.join(missing)}")
+        return [], sheet_issues, 1
+    if unknown := [x for x in columns if x not in known]:
+        sheet_issues.append(f"Ignored columns: {', '.join(unknown)}")
+    if not_in_sheet := [x for x in known if x not in columns and x not in ("object", "Sample Name")]:
+        sheet_issues.append(f"Not in the sheet (existing values stay): {', '.join(not_in_sheet)}")
+
+    checked = []
+    for n, data in enumerate(rows, start=2):  # row 1 is the header in the sheet
+        entry = {"row": n, "data": data, "status": "new", "errors": [], "warnings": [], "notes": [], "values": {}}
+        checked.append(entry)
+        if not any(data.values()):
+            entry["status"] = "skip"
+            entry["notes"].append("empty row")
+            continue
+        errors, warnings, notes, values = entry["errors"], entry["warnings"], entry["notes"], entry["values"]
+
+        # the library to update ('object') or a new one
+        if obj := data.get("object"):
+            model, _, pk = obj.partition("_")
+            library = AnalyzedSample.objects.filter(pk=int(pk)).first() if model == "analyzedsample" and pk.isdigit() else None
+            if library is None:
+                errors.append(f"object '{obj}' is not an existing library")
+            else:
+                entry["library"] = library
+                entry["status"] = "update"
+
+        # text values (limited by the length of the database-field)
+        for column, field in LIBRARY_SHEET_TEXT.items():
+            if column in data:
+                value = data[column] or None
+                max_length = AnalyzedSample._meta.get_field(field).max_length
+                if value and len(value) > max_length:
+                    errors.append(f"{column} is longer than {max_length} characters")
+                values[field] = value
+        for column in ["Library", "Sequencing Run", "Sequencing Lane"]:
+            if not data.get(column):
+                errors.append(f"{column} is empty")
+
+        # numbers
+        for column, field, integer in [("Molecules (qPCR)", "molecules_qpcr", True), ("Efficiency", "efficiency", False)]:
+            if column in data:
+                value = data[column]
+                try:
+                    number = float(value) if value else None
+                    if integer and number is not None:
+                        if not number.is_integer():
+                            raise ValueError
+                        number = int(number)
+                    values[field] = number
+                except ValueError:
+                    errors.append(f"{column} '{value}' is not a {'whole ' if integer else ''}number")
+        if "QC" in data:
+            qc = data["QC"].lower()
+            if qc in ("pass", "fail"):
+                values["qc_pass"] = qc == "pass"
+            elif qc:
+                errors.append(f"QC '{data['QC']}' is not Pass or Fail")
+
+        # the sample: controls have none, else a sample of this site
+        name = data.get("Sample Name")
+        if values.get("tags") in CONTROL_TAGS:
+            values["sample"] = None
+            if name:
+                notes.append(f"sample '{name}' ignored for the control ({values['tags']})")
+        elif not name:
+            errors.append("Sample Name is empty (only controls with Tag LNC/ENC have no sample)")
+        else:
+            # a sample of this site, else of another site (allowed, flagged)
+            samples = list(Sample.objects.filter(name=name, site=site)[:2]) or list(Sample.objects.filter(name=name).select_related("site")[:2])
+            if len(samples) > 1:
+                errors.append(f"sample '{name}' exists more than once{' at this site' if samples[0].site_id == site.pk else ''}")
+            elif not samples:
+                errors.append(f"sample '{name}' is not in the database")
+            else:
+                values["sample"] = samples[0]
+                if samples[0].site_id != site.pk:
+                    warnings.append(f"sample '{name}' belongs to another site ({samples[0].site})")
+
+        # project tags
+        if "Project Tags" in data:
+            names = [x.strip() for x in data["Project Tags"].split(";") if x.strip()]
+            if too_long := [x for x in names if len(x) > 100]:
+                errors.append(f"project tags longer than 100 characters: {', '.join(too_long)}")
+            values["project_tags"] = data["Project Tags"]
+
+    # the identity of a library (library, sequencing run, lane): unique in the sheet and in the database
+    identities = defaultdict(list)
+    for entry in checked:
+        if entry["status"] != "skip" and entry["values"].get("library") and entry["values"].get("seqrun"):
+            identities[(entry["values"]["library"], entry["values"]["seqrun"], entry["values"]["lane"])].append(entry)
+    # (edge-cases, e.g. experimental libraries with other tags, are allowed: flagged, not prevented)
+    for (library, seqrun, lane), entries in identities.items():
+        if len(entries) > 1:
+            for entry in entries:
+                entry["warnings"].append(f"same library/run/lane as row(s) {', '.join(str(e['row']) for e in entries if e is not entry)}")
+        for entry in entries:
+            own = entry.get("library")
+            for other in AnalyzedSample.objects.filter(library=library, seqrun=seqrun, lane=lane).exclude(pk=own.pk if own else None):
+                hint = " (to update it, add it in the 'object' column)" if own is None else ""
+                entry["warnings"].append(f"same library/run/lane as analyzedsample_{other.pk} (Tag: {other.tags or '-'}){hint}")
+
+    for entry in checked:
+        if entry["errors"]:
+            entry["status"] = "error"
+            error_count += 1
+    return checked, sheet_issues, error_count
+
+
+def library_sheet_context(rows, site, checked, sheet_issues, error_count, **kwargs):
+    counts = defaultdict(int)
+    for entry in checked:
+        counts[entry["status"]] += 1
+        if entry.get("warnings") and entry["status"] != "error":
+            counts["warning"] += 1
+    columns = list(rows[0].keys()) if rows else []
+    return {
+        "type": "libraries_confirm",
+        "site": site,
+        "columns": columns,
+        "checked": checked,
+        "issues": sheet_issues,
+        "error_count": error_count,
+        "counts": dict(counts),
+        "json": json.dumps(rows),
+        **kwargs,
+    }
+
+
+@login_required
+def handle_library_file(request, file):
+    """
+    the first stage of the upload: check the sheet and show the result (nothing is saved)
+    """
+    site = tools.generic.get_instance_from_string(request.POST.get('site'))
+    try:
+        rows = read_library_sheet(file)
+    except Exception as e:
+        return render(request, "main/modals/sample_modal.html", {
+            "type": "libraries_confirm", "site": site, "checked": [], "error_count": 1,
+            "issues": [f"The file could not be read as csv: {e}"],
+        })
+    checked, sheet_issues, error_count = validate_library_sheet(rows, site)
+    return render(request, "main/modals/sample_modal.html", library_sheet_context(rows, site, checked, sheet_issues, error_count))
+
+
 @login_required
 def save_verified(request):
-    df = pd.read_json(io.StringIO(request.POST.get("batch-data")))
-    df.convert_dtypes()
+    """
+    the second stage of the upload: check the rows again (the database could have changed) and save all or nothing
+    """
+    from django.db import transaction
 
-    project = Project.objects.get(namespace=request.session["session_project"])
+    rows = json.loads(request.POST.get("batch-data") or "[]")
     site = Site.objects.get(pk=int(request.GET.get('site')))
+    project = tools.projects.get_project(request)
+    checked, sheet_issues, error_count = validate_library_sheet(rows, site)
+    # add_to_project: 'none' (only upload), 'site' (the libraries of samples of this site, and controls) or 'all'
+    add_to_project = request.POST.get("add_to_project", "none")
+    if add_to_project not in ("none", "site", "all"):
+        add_to_project = "none"
+    if project is None and (add_to_project != "none" or any("project_tags" in e["values"] for e in checked)):
+        sheet_issues.append("No project selected: needed for the project and the project tags")
+        error_count += 1
+    if error_count:
+        return render(request, "main/modals/sample_modal.html", library_sheet_context(rows, site, checked, sheet_issues, error_count))
 
-    def value_or_none(val):
-        if val == "nan" or val != val:
-            return None
-        return val
+    created = updated = added = 0
+    with transaction.atomic():
+        for entry in checked:
+            if entry["status"] == "skip":
+                continue
+            values = dict(entry["values"])
+            tags = values.pop("project_tags", None)
+            library = entry.get("library") or AnalyzedSample()
+            for field, value in values.items():
+                setattr(library, field, value)
+            library.save()
+            if add_to_project == "all" or (add_to_project == "site" and (library.sample is None or library.sample.site_id == site.pk)):
+                library.project.add(project)
+                added += 1
+            if entry["status"] == "new":
+                created += 1
+            else:
+                updated += 1
+            # the column is optional (older sheets): if it is there, the library has exactly these tags (in this project)
+            if tags is not None:
+                set_project_tags(library, project, tags)
 
-    # go through the layers
-    for i, row in df.iterrows():
-        if row["Tag"] in ["LNC", "ENC"]:
-            sample = None
-        else:
-            sample = Sample.objects.get(name=row["Sample Name"])
-        # update the instance if 'object' is provided
-        if 'object' in row and row['object']:
-            object = tools.generic.get_instance_from_string(row['object'])
-        # or create a new object
-        else:
-            object = AnalyzedSample()
-        # set or update
-        object.sample = sample
-        object.lysate = value_or_none(row["Lysate"])
-        object.enc_batch = value_or_none(row["ENC Batch"])
-        object.library = row["Library"]
-        object.reamp_library = value_or_none(row["Reamp Library"])
-        object.lnc_batch = value_or_none(row["LNC Batch"])
-        object.molecules_qpcr = value_or_none(row["Molecules (qPCR)"])
-        object.efficiency = value_or_none(row["Efficiency"])
-        object.capture = value_or_none(row["Capture"])
-        object.probes = value_or_none(row["Capture Probe"])      
-        object.seqpool = value_or_none(row["Sequencing Pool"])
-        object.seqrun = value_or_none(row['Sequencing Run'])
-        object.lane = value_or_none(row["Sequencing Lane"])  
-        object.tags = value_or_none(row["Tag"])
-        object.ena_genbank = value_or_none(row["Nucleotide Archive"])
-        object.ena_accession = value_or_none(row["Accession Id"])
-        try:      
-            object.save()
-        except: #unique contraint error
-            print('unique constraint error: ',object)
-            continue
-        # the column is optional (older sheets): if it is there, the library has exactly these tags (in this project)
-        if "Project Tags" in row.index:
-            set_project_tags(object, project, value_or_none(row["Project Tags"]))
-    
-    return get_libraries(request, site.pk)
+    response = render(request, "main/modals/sample_modal.html", library_sheet_context(
+        rows, site, checked, sheet_issues, error_count, saved=True, created=created, updated=updated, added=added, project=project,
+    ))
+    # the DNA tab reloads the libraries and analyses
+    response["HX-Trigger"] = json.dumps({"dna-filter-changed": {"levels": ["libraries"]}})
+    return response
 
 
 @login_required

@@ -1,7 +1,7 @@
 {% load static %}
 {% load format %}
 <a href="#close" class="modal-overlay" aria-label="Close"></a>
-<div class="modal-container">
+<div class="modal-container" {% if type == "libraries_confirm" %}style="max-width: 90vw; width: 90vw;"{% endif %}>
     <div class="modal-header">
         <a id="modal-close" class="btn btn-clear float-right modal_close" aria-label="Close" style="cursor: pointer;"></a>
         <div class="modal-title h5">Sample Modal</div>
@@ -286,22 +286,57 @@
 
     <div class="modal-body">
         <div class="content my-2">
-            <div>
-                <strong>Verify Upload</strong><br>
-                {% for issue in issues %}
-                    <div class="toast toast-warning">{{issue}}</div>
+            {% if saved %}
+            <div class="toast toast-success">Upload saved: {{created}} new, {{updated}} updated libraries{% if added %}, {{added}} added to {{project}}{% endif %}</div>
+            {% else %}
+            <strong>Verify Upload</strong>
+            <p class="text-small">
+                {{counts.new|default:0}} new, {{counts.update|default:0}} updated{% if counts.skip %}, {{counts.skip}} empty rows skipped{% endif %}
+                {% if counts.warning %}<span class="text-warning">, {{counts.warning}} with warnings (please check)</span>{% endif %}
+                {% if error_count %}<span class="text-error">, {{error_count}} with errors: nothing is saved until all errors are fixed</span>{% endif %}
+            </p>
+            {% for issue in issues %}
+                <div class="toast toast-warning">{{issue}}</div>
+            {% endfor %}
+            {% endif %}
+            {% if checked %}
+            <!-- every row of the sheet with its status: nothing is dropped without a reason -->
+            <div style="max-height: 60vh; overflow: auto;">
+            <table class="table table-striped" style="font-size: 85%;">
+                <thead style="position: sticky; top: 0; background: white;">
+                    <tr><th>Row</th><th>Status</th><th>Issues</th>{% for column in columns %}<th nowrap>{{column}}</th>{% endfor %}</tr>
+                </thead>
+                <tbody>
+                {% for entry in checked %}
+                    <tr {% if entry.status == "error" %}style="background-color: #fbe9e9;"{% elif entry.warnings %}style="background-color: #fdf6e3;"{% endif %}>
+                        <td>{{entry.row}}</td>
+                        <td nowrap class="{% if entry.status == 'error' %}text-error{% elif entry.status == 'skip' %}text-gray{% else %}text-success{% endif %}">{{entry.status}}</td>
+                        <td style="min-width: 15rem;">
+                            {% for error in entry.errors %}<div class="text-error">{{error}}</div>{% endfor %}
+                            {% for warning in entry.warnings %}<div class="text-warning">{{warning}}</div>{% endfor %}
+                            {% for note in entry.notes %}<div class="text-gray">{{note}}</div>{% endfor %}
+                        </td>
+                        {% for column in columns %}<td nowrap>{{entry.data|lookup:column}}</td>{% endfor %}
+                    </tr>
                 {% endfor %}
-                {{dataframe|safe}}
-                <form id='sample-batch-verify-form'
-                    hx-post="{% url 'ajax_save_verified_analyzedsamples' %}?site={{site.pk}}"
-                    hx-target="#show_libraries"
-                    >
-                    {% csrf_token %}
-                    <textarea name="batch-data" type="text" style="display:none;">{{json}}</textarea>
-                    <button class="btn modal_close">Confirm</button>
-                </form>
-                <br>
+                </tbody>
+            </table>
             </div>
+            {% endif %}
+            {% if not saved and not error_count %}
+            <form id='sample-batch-verify-form'
+                hx-post="{% url 'ajax_save_verified_analyzedsamples' %}?site={{site.pk}}"
+                hx-target="#modal-blank">
+                {% csrf_token %}
+                <textarea name="batch-data" style="display:none;">{{json}}</textarea>
+                <!-- upload only, or also add the libraries to the active project: of this site's samples (and controls), or all -->
+                <div class="mt-2" style="display: flex; flex-wrap: wrap; gap: .6rem;">
+                    <button class="btn btn-primary" name="add_to_project" value="none">Confirm</button>
+                    <button class="btn" name="add_to_project" value="site">Confirm and add this site's libraries to {{request.session.session_project}}</button>
+                    <button class="btn" name="add_to_project" value="all">Confirm and add all libraries to {{request.session.session_project}}</button>
+                </div>
+            </form>
+            {% endif %}
         </div>
     </div>
 

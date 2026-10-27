@@ -295,6 +295,12 @@ def panel_context(request, site):
         (Q(sample__isnull=True) & Q(layer__culture__isnull=True))
         | (Q(sample__isnull=False) & Q(sample__layer__culture__isnull=True))
     ).exists()
+    # not logged in: only the layers of the samples that can be seen (as in filter_samples: the own layer
+    # or the layer of the parent sample, and their parent layers)
+    if not request.user.is_authenticated:
+        paths = ["layer", "layer__layer", "layer__layer__layer", "sample__layer", "sample__layer__layer", "sample__layer__layer__layer"]
+        layer_ids = set().union(*[set(samples.values_list(path, flat=True)) for path in paths]) - {None}
+        layers = layers.filter(pk__in=layer_ids)
     return {
         "object": site,
         "layers": layers,
@@ -306,7 +312,8 @@ def panel_context(request, site):
         "project_tags": ProjectTag.objects.filter(project=project, analyzedsamples__sample__site=site).distinct(),
         "selected_project_tags": request.session.get("filter_project_tags", []),
         "selected_missing": request.session.get("filter_missing", []),
-        "sample_batches": SampleBatch.objects.filter(sample__site=site, sample__domain="mpi_eva").distinct().order_by("name"),
+        # only the batches of samples that can be seen (not logged in: the samples of the project)
+        "sample_batches": SampleBatch.objects.filter(sample__in=samples.filter(domain="mpi_eva")).distinct().order_by("name"),
         "probes": sorted(libraries.exclude(probes=None).order_by().values_list("probes", flat=True).distinct()),
         "analyses": [
             (analysis, ANALYSIS_NAMES[analysis], ANALYSIS_PREFIX[analysis], get_analysis_settings(request, analysis))
