@@ -25,6 +25,14 @@
             <option value="layer_{{entry.pk}}" {% if entry.pk == request.session.filter_layer_pk %}selected{% endif %}>{{entry.name}}</option>
             {% endfor %}
         </select>
+        {% if request.user.is_authenticated %}
+        <!-- admins: samples without layer (shown as 'Unassigned') -->
+        <input type="hidden" name="_fields" value="no_layer">
+        <label class="chip-toggle mt-1" title="Samples without layer (Unassigned)">
+            <input type="checkbox" name="no_layer" {% if request.session.filter_no_layer %}checked{% endif %}>
+            <span class="chip">No layer</span>
+        </label>
+        {% endif %}
     </div>
     <div class="form-group">
         <!-- several cultures can be selected, none selected means all -->
@@ -91,6 +99,19 @@
         <input type="checkbox" name="controls" {% if request.session.filter_controls %}checked{% endif %}>
         <span class="chip">No Controls</span>
     </label>
+    {% if request.user.is_authenticated %}
+    <div class="form-group mt-1">
+        <!-- admins: libraries without results in any of the selected analyses -->
+        <label class="form-label">Missing analyses</label>
+        <input type="hidden" name="_fields" value="missing">
+        {% for analysis, name in missing_options %}
+        <label class="chip-toggle" title="Libraries without {{name}} results">
+            <input type="checkbox" name="missing" value="{{analysis}}" {% if analysis in selected_missing %}checked{% endif %}>
+            <span class="chip">{{name}}</span>
+        </label>
+        {% endfor %}
+    </div>
+    {% endif %}
 
     <h6 class="dna-filter-heading">Results</h6>
     <!-- the settings of the analysis that is open (see data-analysis of the dna-layout) -->

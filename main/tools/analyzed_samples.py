@@ -87,6 +87,21 @@ def search_libraries(query, text):
     return query.filter(condition)
 
 
+def filter_missing_analyses(request, query):
+    """
+    libraries without results in any of the selected analyses (admins only).
+    the negative controls of these libraries are added afterwards, independent of their analyses
+    """
+    if (missing := request.session.get('filter_missing')) and request.user.is_authenticated:
+        analyses = {"quicksand": QuicksandAnalysis, "matthias": HumanDiagnosticPositions, "nedflow": NedflowAnalysis}
+        condition = Q()
+        for analysis in missing:
+            if analysis in analyses:
+                condition |= ~Q(pk__in=analyses[analysis].objects.exclude(analyzedsample=None).values("analyzedsample"))
+        query = query.filter(condition)
+    return query
+
+
 def filter_libraries(request, query):
     if not request.user.is_authenticated:
         from main.tools.projects import get_project
@@ -104,6 +119,7 @@ def filter_libraries(request, query):
         )
     if request.session.get('filter_search'):
         query = search_libraries(query, request.session['filter_search'])
+    query = filter_missing_analyses(request, query)
     return query
 
 def get_libraries(request, pk, return_query=False):

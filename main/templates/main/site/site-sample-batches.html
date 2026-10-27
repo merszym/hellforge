@@ -45,7 +45,8 @@
 {% endfor %}
 {% else %}
 
-<div class="tab-panel"
+<!-- all batches combined (paginated, the page-links reload this element) -->
+<div class="tab-panel" id="combined-samples"
     hx-get="{% url 'main_samplebatch_get' 0 %}"
     hx-trigger="load once">
     <div class="loading loading-lg m-2"></div>

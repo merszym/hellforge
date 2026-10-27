@@ -22,6 +22,7 @@ SAMPLE_FIELDS = {
     "layer": ["filter_layer_pk", "filter_layer_name"],
     "culture": ["filter_culture"],
     "batch": ["filter_batch_pk", "filter_batch_name"],
+    "no_layer": ["filter_no_layer"],
     "analyzed": ["filter_analyzed"],
     "combine": ["filter_combine"],
 }
@@ -29,7 +30,10 @@ LIBRARY_FIELDS = {
     "search": ["filter_search"],
     "probe": ["filter_probe"],
     "controls": ["filter_controls"],
+    "missing": ["filter_missing"],
 }
+# the filters for admins only (logged-in users)
+ADMIN_FIELDS = ["no_layer", "missing"]
 
 # the settings of the analysis tables, the fields in the form are prefixed (e.g. qs_ancient)
 ANALYSIS_PREFIX = {"quicksand": "qs", "matthias": "mm", "nedflow": "ned"}
@@ -130,6 +134,8 @@ def set_filter(request, field):
     save the posted value of a field of the filter-form in the session
     """
     post = request.POST
+    if field in ADMIN_FIELDS and not request.user.is_authenticated:
+        return
     if field in ("layer", "batch"):
         set_instance_filter(request, SAMPLE_FIELDS[field], post.get(field, "all"))
     elif field == "culture":
@@ -139,7 +145,7 @@ def set_filter(request, field):
             request.session["filter_culture"] = cultures
         else:
             request.session.pop("filter_culture", None)
-    elif field in ("analyzed", "combine"):
+    elif field in ("analyzed", "combine", "no_layer"):
         request.session[SAMPLE_FIELDS[field][0]] = field in post
     elif field == "controls":
         request.session["filter_controls"] = field in post
@@ -149,6 +155,13 @@ def set_filter(request, field):
             request.session["filter_search"] = search
         else:
             request.session.pop("filter_search", None)
+    elif field == "missing":
+        # libraries without results in any of these analyses
+        missing = [x for x in post.getlist("missing") if x in ANALYSIS_DEFAULTS]
+        if missing:
+            request.session["filter_missing"] = missing
+        else:
+            request.session.pop("filter_missing", None)
     elif field == "probe":
         probes = [x for x in post.getlist("probe") if x and x != "all"]
         if probes:
@@ -192,6 +205,8 @@ def active_filters(request):
         samples.append(f"Cultures: {', '.join(labels)}")
     if session.get("filter_batch_pk"):
         samples.append(f"Batch: {session['filter_batch_name']}")
+    if session.get("filter_no_layer") and request.user.is_authenticated:
+        samples.append("No layer")
     if session.get("filter_analyzed"):
         samples.append("Analyzed samples only")
     if session.get("filter_combine"):
@@ -202,6 +217,8 @@ def active_filters(request):
         libraries.append(f"Probes: {', '.join(session['filter_probe'])}")
     if session.get("filter_controls"):
         libraries.append("No controls")
+    if session.get("filter_missing") and request.user.is_authenticated:
+        libraries.append(f"Missing: {', '.join(ANALYSIS_NAMES[x] for x in session['filter_missing'])}")
 
     # the analysis settings that differ from the defaults
     texts = {
@@ -266,6 +283,8 @@ def panel_context(request, site):
         "cultures": Culture.objects.filter(pk__in=culture_ids - {None}),
         "has_sterile": has_sterile,
         "selected_cultures": request.session.get("filter_culture", []),
+        "missing_options": [(analysis, ANALYSIS_NAMES[analysis]) for analysis in ANALYSIS_DEFAULTS],
+        "selected_missing": request.session.get("filter_missing", []),
         "sample_batches": SampleBatch.objects.filter(sample__site=site, sample__domain="mpi_eva").distinct().order_by("name"),
         "probes": sorted(libraries.exclude(probes=None).order_by().values_list("probes", flat=True).distinct()),
         "analyses": [

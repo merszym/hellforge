@@ -37,6 +37,12 @@ def filter_samples(request, query):
         query = query.filter(condition)
     if 'filter_batch_pk' in request.session:
         query = query.filter(Q(batch__pk=request.session['filter_batch_pk']))
+    # samples without layer (as Sample.get_layer: the layer of the parent sample, else the own layer), admins only
+    if request.session.get('filter_no_layer') and request.user.is_authenticated:
+        query = query.filter(
+            (Q(sample__isnull=True) & Q(layer__isnull=True))
+            | (Q(sample__isnull=False) & Q(sample__layer__isnull=True))
+        )
     # filter for analyzed only
     if 'filter_analyzed' in request.session:
         if request.session['filter_analyzed'] == True:

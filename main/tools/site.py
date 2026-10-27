@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.views.generic import CreateView, ListView, UpdateView, DetailView
 from django.db.models import Q, Count
+from django.core.paginator import Paginator
 from main.forms import ProfileForm, SiteForm, SampleBatchForm
 from main.models import (
     Site,
@@ -465,7 +466,7 @@ def get_site_batches(request, pk):
     batches_qs = batches_qs.order_by('name')
 
     # with sample-filters, only the batches with matching samples are shown
-    filtered = any(request.session.get(key) for key in ["filter_layer_pk", "filter_culture", "filter_batch_pk", "filter_analyzed"])
+    filtered = any(request.session.get(key) for key in ["filter_layer_pk", "filter_culture", "filter_batch_pk", "filter_analyzed", "filter_no_layer"])
 
     # Final batch dictionary
     batch_sample_dict = {
@@ -515,74 +516,51 @@ def samplebatch_create(request):
 
 ## Samplebatch-TAB
 
+# what the rows of the sample-table show, loaded in bulk instead of per row
+# (the layer: Sample.get_layer, the age: Sample.age_summary falls back to the parent sample and the layer)
+SAMPLE_ROW_RELATED = [
+    "batch", "date_upper", "date_lower",
+    "sample__date_upper", "sample__date_lower",
+    "sample__layer__culture", "sample__layer__layer", "sample__layer__date_upper", "sample__layer__date_lower",
+    "layer__culture", "layer__layer", "layer__date_upper", "layer__date_lower",
+]
+SAMPLE_ROW_PREFETCH = ["project", "synonyms", "date", "sample__date", "layer__date", "sample__layer__date"]
+
+
 def get_site_samplebatch_tab(request, pk):
     from main.tools.samplebatch import filter_samples
     # if pk=0, means we want to have all the batches from the site (that we are allowed to see)
     current_project = get_project(request)
 
     if pk != 0:
-        batch = SampleBatch.objects \
-            .select_related(
-                'site',
-            ) \
-            .prefetch_related(
-                'sample',
-                'sample__synonyms',
-                'sample__sample',
-                'sample__layer',
-                'sample__layer__culture',
-                'sample__analyzed_sample',
-            ) \
-            .get(pk=pk)
-
-        # get the defaults for display
-        batch_samples = batch.sample.annotate(
-            library_count=Count('analyzed_sample', filter=Q(analyzed_sample__project=current_project))
-        ).all()
-
-        # make a list of id-synonym keys that are necessary for the sample-table
-        sample_synonyms = {
-            synonym.type
-            for sample in batch_samples
-            for synonym in sample.synonyms.all()
-        }
-
-        context = {
-            "object": batch,
-            "sample_synonyms": sample_synonyms,
-            "samples": filter_samples(request, batch_samples)
-        }
-    
+        batch = SampleBatch.objects.select_related('site').get(pk=pk)
+        samples_qs = batch.sample.all()
+        context = {"object": batch}
     else:
         site = get_instance_from_string(request.GET.get('object'))
-        samples_qs = Sample.objects.filter(site=site, domain='mpi_eva') \
-            .select_related(
-                'site',
-                'sample',
-                'sample__layer',
-                'layer',
-                'layer__culture',
-                'batch'
-            ).prefetch_related(
-                'analyzed_sample',
-                'synonyms'
-            ) \
-            .annotate(library_count=Count('analyzed_sample', filter=Q(analyzed_sample__project=current_project))) \
-            .order_by('name')
-
-        sample_synonyms = {
-            synonym.type
-            for sample in samples_qs
-            for synonym in sample.synonyms.all()
-        }
-
-        context={
-            'samples' : filter_samples(request, samples_qs),
-            'site':site,
-            "sample_synonyms": sample_synonyms,
+        samples_qs = Sample.objects.filter(site=site, domain='mpi_eva').order_by('name')
+        context = {
+            'site': site,
             # all batches combined (Combine Batches in the filters of the DNA tab)
             "combined": True,
         }
+
+    # the synonym-types of all samples are the columns of the sample-table
+    context["sample_synonyms"] = sorted(
+        set(Synonym.objects.filter(sample__in=samples_qs).values_list("type", flat=True)), key=str
+    )
+
+    samples = samples_qs \
+        .select_related(*SAMPLE_ROW_RELATED) \
+        .prefetch_related(*SAMPLE_ROW_PREFETCH) \
+        .annotate(library_count=Count('analyzed_sample', filter=Q(analyzed_sample__project=current_project)))
+    samples = filter_samples(request, samples)
+    if pk == 0:
+        # all batches combined can be large: 300 samples per page (only the samples of the page are loaded)
+        context["samples"] = Paginator(samples, 300).get_page(request.GET.get("page", 1))
+        context["combined_url"] = reverse("main_samplebatch_get", args=[0]) + f"?object=site_{site.pk}"
+    else:
+        context["samples"] = list(samples)
 
     return render(request, "main/samples/sample-batch-tab.html", context)
 

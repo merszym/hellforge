@@ -215,7 +215,7 @@
     <div class="empty-icon">
         <i class="icon icon-flag"></i>
     </div>
-    <p class="empty-title h5">{% if request.session.filter_search or request.session.filter_probe or request.session.filter_layer_pk or request.session.filter_culture or request.session.filter_batch_pk or request.session.filter_analyzed %}No libraries match the filters{% else %}No libraries uploaded{% endif %}</p>
+    <p class="empty-title h5">{% if request.session.filter_search or request.session.filter_probe or request.session.filter_layer_pk or request.session.filter_culture or request.session.filter_batch_pk or request.session.filter_analyzed or request.session.filter_no_layer or request.session.filter_missing %}No libraries match the filters{% else %}No libraries uploaded{% endif %}</p>
 </div>
 {% endif %}
 

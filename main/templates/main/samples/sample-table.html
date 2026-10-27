@@ -31,29 +31,21 @@
         </tr>
     </thead>
     <tbody>
+        {% url 'main_modal_get' as modal_url %}
+        {% url 'main_project_toggle' as toggle_url %}
         {% with project=request.session.session_project %}
+        {% spaceless %}
         {% for object in object_list %}
         <tr>
             {% if request.user.is_authenticated %}
             <td nowrap>
-                <form>
-                    {% csrf_token %}
-                    <input type="hidden" name="instance_x" value="sample_{{object.pk}}">
-                    <div
-                        {% if request.user.is_authenticated %}
-                        hx-post="{% url 'main_project_toggle' %}"
-                        {% endif %}
-                        >
-                        {% if project|isin:object.project_namespaces %}
-                        <span style="color:green; cursor: pointer;">
-                            Yes
-                        </span>
-                        {% else %}
-                        <span style="color:red; cursor: pointer;">No
-                        </span>
-                        {% endif %}
-                    </div>
-                </form>
+                <div hx-post="{{toggle_url}}" hx-vals='{"instance_x":"sample_{{object.pk}}"}'>
+                    {% if project|isin:object.project_namespaces %}
+                    <span style="color:green; cursor: pointer;">Yes</span>
+                    {% else %}
+                    <span style="color:red; cursor: pointer;">No</span>
+                    {% endif %}
+                </div>
             </td>
             {% endif %}
             <td nowrap
@@ -61,7 +53,7 @@
                     style="cursor: pointer;"
                     class="{{object.get_layer|yesno:'assigned,unassigned'}}  {{object.get_layer.culture.classname|default:'sterile'}} modal_open tooltip tooltip-right"
                     data-tooltip="Update Layer"
-                    hx-get="{% url 'main_modal_get' %}"
+                    hx-get="{{modal_url}}"
                     hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_layer" }'
                     hx-target="#modal-blank"
                 {% else %}
@@ -81,7 +73,7 @@
                 style="cursor: pointer;"
                 class="tooltip tooltip-top modal_open"
                 data-tooltip="Update Sample Synonyms"
-                hx-get="{% url 'main_modal_get' %}"
+                hx-get="{{modal_url}}"
                 hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_batch" }'
                 hx-target="#modal-blank"
                 {% endif %}
@@ -94,7 +86,7 @@
                 style="cursor: pointer;"
                 class="tooltip tooltip-top modal_open"
                 data-tooltip="Update Sample Type"
-                hx-get="{% url 'main_modal_get' %}"
+                hx-get="{{modal_url}}"
                 hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_base" }'
                 hx-target="#modal-blank"
             {% endif %}>
@@ -108,7 +100,7 @@
                 style="cursor: pointer;"
                 class="tooltip tooltip-top modal_open"
                 data-tooltip="Update Sample Synonyms"
-                hx-get="{% url 'main_modal_get' %}"
+                hx-get="{{modal_url}}"
                 hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_synonyms" }'
                 hx-target="#modal-blank"
             {% endif %}
@@ -130,7 +122,7 @@
                 style="cursor: pointer;"
                 class="tooltip tooltip-top modal_open"
                 data-tooltip="Update Sample Dating"
-                hx-get="{% url 'main_modal_get' %}"
+                hx-get="{{modal_url}}"
                 hx-vals='{"object":"sample_{{object.pk}}", "type":"dates_list" }'
                 hx-target="#modal-blank"
             {% endif %}>
@@ -149,7 +141,7 @@
                 style="cursor: pointer;"
                 class="tooltip tooltip-top modal_open"
                 data-tooltip="Update Year of Collection"
-                hx-get="{% url 'main_modal_get' %}"
+                hx-get="{{modal_url}}"
                 hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_base" }'
                 hx-target="#modal-blank"
             {% endif %}>
@@ -160,22 +152,23 @@
                 style="cursor: pointer;"
                 class="modal_open"
                 data-tooltip="Update Layer"
-                hx-get="{% url 'main_modal_get' %}"
+                hx-get="{{modal_url}}"
                 hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_provenience" }'
                 hx-target="#modal-blank"
             {% endif %}
             >
                 {% for k,v in object.get_provenience %}
-                <span class="text-gray small">{{k}}: {{v}},</span>
+                <span class="text-gray small">{{k}}: {{v}}, </span>
                 {% endfor %}
             </td>
         </tr>
         {% endfor %}
+        {% endspaceless %}
         {% endwith %}
     </tbody>
 </table>
 </div>
 <div class="m-2">
-    <span><strong>Total: </strong>{{object_list|length}} Samples</span>
+    <span><strong>Total: </strong>{% if object_list.paginator %}{{object_list.paginator.count}}{% else %}{{object_list|length}}{% endif %} Samples</span>
 </div>
 {% endif %}
