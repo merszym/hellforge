@@ -11,7 +11,7 @@ from main.models import (
     NedflowAnalysis,
 )
 from django.http import JsonResponse, HttpResponse
-from django.urls import path
+from django.urls import path, reverse
 from django import forms
 from django.shortcuts import render
 import main.tools as tools
@@ -122,6 +122,42 @@ def filter_libraries(request, query):
     query = filter_missing_analyses(request, query)
     return query
 
+def prefetch_for_table(query):
+    """
+    for the library-table only: the analyses are ordered, so that .first in the template uses
+    the prefetched data, and the large data-field is not needed for the display
+    """
+    return query.prefetch_related(
+        'project',
+        Prefetch('quicksand_analysis', queryset=QuicksandAnalysis.objects.order_by('pk').defer('data')),
+        Prefetch('matthias_analysis', queryset=HumanDiagnosticPositions.objects.defer('data')),
+        Prefetch('nedflow_analysis', queryset=NedflowAnalysis.objects.order_by('pk').defer('data')),
+    )
+
+
+def library_rows_context(request, library):
+    """
+    the context to render the rows of the library-table (analyzedsample-row.html) after editing a library:
+    the library, or with ?all=yes (sequencing run of all libraries) all libraries of the site with this run/pool/lane
+    """
+    libraries = AnalyzedSample.objects.filter(pk=library.pk)
+    if request.GET.get("all") == "yes" and library.sample:
+        libraries = AnalyzedSample.objects.filter(
+            Q(seqrun=library.seqrun) & Q(seqpool=library.seqpool) & Q(lane=library.lane) & Q(sample__site=library.sample.site)
+        )
+    return {
+        "libraries": prefetch_for_table(libraries.select_related(*LIBRARY_LAYER_RELATED)),
+        "site": library.sample.site if library.sample else None,
+        "request": request,
+        "probe_names": probe_translations(),
+        "project": request.session.get("session_project"),
+        "modal_url": reverse("main_modal_get"),
+        "toggle_url": reverse("main_project_toggle"),
+        "delete_url": reverse("main_generic_delete"),
+        "oob": True,
+    }
+
+
 def get_libraries(request, pk, return_query=False):
     """
     from one site, get all the (filtered) samples and display the list of libraries
@@ -153,14 +189,7 @@ def get_libraries(request, pk, return_query=False):
     if return_query:
         return query
 
-    # for the table only: the analyses are ordered, so that .first in the template uses
-    # the prefetched data, and the large data-field is not needed for the display
-    query = query.prefetch_related(
-        'project',
-        Prefetch('quicksand_analysis', queryset=QuicksandAnalysis.objects.order_by('pk').defer('data')),
-        Prefetch('matthias_analysis', queryset=HumanDiagnosticPositions.objects.defer('data')),
-        Prefetch('nedflow_analysis', queryset=NedflowAnalysis.objects.order_by('pk').defer('data')),
-    )
+    query = prefetch_for_table(query)
     
     #paginator to improve speed
     paginator = Paginator(query, 300)

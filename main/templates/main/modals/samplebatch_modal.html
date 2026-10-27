@@ -15,6 +15,11 @@
         {% endfor %}
     {% endif %}
 
+    <!-- after a change (POST): update the name of the batch in the list of batches -->
+    {% if request.method == "POST" and object %}
+    <div class="tile-title" id="batch-title-{{object.pk}}" hx-swap-oob="true">{{object.name}}</div>
+    {% endif %}
+
 
 
     {% if type == "edit" %}

@@ -1,0 +1,128 @@
+{% load format %}
+{# a row of the sample-table (also swapped out-of-band after editing the sample in the sample-modal) #}
+<tr id="sample-row-{{object.pk}}" {% if oob %}hx-swap-oob="true"{% endif %}>
+    {% if request.user.is_authenticated %}
+    <td nowrap>
+        <div hx-post="{{toggle_url}}" hx-vals='{"instance_x":"sample_{{object.pk}}"}'>
+            {% if project|isin:object.project_namespaces %}
+            <span style="color:green; cursor: pointer;">Yes</span>
+            {% else %}
+            <span style="color:red; cursor: pointer;">No</span>
+            {% endif %}
+        </div>
+    </td>
+    {% endif %}
+    <td nowrap
+        {% if request.user.is_authenticated %}
+            style="cursor: pointer;"
+            class="{{object.get_layer|yesno:'assigned,unassigned'}}  {{object.get_layer.culture.classname|default:'sterile'}} modal_open tooltip tooltip-right"
+            data-tooltip="Update Layer"
+            hx-get="{{modal_url}}"
+            hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_layer" }'
+            hx-target="#modal-blank"
+        {% else %}
+            class="{{object.get_layer|yesno:'assigned,unassigned'}}  {{object.get_layer.culture.classname|default:'sterile'}}"
+        {% endif %}>
+        {% if object.get_layer %}{{object.get_layer.name}}{% else %}Unassigned{% endif %}
+    </td>
+    <td nowrap>
+        {% if object.get_layer %}{{object.get_layer.layer.name}}{% else %}{% endif %}
+    </td>
+    <td nowrap>
+        {{object.sample.name|default:""}}
+    </td>
+    {% if not batch %}
+    <td nowrap
+        {% if request.user.is_authenticated %}
+        style="cursor: pointer;"
+        class="tooltip tooltip-top modal_open"
+        data-tooltip="Update Sample Synonyms"
+        hx-get="{{modal_url}}"
+        hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_batch" }'
+        hx-target="#modal-blank"
+        {% endif %}
+        >
+        {{object.batch.name}}
+    </td>
+    {% endif %}
+    <td nowrap
+    {% if request.user.is_authenticated %}
+        style="cursor: pointer;"
+        class="tooltip tooltip-top modal_open"
+        data-tooltip="Update Sample Type"
+        hx-get="{{modal_url}}"
+        hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_base" }'
+        hx-target="#modal-blank"
+    {% endif %}>
+        {{object.type}}
+    </td>
+    <td nowrap>{{object.name}}</td>
+    {% with synonyms=object.synonyms.all %}
+    {% for type in sample_synonyms %}
+    <td nowrap
+    {% if request.user.is_authenticated %}
+        style="cursor: pointer;"
+        class="tooltip tooltip-top modal_open"
+        data-tooltip="Update Sample Synonyms"
+        hx-get="{{modal_url}}"
+        hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_synonyms" }'
+        hx-target="#modal-blank"
+    {% endif %}
+    >
+        {% for syn in synonyms%}
+            {% if syn.type == type %}
+            {{syn.name}}
+            {% endif %}
+        {% endfor %}
+    </td>
+    {% endfor %}
+    {% endwith %}
+    <td nowrap>
+        {{object.library_count}}
+    </td>
+    <td nowrap>
+        <a href="#"
+    {% if request.user.is_authenticated %}
+        style="cursor: pointer;"
+        class="tooltip tooltip-top modal_open"
+        data-tooltip="Update Sample Dating"
+        hx-get="{{modal_url}}"
+        hx-vals='{"object":"sample_{{object.pk}}", "type":"dates_list" }'
+        hx-target="#modal-blank"
+    {% endif %}>
+    {{object.age_summary}}
+        </a>
+    </td>
+    <td>
+        {% if object.date.first %}
+        Direct
+        {% else %}
+        Context
+        {% endif %}
+    </td>
+    <td nowrap
+    {% if request.user.is_authenticated %}
+        style="cursor: pointer;"
+        class="tooltip tooltip-top modal_open"
+        data-tooltip="Update Year of Collection"
+        hx-get="{{modal_url}}"
+        hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_base" }'
+        hx-target="#modal-blank"
+    {% endif %}>
+        {{object.year_of_collection|default:''}}
+    </td>
+    <td nowrap
+    {% if request.user.is_authenticated %}
+        style="cursor: pointer;"
+        class="modal_open"
+        data-tooltip="Update Layer"
+        hx-get="{{modal_url}}"
+        hx-vals='{"object":"sample_{{object.pk}}", "type":"edit_provenience" }'
+        hx-target="#modal-blank"
+    {% endif %}
+    >
+        {% for k,v in object.get_provenience %}
+        <span class="text-gray small">{{k}}: {{v}}, </span>
+        {% endfor %}
+    </td>
+</tr>

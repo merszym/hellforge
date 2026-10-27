@@ -41,6 +41,28 @@ $('body').on('click','.tab-item', function(){
     $(`.${$(this).attr("data-show")}`).show()
 });
 
+// background reloads (e.g. after saving a modal, elements with data-keep-scroll) keep the scroll position
+// of the page and of the scrollable elements (with id) in the reloaded element
+document.body.addEventListener('htmx:beforeSwap', function(e){
+    var elt = e.detail.requestConfig && e.detail.requestConfig.elt
+    if(!elt || !elt.hasAttribute || !elt.hasAttribute('data-keep-scroll')){ return }
+    var positions = []
+    e.detail.target.querySelectorAll('[id]').forEach(function(el){
+        if(el.scrollTop || el.scrollLeft){ positions.push([el.id, el.scrollTop, el.scrollLeft]) }
+    })
+    e.detail.target.keepScroll = {page: window.scrollY, positions: positions}
+});
+document.body.addEventListener('htmx:afterSwap', function(e){
+    var keep = e.detail.target.keepScroll
+    if(!keep){ return }
+    delete e.detail.target.keepScroll
+    window.scrollTo(window.scrollX, keep.page)
+    keep.positions.forEach(function(position){
+        var el = document.getElementById(position[0])
+        if(el){ el.scrollTop = position[1]; el.scrollLeft = position[2] }
+    })
+});
+
 // generic modal handling
 $('body').on('click','.modal_open', function(){
     var element = $("#modal-blank")

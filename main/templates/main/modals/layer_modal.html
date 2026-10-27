@@ -22,13 +22,17 @@
         {% endif %}
     </div>
 
-    <!--Whenever the layer-modal appears, I assume something in the profile was updated. So reload the profile in the background
+    <!--after a change (POST, not when the modal is opened), reload the profile in the background (keeping the scroll position).
+    only profile and site are passed on (request.GET can contain e.g. the rendered form)
     -->
+    {% if request.method == "POST" %}
     <div
-        hx-get="{% url 'main_profile_get' %}?{{request.GET|getstring}}"
+        hx-get="{% url 'main_profile_get' %}?profile={{request.GET.profile|default:''}}&site={{request.GET.site|default:''}}"
         hx-trigger="load"
-        hx-target="#show_profile">
+        hx-target="#show_profile"
+        data-keep-scroll>
     </div>
+    {% endif %}
 
     {% if type == "edit" %}
 

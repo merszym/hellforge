@@ -15,7 +15,7 @@
         </div>
     </div>
     <div class="tile-content">
-        <div class="tile-title">{{batch.name}}</div>
+        <div class="tile-title" id="batch-title-{{batch.pk}}">{{batch.name}}</div>
         <small class="tile-subtitle text-gray">Number of samples: {{batches|lookup:batch}}</small>
     </div>
 </div>

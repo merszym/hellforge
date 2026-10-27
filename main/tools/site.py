@@ -527,6 +527,37 @@ SAMPLE_ROW_RELATED = [
 SAMPLE_ROW_PREFETCH = ["project", "synonyms", "date", "sample__date", "layer__date", "sample__layer__date"]
 
 
+def sample_synonym_types(samples_qs):
+    """
+    the synonym-types of the samples are the columns of the sample-table
+    """
+    return sorted(set(Synonym.objects.filter(sample__in=samples_qs).values_list("type", flat=True)), key=str)
+
+
+def sample_row_context(request, sample):
+    """
+    the context to render a single row of the sample-table (sample-row.html), e.g. after editing the sample
+    """
+    combined = request.session.get("filter_combine")
+    samples_qs = Sample.objects.filter(site=sample.site, domain='mpi_eva') if combined else Sample.objects.filter(batch=sample.batch)
+    row = Sample.objects.filter(pk=sample.pk) \
+        .select_related(*SAMPLE_ROW_RELATED) \
+        .prefetch_related(*SAMPLE_ROW_PREFETCH) \
+        .annotate(library_count=Count('analyzed_sample', filter=Q(analyzed_sample__project=get_project(request)))) \
+        .first()
+    return {
+        "object": row,
+        "request": request,
+        "sample_synonyms": sample_synonym_types(samples_qs),
+        # the batch-column is only shown in the combined table
+        "batch": None if combined else sample.batch,
+        "project": request.session.get("session_project"),
+        "modal_url": reverse("main_modal_get"),
+        "toggle_url": reverse("main_project_toggle"),
+        "oob": True,
+    }
+
+
 def get_site_samplebatch_tab(request, pk):
     from main.tools.samplebatch import filter_samples
     # if pk=0, means we want to have all the batches from the site (that we are allowed to see)
@@ -546,9 +577,7 @@ def get_site_samplebatch_tab(request, pk):
         }
 
     # the synonym-types of all samples are the columns of the sample-table
-    context["sample_synonyms"] = sorted(
-        set(Synonym.objects.filter(sample__in=samples_qs).values_list("type", flat=True)), key=str
-    )
+    context["sample_synonyms"] = sample_synonym_types(samples_qs)
 
     samples = samples_qs \
         .select_related(*SAMPLE_ROW_RELATED) \

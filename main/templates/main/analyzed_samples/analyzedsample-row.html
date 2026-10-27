@@ -1,0 +1,123 @@
+{% load format %}
+{# a row of the library-table (also swapped out-of-band after editing the library in the modal) #}
+<tr class="{{batch.classname}}_libtr libsearch" id="tr_analyzedsample_{{object.pk}}" {% if oob %}hx-swap-oob="true"{% endif %}>
+    {% if request.user.is_authenticated %}
+    <td nowrap>
+        <div hx-post="{{toggle_url}}" hx-vals='{"instance_x":"analyzedsample_{{object.pk}}"}'>
+            {% if project|isin:object.project_namespaces %}
+            <span style="color:green; cursor: pointer;">Yes</span>
+            {% else %}
+            <span style="color:red; cursor: pointer;">No</span>
+            {% endif %}
+        </div>
+    </td>
+    <td class='{{object.qc_pass|yesno:"pass,fail"}}'>
+        <div hx-post="{% url 'main_analyzedsample_qctoggle' object.pk %}">{{object.qc_pass|yesno:"Pass,Fail"}}</div>
+    </td>
+    {% endif %}
+    <td nowrap class="{% if object.sample %}{{object.sample.get_layer|yesno:'assigned,unassigned'}}{% endif %} {{object.sample.get_layer.culture.classname|default:'sterile'}}">
+        {% if object.sample %}
+            {% if object.sample.get_layer %}{{object.sample.get_layer.name}}{% else %}Unassigned{% endif %}
+        {% else %}
+            -
+        {% endif %}
+    </td>
+    <td nowrap class="{% if object.sample %}{{object.sample.get_layer|yesno:'assigned,unassigned'}}{% endif %} {{object.sample.get_layer.culture.classname|default:'sterile'}}">
+        {% if object.sample %}
+            {% if object.sample.get_layer %}{{object.sample.get_layer.layer.name}}{% else %}{% endif %}
+        {% else %}
+            -
+        {% endif %}
+    </td>
+    <td>{{object.sample|default:"Control"}}</td>
+    <td nowrap>{{object.sample.batch.name|default:''}}</td>
+    <td>{{object.lysate|default:""}}</td>
+    <td nowrap>{{object.enc_batch|default:""}}</td>
+    <td>{{object.library}}</td>
+    <td>{{object.reamp_library|default:""}}</td>
+    <td>{{object.molecules_qpcr|stringformat:".2e"}}</td>
+    <td>{{object.efficiency|stringformat:".2f"}}</td>
+    <td nowrap>{{object.lnc_batch|default:""}}</td>
+    <td>{{object.capture|default:""}}</td>
+    <td nowrap>{{probe_names|lookup:object.probes|default:object.probes}}</td>
+    <td {% if request.user.is_authenticated %}
+        class="modal_open tooltip tooltip-top" data-tooltip="Edit Seqrun"
+        hx-get="{{modal_url}}"
+        hx-vals='{"object":"analyzedsample_{{object.pk}}","type":"edit_seqrun"}'
+        hx-target="#modal-blank"
+        style="cursor: pointer;"
+        {% endif %}
+    >{{object.seqrun|truncatechars:30}}</td>
+    <td>{{object.lane}}</td>
+    <td>{{object.seqpool}}</td>
+    <td nowrap {% if request.user.is_authenticated and object.sample %}
+        class="modal_open tooltip tooltip-left" data-tooltip="Edit Tag"
+        hx-get="{{modal_url}}"
+        hx-vals='{"object":"analyzedsample_{{object.pk}}","type":"tags"}'
+        hx-target="#modal-blank"
+        style="cursor: pointer;"
+        {% endif %}
+    >{{object.tags|default:''}}</td>
+    <td>
+        {% if object.ena_genbank %}
+        <span>{{object.ena_genbank}}</span>
+        {% endif %}
+    </td>
+    <td>
+        {% if object.ena_accession %}
+            {% if object.ena_genbank == 'ENA' %}
+                <a target="_blank" href="https://www.ebi.ac.uk/ena/browser/view/{{object.ena_accession}}">{{object.ena_accession}}</a>
+            {% else %}
+                <span>{{object.ena_accession}}</span>
+            {% endif %}
+        {% endif %}
+    </td>
+    <td>
+        <div style="display: flex; gap:1px;">
+            <span>{{object.quicksand_analysis.first.version|default:''}}</span>
+            {% if request.user.is_authenticated %}
+                <a class="tooltip tooltip-left modal_open"
+                hx-get="{{modal_url}}"
+                hx-vals='{"object":"site_{{site.pk}}","type":"quicksand_upload", "seqrun":"{{object.seqrun}}", "lane":"{{object.lane}}", "seqpool":"{{object.seqpool}}"}'
+                hx-target="#modal-blank"
+                data-tooltip="Add quicksand analysis"><i class="icon icon-plus"></i></a>
+            {% endif %}
+        </div>
+    </td>
+    <td>
+        <div style="display: flex; gap:1px;">
+            <span>{{object.matthias_analysis.first.version|default:''}}</span>
+            {% if request.user.is_authenticated %}
+                <a class="tooltip tooltip-left modal_open"
+                hx-get="{{modal_url}}"
+                hx-vals='{"object":"site_{{site.pk}}","type":"matthias_upload", "seqrun":"{{object.seqrun}}", "lane":"{{object.lane}}", "seqpool":"{{object.seqpool}}"}'
+                hx-target="#modal-blank"
+                data-tooltip="Add lineage-test analysis"><i class="icon icon-plus"></i></a>
+            {% endif %}
+        </div>
+    </td>
+    <td>
+        <div style="display: flex; gap:1px;">
+            <span>{{object.nedflow_analysis.first.version|default:''}}</span>
+            {% if request.user.is_authenticated %}
+                <a class="tooltip tooltip-left modal_open"
+                hx-get="{{modal_url}}"
+                hx-vals='{"object":"site_{{site.pk}}","type":"nedflow_upload", "seqrun":"{{object.seqrun}}", "lane":"{{object.lane}}", "seqpool":"{{object.seqpool}}"}'
+                hx-target="#modal-blank"
+                data-tooltip="Add NedFlow analysis (Matthias' summary)"><i class="icon icon-plus"></i></a>
+            {% endif %}
+        </div>
+    </td>
+    
+    {% if request.user.is_authenticated %}
+    <td>
+        <a class="tooltip tooltip-left"
+        hx-post="{{delete_url}}"
+        hx-vals='{"instance_x":"analyzedsample_{{object.pk}}"}'
+        hx-confirm="Delete the Library"
+        hx-target="#tr_analyzedsample_{{object.pk}}"
+        hx-swap="delete"
+        data-tooltip="Delete AnalyzedSample Entry"><i class="icon icon-delete"></i></a>
+    </td>
+    {% endif %}
+</tr>

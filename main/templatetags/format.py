@@ -48,3 +48,23 @@ def getstring(dict):
 @register.filter(name="species_from_faunastring")
 def species_from_faunastring(string):
     return string.split("__")[1]
+
+
+@register.inclusion_tag("main/samples/sample-row-oob.html", takes_context=True)
+def sample_row_oob(context, sample):
+    """
+    the updated row of the sample-table, swapped out-of-band (e.g. in the response of the sample-modal)
+    """
+    from main.tools.site import sample_row_context
+
+    return sample_row_context(context["request"], sample)
+
+
+@register.inclusion_tag("main/analyzed_samples/analyzedsample-rows-oob.html", takes_context=True)
+def library_rows_oob(context, library):
+    """
+    the updated rows of the library-table, swapped out-of-band (in the response of the library-modal)
+    """
+    from main.tools.analyzed_samples import library_rows_context
+
+    return library_rows_context(context["request"], library)

@@ -7,23 +7,27 @@
         <div class="modal-title h5">Sample Modal</div>
     </div>
 
-    <!--Whenever the sample-modal appears, I assume either the sample-batch or the human remains were updated. 
-    So reload them in the background
+    <!--after a change of the sample (POST, not when the modal is opened), update it in the background:
+    human remains: reload the tab, moved to another batch: reload the batch, else: replace the row of the sample-table
     -->
+    {% if request.method == "POST" and object %}
     {% if object.domain == 'archaeology' %}
     <div
-        hx-get="{% url 'main_site_human_get' object.site.pk %}?{{request.GET|getstring}}"
+        hx-get="{% url 'main_site_human_get' object.site.pk %}"
         hx-trigger="load"
-        hx-target="#site_human">
+        hx-target="#site_human"
+        data-keep-scroll>
     </div>
-    {% elif not object %}
-    <div></div>
-    {% else %}
+    {% elif type == "edit_batch" %}
     <div
         hx-get="{% url 'main_samplebatch_get' object.batch.pk %}"
         hx-trigger="load"
-        hx-target="#samplebatch-content-{{object.batch.pk}}">
+        hx-target="#samplebatch-content-{{object.batch.pk}}"
+        data-keep-scroll>
     </div>
+    {% elif object.model == "sample" %}
+    {% sample_row_oob object %}
+    {% endif %}
     {% endif %}
 
     {% if messages %}

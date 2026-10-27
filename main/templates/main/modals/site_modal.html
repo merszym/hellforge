@@ -26,7 +26,8 @@
         hx-target="#site_fauna">
     </div>
     {% elif type == 'samplebatch_upload_confirm' %}
-    {% else %}
+    {% elif request.method == "POST" %}
+    <!-- after a change (not when the modal is opened): reload the site overview -->
     <div
         hx-get="{% url 'main_site_element' %}"
         hx-vals='{ "object": "{{ object.pk }}", "element":"overview" }'

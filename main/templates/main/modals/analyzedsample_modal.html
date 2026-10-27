@@ -15,6 +15,11 @@
         {% endfor %}
     {% endif %}
 
+    <!-- after a change (POST): replace the edited row(s) of the library-table -->
+    {% if request.method == "POST" and object %}
+    {% library_rows_oob object %}
+    {% endif %}
+
     {% if type == "tags" %}
 
     {# -------------------- #}

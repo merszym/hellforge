@@ -1,0 +1,9 @@
+<!-- the updated rows of the library-table: each <tr> replaces the row with the same id (hx-swap-oob),
+     the table is needed, otherwise the browser drops the <tr> -->
+<table style="display: none;"><tbody>
+    {% spaceless %}
+    {% for object in libraries %}
+    {% include 'main/analyzed_samples/analyzedsample-row.html' %}
+    {% endfor %}
+    {% endspaceless %}
+</tbody></table>
