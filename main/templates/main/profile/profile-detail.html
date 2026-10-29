@@ -1,7 +1,22 @@
 {% load static %}
 {% load format %}
+{% if renamed %}
+<!-- after renaming: the name in the profile-tab (out-of-band, top-level for htmx) -->
+<a style="cursor:pointer;white-space: nowrap;" id="profile-tab-name_{{object.pk}}" hx-swap-oob="true">{{object.name}}</a>
+{% endif %}
   <div style="position: relative;">
-    <h3>{{object.name}}</h3>
+    <h3 id="profile-name_{{object.pk}}">{{object.name}}</h3>
+    {% if request.user.is_authenticated %}
+    <!-- rename (opened with the button next to visibility/delete) -->
+    <form id="profile-rename_{{object.pk}}" class="input-group mb-2" style="display: none; max-width: 30rem;"
+      hx-post="{% url 'main_profile_rename' object.pk %}"
+      hx-target="#show_profile">
+      <input class="form-input" type="text" name="name" value="{{object.name}}" required maxlength="200">
+      <button class="btn btn-primary input-group-btn">Rename</button>
+      <button type="button" class="btn input-group-btn"
+        onclick="$('#profile-rename_{{object.pk}}').hide(); $('#profile-name_{{object.pk}}').show()">Cancel</button>
+    </form>
+    {% endif %}
     {% if request.user.is_authenticated %}
     <div style="position:absolute; right:5%; top:10px">
       <span class="btn tooltip tooltip-left {{ object.visible|yesno:'bg-success,bg-error' }}"
@@ -9,6 +24,10 @@
         hx-target="#show_profile"
         data-tooltip="Change Visibility">
           <i class="icon icon-check"></i>
+      </span>
+      <span class="btn tooltip tooltip-left" data-tooltip="Rename the Profile"
+        onclick="$('#profile-name_{{object.pk}}').hide(); $('#profile-rename_{{object.pk}}').show().find('input[name=name]').focus().select()">
+          <i class="icon icon-edit"></i>
       </span>
       <span class="btn btn-primary tooltip tooltip-left generic_delete"
         hx-post="{% url 'main_generic_delete' %}"

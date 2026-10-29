@@ -10,7 +10,7 @@
         hx-get="{% url 'main_timeline_render_profile' 'site' object.pk profile.pk %}"
         hx-target="#timeline-content"
         >
-            <a style="cursor:pointer;white-space: nowrap;">{{profile.name}}</a>
+            <a style="cursor:pointer;white-space: nowrap;" id="profile-tab-name_{{profile.pk}}">{{profile.name}}</a>
         </li>
         <span style="display: none;"
         hx-get="{% url 'main_profile_get' %}?profile=profile_{{profile.pk}}"

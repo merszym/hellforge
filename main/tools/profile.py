@@ -47,7 +47,23 @@ def attach_highest_layers(layers):
     return layers
 
 
-def get_profile_detail(request):
+@login_required
+def rename_profile(request, pk):
+    """
+    rename a profile (button next to visibility and delete), an empty name keeps the old one
+    """
+    profile = Profile.objects.get(pk=pk)
+    if name := request.POST.get("name", "").strip():
+        profile.name = name
+        profile.save()
+
+    request.GET._mutable = True
+    request.GET.update({"profile": f"profile_{profile.pk}"})
+    # the name in the profile-tab is updated as well
+    return get_profile_detail(request, renamed=True)
+
+
+def get_profile_detail(request, renamed=False):
     """
     the content of the profile that is rendered when selecting a profile and on load of the site-stratigraphy section
     important: profile is in the request.GET as soon as one clicked a profile, so by default, it is the _first_
@@ -65,7 +81,7 @@ def get_profile_detail(request):
     return render(
         request,
         "main/profile/profile-detail.html",
-        {'object': profile, 'junctions': junctions, 'parents': range(1, max_parents)},
+        {'object': profile, 'junctions': junctions, 'parents': range(1, max_parents), 'renamed': renamed},
     )
 
 
@@ -134,5 +150,6 @@ urlpatterns = [
         name="main_profile_layer_add",
     ),
     path('get', get_profile_detail ,name='main_profile_get'),
-    path('visibility/<int:pk>', update_visibility, name='main_profile_visibiliy')
+    path('visibility/<int:pk>', update_visibility, name='main_profile_visibiliy'),
+    path('rename/<int:pk>', rename_profile, name='main_profile_rename'),
 ]
