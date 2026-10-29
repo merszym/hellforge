@@ -56,9 +56,9 @@
                 {% for entry in object_list %}
                 {% with ana=entry.analyzedsample %}
                 <tr class="dna-tr">
-                    <td nowrap class="{{ana.sample.get_layer.culture.classname|default:'sterile'}}">
+                    <td nowrap class="{{ana.sample.layer.culture.classname|default:'sterile'}}">
                         {% if ana.sample %}
-                            {{ana.sample.get_layer.name|default:'unassigned'}}
+                            {{ana.sample.layer.name|default:'unassigned'}}
                         {% else %}
                             -
                         {% endif %}

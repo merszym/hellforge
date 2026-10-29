@@ -98,6 +98,16 @@ def fill_date(sender, instance, **kwargs):
             instance.save()
 
 
+@receiver(post_delete, sender=Layer)
+def update_sublayer_paths(sender, instance, **kwargs):
+    """
+    the sub-layers of a deleted layer lose their parent (on_delete=SET_NULL, without save): update their paths
+    """
+    if instance.path:
+        for layer in Layer.objects.filter(path__startswith=instance.path).order_by("depth"):
+            layer.update_path()
+
+
 @receiver(post_save, sender=Layer)
 def update_layer(sender, instance, **kwargs):
     """

@@ -277,11 +277,6 @@ def panel_context(request, site):
     the options of the filter side-panel (all options of the site, independent of the other filters)
     """
     project = get_project(request)
-    layers = Layer.objects.filter(
-        Q(site=site, sample__isnull=False)
-        | Q(site=site, child__sample__isnull=False)
-        | Q(site=site, child__child__sample__isnull=False)
-    ).distinct()
     libraries = AnalyzedSample.objects.filter(sample__site=site)
     if not request.user.is_authenticated:
         libraries = libraries.filter(project=project, qc_pass=True)
@@ -289,18 +284,13 @@ def panel_context(request, site):
     samples = Sample.objects.filter(site=site).order_by()
     if not request.user.is_authenticated:
         samples = samples.filter(project=project)
-    culture_ids = set(samples.values_list("layer__culture", flat=True)) | set(samples.values_list("sample__layer__culture", flat=True))
+    culture_ids = set(samples.values_list("layer__culture", flat=True))
     # samples without a culture (see the 'sterile' filter in filter_samples)
-    has_sterile = samples.filter(
-        (Q(sample__isnull=True) & Q(layer__culture__isnull=True))
-        | (Q(sample__isnull=False) & Q(sample__layer__culture__isnull=True))
-    ).exists()
-    # not logged in: only the layers of the samples that can be seen (as in filter_samples: the own layer
-    # or the layer of the parent sample, and their parent layers)
-    if not request.user.is_authenticated:
-        paths = ["layer", "layer__layer", "layer__layer__layer", "sample__layer", "sample__layer__layer", "sample__layer__layer__layer"]
-        layer_ids = set().union(*[set(samples.values_list(path, flat=True)) for path in paths]) - {None}
-        layers = layers.filter(pk__in=layer_ids)
+    has_sterile = samples.filter(layer__culture__isnull=True).exists()
+    # the layers with samples (that can be seen) and their parent layers (from the path)
+    layer_samples = samples if not request.user.is_authenticated else Sample.objects.filter(layer__site=site)
+    layer_ids = {int(x) for path in layer_samples.exclude(layer=None).values_list("layer__path", flat=True).distinct() for x in path.strip("/").split("/")}
+    layers = Layer.objects.filter(site=site, pk__in=layer_ids)
     return {
         "object": site,
         "layers": layers,

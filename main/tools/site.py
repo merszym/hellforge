@@ -46,7 +46,7 @@ from main.tools.generic import (
 from main.tools.projects import get_project
 from main.tools.quicksand import prepare_data
 from main.tools.analyzed_samples import update_query_for_negatives
-from main.tools.profile import layers_for_table
+from main.tools.profile import layers_for_table, attach_highest_layers
 
 
 ## Sites
@@ -315,7 +315,7 @@ def get_site_other_layers(request):
     context = {
         "object": object,
         "selected_profile": selected_profile,
-        "layers": layers_for_table(object.layer.all()),
+        "layers": attach_highest_layers(layers_for_table(object.layer.all())),
     }
     return render(request, "main/profile/other-layers.html", context)
 
@@ -517,11 +517,10 @@ def samplebatch_create(request):
 ## Samplebatch-TAB
 
 # what the rows of the sample-table show, loaded in bulk instead of per row
-# (the layer: Sample.get_layer, the age: Sample.age_summary falls back to the parent sample and the layer)
+# (the age: Sample.age_summary falls back to the parent sample, its dates and its layer)
 SAMPLE_ROW_RELATED = [
     "batch", "date_upper", "date_lower",
-    "sample__date_upper", "sample__date_lower",
-    "sample__layer__culture", "sample__layer__layer", "sample__layer__date_upper", "sample__layer__date_lower",
+    "sample__date_upper", "sample__date_lower", "sample__layer__date_upper", "sample__layer__date_lower",
     "layer__culture", "layer__layer", "layer__date_upper", "layer__date_lower",
 ]
 SAMPLE_ROW_PREFETCH = ["project", "synonyms", "date", "sample__date", "layer__date", "sample__layer__date"]

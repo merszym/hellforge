@@ -21,8 +21,8 @@ def update_visibility(request, pk):
 
 
 # what the layer rows (layer-tablecells.html) display, loaded in bulk instead of per row.
-# layer__layer__layer are the parents for the hierarchy columns (layers are nested up to 3 levels)
-LAYER_ROW_RELATED = ["culture", "epoch", "date_upper", "date_lower", "layer__layer__layer"]
+# layer is the parent layer, the highest layer is set by attach_highest_layers
+LAYER_ROW_RELATED = ["culture", "epoch", "date_upper", "date_lower", "layer"]
 LAYER_ROW_PREFETCH = ["synonyms", "date", "additional_cultures"]
 
 
@@ -33,6 +33,18 @@ def layers_for_table(queryset, prefix=""):
     return queryset.select_related(*[prefix + x for x in LAYER_ROW_RELATED]).prefetch_related(
         *[prefix + x for x in LAYER_ROW_PREFETCH]
     )
+
+
+def attach_highest_layers(layers):
+    """
+    set the highest parent layer (Layer.get_highest) of all layers with one query (from the paths)
+    """
+    layers = list(layers)
+    highest = Layer.objects.in_bulk({layer.path_ids[0] for layer in layers if layer.path_ids})
+    for layer in layers:
+        if layer.path_ids:
+            layer._highest = highest.get(layer.path_ids[0])
+    return layers
 
 
 def get_profile_detail(request):
@@ -46,8 +58,9 @@ def get_profile_detail(request):
         profile = get_instance_from_string(request.GET.get('site')).profile.first()
 
     junctions = list(layers_for_table(profile.layer_junction.all(), prefix="layer__"))
-    # the number of nested parents reserves the columns in the profile-table (as Profile.max_number_of_parents)
-    max_parents = max([1] + [junction.layer.number_of_parents for junction in junctions]) + 1
+    attach_highest_layers(junction.layer for junction in junctions)
+    # the number of nested parents reserves the columns in the profile-table
+    max_parents = profile.max_number_of_parents
 
     return render(
         request,

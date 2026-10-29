@@ -15,16 +15,16 @@
         <div hx-post="{% url 'main_analyzedsample_qctoggle' object.pk %}">{{object.qc_pass|yesno:"Pass,Fail"}}</div>
     </td>
     {% endif %}
-    <td nowrap class="{% if object.sample %}{{object.sample.get_layer|yesno:'assigned,unassigned'}}{% endif %} {{object.sample.get_layer.culture.classname|default:'sterile'}}">
+    <td nowrap class="{% if object.sample %}{{object.sample.layer|yesno:'assigned,unassigned'}}{% endif %} {{object.sample.layer.culture.classname|default:'sterile'}}">
         {% if object.sample %}
-            {% if object.sample.get_layer %}{{object.sample.get_layer.name}}{% else %}Unassigned{% endif %}
+            {% if object.sample.layer %}{{object.sample.layer.name}}{% else %}Unassigned{% endif %}
         {% else %}
             -
         {% endif %}
     </td>
-    <td nowrap class="{% if object.sample %}{{object.sample.get_layer|yesno:'assigned,unassigned'}}{% endif %} {{object.sample.get_layer.culture.classname|default:'sterile'}}">
+    <td nowrap class="{% if object.sample %}{{object.sample.layer|yesno:'assigned,unassigned'}}{% endif %} {{object.sample.layer.culture.classname|default:'sterile'}}">
         {% if object.sample %}
-            {% if object.sample.get_layer %}{{object.sample.get_layer.layer.name}}{% else %}{% endif %}
+            {% if object.sample.layer %}{{object.sample.layer.layer.name}}{% else %}{% endif %}
         {% else %}
             -
         {% endif %}

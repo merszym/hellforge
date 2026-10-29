@@ -62,10 +62,10 @@ def get_modal_context(object, request):
     # Add sample edit context
     if object.model == "sample":
         if context["type"] == "dates_list":
-            context.update({"site_dates": object.get_layer.site.get_dates() if object.get_layer else []})
+            context.update({"site_dates": object.layer.site.get_dates() if object.layer else []})
         if context["type"] == "dates":
             context.update({"datingoptions": DatingMethod.objects.all()})
-            context.update({"site_dates": object.get_layer.site.get_dates() if object.get_layer else []})
+            context.update({"site_dates": object.layer.site.get_dates() if object.layer else []})
         if context["type"] == "edit_batch":
             context.update(
                 {"site_batches": SampleBatch.objects.filter(site=object.site)}
@@ -93,7 +93,9 @@ def get_modal_context(object, request):
     if object.model == "layer":
         if context["type"] == "edit":
             # basic edit modal
-            options = Layer.objects.filter(Q(site=object.site)).exclude(id=object.pk)
+            # not the layer itself or its sub-layers (a layer can not be a sub-layer of itself)
+            options = Layer.objects.filter(Q(site=object.site)).exclude(path__startswith=object.path) if object.path \
+                else Layer.objects.filter(Q(site=object.site)).exclude(id=object.pk)
             if object.parent:
                 options = options.exclude(id=object.parent.pk)
             context.update({"parent_options": options})

@@ -18,8 +18,8 @@ from django.urls import path, reverse
 from django import forms
 from django.shortcuts import render
 import main.tools as tools
-from django.db.models import Q, Prefetch, F, OuterRef, Subquery, Case, When
-from django.db.models.functions import Coalesce
+from django.db.models import Q, Prefetch, F, OuterRef, Subquery
+from django.db.models.lookups import StartsWith
 from collections import defaultdict
 import pandas as pd
 import json, io
@@ -39,14 +39,12 @@ def get_site_dna_content(request, pk):
     return render(request, "main/site/site-dna-content.html", context)
 
 
-# the related objects needed to display the layer/culture of a library (see Sample.get_layer)
+# the related objects needed to display the layer/culture of a library
 # prefix with 'analyzedsample__' for the analysis models
 LIBRARY_LAYER_RELATED = [
     'sample__batch',
     'sample__layer__culture',
     'sample__layer__layer',
-    'sample__sample__layer__culture',
-    'sample__sample__layer__layer',
 ]
 
 
@@ -120,17 +118,13 @@ def sort_libraries(request, query, site, prefix=""):
     if sort == "layer":
         profile = main_profile(site)
 
-        def position(layer):
-            # the position of the layer in the profile, or of its parent layers (sub-layers are not always in the profile)
-            return Coalesce(*[
-                Subquery(ProfileLayerJunction.objects.filter(profile=profile, layer=OuterRef(layer + parents)).values("position")[:1])
-                for parents in ["", "__layer", "__layer__layer"]
-            ])
-        # as Sample.get_layer: the layer of the parent sample, else the own layer
-        query = query.annotate(layer_position=Case(
-            When(**{prefix + "sample__sample__isnull": False}, then=position(prefix + "sample__sample__layer")),
-            default=position(prefix + "sample__layer"),
-        ))
+        # the position of the layer in the profile, or of its closest parent layer in the profile
+        # (sub-layers are not always in the profile): the junctions of the layers that are in the path of the sample-layer
+        position = ProfileLayerJunction.objects.filter(profile=profile) \
+            .filter(StartsWith(OuterRef(prefix + "sample__layer__path"), F("layer__path"))) \
+            .order_by("-layer__depth") \
+            .values("position")[:1]
+        query = query.annotate(layer_position=Subquery(position))
         return query.order_by(F("layer_position").asc(nulls_last=True), f("sample__name"), *run)
     return query.order_by(*run)
 

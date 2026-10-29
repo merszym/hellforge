@@ -57,16 +57,16 @@
                 {% for entry in object_list %}
                 {% with ana=entry.analyzedsample %}
                 <tr class="nedflow-tr">
-                    <td nowrap class="{{ana.sample.get_layer.culture.classname|default:'sterile'}}">
+                    <td nowrap class="{{ana.sample.layer.culture.classname|default:'sterile'}}">
                         {% if ana.sample %}
-                            {{ana.sample.get_layer.name|default:'unassigned'}}
+                            {{ana.sample.layer.name|default:'unassigned'}}
                         {% else %}
                             -
                         {% endif %}
                     </td>
-                    <td nowrap class="{% if ana.sample %}{{ana.sample.get_layer|yesno:'assigned,unassigned'}}{% endif %} {{ana.sample.get_layer.culture.classname|default:'sterile'}}">
+                    <td nowrap class="{% if ana.sample %}{{ana.sample.layer|yesno:'assigned,unassigned'}}{% endif %} {{ana.sample.layer.culture.classname|default:'sterile'}}">
                         {% if ana.sample %}
-                            {% if ana.sample.get_layer %}{{ana.sample.get_layer.layer.name}}{% else %}{% endif %}
+                            {% if ana.sample.layer %}{{ana.sample.layer.layer.name}}{% else %}{% endif %}
                         {% else %}
                             -
                         {% endif %}

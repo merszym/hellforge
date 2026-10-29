@@ -152,8 +152,7 @@ def save_verified(request):
             s, created = Sample.objects.get_or_create(name=sample, site=site)
             # if layer is given: Update the layer
             if fossil==fossil:
-                # we go by the layer of the parent
-                s.layer = None
+                # the sample gets the layer of the parent (see Sample.save)
                 parent = Sample.objects.get(site=site, domain='archaeology', name=fossil)
                 s.sample = parent
             else:
@@ -235,9 +234,9 @@ def update_samplelayer(request):
         except ValueError:  # no layer pk given
             sample.layer = None
         try:
+            # the sample gets the layer of the fossil (see Sample.save)
             fossil = Sample.objects.get(pk=int(request.POST.get('sample')))
             sample.sample = fossil
-            sample.layer = None
         except:
             sample.sample = None
         sample.save()

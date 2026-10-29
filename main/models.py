@@ -1,7 +1,7 @@
 import json
 from django.db import models
 from django.urls import reverse
-from django.db.models import Q
+from django.db.models import Q, Max
 from django.db.models.functions import Lower
 from django.core.validators import RegexValidator
 from django.contrib.contenttypes.fields import GenericForeignKey  # for the description
@@ -398,7 +398,7 @@ class Date(models.Model):
         if self.layer_model.first():
             return self.layer_model.first()
         # if sample not layer
-        return self.sample_model.first().get_layer
+        return self.sample_model.first().layer
 
     class Meta:
         default_manager_name = "visible_objects"
@@ -709,8 +709,8 @@ class Dateable(models.Model):
         if self.model == 'sample' and self.sample:
             return self.sample.age_summary(export=export)
 
-        if self.model == "sample" and self.get_layer:
-            return self.get_layer.age_summary()
+        if self.model == "sample" and self.layer:
+            return self.layer.age_summary()
 
         ## return "undated"
         else:
@@ -1015,14 +1015,6 @@ class Profile(models.Model):
     def __str__(self):
         return f"{self.site.name}: {self.name}"
 
-    @property
-    def other_layers(self):
-        return Layer.objects.filter(Q(site=self.site))
-
-    @property
-    def other_profiles(self):
-        return Profile.objects.filter(site=self.site).exclude(id=self.pk)
-
     def get_data(self, **kwargs):
         # for an entry, return a dict {'col': data} that is used for the export of the data
         data = {
@@ -1035,12 +1027,8 @@ class Profile(models.Model):
         """
         get the number of nested parents to reserve accordingly the number of columns in the profile-table
         """
-        n = 1
-        for junction in self.layer_junction.all():
-            layer = junction.layer
-            if layer.number_of_parents > n:
-                n = layer.number_of_parents
-        return n+1
+        n = self.layer_junction.aggregate(n=Max("layer__depth"))["n"] or 0
+        return max(n, 1) + 1
 
 
     @classmethod
@@ -1169,6 +1157,11 @@ class Layer(Dateable):
     colour_hex = models.CharField("colour_rgb", max_length=200, blank=True, null=True) # The hex value calculated from Munsell
     texture = models.CharField("texture", max_length=200, blank=True, null=True, choices=texture_choices)
 
+    # the hierarchy of the layers (maintained in save): the ids of the parent layers and the layer ('/12/45/78/'),
+    # and the number of parents. a layer and all its sub-layers: Layer.objects.filter(path__startswith=layer.path)
+    path = models.CharField("path", max_length=255, default="", editable=False, db_index=True)
+    depth = models.PositiveSmallIntegerField("number of parents", default=0, editable=False)
+
     #
     ## References
     #
@@ -1184,16 +1177,48 @@ class Layer(Dateable):
     def parent(self):
         return self.layer
 
-    def get_highest(self):
-        if self.parent:
-            return self.parent.get_highest()
-        return self
-    
     @property
-    def number_of_parents(self):
-        if not self.parent:
-            return 0
-        return 1 + self.parent.number_of_parents
+    def path_ids(self):
+        """
+        the ids of the parent layers and the layer, from the highest layer down
+        """
+        return [int(x) for x in self.path.strip("/").split("/") if x]
+
+    def get_highest(self):
+        """
+        the highest parent layer (or the layer itself). can be set in bulk as _highest (see attach_highest_layers)
+        """
+        ids = self.path_ids
+        if not ids or ids[0] == self.pk:
+            return self
+        if getattr(self, "_highest", None) is None:
+            self._highest = Layer.objects.get(pk=ids[0])
+        return self._highest
+
+    def save(self, *args, **kwargs):
+        # a layer can not be its own parent (or a parent of its parent layers)
+        if self.pk and self.layer_id:
+            parent_path = Layer.objects.filter(pk=self.layer_id).values_list("path", flat=True).first() or ""
+            if self.layer_id == self.pk or f"/{self.pk}/" in parent_path:
+                raise ValueError(f"layer {self} can not be a sub-layer of itself")
+        super().save(*args, **kwargs)
+        self.update_path()
+
+    def update_path(self):
+        """
+        set path and depth from the parent layer, and update the sub-layers if the path changed
+        """
+        parent_path = (Layer.objects.filter(pk=self.layer_id).values_list("path", flat=True).first() or "/") if self.layer_id else "/"
+        path = f"{parent_path}{self.pk}/"
+        old = Layer.objects.filter(pk=self.pk).values_list("path", flat=True).first()
+        self.path, self.depth = path, path.count("/") - 2
+        if path == old:
+            return
+        Layer.objects.filter(pk=self.pk).update(path=path, depth=self.depth)
+        if old:
+            for sub in Layer.objects.filter(path__startswith=old).exclude(pk=self.pk).only("pk", "path"):
+                sub_path = path + sub.path[len(old):]
+                Layer.objects.filter(pk=sub.pk).update(path=sub_path, depth=sub_path.count("/") - 2)
 
     @property
     def in_profile(self):
@@ -1382,11 +1407,14 @@ class Sample(Dateable):
         except:
             return []
 
-    @property
-    def get_layer(self):
-        if self.sample:
-            return self.sample.layer
-        return self.layer
+    def save(self, *args, **kwargs):
+        # the layer of a sample with a parent sample is the layer of the parent
+        if self.sample_id:
+            self.layer_id = Sample.objects.filter(pk=self.sample_id).values_list("layer_id", flat=True).first()
+        super().save(*args, **kwargs)
+        # and the samples of this sample (e.g. of a fossil) get its layer
+        if self.pk:
+            Sample.objects.filter(sample=self).exclude(layer_id=self.layer_id).update(layer_id=self.layer_id)
 
     @property
     def model(self):
@@ -1415,14 +1443,14 @@ class Sample(Dateable):
         # get the age of the layer
         infinite, upper, lower = self.get_upper_and_lower(calculate_mean=True)
         if upper == None and lower == None:
-            if self.get_layer:
-                infinite, upper, lower = self.get_layer.get_upper_and_lower(
+            if self.layer:
+                infinite, upper, lower = self.layer.get_upper_and_lower(
                     calculate_mean=True
                 )
         if infinite:
             upper = None
         ## Inherit from sample parent
-        if layer:= self.get_layer:
+        if layer:= self.layer:
             data = layer.get_data()
         else:
             data = self.site.get_data()

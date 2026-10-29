@@ -13,13 +13,13 @@
 <!-- This is for all sub-hierarchies -->
 {% for i in parents %}
 <td class="{% if layer.culture %}{{layer.culture.classname}}{% else %}sterile{% endif%} layer_{{layer.pk}}" style="width: 5px;white-space: nowrap;">
-    {% if layer.number_of_parents == i %}
+    {% if layer.depth == i %}
         <strong>{{layer.name}}</strong>
         {% for syn in layer.synonyms.all %}
             <br><span style="font-size:11pt;">{{syn.name}}{% if syn.type %} ({{syn.type}}){% endif %}</span>
         {% endfor %}
     {% endif %}
-    {% if layer.parent.number_of_parents == i %}
+    {% if layer.parent.depth == i %}
         <span class="text-italic">{{layer.parent.name}}</span>
     {% endif %}
 </td>
