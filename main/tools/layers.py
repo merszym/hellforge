@@ -1,4 +1,6 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
+from django.db import transaction
+from django.views.decorators.http import require_POST
 from django.urls import path, reverse
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
@@ -100,42 +102,53 @@ def update_inherited_features(request, pk):
 
     return get_profile_detail(request)
 
+def renumber_profile(profile, junction_ids):
+    """
+    set the positions of the layers in a profile (0, 1, 2, ...) in the order of the junction ids.
+    only this profile changes, the positions of the layers in other profiles stay
+    """
+    with transaction.atomic():
+        for position, pk in enumerate(junction_ids):
+            ProfileLayerJunction.objects.filter(pk=pk, profile=profile).update(position=position)
+
+
 @login_required
-def update_positions(request, pk):
+@require_POST
+def reorder_profile(request, pk):
+    """
+    the new order of the layers in a profile (drag and drop): all junction ids of the profile, top to bottom
+    """
+    profile = Profile.objects.get(pk=pk)
+    junction_ids = [int(x) for x in request.POST.getlist("junction") if x.isdigit()]
+    current = set(profile.layer_junction.values_list("pk", flat=True))
+    # the complete profile, every layer once: otherwise the table is outdated (changed in the meantime)
+    if len(junction_ids) != len(set(junction_ids)) or set(junction_ids) != current:
+        return HttpResponse("The profile changed in the meantime, please reload it", status=409)
+    renumber_profile(profile, junction_ids)
+    return HttpResponse(status=204)
+
+
+@login_required
+@require_POST
+def move_layer(request, pk):
+    """
+    move a layer (junction) to a position in its profile (1 = top), from the layer modal
+    """
     junction = ProfileLayerJunction.objects.get(pk=pk)
     profile = junction.profile
+    junction_ids = list(profile.layer_junction.order_by("position", "pk").values_list("pk", flat=True))
+    try:
+        position = int(request.POST.get("position"))
+    except (TypeError, ValueError):
+        position = junction_ids.index(junction.pk) + 1
+    junction_ids.remove(junction.pk)
+    junction_ids.insert(min(max(position, 1), len(junction_ids) + 1) - 1, junction.pk)
+    renumber_profile(profile, junction_ids)
 
-    all_junctions = ProfileLayerJunction.objects.filter(profile=profile)
-
-    positions = [x.position for x in all_junctions]
-    
-    junction_pos = junction.position
-    junction_index = positions.index(junction_pos) #the relative position of the junction
-    
-
-    # do some basic checking: already at top?
-    if not junction_index == 0:
-        # now get the index of the layer to switch positions with
-        n = junction_index - 1
-        swap_junction = all_junctions[n]
-        swap_pos = swap_junction.position
-
-        # and swap positions
-        junction.position = swap_pos
-        swap_junction.position = junction_pos
-
-        # and save
-        junction.save()
-        swap_junction.save()
-
-    from main.tools.profile import get_profile_detail
-
-    context = {"profile": f"profile_{profile.pk}"}
-
+    # the layer modal again (with the new position), the profile-table reloads in the background
     request.GET._mutable = True
-    request.GET.update(context)
-
-    return get_profile_detail(request)
+    request.GET.update({"object": f"layer_{junction.layer_id}", "type": "edit", "profile": f"profile_{profile.pk}"})
+    return get_modal(request)
 
 
 @login_required
@@ -195,6 +208,7 @@ urlpatterns = [
     path("set-epoch", set_epoch, name="layer-epoch-update"),
     path("clone/<int:pk>", clone, name="main_layer_clone"),
     path("inherit/<int:pk>", update_inherited_features, name="main_layer_inherit"),
-    path("positions/<int:pk>", update_positions, name="main_layer_positionupdate"),
+    path("reorder/<int:pk>", reorder_profile, name="main_profile_reorder"),
+    path("move/<int:pk>", move_layer, name="main_layer_move"),
     path('set-tools/<int:pk>', set_tools, name='layer_set_toolcount')
 ]

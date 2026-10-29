@@ -3,6 +3,8 @@
 {% block head %}
 {% load static %}
 <title>Hellforge: {{object.name}}</title>
+<!-- drag and drop of the layers in the profile-table (profile-detail.html) -->
+<script src="{% static 'js/packages/sortable-1.15.2.min.js' %}"></script>
 {% include 'main/editor/editor-head.html' %}
 {% endblock %}
 {% block headline %} <a style='color:white' href="{% url 'site_list' %}">{{object}}</a>{% endblock %}

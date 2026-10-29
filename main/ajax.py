@@ -99,6 +99,18 @@ def get_modal_context(object, request):
             if object.parent:
                 options = options.exclude(id=object.parent.pk)
             context.update({"parent_options": options})
+            # the position of the layer in the profile the modal was opened from (?profile=profile_x)
+            profile_id = (request.GET.get("profile") or "").partition("_")[2]
+            if profile_id.isdigit():
+                from main.models import ProfileLayerJunction
+                junctions = list(ProfileLayerJunction.objects.filter(profile_id=int(profile_id)).order_by("position", "pk").values_list("pk", "layer_id"))
+                junction = next((pk for pk, layer_id in junctions if layer_id == object.pk), None)
+                if junction:
+                    context.update({
+                        "junction": junction,
+                        "profile_position": [layer_id for _, layer_id in junctions].index(object.pk) + 1,
+                        "profile_size": len(junctions),
+                    })
         if context["type"] == "dates":
             # Add a date to the layer
             context.update(

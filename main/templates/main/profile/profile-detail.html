@@ -45,7 +45,7 @@
     <table class="table table-striped table-hover" style="line-height: 1.2;">
       <thead>
         <tr>
-          {# this is the draggable column #}
+          {# the column with the drag-handle #}
           {% if request.user.is_authenticated %}
           <th></th>
           {% endif %}
@@ -56,25 +56,13 @@
           {% endif %}
         </tr>
       </thead>
-      <tbody>
+      <tbody id="profile-layers-{{object.pk}}" data-reorder-url="{% url 'main_profile_reorder' object.pk %}">
         {% for junction in junctions %}
         {% with layer=junction.layer %}
         <tr class="table_row" id="profilelayerjunction_{{junction.pk}}" data-pos="{{junction.position}}">
           {% if request.user.is_authenticated %}
-          <td>
-            <form style="width: 2px;">
-            {% csrf_token %}
-            <input name="object" value="layer_{{layer.pk}}" style="display: none;">
-            <span
-              class="tooltip tooltip-right"
-              data-tooltip="Move Layer up"
-              hx-post="{% url 'main_layer_positionupdate' junction.pk %}"
-              hx-target="#show_profile"
-            >
-              <i class="icon icon-upward text-gray"></i>
-            </span>
-            </form>
-          </td>
+          <td class="layer-drag-handle tooltip tooltip-right" data-tooltip="Drag to move the layer"
+            style="cursor: grab; color: #9aa0ac; user-select: none; width: 1rem;">&#8942;&#8942;</td>
           {% endif %}
           {% include 'main/profile/layer-tablecells.html' with site=object.site %}
           {% if request.user.is_authenticated %}
@@ -147,6 +135,44 @@
         {% endfor %}
       </tbody>
       </table>
+      {% if request.user.is_authenticated %}
+      <script>
+        // drag and drop of the layers: the new order of all layers of this profile is saved at once
+        (function(){
+          var tbody = document.getElementById('profile-layers-{{object.pk}}')
+          if(!tbody || typeof Sortable === 'undefined'){ return }
+          var order = function(){
+            return Array.from(tbody.querySelectorAll('tr.table_row')).map(function(row){ return row.id.split('_')[1] })
+          }
+          var before = order()
+          Sortable.create(tbody, {
+            handle: '.layer-drag-handle',
+            draggable: 'tr.table_row',
+            animation: 150,
+            scroll: true,
+            onEnd: function(e){
+              if(e.oldIndex === e.newIndex){ return }
+              var body = new URLSearchParams()
+              order().forEach(function(pk){ body.append('junction', pk) })
+              fetch(tbody.dataset.reorderUrl, {
+                method: 'POST', body: body,
+                headers: {'X-CSRFToken': '{{ csrf_token }}'},
+              }).then(function(response){
+                if(!response.ok){ throw response }
+                before = order()
+                // the timeline depends on the order
+                htmx.ajax('GET', '{% url "main_timeline_render_profile" "site" object.site.pk object.pk %}', '#timeline-content')
+              }).catch(function(response){
+                // not saved: restore the order and show why
+                before.forEach(function(pk){ tbody.appendChild(document.getElementById('profilelayerjunction_' + pk)) })
+                var reason = response && response.text ? response.text() : Promise.resolve('The order could not be saved')
+                reason.then(function(text){ alert(text || 'The order could not be saved') })
+              })
+            },
+          })
+        })()
+      </script>
+      {% endif %}
       {% if request.user.is_authenticated %}
       <div class="panel-footer">
         <form>

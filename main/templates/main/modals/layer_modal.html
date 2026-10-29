@@ -107,6 +107,18 @@
                             </span>
                         </div>
                     </form>
+                    {% if junction %}
+                    <!-- the position in the profile (1 = top), e.g. for long profiles instead of drag and drop -->
+                    <div class="divider text-center" data-content="Position in the profile"></div>
+                    <form class="input-group"
+                        hx-post="{% url 'main_layer_move' junction %}?{{request.GET|getstring}}"
+                        hx-target="#modal-blank">
+                        <span class="input-group-addon">Position</span>
+                        <input class="form-input" type="number" name="position" min="1" max="{{profile_size}}" value="{{profile_position}}">
+                        <span class="input-group-addon">of {{profile_size}}</span>
+                        <button class="btn btn-primary input-group-btn">Move</button>
+                    </form>
+                    {% endif %}
                 </div>
             </div>
         </div>
