@@ -1,5 +1,5 @@
 from main.models import models
-from main.models import Reference, FaunalResults, LayerAnalysis, Layer, Culture, Site
+from main.models import Reference, FaunalResults, LayerAnalysis, Layer, Culture, Site, ProfileLayerJunction
 from django.http import JsonResponse
 from django.urls import path
 from django.shortcuts import render
@@ -136,22 +136,27 @@ def get_fauna_tab(
         collapse = "on" == request.POST.get("collapse", "")
 
     ## Create the table here that is then parsed in the html view
-    # 1. Get all the analyses (layer+reference)
-    try:
-        analyses = sorted(list(set(LayerAnalysis.objects.filter(
-            (Q(layer__site=site) | Q(site=site)) & Q(type="Fauna")
-        ).select_related(*ANALYSIS_RELATED).prefetch_related("layer__profile_junction"))), key=lambda x: (
-                getattr(x.layer.profile_junction.first(),"position","") if len(x.layer.profile_junction.all()) > 0 else 0, 
-                getattr(x.ref, 'short', 'ZZ'), 
-                getattr(x,'culture',''),
-                getattr(x,'site','')
-            )
-        )
-    except (AttributeError, TypeError): # no layer
-        analyses = LayerAnalysis.objects.filter(
-            (Q(layer__site=site) | Q(site=site)) & Q(type="Fauna")
-        ).select_related(*ANALYSIS_RELATED).prefetch_related("layer__profile_junction")
-        
+    # 1. Get all the analyses (layer+reference), sorted by layer (position in the main profile), reference and method
+    from main.tools.analyzed_samples import main_profile
+
+    analyses = list(LayerAnalysis.objects.filter(
+        (Q(layer__site=site) | Q(site=site)) & Q(type="Fauna")
+    ).select_related(*ANALYSIS_RELATED).distinct())
+    positions = dict(ProfileLayerJunction.objects.filter(profile=main_profile(site)).values_list("layer_id", "position"))
+
+    def layer_position(layer):
+        # the position of the layer, or of its closest parent layer in the profile (sub-layers are not always in it)
+        return next((positions[pk] for pk in reversed(layer.path_ids) if pk in positions), None)
+
+    def sort_key(analysis):
+        layer = analysis.layer
+        if layer is None:
+            # analyses of the site or a culture (without layer) at the end
+            return (2, 0, analysis.culture.name if analysis.culture else "", getattr(analysis.ref, "short", "~"), analysis.method or "")
+        position = layer_position(layer)
+        return (0 if position is not None else 1, position or 0, layer.name, getattr(analysis.ref, "short", "~"), analysis.method or "")
+
+    analyses.sort(key=sort_key)
 
     # hide entries without reference if not authenticated or not in project
     if not request.user.is_authenticated:
@@ -205,17 +210,30 @@ def get_fauna_tab(
     for var, vals in data["max"].items():
         data["max"][var] = max([x for x in vals if x != None])
 
-    # define the order of families based on the highest assignment
+    # the structure of the table: large/small mammals -> order -> family (-> species), families by the highest assignment
     sorting = sorted(list(data["sorting"]), key=lambda x: -1 * data["sorting"][x])
+    family_order = {}
+    for family, order in entries.values_list("family", "order"):
+        order = (order or "").strip()
+        if order and order != "nan":
+            family_order.setdefault(family, order)
+    small = get_small_mammals()
+    group_names = ["Large mammals", "Small mammals", "Unknown order"]
+
+    def group_of(family):
+        order = family_order.get(family)
+        return 2 if order is None else (1 if order in small else 0)
+
+    # within an order: counts reported on the order-level (family == order) first, then the families by abundance
     families = sorted(
         entries.values_list("family", flat=True).distinct(),
-        key=lambda x: sorting.index(x),
+        key=lambda x: (group_of(x), family_order.get(x, ""), x != family_order.get(x), sorting.index(x)),
     )
 
     # make sure to preserve family namespace
     species = sorted(
         entries.values_list("family", "scientific_name").distinct(),
-        key=lambda x: sorting.index(x[0]),
+        key=lambda x: families.index(x[0]),
     )
     # and check if no "empty" headers might cause a shift
     species = [
@@ -223,6 +241,39 @@ def get_fauna_tab(
         for family, species in species
         if len(data["header"][f"{family}__{species}"]) > 0
     ]
+
+    # the columns (key: family or family__species, var) and the separators where a group, order, family or species starts
+    columns = []
+    previous = (None, None, None, None)
+    for family in families:
+        keys = [family] if collapse else [sp for sp in species if sp.split("__")[0] == family]
+        for key in keys:
+            for var in data["collapsed" if collapse else "header"][key]:
+                current = (group_of(family), family_order.get(family), family, key)
+                level = next((n for n in range(4) if current[n] != previous[n]), None)
+                columns.append({"key": key, "var": var, "family": family,
+                                "sep": ["group", "order", "family", "species"][level] if level is not None and columns else ""})
+                previous = current
+
+    # the header rows: consecutive columns with the same group/order/family/species are merged (colspan)
+    def header_row(level, label, kind):
+        # level: the columns with the same value up to this level are merged
+        cells = []
+        for column in columns:
+            value = (group_of(column["family"]), family_order.get(column["family"]), column["family"], column["key"])[:level]
+            if cells and cells[-1]["value"] == value:
+                cells[-1]["colspan"] += 1
+            else:
+                cells.append({"value": value, "label": label(column), "colspan": 1, "sep": column["sep"], "kind": kind})
+        return cells
+
+    header_rows = [
+        header_row(1, lambda c: group_names[group_of(c["family"])], "group"),
+        header_row(2, lambda c: family_order.get(c["family"], ""), "order"),
+        header_row(3, lambda c: c["family"], "family"),
+    ]
+    if not collapse:
+        header_rows.append(header_row(4, lambda c: c["key"].split("__", 1)[1], "species"))
 
     # this is for the filters in the view
     all_refs = Reference.objects.filter(
@@ -238,6 +289,8 @@ def get_fauna_tab(
             "data": data,
             "families": families,
             "species": species,
+            "columns": columns,
+            "header_rows": header_rows,
             "analyses": analyses,
             "all_refs": all_refs,
             "reference": reference,
@@ -246,6 +299,18 @@ def get_fauna_tab(
             "collapse": collapse,
         },
     )
+
+
+def strip_whitespace(df):
+    """
+    remove leading/trailing whitespace from the column names and all text values of an uploaded sheet
+    (e.g. ' Artiodactyla' would be a separate order)
+    """
+    df.columns = [str(x).strip() for x in df.columns]
+    for column in df.columns:
+        if df[column].dtype == object:
+            df[column] = df[column].map(lambda x: x.strip() if isinstance(x, str) else x)
+    return df
 
 
 def handle_faunal_table(request, file):
@@ -268,7 +333,7 @@ def handle_faunal_table(request, file):
             },
         )
 
-    df = pd.read_csv(file, sep=",")
+    df = strip_whitespace(pd.read_csv(file, sep=","))
     df.drop_duplicates(inplace=True)
     # All required information is in the table
 
