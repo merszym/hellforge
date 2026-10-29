@@ -38,7 +38,7 @@
         <form id="fauna-filter-form" class="mt-2"
             hx-post="{% url 'main_site_fauna_get' object.pk %}"
             hx-target="#site_fauna"
-            hx-trigger="change">
+            hx-trigger="change, fauna-translation-changed from:body">
             <div class="fauna-filter-row">
                 <small class="fauna-filter-label">Mammals</small>
                 <label class="chip-toggle">
@@ -98,7 +98,21 @@
                     <td></td>
                     <td></td>
                     {% for cell in row %}
-                    <th colspan="{{cell.colspan}}" class="fauna-sep-{{cell.sep}}" nowrap>{% if cell.kind == "species" %}<i>{{cell.label}}</i>{% else %}{{cell.label}}{% endif %}</th>
+                    {% if cell.kind == "species" %}
+                    <!-- the species: the translated name, the uploaded name below (click: edit the translation) -->
+                    <th colspan="{{cell.colspan}}" class="fauna-sep-{{cell.sep}} {% if request.user.is_authenticated %}modal_open{% endif %}" nowrap
+                        {% if request.user.is_authenticated %}
+                        style="cursor: pointer;" title="Edit the name"
+                        hx-get="{% url 'main_fauna_species_translation' %}"
+                        hx-vals='{"family": "{{cell.family|escapejs}}", "original": "{{cell.original|escapejs}}", "site": "{{object.pk}}"}'
+                        hx-target="#modal-blank"
+                        {% endif %}>
+                        <i>{{cell.label}}</i>
+                        {% if cell.label != cell.original %}<br><small class="text-gray" style="font-weight: normal;"><i>{{cell.original}}</i></small>{% endif %}
+                    </th>
+                    {% else %}
+                    <th colspan="{{cell.colspan}}" class="fauna-sep-{{cell.sep}}" nowrap>{{cell.label}}</th>
+                    {% endif %}
                     {% endfor %}
                 </tr>
                 {% endfor %}

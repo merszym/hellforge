@@ -215,9 +215,23 @@
         <div class="modal-body">
             <div class="content my-2">
                 <div class="toast toast-success">Successful upload of faunal information</div>
+                <!-- per analysis: the results of the sheet replace the previous ones -->
+                <table class="table table-striped mt-2" style="font-size: 85%;">
+                    <thead><tr><th>Layer / Culture / Site</th><th>Reference</th><th>Method</th><th>Previous results</th><th>New results</th></tr></thead>
+                    <tbody>
+                    {% for entry in summary %}
+                    <tr>
+                        <td>{% if entry.analysis.layer %}{{entry.analysis.layer.name}}{% elif entry.analysis.culture %}{{entry.analysis.culture.name}}{% else %}<i>Site</i>{% endif %}</td>
+                        <td>{{entry.analysis.ref.short}}</td>
+                        <td>{{entry.analysis.method|default:''}}</td>
+                        <td>{{entry.replaced}}</td>
+                        <td>{{entry.new}}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
-        <!--#TODO: summary report-->
 
         {% elif type == "stratigraphy" %}
 

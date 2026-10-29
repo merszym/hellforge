@@ -1,6 +1,7 @@
 from main.models import models
-from main.models import Reference, FaunalResults, LayerAnalysis, Layer, Culture, Site, ProfileLayerJunction
+from main.models import Reference, FaunalResults, LayerAnalysis, Layer, Culture, Site, ProfileLayerJunction, SpeciesTranslation
 from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
 from django.urls import path
 from django.shortcuts import render
 from main.tools.generic import get_instance_from_string, download_csv
@@ -264,7 +265,13 @@ def get_fauna_tab(request, pk, by_layer=True):
         header_row(3, lambda c: c["family"], "family"),
     ]
     if not collapse:
-        header_rows.append(header_row(4, lambda c: c["key"].split("__", 1)[1], "species"))
+        # the species: the translated name (SpeciesTranslation), the original name below
+        translations = SpeciesTranslation.lookup()
+        species_row = header_row(4, lambda c: c["key"].split("__", 1)[1], "species")
+        for cell in species_row:
+            family, original = cell["value"][3].split("__", 1)
+            cell.update({"family": family, "original": original, "label": translations.get((family, original), original)})
+        header_rows.append(species_row)
 
     # this is for the filters in the view
     all_refs = Reference.objects.filter(
@@ -304,160 +311,161 @@ def strip_whitespace(df):
     return df
 
 
+def faunal_value(value):
+    """
+    a value of the results: whole numbers stay whole numbers (pandas reads them as float, e.g. 5.0)
+    """
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    if hasattr(value, "item"):  # numpy types
+        return faunal_value(value.item())
+    return value
+
+
 def handle_faunal_table(request, file):
+    """
+    upload of faunal results: all rows are checked first (all problems are listed), then saved all-or-nothing.
+    the results of an analysis (layer/culture/site + reference) are replaced by the rows of the sheet
+    """
+    from django.db import transaction
 
     site = get_instance_from_string(request.POST.get("object"))
 
     def return_error(request, issues, df):
-
-        messages.add_message(request, messages.WARNING, issues)
-
+        # nothing is saved, all problems are listed
         return render(
             request,
             "main/modals/site_modal.html",
             {
-                "object": get_instance_from_string(request.POST.get("object")),
+                "object": site,
                 "type": "faunal_errors",
+                "issues": issues,
                 "dataframe": df.fillna("").to_html(
                     index=False, classes="table table-striped col-12"
                 ),
             },
         )
 
+    present = lambda value: value == value and value not in ("", None)
+
     df = strip_whitespace(pd.read_csv(file, sep=","))
     df.drop_duplicates(inplace=True)
-    # All required information is in the table
 
     ## 0. Verify the data-table
     expected_columns = FaunalResults.table_columns()
-    ## there can be more, but check that all required are in
-
     if not all(x in df.columns for x in expected_columns):
         missing = [x for x in expected_columns if x not in df.columns]
-        issues = [f"Missing Table Columns: {x}" for x in missing]
+        return return_error(request, [f"Missing Table Columns: {x}" for x in missing], df)
 
-        return return_error(request, issues, df)
-
-    ## 1. Get the unique information to create LayerAnalysis entries
-
-    analyses = df[
-        ["Site Name", "Layer Name", "Culture Name", "Reference", "Method"]
-    ].drop_duplicates()  # get the LayerAnalysis fields
-    analyses["pk"] = ""
-
-    ## 2. create LayerAnalysis entries
-    layer_analyses = []
-
-    for i, data in analyses.iterrows():
-        # sometimes a faunal analaysis is linked to the site directly...
-        layer = False
-        culture = False
-
-        if data["Layer Name"] == data["Layer Name"]:
-            try:
-                layer = Layer.objects.get(site=site, name=data["Layer Name"].strip())
-            except Layer.DoesNotExist:
-                return return_error(
-                    request,
-                    [f'Layer: {data["Layer Name"]} doesnt exist'],
-                    pd.DataFrame(
-                        {k: v for k, v in zip(data.index, data.values)}, index=[0]
-                    ),
-                )
-        # sometimes its linked to the culture of a site
-        if data["Culture Name"] == data["Culture Name"]:
-            try:
-                culture = Culture.objects.get(name=data["Culture Name"].strip())
-            except Culture.DoesNotExist:
-                return return_error(
-                    request,
-                    [f'Culture: {data["Culture Name"]} doesnt exist in the database'],
-                    pd.DataFrame(
-                        {k: v for k, v in zip(data.index, data.values)}, index=[0]
-                    ),
-                )
-
+    ## 1. check all analyses (layer, culture, reference) before anything is saved
+    analysis_columns = ["Site Name", "Layer Name", "Culture Name", "Reference", "Method"]
+    # empty cells as '' (NaN is not equal to itself, the rows are used as keys)
+    df[analysis_columns] = df[analysis_columns].fillna("")
+    issues = []
+    targets = {}  # analysis-row -> (layer, culture, reference)
+    for i, data in df[analysis_columns].drop_duplicates().iterrows():
+        row = tuple(data.values)
+        if present(data["Site Name"]) and data["Site Name"] != site.name:
+            issues.append(f"Site '{data['Site Name']}' is not this site ({site.name})")
+        layer = culture = None
+        if present(data["Layer Name"]):
+            layers = list(Layer.objects.filter(site=site, name=data["Layer Name"])[:2])
+            if not layers:
+                issues.append(f"Layer '{data['Layer Name']}' doesn't exist at {site.name}")
+            elif len(layers) > 1:
+                issues.append(f"Layer '{data['Layer Name']}' exists more than once at {site.name}")
+            else:
+                layer = layers[0]
+        if present(data["Culture Name"]):
+            culture = Culture.objects.filter(name=data["Culture Name"]).first()
+            if culture is None:
+                issues.append(f"Culture '{data['Culture Name']}' doesn't exist in the database")
         reference = tools.references.find(data["Reference"])
         if reference == "Not Found":
-            issues = [f"Reference not in found: {data['Reference']}"]
-            return return_error(
-                request,
-                issues,
-                pd.DataFrame(
-                    {k: v for k, v in zip(data.index, data.values)}, index=[0]
-                ),
-            )
-        # get or create the LayerAnalysis object
-        if layer:
-            ana, created = LayerAnalysis.objects.get_or_create(
-                layer=layer, ref=reference, type="Fauna"
-            )
-        elif culture:
-            ana, created = LayerAnalysis.objects.get_or_create(
-                site=site, culture=culture, ref=reference, type="Fauna"
-            )
-        else:
-            ana, created = LayerAnalysis.objects.get_or_create(
-                site=site, ref=reference, type="Fauna"
-            )
-        layer_analyses.append(ana)
-        # clear the related faunal results
-        ana.faunal_results.clear()
-        ana.method = data["Method"]
-        ana.save()
-        # now add the pk to the analyses df, as we need this to then attach the faunal
-        # analysis
-        analyses.loc[i, "pk"] = ana.pk
+            issues.append(f"Reference not found: {data['Reference']}")
+        targets[row] = (layer, culture, reference)
 
-    ## 3. Merge the pk of the Analysis entry back into the original df
+    # an analysis (layer/culture + reference) can only have one method
+    methods = defaultdict(set)
+    for row, (layer, culture, reference) in targets.items():
+        methods[(layer, culture, reference if reference != "Not Found" else None)].add(row[4] if present(row[4]) else "")
+    for (layer, culture, reference), names in methods.items():
+        if len(names) > 1:
+            issues.append(f"{layer or culture or site} / {reference}: more than one method ({', '.join(sorted(names))})")
 
-    df = df.merge(
-        analyses,
-        on=["Site Name", "Layer Name", "Culture Name", "Reference", "Method"],
-        validate="m:1",
-        how="left",
-    )
+    # a species can only be once in an analysis
+    species = df.apply(lambda d: (tuple(d[analysis_columns].values), d["Family"],
+        d["Original"] if "Original" in d and present(d["Original"]) else d["Scientific Name"]), axis=1)
+    if duplicated := sorted({f"{s[1]} / {s[2]} ({s[0][1] if present(s[0][1]) else s[0][2] if present(s[0][2]) else 'site'}, {s[0][3]})" for s in species[species.duplicated()]}):
+        issues.append(f"Species more than once in the same analysis: {'; '.join(duplicated)}")
 
-    ## 4. Create a FaunalResults object per line, attach to the LayerAnalysis object
-    ### Find the additional columns
+    if issues:
+        return return_error(request, issues, df)
+
+    ## 2. save all-or-nothing: the results of the analyses are replaced
     res = [
         x
         for x in df.columns
-        if x not in expected_columns and bool(re.search("^(pk|Unnamed)", x)) == False
+        if x not in expected_columns + ["Original"] and bool(re.search("^(pk|Unnamed)", x)) == False
     ]
-    faunal_results = []
+    summary = []
+    with transaction.atomic():
+        analyses = {}
+        for row, (layer, culture, reference) in targets.items():
+            if layer:
+                ana, created = LayerAnalysis.objects.get_or_create(layer=layer, ref=reference, type="Fauna")
+            elif culture:
+                ana, created = LayerAnalysis.objects.get_or_create(site=site, culture=culture, ref=reference, type="Fauna")
+            else:
+                ana, created = LayerAnalysis.objects.get_or_create(site=site, ref=reference, type="Fauna")
+            ana.method = row[4] if present(row[4]) else None
+            ana.save()
+            analyses[row] = ana
+        # remove the old results (delete, not only unlink: the results would remain without analysis)
+        replaced = {}
+        for ana in set(analyses.values()):
+            replaced[ana.pk] = ana.faunal_results.count()
+            ana.faunal_results.all().delete()
 
-    for i, data in df.iterrows():
-        # first get all the required information
-        tmp, created = FaunalResults.objects.get_or_create(
-            order=data["Order"],
-            family=data["Family"],
-            scientific_name=data["Scientific Name"],
-            taxid=data["TaxID"],
-            analysis=LayerAnalysis.objects.get(pk=data["pk"]),
-        )
-        # now take the additional table-columns and create/update the results as json
-        # make sure not to include 'nan' values
-        tmp.results = json.dumps({x: data[x] for x in res if data[x] == data[x]})
-        tmp.save()
-        faunal_results.append(tmp)
+        new = defaultdict(int)
+        for i, data in df.iterrows():
+            ana = analyses[tuple(data[analysis_columns].values)]
+            FaunalResults.objects.create(
+                order=data["Order"] if present(data["Order"]) else None,
+                family=data["Family"] if present(data["Family"]) else None,
+                # the export has the translation in 'Scientific Name' and the uploaded name in 'Original'
+                scientific_name=data["Original"] if "Original" in data and present(data["Original"]) else data["Scientific Name"],
+                taxid=str(faunal_value(data["TaxID"])) if present(data["TaxID"]) else None,
+                analysis=ana,
+                # the additional table-columns are the results (without empty values)
+                results=json.dumps({x: faunal_value(data[x]) for x in res if present(data[x])}),
+            )
+            new[ana.pk] += 1
+        for ana in set(analyses.values()):
+            summary.append({"analysis": ana, "replaced": replaced[ana.pk], "new": new[ana.pk]})
 
     return render(
         request,
         "main/modals/site_modal.html",
         {
-            "object": get_instance_from_string(request.POST.get("object")),
+            "object": site,
             "type": "faunal_success",
-            "faunal_results": faunal_results,
-            "layer_analyses": layer_analyses,
+            "summary": sorted(summary, key=lambda x: str(x["analysis"])),
         },
     )
 
 
 def download_faunal_table(request):
+    translations = SpeciesTranslation.lookup()
+
     def to_table(entry):
+        # 'Scientific Name' is the translation (SpeciesTranslation), 'Original' the uploaded name
         columns = FaunalResults.table_columns()
         data = entry.data
+        position = columns.index("Scientific Name")
+        data[position] = translations.get((entry.family, entry.scientific_name), entry.scientific_name)
+        columns.insert(position + 1, "Original")
+        data.insert(position + 1, entry.scientific_name)
         tmp = pd.DataFrame.from_dict({0: data}, columns=columns, orient="index")
         for var, val in json.loads(entry.results).items():
             tmp[var] = val
@@ -473,8 +481,7 @@ def download_faunal_table(request):
         site = Site.objects.get(name=obj)
 
     entries = FaunalResults.objects.filter(
-        Q(analysis__layer__site=site)
-        | Q(analysis__site=site) & Q(analysis__type="Fauna")
+        (Q(analysis__layer__site=site) | Q(analysis__site=site)) & Q(analysis__type="Fauna")
     ).order_by("analysis__layer")
 
     
@@ -489,7 +496,61 @@ def download_faunal_table(request):
     return download_csv(data, columns=columns.keys(), name=f"{site.name.replace(' ','_')}_faunal_overview.csv")
 
 
+@login_required
+def species_translation(request):
+    """
+    the name of a species (click on the species in the fauna-table): GET shows the modal.
+    POST action=translate: the translation (SpeciesTranslation, empty name: delete), for all sites
+    POST action=rename: correct the uploaded name of the results (wrong imports), at this site or at all sites
+    after saving, the fauna-tab reloads (with its filters)
+    """
+    get = lambda key, default="": request.POST.get(key, request.GET.get(key, default)).strip()
+    family, original = get("family"), get("original")
+    site = Site.objects.filter(pk=get("site")).first() if get("site").isdigit() else None
+    saved = renamed = False
+    errors = []
+
+    def results_of(name, all_sites=True):
+        results = FaunalResults.objects.filter(family=family, scientific_name=name)
+        if not all_sites and site:
+            results = results.filter(Q(analysis__layer__site=site) | Q(analysis__site=site))
+        return results
+
+    if request.method == "POST" and get("action") == "rename":
+        new_name = get("new_original")
+        results = results_of(original, all_sites=get("scope") == "all")
+        # the same species can only be once in an analysis
+        if conflicts := FaunalResults.objects.filter(family=family, scientific_name=new_name, analysis__in=results.values("analysis")).select_related("analysis__layer", "analysis__ref"):
+            errors.append(f"'{new_name}' is already in the analyses: {', '.join(str(x.analysis) for x in conflicts)}")
+        elif new_name and new_name != original:
+            results.update(scientific_name=new_name)
+            original, renamed, saved = new_name, True, True
+    elif request.method == "POST":
+        translation = SpeciesTranslation.objects.filter(family=family, original_name=original).first()
+        name = get("name")
+        if not name or name == original:
+            if translation:
+                translation.delete()
+        elif translation:
+            translation.name = name
+            translation.save()
+        else:
+            SpeciesTranslation.objects.create(family=family, original_name=original, name=name)
+        saved = True
+
+    response = render(request, "main/modals/species_translation_modal.html", {
+        "family": family, "original": original, "site": site, "saved": saved, "renamed": renamed, "errors": errors,
+        "translation": SpeciesTranslation.objects.filter(family=family, original_name=original).first(),
+        "results": results_of(original).count(),
+        "site_results": results_of(original, all_sites=False).count() if site else None,
+    })
+    if saved:
+        response["HX-Trigger"] = "fauna-translation-changed"
+    return response
+
+
 urlpatterns = [
     path("<int:pk>/get-tab", get_fauna_tab, name="main_site_fauna_get"),
     path("download", download_faunal_table, name="download_faunal_table"),
+    path("species-translation", species_translation, name="main_fauna_species_translation"),
 ]

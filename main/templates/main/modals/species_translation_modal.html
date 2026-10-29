@@ -1,0 +1,69 @@
+<!-- the name of a species of the faunal results (opened by clicking the species in the fauna-table):
+     the translation (shown name, all sites) and the correction of the uploaded name (wrong imports) -->
+<a href="#close" class="modal-overlay" aria-label="Close"></a>
+<div class="modal-container">
+    <div class="modal-header">
+        <a id="modal-close" class="btn btn-clear float-right modal_close" aria-label="Close" style="cursor: pointer;"></a>
+        <div class="modal-title h5">Species Name</div>
+    </div>
+    <div class="modal-body">
+        <div class="content my-2">
+            {% for error in errors %}
+            <div class="toast toast-error">Not changed: {{error}}</div>
+            {% endfor %}
+            {% if saved %}
+            <div class="toast toast-success">
+                {% if renamed %}Uploaded name corrected to <i>{{original}}</i>
+                {% elif translation %}Saved: <i>{{original}}</i> is shown as <i>{{translation.name}}</i>
+                {% else %}No translation: <i>{{original}}</i> is shown as uploaded{% endif %}
+            </div>
+            {% endif %}
+            <p class="text-small">
+                Family: <strong>{{family}}</strong><br>
+                Uploaded name: <i>{{original}}</i>
+                ({% if site %}{{site_results}} result{{site_results|pluralize}} at {{site.name}}, {% endif %}{{results}} at all sites)
+            </p>
+
+            <h6>Shown name</h6>
+            <form hx-post="{% url 'main_fauna_species_translation' %}" hx-target="#modal-blank">
+                <input type="hidden" name="action" value="translate">
+                <input type="hidden" name="family" value="{{family}}">
+                <input type="hidden" name="original" value="{{original}}">
+                <input type="hidden" name="site" value="{{site.pk|default:''}}">
+                <div class="input-group">
+                    <span class="input-group-addon">Name</span>
+                    <input class="form-input" type="text" name="name" maxlength="400" autocomplete="off"
+                        value="{% if translation %}{{translation.name}}{% else %}{{original}}{% endif %}">
+                    <button class="btn btn-primary input-group-btn">Save</button>
+                </div>
+                <p class="form-input-hint">The name shown in the tables and the export (all sites). Empty (or the uploaded name): no translation.</p>
+            </form>
+
+            <div class="divider"></div>
+            <h6>Correct the uploaded name</h6>
+            <!-- changes the stored name of the results, e.g. after a wrong import -->
+            <form hx-post="{% url 'main_fauna_species_translation' %}" hx-target="#modal-blank">
+                <input type="hidden" name="action" value="rename">
+                <input type="hidden" name="family" value="{{family}}">
+                <input type="hidden" name="original" value="{{original}}">
+                <input type="hidden" name="site" value="{{site.pk|default:''}}">
+                <div class="input-group">
+                    <span class="input-group-addon">Uploaded name</span>
+                    <input class="form-input" type="text" name="new_original" maxlength="400" autocomplete="off" value="{{original}}" required>
+                    <button class="btn input-group-btn">Correct</button>
+                </div>
+                <div class="mt-1">
+                    {% if site %}
+                    <label class="form-radio form-inline">
+                        <input type="radio" name="scope" value="site" checked><i class="form-icon"></i> only at {{site.name}} ({{site_results}})
+                    </label>
+                    {% endif %}
+                    <label class="form-radio form-inline">
+                        <input type="radio" name="scope" value="all" {% if not site %}checked{% endif %}><i class="form-icon"></i> at all sites ({{results}})
+                    </label>
+                </div>
+                <p class="form-input-hint">Changes the stored name of the results (as in a new upload). The translation of the old name stays for the other sites.</p>
+            </form>
+        </div>
+    </div>
+</div>

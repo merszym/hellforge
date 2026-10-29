@@ -1730,6 +1730,32 @@ class LayerAnalysis(models.Model):
         return f"{self.layer if self.layer else self.site} / {self.ref}"
     
 
+class SpeciesTranslation(models.Model):
+    """
+    the current name of a species, as it was uploaded in the faunal results (e.g. 'cf. Bos primigenius', old names).
+    only used for the display and the export, FaunalResults.scientific_name keeps the original
+    """
+    family = models.CharField("family", max_length=400)
+    original_name = models.CharField("original name", max_length=400)
+    name = models.CharField("name", max_length=400)
+
+    class Meta:
+        ordering = ["family", "original_name"]
+        constraints = [
+            models.UniqueConstraint(fields=["family", "original_name"], name="unique_speciestranslation"),
+        ]
+
+    def __str__(self):
+        return f"{self.family}: {self.original_name} -> {self.name}"
+
+    @classmethod
+    def lookup(cls):
+        """
+        {(family, original name): name} of all translations
+        """
+        return {(t.family, t.original_name): t.name for t in cls.objects.all()}
+
+
 class FaunalResults(models.Model):
     order = models.CharField("order", max_length=400, blank=True, null=True)
     family = models.CharField("family", max_length=400, blank=True, null=True)
