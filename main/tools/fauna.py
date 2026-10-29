@@ -122,18 +122,16 @@ def get_fauna_data(entries):
 ANALYSIS_RELATED = ["layer__culture", "ref", "culture", "site"]
 
 
-def get_fauna_tab(
-    request, pk, type="all", reference="all", collapse=True, by_layer=True
-):
+def get_fauna_tab(request, pk, by_layer=True):
 
     site = Site.objects.get(pk=pk)
     project = tools.projects.get_project(request)
 
-    # check the POST parameters
-    if request.method == "POST":
-        reference = request.POST.get("reference")
-        type = request.POST.get("type")
-        collapse = "on" == request.POST.get("collapse", "")
+    # the filter-chips (applied directly): references and large/small mammals (several or none = all),
+    # 'species' shows the species instead of the families
+    references = [int(x) for x in request.POST.getlist("reference") if x.isdigit()]
+    types = [x for x in request.POST.getlist("type") if x in ("large", "small")]
+    collapse = "species" not in request.POST
 
     ## Create the table here that is then parsed in the html view
     # 1. Get all the analyses (layer+reference), sorted by layer (position in the main profile), reference and method
@@ -167,24 +165,17 @@ def get_fauna_tab(
             analyses = [x for x in analyses if x.ref]
 
     # check the reference filter
-    if reference != "all":
-        reference = get_instance_from_string(reference)
-        analyses = [x for x in analyses if x.ref == reference]
+    if references:
+        analyses = [x for x in analyses if x.ref_id in references]
 
     # now get the faunal results from the remaining analysis objects
     entries = FaunalResults.objects.filter(Q(analysis__in=analyses)).select_related("analysis")
 
-    # check the filters for small or big mammals
-    if type == "small mammals":
-        orders = get_small_mammals()
-        entries = entries.filter(order__in=orders)
-        analyses = [x for x in analyses if x.faunal_results.first() in entries]
-        #analyses = analyses.filter(faunal_results__in=entries).distinct()
-    if type == "large mammals":
-        orders = get_small_mammals()
-        entries = entries.exclude(order__in=orders)
-        analyses = [x for x in analyses if x.faunal_results.first() in set(entries)]
-        #analyses = analyses.filter(faunal_results__in=entries).distinct()
+    # check the filters for small or large mammals (both or none: all), only the analyses with results remain
+    if len(types) == 1:
+        entries = entries.filter(order__in=get_small_mammals()) if types == ["small"] else entries.exclude(order__in=get_small_mammals())
+        with_results = set(entries.values_list("analysis_id", flat=True))
+        analyses = [x for x in analyses if x.pk in with_results]
 
     # 2. Get the table columns
     # Thats now a bit more complicated, as we need the headers as follows
@@ -293,8 +284,8 @@ def get_fauna_tab(
             "header_rows": header_rows,
             "analyses": analyses,
             "all_refs": all_refs,
-            "reference": reference,
-            "type": type,
+            "references": references,
+            "types": types,
             "by_layer": by_layer,
             "collapse": collapse,
         },

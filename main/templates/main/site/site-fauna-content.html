@@ -34,46 +34,49 @@
             href="{% url 'download_faunal_table' %}?object=site_{{object.pk}}"
             ><i class="icon icon-download"></i>
         </a>
-        <h5 style="margin-top: 10px;">Filter</h5>
-        <form
+        <!-- the filters (chips, applied directly): several references or types can be selected, none = all -->
+        <form id="fauna-filter-form" class="mt-2"
             hx-post="{% url 'main_site_fauna_get' object.pk %}"
             hx-target="#site_fauna"
-            style="width: 80%;"
-        >
-            <div class="input-group">
-                <span class="input-group-addon">Reference</span>
-                <select class="form-select" name="reference">
-                    {% if reference != 'all' %}
-                    <option value="reference_{{reference.pk}}" selected>{{reference.short|title}}</option>
-                    {% else %}
-                    <option value="all" selected>All</option>
-                    {% endif %}
-                    {% for ref in all_refs %}
-                    {% if ref != reference %}
-                    <option value="reference_{{ref.pk}}">{{ref}}</option>
-                    {% endif %}
-                    {% endfor %}
-                    <option value="all">All</option>
-                </select>
-                <span class="input-group-addon">Type</span>
-                <select class="form-select" name="type">
-                    <option value="{{type}}" selected>{{type|title}}</option>
-                    <option value="small mammals">Small mammals</option>
-                    <option value="large mammals">Large mammals</option>
-                    <option value="all">All</option>
-                </select>
-                <span class="input-group-addon">Collapse Family</span>
-                <label class="form-switch mx-2">
-                    <input type="checkbox" name="collapse" {% if collapse %}checked{% endif %}><i class="form-icon"></i>
+            hx-trigger="change">
+            <div class="fauna-filter-row">
+                <small class="fauna-filter-label">Mammals</small>
+                <label class="chip-toggle">
+                    <input type="checkbox" name="type" value="large" {% if "large" in types %}checked{% endif %}>
+                    <span class="chip">Large mammals</span>
                 </label>
-                <button class="btn btn-primary input-group-btn">Filter</button>
+                <label class="chip-toggle">
+                    <input type="checkbox" name="type" value="small" {% if "small" in types %}checked{% endif %}>
+                    <span class="chip">Small mammals</span>
+                </label>
+                <small class="fauna-filter-label" style="margin-left: 1rem;">Table</small>
+                <label class="chip-toggle">
+                    <input type="checkbox" name="species" {% if not collapse %}checked{% endif %}>
+                    <span class="chip">Show species</span>
+                </label>
+                {% if references or types or not collapse %}
+                <a class="btn btn-link btn-sm" style="cursor: pointer;"
+                    hx-post="{% url 'main_site_fauna_get' object.pk %}" hx-target="#site_fauna" hx-params="none">Reset</a>
+                {% endif %}
             </div>
+            {% if all_refs %}
+            <div class="fauna-filter-row">
+                <small class="fauna-filter-label">References</small>
+                {% for ref in all_refs %}
+                <label class="chip-toggle" title="{{ref}}">
+                    <input type="checkbox" name="reference" value="{{ref.pk}}" {% if ref.pk in references %}checked{% endif %}>
+                    <span class="chip">{{ref.short}}</span>
+                </label>
+                {% endfor %}
+            </div>
+            {% endif %}
         </form>
+        <style>
+            .fauna-filter-row { display: flex; flex-wrap: wrap; align-items: center; gap: .2rem; margin-top: .3rem; }
+            .fauna-filter-label { color: #5b657a; font-weight: 600; margin-right: .3rem; }
+        </style>
     </div>
     <div class="panel-body p-2">
-        {% if type != 'all' %}
-        <h3>{{type|title}}</h3>
-        {% endif %}
         {% if families %}
 
         <style>

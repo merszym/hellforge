@@ -151,7 +151,7 @@
              the checkboxes belong to the filter-form of the side-panel (form="dna-filter-form") and apply it directly -->
         <div class="m-2">
             <div style="display: flex; align-items: center; gap: .2rem;">
-                <small class="text-gray" style="min-width: 8rem;">Show only libraries with:</small>
+                <small style="color: #5b657a; font-weight: 600; margin-right: .3rem;">Show only libraries with:</small>
                 <input type="hidden" name="_fields" value="ned_positives" form="dna-filter-form">
             <input type="hidden" name="_fields" value="ned_family" form="dna-filter-form">
             <label class="chip-toggle" title="Libraries with results in any family (after the filters)">
@@ -163,7 +163,7 @@
             </div>
             {% for group, entries in legend_groups %}
             <div style="display: flex; flex-wrap: wrap; align-items: center; gap: .2rem; margin-top: .3rem;">
-                <small class="text-bold" style="min-width: 8rem;">{{group}}</small>
+                <small style="color: #5b657a; font-weight: 600; margin-right: .3rem;">{{group}}</small>
                 {% for family,color in entries %}
                 <label class="chip-toggle">
                     <input type="checkbox" name="ned_family" value="{{family}}" form="dna-filter-form"
