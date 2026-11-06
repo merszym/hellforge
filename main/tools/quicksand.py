@@ -121,6 +121,24 @@ def handle_quicksand_report(request, file):
     )
 
 
+# the colors of these families are the same in all tables and charts (quicksand tab, image overlay)
+FAMILY_COLORS = {
+    "Bovidae": "#f5deb6",
+    "Cervidae": "#88cefa",
+    "Canidae": "#ccce00",
+    "Hyaenidae": "#8d4512",
+    "Ursidae": "#006403",
+    "Equidae": "#ce1177",
+    "Rhinocerotidae": "#65cdaa",
+    "Elephantidae": "#ffc1c2",
+    "Felidae": "#ff4700",
+    "Hominidae": "#67218d",
+    "Mustelidae": "#ffbb78",
+    "Cricetidae": "#ffe680",
+    "Suidae": "#ffd21a",
+}
+
+
 def prepare_data(
     request,
     query,
@@ -198,13 +216,10 @@ def prepare_data(
 
     families = set(families)
 
-    colors = [
-        (k, v)
-        for k, v in zip(
-            [x for x in sorted(families)],
-            sns.color_palette("husl", len(families)).as_hex(),
-        )
-    ]
+    # fixed colors for the common families, the others from the husl palette
+    others = sorted(families - FAMILY_COLORS.keys())
+    palette = dict(zip(others, sns.color_palette("husl", len(others)).as_hex()))
+    colors = [(family, FAMILY_COLORS.get(family) or palette[family]) for family in sorted(families)]
     # selected families without (filtered) results stay in the legend (grey), so they can be deselected
     colors += [(family, "#bbbbbb") for family in families_selected or [] if family not in families]
 

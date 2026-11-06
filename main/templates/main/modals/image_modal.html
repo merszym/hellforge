@@ -14,16 +14,30 @@
         <div class="modal-header">
             <a class="btn btn-clear float-right modal_close" aria-label="Close" style="cursor: pointer;"></a>
             <div class="modal-title h5">{{object.title|default:"Image"}}{% if batch %} <small class="text-gray">({{batch.name}})</small>{% endif %}</div>
-            <!-- show/hide the tags; editing (tag, move, remove) only after switching on "Edit" -->
-            <div class="mt-1">
+            <!-- show/hide the tags; editing (tag, move, remove) only after switching on "Edit"; the results shown on the tags -->
+            <div class="mt-1" style="display: flex; flex-wrap: wrap; align-items: center; gap: .25rem 1rem;">
                 <label class="form-switch form-inline">
                     <input type="checkbox" id="annotation-show-{{object.pk}}" checked><i class="form-icon"></i> Show tags
                 </label>
                 {% if request.user.is_authenticated and batch %}
-                <label class="form-switch form-inline ml-2">
+                <label class="form-switch form-inline">
                     <input type="checkbox" id="annotation-edit-{{object.pk}}"><i class="form-icon"></i> Edit
                 </label>
                 {% endif %}
+                <select class="form-select select-sm" id="annotation-overlay-{{object.pk}}" style="width: auto;">
+                    <option value="">Results: none</option>
+                    <option value="quicksand">Quicksand: ancient families</option>
+                </select>
+                <select class="form-select select-sm" id="annotation-probe-{{object.pk}}" style="width: auto; display: none;" title="Capture probe"></select>
+                <!-- options of the results-overlay: size of the pie-charts, the sample names -->
+                <span id="annotation-overlay-options-{{object.pk}}" style="display: none; align-items: center; gap: 1rem;">
+                    <label class="text-small" style="display: flex; align-items: center; gap: .4rem;">
+                        Size <input class="slider" type="range" id="annotation-size-{{object.pk}}" min="16" max="120" value="32" style="width: 8rem;">
+                    </label>
+                    <label class="form-switch form-inline">
+                        <input type="checkbox" id="annotation-labels-{{object.pk}}" checked><i class="form-icon"></i> Labels
+                    </label>
+                </span>
             </div>
         </div>
         <div class="modal-body" style="flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column;">
@@ -45,7 +59,8 @@
                 data-focus="{{request.GET.focus|default:''}}"
                 data-save-url="{% url 'main_annotation_save' object.pk %}"
                 data-delete-url="{% url 'main_annotation_delete' 0 %}"
-                data-search-url="{% url 'main_annotation_samples' object.pk %}"></div>
+                data-search-url="{% url 'main_annotation_samples' object.pk %}"
+                data-quicksand-url="{% url 'main_annotation_quicksand' object.pk %}"></div>
             {% if object.alt %}<p class="text-small text-gray mt-1">{{object.alt}}</p>{% endif %}
         </div>
     </div>
@@ -57,6 +72,21 @@
     .annotation-marker .label { position: absolute; left: 9px; top: -10px; white-space: nowrap; font-size: .7rem; font-weight: 600;
         background: rgba(255,255,255,.85); padding: 0 .25rem; border-radius: .15rem; }
     .annotation-marker.focus .dot { background: #e85600; width: 18px; height: 18px; left: -9px; top: -9px; }
+    /* results: pie-chart (families), ring (analyzed, no family), grey dot (no results) */
+    /* the size of the pie-charts is set with the slider (--pie-size on the map) */
+    .annotation-marker .pie { position: absolute; width: var(--pie-size, 32px); height: var(--pie-size, 32px);
+        left: calc(var(--pie-size, 32px) / -2); top: calc(var(--pie-size, 32px) / -2); border-radius: 50%;
+        border: 2px solid #fff; box-shadow: 0 0 3px rgba(0,0,0,.7); }
+    .annotation-marker .pie ~ .label { left: calc(var(--pie-size, 32px) / 2 + 2px); }
+    .annotation-marker .ring { position: absolute; left: -9px; top: -9px; width: 18px; height: 18px; border-radius: 50%;
+        border: 4px solid #fff; box-shadow: 0 0 2px rgba(0,0,0,.7), inset 0 0 2px rgba(0,0,0,.7); }
+    .annotation-marker .dot.none { background: #9a9a9a; }
+    .annotation-marker.focus .pie, .annotation-marker.focus .ring { border-color: #e85600; }
+    .hide-labels .annotation-marker .label { display: none; }
+    .annotation-legend { background: rgba(255,255,255,.92); padding: .3rem .5rem; border-radius: .2rem; font-size: .7rem;
+        box-shadow: 0 0 3px rgba(0,0,0,.4); max-height: 50vh; overflow-y: auto; }
+    .annotation-legend .swatch { display: inline-block; width: .7rem; height: .7rem; border-radius: 50%; margin-right: .3rem; vertical-align: middle; }
+    .annotation-popup td { padding: 0 .4rem 0 0; font-size: .7rem; }
 </style>
 <script>
 (function(){
@@ -86,7 +116,6 @@
         var setEditable = function(marker){
             marker.options.draggable = editing
             if(marker.dragging){ editing ? marker.dragging.enable() : marker.dragging.disable() }
-            if(marker.removeButton){ marker.removeButton.style.display = editing ? '' : 'none' }
         }
         var post = function(url, values){
             var body = new URLSearchParams(values)
@@ -95,42 +124,166 @@
                 return response.json()
             })
         }
-        var icon = function(name, focus){
-            var label = document.createElement('span'); label.className = 'label'; label.textContent = name
-            return L.divIcon({className: 'annotation-marker' + (focus ? ' focus' : ''), html: '<span class="dot"></span>' + label.outerHTML, iconSize: [0, 0]})
+
+        // results on the tags: {probes, colors, results: {probe: {sample: {family: reads}}}}
+        var overlay = null, probe = ''
+        var sampleResults = function(sample){
+            // undefined: no results, {}: analyzed without (ancient) families
+            return overlay ? (overlay.results[probe] || {})[sample] : undefined
         }
-        var addMarker = function(annotation){
-            if(markers[annotation.sample]){ tags.removeLayer(markers[annotation.sample]) }
-            var focus = String(annotation.sample) === data.focus
-            var marker = L.marker(toLatLng(annotation.x, annotation.y), {icon: icon(annotation.name, focus)})
-            marker.annotation = annotation
-            if(editable){
-                var popup = document.createElement('div')
-                var title = document.createElement('strong'); title.textContent = annotation.name
+        var sorted = function(families){
+            return Object.keys(families).sort(function(a, b){ return families[b] - families[a] })
+        }
+        var icon = function(marker){
+            var label = document.createElement('span'); label.className = 'label'; label.textContent = marker.annotation.name
+            var symbol = '<span class="dot"></span>'
+            if(overlay){
+                var families = sampleResults(marker.annotation.sample)
+                if(families === undefined){
+                    symbol = '<span class="dot none"></span>'
+                } else if(!Object.keys(families).length){
+                    symbol = '<span class="ring"></span>'
+                } else {
+                    // pie-chart: conic-gradient with the share of each family
+                    var total = Object.values(families).reduce(function(a, b){ return a + b }, 0), start = 0
+                    var slices = sorted(families).map(function(family){
+                        var end = start + families[family] / total * 100
+                        var slice = (overlay.colors[family] || '#bbbbbb') + ' ' + start + '% ' + end + '%'
+                        start = end
+                        return slice
+                    })
+                    symbol = '<span class="pie" style="background: conic-gradient(' + slices.join(', ') + ')"></span>'
+                }
+            }
+            return L.divIcon({className: 'annotation-marker' + (marker.focus ? ' focus' : ''), html: symbol + label.outerHTML, iconSize: [0, 0]})
+        }
+        var popup = function(marker){
+            var content = document.createElement('div'); content.className = 'annotation-popup'
+            var title = document.createElement('strong'); title.textContent = marker.annotation.name
+            content.appendChild(title)
+            if((marker.annotation.synonyms || []).length){
+                var synonyms = document.createElement('div'); synonyms.className = 'text-gray'
+                synonyms.textContent = marker.annotation.synonyms.join(', ')
+                content.appendChild(synonyms)
+            }
+            if(overlay){
+                var families = sampleResults(marker.annotation.sample), info = document.createElement('div')
+                if(families === undefined){
+                    info.className = 'text-gray'; info.textContent = 'No quicksand results (' + probeName() + ')'
+                } else if(!Object.keys(families).length){
+                    info.className = 'text-gray'; info.textContent = 'No ancient families (' + probeName() + ')'
+                } else {
+                    var total = Object.values(families).reduce(function(a, b){ return a + b }, 0)
+                    var table = document.createElement('table')
+                    sorted(families).forEach(function(family){
+                        var row = table.insertRow()
+                        var swatch = document.createElement('span'); swatch.className = 'swatch'; swatch.style.background = overlay.colors[family]
+                        row.insertCell().appendChild(swatch); row.cells[0].appendChild(document.createTextNode(family))
+                        row.insertCell().textContent = families[family].toLocaleString()
+                        row.insertCell().textContent = (families[family] / total * 100).toFixed(1) + '%'
+                    })
+                    info.appendChild(document.createTextNode(probeName() + ', ' + overlay.column + ':'))
+                    info.appendChild(table)
+                }
+                content.appendChild(info)
+            }
+            if(editing){
                 var remove = document.createElement('button'); remove.className = 'btn btn-sm btn-error mt-1'; remove.textContent = 'Remove'
                 remove.onclick = function(){
                     post(data.deleteUrl.replace(/\/0$/, '/' + marker.annotation.pk), {}).then(function(){
-                        tags.removeLayer(marker); delete markers[annotation.sample]
+                        tags.removeLayer(marker); delete markers[marker.annotation.sample]
                     }).catch(function(e){ alert(e.message) })
                 }
-                marker.removeButton = remove
-                popup.appendChild(title); popup.appendChild(document.createElement('br')); popup.appendChild(remove)
-                marker.bindPopup(popup)
+                content.appendChild(document.createElement('br')); content.appendChild(remove)
+            }
+            return content
+        }
+        var addMarker = function(annotation){
+            if(markers[annotation.sample]){ tags.removeLayer(markers[annotation.sample]) }
+            var marker = L.marker(toLatLng(annotation.x, annotation.y))
+            marker.annotation = annotation
+            marker.focus = String(annotation.sample) === data.focus
+            marker.setIcon(icon(marker))
+            marker.bindPopup(function(){ return popup(marker) })  // built on opening: results and edit mode
+            if(editable){
                 marker.on('dragend', function(){
                     var position = fromLatLng(marker.getLatLng())
                     post(data.saveUrl, {sample: annotation.sample, x: position.x, y: position.y})
                         .then(function(saved){ marker.annotation = saved; marker.setLatLng(toLatLng(saved.x, saved.y)) })
                         .catch(function(e){ alert(e.message); marker.setLatLng(toLatLng(marker.annotation.x, marker.annotation.y)) })
                 })
-            } else {
-                marker.bindPopup(document.createTextNode(annotation.name))
             }
             marker.addTo(tags)
             setEditable(marker)
             markers[annotation.sample] = marker
-            if(focus){ map.setView(marker.getLatLng(), Math.max(map.getZoom() + 1.5, 0)) }
+            if(marker.focus){ map.setView(marker.getLatLng(), Math.max(map.getZoom() + 1.5, 0)) }
         }
         JSON.parse(data.annotations || '[]').forEach(addMarker)
+
+        // the results: overlay and capture-probe selection, legend of the families
+        var overlaySelect = document.getElementById('annotation-overlay-{{object.pk}}')
+        var probeSelect = document.getElementById('annotation-probe-{{object.pk}}')
+        var probeName = function(){
+            var match = overlay.probes.filter(function(p){ return p.value === probe })[0]
+            return match ? match.name : 'no results'
+        }
+        var legend = L.control({position: 'bottomright'})
+        legend.onAdd = function(){ return L.DomUtil.create('div', 'annotation-legend') }
+        var refresh = function(){
+            Object.values(markers).forEach(function(marker){ marker.setIcon(icon(marker)); setEditable(marker) })
+            map.closePopup()
+            if(!overlay){ legend.remove(); return }
+            legend.addTo(map)
+            var content = legend.getContainer(); content.innerHTML = ''
+            var totals = {}
+            Object.values(overlay.results[probe] || {}).forEach(function(families){
+                Object.keys(families).forEach(function(f){ totals[f] = (totals[f] || 0) + families[f] })
+            })
+            var heading = document.createElement('strong'); heading.textContent = 'Ancient families'
+            content.appendChild(heading)
+            sorted(totals).forEach(function(family){
+                var row = document.createElement('div'), swatch = document.createElement('span')
+                swatch.className = 'swatch'; swatch.style.background = overlay.colors[family]
+                row.appendChild(swatch); row.appendChild(document.createTextNode(family)); content.appendChild(row)
+            })
+            var note = document.createElement('div'); note.className = 'text-gray mt-1'
+            note.innerHTML = '<span class="swatch" style="border: 2px solid #fff; box-shadow: 0 0 2px #000, inset 0 0 2px #000;"></span>no ancient family<br>' +
+                '<span class="swatch" style="background: #9a9a9a;"></span>no results'
+            content.appendChild(note)
+            L.DomEvent.disableScrollPropagation(content); L.DomEvent.disableClickPropagation(content)
+        }
+        var overlayOptions = document.getElementById('annotation-overlay-options-{{object.pk}}')
+        document.getElementById('annotation-size-{{object.pk}}').addEventListener('input', function(){
+            element.style.setProperty('--pie-size', this.value + 'px')
+        })
+        // the sample names can be hidden only with the overlay (without it, the tags are the names)
+        var labels = document.getElementById('annotation-labels-{{object.pk}}')
+        var showLabels = function(){ element.classList.toggle('hide-labels', !!overlaySelect.value && !labels.checked) }
+        labels.addEventListener('change', showLabels)
+        var loadOverlay = function(){
+            overlayOptions.style.display = overlaySelect.value ? 'flex' : 'none'
+            showLabels()
+            if(!overlaySelect.value){ overlay = null; probeSelect.style.display = 'none'; refresh(); return }
+            var current = overlay ? probe : null
+            fetch(data.quicksandUrl).then(function(r){ return r.json() }).then(function(result){
+                overlay = result
+                probeSelect.innerHTML = ''
+                result.probes.forEach(function(p){
+                    var option = document.createElement('option'); option.value = p.value
+                    option.textContent = p.name + ' (' + p.samples + ' sample' + (p.samples === 1 ? '' : 's') + ')'
+                    probeSelect.appendChild(option)
+                })
+                if(!result.probes.length){ probeSelect.innerHTML = '<option>No quicksand results</option>' }
+                // the probe with the most samples first (or the selected probe, after tagging a sample)
+                var values = result.probes.map(function(p){ return p.value })
+                probe = values.indexOf(current) > -1 ? current : (values.length ? values[0] : '')
+                probeSelect.value = probe
+                probeSelect.style.display = ''; probeSelect.disabled = result.probes.length < 2
+                refresh()
+            })
+        }
+        overlaySelect.addEventListener('change', function(){ overlay = null; loadOverlay() })
+        probeSelect.addEventListener('change', function(){ probe = this.value; refresh() })
         if(!editable){ return }
 
         // tagging: the picked sample is placed with the next click on the image
@@ -155,6 +308,11 @@
                     var item = document.createElement('li'); item.className = 'menu-item'
                     var link = document.createElement('a'); link.style.cursor = 'pointer'
                     link.textContent = sample.name + (sample.tagged ? ' (tagged: move)' : '')
+                    if(sample.synonyms.length){
+                        var synonyms = document.createElement('div'); synonyms.className = 'text-gray text-small'
+                        synonyms.textContent = sample.synonyms.join(', ')
+                        link.appendChild(synonyms)
+                    }
                     link.onmousedown = function(e){
                         e.preventDefault()
                         picked = sample; search.value = sample.name; results.style.display = 'none'
@@ -179,7 +337,7 @@
             if(!picked || !editing){ return }
             var position = fromLatLng(e.latlng)
             post(data.saveUrl, {sample: picked.pk, x: position.x, y: position.y})
-                .then(function(saved){ addMarker(saved); reset() })
+                .then(function(saved){ addMarker(saved); reset(); if(overlay){ loadOverlay() } })
                 .catch(function(err){ alert(err.message) })
         })
     }
