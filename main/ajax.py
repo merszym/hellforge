@@ -59,6 +59,11 @@ def get_modal_context(object, request):
                 "selected_project_tags": object.project_tags.filter(project=project).values_list("pk", flat=True),
             })
 
+    # the samples tagged on an image (viewer in image_modal.html)
+    if object.model == "image" and context["type"] == "display":
+        from main.tools.annotations import image_annotations
+        context.update({"annotations": image_annotations(object), "batch": getattr(object.gallery, "sample_batch", None)})
+
     # Add sample edit context
     if object.model == "sample":
         if context["type"] == "dates_list":

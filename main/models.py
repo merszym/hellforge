@@ -118,6 +118,27 @@ class Image(models.Model):
         return "image"
 
 
+class ImageAnnotation(models.Model):
+    """
+    a sample tagged on an image (e.g. a photo of a sample batch): the position relative to the image
+    (x: 0 = left, 1 = right, y: 0 = top, 1 = bottom), so it does not depend on the resolution
+    """
+    image = models.ForeignKey("Image", verbose_name="image", related_name="annotations", on_delete=models.CASCADE)
+    sample = models.ForeignKey("Sample", verbose_name="sample", related_name="image_annotations", on_delete=models.CASCADE)
+    x = models.FloatField("x")
+    y = models.FloatField("y")
+
+    class Meta:
+        constraints = [
+            # a sample is tagged once per image
+            models.UniqueConstraint(fields=["image", "sample"], name="unique_imageannotation"),
+            models.CheckConstraint(check=Q(x__gte=0, x__lte=1, y__gte=0, y__lte=1), name="imageannotation_relative_position"),
+        ]
+
+    def __str__(self):
+        return f"{self.sample} on {self.image}"
+
+
 class Gallery(models.Model):
     title = models.CharField("title", max_length=200, blank=True, null=True)
     description = models.OneToOneField(

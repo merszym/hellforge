@@ -523,7 +523,7 @@ SAMPLE_ROW_RELATED = [
     "sample__date_upper", "sample__date_lower", "sample__layer__date_upper", "sample__layer__date_lower",
     "layer__culture", "layer__layer", "layer__date_upper", "layer__date_lower",
 ]
-SAMPLE_ROW_PREFETCH = ["project", "synonyms", "date", "sample__date", "layer__date", "sample__layer__date"]
+SAMPLE_ROW_PREFETCH = ["project", "synonyms", "date", "sample__date", "layer__date", "sample__layer__date", "image_annotations"]
 
 
 def sample_synonym_types(samples_qs):

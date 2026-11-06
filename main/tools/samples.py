@@ -4,6 +4,7 @@ from main.forms import SampleBatchForm
 from django.http import JsonResponse
 from django.urls import path
 from django.shortcuts import render
+from django.template.loader import render_to_string
 from main.tools.generic import get_instance_from_string
 import main.tools as tools
 from django.db.models import Q
@@ -48,6 +49,8 @@ def handle_galleryimage_upload(request, file):
         "file": {
             "url": url,
         },
+        # the gallery-tile of the image: added to the sample-batch gallery without reloading the page
+        "html": render_to_string("main/samples/gallery-image.html", {"image": image}, request=request) if image.pk else "",
     }
     return JsonResponse(res)
 

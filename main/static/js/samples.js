@@ -1,5 +1,6 @@
 //Add image to a sample-batch-gallery
 $('body').on('click','.add_samplebatch_image',function(){
+    var button = this
     var url = $(this).attr('data-url')
     var fileinput = $('<input>').attr({
             type: 'file',
@@ -21,9 +22,11 @@ $('body').on('click','.add_samplebatch_image',function(){
                 processData: false,
                 contentType: false,
                 data: form_data
-                }).done(function(){
-                    //#TODO: update the gallery...
-                    location.reload()
+                }).done(function(response){
+                    // add the new image in front of the "Add Image" tile (no reload)
+                    var image = $(response.html.trim())
+                    $(button).closest('.empty').before(image)
+                    htmx.process(image.get(0))
                 });
         }
     });

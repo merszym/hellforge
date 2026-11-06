@@ -6,13 +6,185 @@
 {#   DISPLAY MODAL   #}
 {# ----------------- #}
 
+<!-- the image with the tagged samples (leaflet: zoom, pan, markers). positions are relative to the image (0-1) -->
 <div id="modal_image_{{object.pk}}" class="modal modal-lg active" style="z-index: 1000">
     <a style="cursor:pointer;" class="modal-overlay modal_close" aria-label="Close"></a>
-    <div class="modal-container" style="overflow: scroll;">
-        <img class="modal_close" src="{{object.image.url}}" style="width:900px; cursor:pointer;" />
-        <input type="text" value="{{object.alt}}" style="width:900px;" />
+    <!-- fixed height, the modal itself does not scroll: the map takes the remaining space (zoom and pan inside the map) -->
+    <div class="modal-container" style="max-width: 92vw; width: 92vw; height: 92vh; max-height: 92vh; display: flex; flex-direction: column;">
+        <div class="modal-header">
+            <a class="btn btn-clear float-right modal_close" aria-label="Close" style="cursor: pointer;"></a>
+            <div class="modal-title h5">{{object.title|default:"Image"}}{% if batch %} <small class="text-gray">({{batch.name}})</small>{% endif %}</div>
+            <!-- show/hide the tags; editing (tag, move, remove) only after switching on "Edit" -->
+            <div class="mt-1">
+                <label class="form-switch form-inline">
+                    <input type="checkbox" id="annotation-show-{{object.pk}}" checked><i class="form-icon"></i> Show tags
+                </label>
+                {% if request.user.is_authenticated and batch %}
+                <label class="form-switch form-inline ml-2">
+                    <input type="checkbox" id="annotation-edit-{{object.pk}}"><i class="form-icon"></i> Edit
+                </label>
+                {% endif %}
+            </div>
+        </div>
+        <div class="modal-body" style="flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column;">
+            {% if request.user.is_authenticated and batch %}
+            <!-- tagging: pick a sample of the batch, then click on its position in the image -->
+            <div class="annotation-tools" id="annotation-tools-{{object.pk}}" style="position: relative; max-width: 30rem; display: none;">
+                <div class="input-group">
+                    <span class="input-group-addon">Tag sample</span>
+                    <input class="form-input" type="text" id="annotation-search-{{object.pk}}" placeholder="Sample of {{batch.name}} (type to search)" autocomplete="off">
+                </div>
+                <ul class="menu annotation-results" id="annotation-results-{{object.pk}}" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 2000; max-height: 260px; overflow-y: auto;"></ul>
+                <p class="form-input-hint" id="annotation-hint-{{object.pk}}">Pick a sample, then click on its position in the image. Markers can be moved by dragging.</p>
+            </div>
+            {% endif %}
+            <div id="annotation-map-{{object.pk}}" style="flex: 1; min-height: 0; background: #f1f1f1;"
+                data-image="{{object.image.url}}"
+                data-annotations="{{annotations}}"
+                data-editable="{% if request.user.is_authenticated and batch %}1{% endif %}"
+                data-focus="{{request.GET.focus|default:''}}"
+                data-save-url="{% url 'main_annotation_save' object.pk %}"
+                data-delete-url="{% url 'main_annotation_delete' 0 %}"
+                data-search-url="{% url 'main_annotation_samples' object.pk %}"></div>
+            {% if object.alt %}<p class="text-small text-gray mt-1">{{object.alt}}</p>{% endif %}
+        </div>
     </div>
 </div>
+<style>
+    .annotation-marker { background: none; border: none; }
+    .annotation-marker .dot { position: absolute; left: -6px; top: -6px; width: 12px; height: 12px; border-radius: 50%;
+        background: #5755d9; border: 2px solid #fff; box-shadow: 0 0 2px rgba(0,0,0,.6); }
+    .annotation-marker .label { position: absolute; left: 9px; top: -10px; white-space: nowrap; font-size: .7rem; font-weight: 600;
+        background: rgba(255,255,255,.85); padding: 0 .25rem; border-radius: .15rem; }
+    .annotation-marker.focus .dot { background: #e85600; width: 18px; height: 18px; left: -9px; top: -9px; }
+</style>
+<script>
+(function(){
+    var element = document.getElementById('annotation-map-{{object.pk}}')
+    var data = element.dataset, editable = data.editable === '1', editing = false
+    var csrf = {'X-CSRFToken': '{{ csrf_token }}'}
+    var picture = new window.Image()
+    picture.onload = function(){
+        var w = picture.naturalWidth, h = picture.naturalHeight
+        var bounds = [[0, 0], [h, w]]
+        // keyboard: false - focusing the map on the first click scrolls the modal (the click then misses the marker)
+        var map = L.map(element, {crs: L.CRS.Simple, minZoom: -6, maxZoom: 3, zoomSnap: 0.25, attributionControl: false, keyboard: false})
+        L.imageOverlay(data.image, bounds).addTo(map)
+        map.fitBounds(bounds)
+        // relative position (x: left-right, y: top-bottom, 0-1) <-> leaflet coordinates (y from the bottom)
+        var toLatLng = function(x, y){ return [h * (1 - y), w * x] }
+        var fromLatLng = function(ll){
+            var clamp = function(v){ return Math.min(1, Math.max(0, v)) }
+            return {x: clamp(ll.lng / w), y: clamp(1 - ll.lat / h)}
+        }
+        var markers = {}  // sample-pk -> marker
+        var tags = L.layerGroup().addTo(map)
+        document.getElementById('annotation-show-{{object.pk}}').addEventListener('change', function(){
+            this.checked ? tags.addTo(map) : map.removeLayer(tags)
+        })
+        // markers can only be moved (and removed) in edit mode
+        var setEditable = function(marker){
+            marker.options.draggable = editing
+            if(marker.dragging){ editing ? marker.dragging.enable() : marker.dragging.disable() }
+            if(marker.removeButton){ marker.removeButton.style.display = editing ? '' : 'none' }
+        }
+        var post = function(url, values){
+            var body = new URLSearchParams(values)
+            return fetch(url, {method: 'POST', body: body, headers: csrf}).then(function(response){
+                if(!response.ok){ return response.text().then(function(text){ throw new Error(text) }) }
+                return response.json()
+            })
+        }
+        var icon = function(name, focus){
+            var label = document.createElement('span'); label.className = 'label'; label.textContent = name
+            return L.divIcon({className: 'annotation-marker' + (focus ? ' focus' : ''), html: '<span class="dot"></span>' + label.outerHTML, iconSize: [0, 0]})
+        }
+        var addMarker = function(annotation){
+            if(markers[annotation.sample]){ tags.removeLayer(markers[annotation.sample]) }
+            var focus = String(annotation.sample) === data.focus
+            var marker = L.marker(toLatLng(annotation.x, annotation.y), {icon: icon(annotation.name, focus)})
+            marker.annotation = annotation
+            if(editable){
+                var popup = document.createElement('div')
+                var title = document.createElement('strong'); title.textContent = annotation.name
+                var remove = document.createElement('button'); remove.className = 'btn btn-sm btn-error mt-1'; remove.textContent = 'Remove'
+                remove.onclick = function(){
+                    post(data.deleteUrl.replace(/\/0$/, '/' + marker.annotation.pk), {}).then(function(){
+                        tags.removeLayer(marker); delete markers[annotation.sample]
+                    }).catch(function(e){ alert(e.message) })
+                }
+                marker.removeButton = remove
+                popup.appendChild(title); popup.appendChild(document.createElement('br')); popup.appendChild(remove)
+                marker.bindPopup(popup)
+                marker.on('dragend', function(){
+                    var position = fromLatLng(marker.getLatLng())
+                    post(data.saveUrl, {sample: annotation.sample, x: position.x, y: position.y})
+                        .then(function(saved){ marker.annotation = saved; marker.setLatLng(toLatLng(saved.x, saved.y)) })
+                        .catch(function(e){ alert(e.message); marker.setLatLng(toLatLng(marker.annotation.x, marker.annotation.y)) })
+                })
+            } else {
+                marker.bindPopup(document.createTextNode(annotation.name))
+            }
+            marker.addTo(tags)
+            setEditable(marker)
+            markers[annotation.sample] = marker
+            if(focus){ map.setView(marker.getLatLng(), Math.max(map.getZoom() + 1.5, 0)) }
+        }
+        JSON.parse(data.annotations || '[]').forEach(addMarker)
+        if(!editable){ return }
 
+        // tagging: the picked sample is placed with the next click on the image
+        var tools = document.getElementById('annotation-tools-{{object.pk}}')
+        document.getElementById('annotation-edit-{{object.pk}}').addEventListener('change', function(){
+            editing = this.checked
+            tools.style.display = editing ? '' : 'none'
+            map.invalidateSize()  // the tools change the height of the map
+            if(!editing){ reset(); map.closePopup() }
+            Object.values(markers).forEach(setEditable)
+        })
+        var search = document.getElementById('annotation-search-{{object.pk}}')
+        var results = document.getElementById('annotation-results-{{object.pk}}')
+        var hint = document.getElementById('annotation-hint-{{object.pk}}')
+        var picked = null, timer = null, latest = 0
+        var showResults = function(){
+            var request = ++latest
+            fetch(data.searchUrl + '?q=' + encodeURIComponent(search.value)).then(function(r){ return r.json() }).then(function(samples){
+                if(request !== latest){ return }  // a newer search is running
+                results.innerHTML = ''
+                samples.forEach(function(sample){
+                    var item = document.createElement('li'); item.className = 'menu-item'
+                    var link = document.createElement('a'); link.style.cursor = 'pointer'
+                    link.textContent = sample.name + (sample.tagged ? ' (tagged: move)' : '')
+                    link.onmousedown = function(e){
+                        e.preventDefault()
+                        picked = sample; search.value = sample.name; results.style.display = 'none'
+                        hint.textContent = 'Click on the position of ' + sample.name + ' in the image (Escape: cancel)'
+                        element.style.cursor = 'crosshair'
+                    }
+                    item.appendChild(link); results.appendChild(item)
+                })
+                if(!samples.length){ results.innerHTML = '<li class="menu-item text-gray">No sample of this batch</li>' }
+                results.style.display = 'block'
+            })
+        }
+        var reset = function(){
+            picked = null; search.value = ''; element.style.cursor = ''
+            hint.textContent = 'Pick a sample, then click on its position in the image. Markers can be moved by dragging.'
+        }
+        search.addEventListener('input', function(){ picked = null; clearTimeout(timer); timer = setTimeout(showResults, 200) })
+        search.addEventListener('focus', showResults)
+        search.addEventListener('blur', function(){ setTimeout(function(){ results.style.display = 'none' }, 150) })
+        search.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ reset(); e.stopPropagation() } })
+        map.on('click', function(e){
+            if(!picked || !editing){ return }
+            var position = fromLatLng(e.latlng)
+            post(data.saveUrl, {sample: picked.pk, x: position.x, y: position.y})
+                .then(function(saved){ addMarker(saved); reset() })
+                .catch(function(err){ alert(err.message) })
+        })
+    }
+    picture.src = data.image
+})()
+</script>
 
 {% endif %}

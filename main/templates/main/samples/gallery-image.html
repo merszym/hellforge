@@ -1,0 +1,20 @@
+{# an image of a sample-batch gallery (also returned after uploading an image, see samples.js) #}
+<div id="image_container_{{image.pk}}" style="position: relative">
+    <img src="{{image.image.url}}" style="height: 300px;"  class="modal_open" data-open="modal_image_{{image.pk}}"
+        hx-get="{% url 'main_modal_get' %}"
+        hx-vals='{"object":"image_{{image.pk}}", "type":"display"}'
+        hx-target="#modal-blank"/>
+    {# and the delete button #}
+    <span class="btn tooltip tooltip-left generic_delete"
+        hx-post="{% url 'main_generic_delete' %}"
+        hx-vals='{
+            "instance_x": "image_{{image.pk}}"
+        }'
+        hx-swap="none"
+        hx-confirm="Are you sure?"
+        data-hide="image_container_{{image.pk}}"
+        data-tooltip="Remove Image from Gallery"
+        style="position: absolute; top:5px; right:5px">
+        <i class="icon icon-delete"></i>
+    </span>
+</div>
