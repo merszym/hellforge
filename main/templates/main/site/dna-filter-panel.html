@@ -15,6 +15,16 @@
             hx-target="#dna-filters-samples">Reset all</button>
     </div>
 
+    {% if request.user.is_authenticated and request.session.session_project %}
+    <!-- admins: hide the samples and libraries that are not in the project (on by default) -->
+    <h6 class="dna-filter-heading">Project</h6>
+    <input type="hidden" name="_fields" value="in_project">
+    <label class="chip-toggle" title="Only samples and libraries of the active project">
+        <input type="checkbox" name="in_project" {% if not request.session.filter_all_projects %}checked{% endif %}>
+        <span class="chip">In project only</span>
+    </label>
+    {% endif %}
+
     <h6 class="dna-filter-heading">Samples</h6>
     <div class="form-group">
         <label class="form-label" for="dna-filter-layer">Layer</label>
@@ -188,12 +198,10 @@
             <input type="hidden" name="_fields" value="ned_fampercent">
             <input class="form-input input-sm dna-live" type="text" inputmode="decimal" name="ned_fampercent" id="ned-fampercent" value="{{settings.fampercent}}">
         </div>
-        {% endif %}
-        {% if request.user.is_authenticated %}
-        <input type="hidden" name="_fields" value="{{prefix}}_only_project">
+        <input type="hidden" name="_fields" value="ned_tableview">
         <label class="chip-toggle">
-            <input type="checkbox" name="{{prefix}}_only_project" {% if settings.only_project %}checked{% endif %}>
-            <span class="chip">In Project</span>
+            <input type="checkbox" name="ned_tableview" {% if settings.tableview %}checked{% endif %}>
+            <span class="chip">Table-View</span>
         </label>
         {% endif %}
     </div>

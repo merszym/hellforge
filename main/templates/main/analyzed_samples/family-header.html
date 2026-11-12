@@ -1,0 +1,21 @@
+{% comment %}the grouped header of the table-view of quicksand and NED-Flow (as the faunal table): include in the thead with
+   header_rows (group, order), lead=number of columns before the families. the family-cells use ned-sep-{{column.sep}}{% endcomment %}
+<style>
+    /* the separators where a family, order or the group (mammals, non-mammals) starts.
+       separate borders: with collapsed borders, the lines of the sticky header scroll away with the rows */
+    .ned-table { border-collapse: separate; border-spacing: 0; }
+    .ned-sep-family { border-left: 1px solid #e7e9ed; }
+    .ned-sep-order { border-left: 2px solid #9aa0ac; padding-left: 1rem !important; }
+    .ned-sep-group { border-left: 3px solid #3b4351; padding-left: 1.2rem !important; }
+    .ned-header-group th { font-size: 1.05rem; }
+    .ned-header-order th { font-weight: 600; color: #5b657a; }
+</style>
+<!-- mammals/non-mammals and the orders, merged over their families -->
+{% for row in header_rows %}
+<tr class="ned-header-{% if forloop.first %}group{% else %}order{% endif %}">
+    <td colspan="{{lead}}"></td>
+    {% for cell in row %}
+    <th colspan="{{cell.colspan}}" class="ned-sep-{{cell.sep}}" nowrap>{{cell.label}}</th>
+    {% endfor %}
+</tr>
+{% endfor %}

@@ -7,7 +7,8 @@
     .dna-layout.filters-open .dna-sidebar .dna-sidebar-body { display: block; }
     .dna-sidebar-toggle { margin-bottom: .4rem; }
     #dna-filter-count:empty { display: none; }
-    .dna-main { flex: 1 1 auto; min-width: 0; }
+    /* no browser scroll-anchoring: the view is held by dnaKeepAnchor (the browser anchors on elements that are replaced) */
+    .dna-main { flex: 1 1 auto; min-width: 0; overflow-anchor: none; }
     .dna-filter-heading { margin: .8rem 0 .3rem 0; border-bottom: 1px solid #dadee4; padding-bottom: .1rem; }
     #dna-filter-form .form-group { margin-bottom: .4rem; }
     #dna-filter-form .chip-toggle { margin: .1rem; }
@@ -117,4 +118,49 @@
             delete e.target.dataset.stale
         }
     })
+
+    // keep the view in place while the sections reload after a filter change (otherwise the sections above
+    // shrink/grow and the view jumps; the scroll-anchoring of the browsers does not catch that, Safari has none).
+    // anchor: the last heading/container (not replaced by the reloads) at the top of the view.
+    // it is kept at its position until the user scrolls, or all reloads are done and nothing changed for a few seconds
+    var dnaAnchor = null
+    function dnaSetAnchor(){
+        var candidates = Array.prototype.filter.call(
+            document.querySelectorAll('#site_sample_content > section > h3, #site_sample_content > section > .filter-bar, #dna-batches, #show_libraries, .dna-analysis-panel'),
+            function(el){ return el.offsetParent !== null })
+        var anchor = null
+        candidates.forEach(function(el){ if(el.getBoundingClientRect().top <= 10){ anchor = el } })
+        anchor = anchor || candidates[0]
+        dnaAnchor = anchor ? {el: anchor, top: anchor.getBoundingClientRect().top, until: Date.now() + 3000, pending: 0, started: Date.now()} : null
+    }
+    function dnaKeepAnchor(){
+        if(!dnaAnchor){ return }
+        var expired = (dnaAnchor.pending <= 0 && Date.now() > dnaAnchor.until) || Date.now() - dnaAnchor.started > 60000
+        if(expired || !document.body.contains(dnaAnchor.el)){ dnaAnchor = null; return }
+        var delta = dnaAnchor.el.getBoundingClientRect().top - dnaAnchor.top
+        if(Math.abs(delta) > 1){ window.scrollBy(0, delta) }
+    }
+    var filterUrl = "{% url 'main_dna_filters_update' object.pk %}"
+    // the reloads (htmx requests) while the view is held: held at least until they are all done (slow tables)
+    $(document.body).off('htmx:beforeRequest.dnaanchor').on('htmx:beforeRequest.dnaanchor', function(e){
+        if(e.originalEvent.detail.requestConfig.path.split('?')[0] === filterUrl){ dnaSetAnchor() }
+        if(dnaAnchor){ dnaAnchor.pending++ }
+    })
+    $(document.body).off('htmx:afterRequest.dnaanchor').on('htmx:afterRequest.dnaanchor', function(){
+        if(dnaAnchor){ dnaAnchor.pending--; dnaAnchor.until = Date.now() + 3000 }
+    })
+    // right after the swap (before the browser paints, no flicker) and whenever the size of the content changes
+    // (resize-observer: also after the swap, e.g. images, charts, nested loads)
+    $(document.body).off('htmx:afterSwap.dnaanchor htmx:afterSettle.dnaanchor').on('htmx:afterSwap.dnaanchor htmx:afterSettle.dnaanchor', dnaKeepAnchor)
+    if(window.ResizeObserver){
+        if(window.dnaResizeObserver){ window.dnaResizeObserver.disconnect() }
+        window.dnaResizeObserver = new ResizeObserver(dnaKeepAnchor)
+        window.dnaResizeObserver.observe(document.getElementById('site_sample_content'))
+    }
+    // the user scrolls: stop holding the view
+    $(window).off('wheel.dnaanchor touchmove.dnaanchor keydown.dnaanchor mousedown.dnaanchor')
+        .on('wheel.dnaanchor touchmove.dnaanchor', function(){ dnaAnchor = null })
+        .on('keydown.dnaanchor mousedown.dnaanchor', function(e){
+            if(!(e.target.closest && e.target.closest('#dna-filter-panel'))){ dnaAnchor = null }
+        })
 </script>

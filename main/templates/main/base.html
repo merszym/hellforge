@@ -17,7 +17,9 @@
     <style>
         /* boolean filters: a checkbox displayed as a clickable chip
            <label class="chip-toggle"><input type="checkbox" ...><span class="chip">Label</span></label> */
-        .chip-toggle { display: inline-flex; align-items: center; margin: 0 .1rem; }
+        /* relative: the hidden checkbox stays within the chip. otherwise (e.g. in the scrolled filter-panel) it is placed
+           elsewhere on the page and the browser scrolls there when it gets the focus (click on the chip) */
+        .chip-toggle { display: inline-flex; align-items: center; margin: 0 .1rem; position: relative; }
         .chip-toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
         .chip-toggle .chip { height: 1.8rem; margin: 0; padding: .2rem .6rem; cursor: pointer; user-select: none; }
         .chip-toggle .chip:hover { background: #e0e2ea; }

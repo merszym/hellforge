@@ -145,11 +145,12 @@ def filter_missing_analyses(request, query):
 
 
 def filter_libraries(request, query):
+    from main.tools.dna_filters import project_only
     if not request.user.is_authenticated:
-        from main.tools.projects import get_project
-
-        project = get_project(request)
-        query = query.filter(project=project, qc_pass=True)
+        query = query.filter(project=project_only(request), qc_pass=True)
+    elif project := project_only(request):
+        # logged in, 'In project only' (default)
+        query = query.filter(project=project)
 
     if 'filter_probe' in request.session:
         # several probes can be selected
@@ -229,11 +230,14 @@ def get_libraries(request, pk, return_query=False):
    
     query = filter_libraries(request, analyzed_samples)
 
+    # the controls of all projects only for logged-in users without 'In project only'
+    from main.tools.dna_filters import project_only
+    all_controls = request.user.is_authenticated and not project_only(request)
     try:
         if not request.session['filter_controls']:
-            query = update_query_for_negatives(query, project=project, authenticated=request.user.is_authenticated)
+            query = update_query_for_negatives(query, project=project, authenticated=all_controls)
     except KeyError:
-        query = update_query_for_negatives(query, project=project, authenticated=request.user.is_authenticated)
+        query = update_query_for_negatives(query, project=project, authenticated=all_controls)
 
     # load the sample/layer information in bulk instead of per row
     query = sort_libraries(request, query.select_related(*LIBRARY_LAYER_RELATED), object)

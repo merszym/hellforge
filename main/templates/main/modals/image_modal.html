@@ -25,7 +25,7 @@
                 </label>
                 {% endif %}
                 <select class="form-select select-sm" id="annotation-overlay-{{object.pk}}" style="width: auto;">
-                    <option value="">Results: none</option>
+                    <option value="">Samples</option>
                     <option value="quicksand">Quicksand: ancient families</option>
                 </select>
                 <select class="form-select select-sm" id="annotation-probe-{{object.pk}}" style="width: auto; display: none;" title="Capture probe"></select>
@@ -57,6 +57,8 @@
                 data-annotations="{{annotations}}"
                 data-editable="{% if request.user.is_authenticated and batch %}1{% endif %}"
                 data-focus="{{request.GET.focus|default:''}}"
+                data-overlay="{{request.GET.overlay|default:''}}"
+                data-probe="{{request.GET.probe|default:''}}"
                 data-save-url="{% url 'main_annotation_save' object.pk %}"
                 data-delete-url="{% url 'main_annotation_delete' 0 %}"
                 data-search-url="{% url 'main_annotation_samples' object.pk %}"
@@ -264,7 +266,8 @@
             overlayOptions.style.display = overlaySelect.value ? 'flex' : 'none'
             showLabels()
             if(!overlaySelect.value){ overlay = null; probeSelect.style.display = 'none'; refresh(); return }
-            var current = overlay ? probe : null
+            // the selected probe (after tagging a sample) or the one requested on opening (?probe=, e.g. from the quicksand table)
+            var current = overlay ? probe : (data.probe || null)
             fetch(data.quicksandUrl).then(function(r){ return r.json() }).then(function(result){
                 overlay = result
                 probeSelect.innerHTML = ''
@@ -282,7 +285,11 @@
                 refresh()
             })
         }
-        overlaySelect.addEventListener('change', function(){ overlay = null; loadOverlay() })
+        overlaySelect.addEventListener('change', function(){ overlay = null; data.probe = ''; loadOverlay() })
+        // opened with the results shown (?overlay=quicksand, e.g. from the quicksand table)
+        if(data.overlay && overlaySelect.querySelector('option[value="' + data.overlay + '"]')){
+            overlaySelect.value = data.overlay; loadOverlay()
+        }
         probeSelect.addEventListener('change', function(){ probe = this.value; refresh() })
         if(!editable){ return }
 

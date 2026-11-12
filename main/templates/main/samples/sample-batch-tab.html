@@ -64,6 +64,17 @@
         </span>
         {% endif %}
     </div>
+    {% if batch_projects %}
+    <!-- the projects the samples of the batch are used in: click to switch to the project (back to this DNA tab) -->
+    <div class="mt-1">
+        <small class="text-gray">Projects:</small>
+        {% for project, count, label in batch_projects %}
+        <a class="chip {% if project.namespace == request.session.session_project %}active{% endif %}"
+            href="{% url 'main_project_checkout' project.namespace %}?goto_site={{object.site.pk}}&tab=site_samples"
+            title="Switch to {{project.name}}">{{label}} ({{count}})</a>
+        {% endfor %}
+    </div>
+    {% endif %}
     {% if object.gallery.image.first or request.user.is_authenticated %}
     <div style="display: none;" id="gallery-{{object.pk}}">
         <h4>Gallery</h4>

@@ -121,7 +121,7 @@ def handle_quicksand_report(request, file):
     )
 
 
-# the colors of these families are the same in all tables and charts (quicksand tab, image overlay)
+# the colors of these (mammalian) families are the same in all tables and charts (quicksand, NED-Flow, image overlay)
 FAMILY_COLORS = {
     "Bovidae": "#f5deb6",
     "Cervidae": "#88cefa",
@@ -376,7 +376,7 @@ def table_rows(request, site):
     #order by analyzed sample to match the order of the table above the quicksand tab
     query = QuicksandAnalysis.objects.filter(analyzedsample__in=analyzed_samples).select_related(
         *[f'analyzedsample__{x}' for x in LIBRARY_LAYER_RELATED]
-    )
+    ).prefetch_related("analyzedsample__sample__image_annotations")  # the images the sample is tagged on (eye-icon)
     # the same order as the library-table
     query = sort_libraries(request, query, site, prefix="analyzedsample__")
 
@@ -404,6 +404,10 @@ def get_quicksand_tab(request, pk):
     context = {"object": site, "probe_names": probe_translations()}
 
     context.update(table_rows(request, site))
+    if context["tableview"]:
+        # the family-columns grouped by mammals/non-mammals and order (as in NED-Flow and the faunal table)
+        from main.tools.nedflow import table_columns
+        context["table_columns"], context["header_rows"] = table_columns(context["colors"], context["quicksand_results"])
 
     # only the rows of the table are paginated, the colors etc. are calculated from all rows
     context.update(paginate_rows(request, context["object_list"]))

@@ -12,6 +12,7 @@ from main.tools.generic import get_instance_from_string
 from main.tools.projects import get_project
 from main.tools.analyzed_samples import update_query_for_negatives, get_libraries, LIBRARY_LAYER_RELATED, probe_translations, paginate_rows, sort_libraries
 from main.tools.dna_filters import get_analysis_settings
+from main.tools.quicksand import FAMILY_COLORS
 from main.models import NedflowAnalysis, AnalyzedSample, Site, Taxonomy
 import re
 import json
@@ -161,6 +162,44 @@ def handle_nedflow_report(request, file):
     )
 
 
+def table_columns(colors, results):
+    """
+    the family-columns of the table-view (as the faunal table): mammals / non-mammals / unknown order -> order -> family,
+    within an order the families by abundance (all rows). with the separators where a group or order starts and
+    the header rows (group, order) with the merged cells
+    """
+    orders = get_family_orders()
+    groups = ["Mammals", "Non-mammals", UNKNOWN_ORDER]
+    totals = defaultdict(int)
+    for families in results.values():
+        for family, value in families.items():
+            totals[family] += value["raw"]
+
+    def position(family):
+        order = orders.get(family)
+        if not order or order == "Unassigned":
+            return (2, "")
+        return (0 if order in MAMMALIAN_ORDERS else 1, order)
+
+    columns, previous = [], None
+    for family, color in sorted(colors, key=lambda x: (position(x[0]), -totals[x[0]], x[0])):
+        current = position(family)
+        level = "group" if previous is None else ("group" if current[0] != previous[0] else ("order" if current != previous else "family"))
+        columns.append({"family": family, "color": color, "group": groups[current[0]], "order": current[1], "sep": level, "key": current})
+        previous = current
+
+    def header_row(label, length):
+        cells = []
+        for column in columns:
+            if cells and cells[-1]["value"] == column["key"][:length]:
+                cells[-1]["colspan"] += 1
+            else:
+                cells.append({"value": column["key"][:length], "label": column[label], "colspan": 1, "sep": column["sep"]})
+        return cells
+
+    return columns, [header_row("group", 1), header_row("order", 2)]
+
+
 def prepare_data(
     request,
     query,
@@ -168,7 +207,8 @@ def prepare_data(
     positives=False,
     only_project=True,
     fampercent=1,
-    families_selected=None
+    families_selected=None,
+    tableview=False,
 ):
     nested_dict = lambda: defaultdict(nested_dict)
     results = nested_dict()
@@ -247,12 +287,11 @@ def prepare_data(
     # build the family list / colors only from families that survived
     families = {f for entry in results for f in results[entry]}
 
-    colors = list(
-        zip(
-            sorted(families),
-            sns.color_palette("husl", len(families)).as_hex(),
-        )
-    )
+    # the mammalian families have the same colors as in quicksand, the others stay in the husl palette
+    colors = [
+        (family, FAMILY_COLORS.get(family, color))
+        for family, color in zip(sorted(families), sns.color_palette("husl", len(families)).as_hex())
+    ]
     # selected families without (filtered) results stay in the legend (grey), so they can be deselected
     colors += [(family, "#bbbbbb") for family in families_selected or [] if family not in families]
     legend_groups, known_orders = group_families(colors)
@@ -276,6 +315,7 @@ def prepare_data(
         "positives": positives,
         "only_project": only_project,
         "fampercent": fampercent,
+        "tableview": tableview,
         "families_selected": families_selected,
         "legend_groups": legend_groups,
         "unknown_families": dict(legend_groups).get(UNKNOWN_ORDER, []),
@@ -308,6 +348,7 @@ def table_rows(request, site):
         only_project=settings["only_project"],
         fampercent=settings["fampercent"],
         families_selected=settings["family"],
+        tableview=settings["tableview"],
     )
 
 
@@ -319,6 +360,8 @@ def get_nedflow_tab(request, pk):
     context = {"object": site, "probe_names": probe_translations()}
 
     context.update(table_rows(request, site))
+    if context["tableview"]:
+        context["table_columns"], context["header_rows"] = table_columns(context["colors"], context["quicksand_results"])
 
     # only the rows of the table are paginated, the colors etc. are calculated from all rows
     context.update(paginate_rows(request, context["object_list"]))

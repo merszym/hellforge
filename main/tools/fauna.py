@@ -244,7 +244,7 @@ def get_fauna_tab(request, pk, by_layer=True):
                 current = (group_of(family), family_order.get(family), family, key)
                 level = next((n for n in range(4) if current[n] != previous[n]), None)
                 columns.append({"key": key, "var": var, "family": family,
-                                "sep": ["group", "order", "family", "species"][level] if level is not None and columns else ""})
+                                "sep": "group" if not columns else (["group", "order", "family", "species"][level] if level is not None else "")})
                 previous = current
 
     # the header rows: consecutive columns with the same group/order/family/species are merged (colspan)

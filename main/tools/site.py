@@ -35,7 +35,7 @@ from django.contrib.auth.mixins import (
 from django.contrib.auth.decorators import (
     login_required,
 )  # this is for now, make smarter later
-from collections import defaultdict
+from collections import Counter, defaultdict
 from django.shortcuts import get_object_or_404
 from main.views import ProjectAwareListView, ProjectAwareDetailView
 from main.tools.generic import (
@@ -557,6 +557,30 @@ def sample_row_context(request, sample):
     }
 
 
+def batch_projects(batch):
+    """
+    the projects the samples of a batch are used in (the samples or their libraries are in the project),
+    with the number of samples and a short label (published: the rendered reference, e.g. 'Braadbaart et al. 2020', otherwise the name, max. 30 chars),
+    the most samples first
+    """
+    pairs = set(Sample.objects.filter(batch=batch, project__isnull=False).values_list("project", "pk")) | set(
+        AnalyzedSample.objects.filter(sample__batch=batch, project__isnull=False).values_list("project", "sample")
+    )
+    counts = Counter(project for project, sample in pairs)
+    projects = Project.objects.prefetch_related("ref").in_bulk(counts.keys())
+
+    def label(project):
+        refs = [ref.parsedInline or ref.short for ref in project.ref.all() if ref.parsedInline or ref.short]
+        if project.published and refs:
+            return refs[0]
+        return project.name if len(project.name) <= 30 else project.name[:29] + "…"
+
+    return sorted(
+        [(projects[pk], n, label(projects[pk])) for pk, n in counts.items()],
+        key=lambda entry: (-entry[1], entry[0].name),
+    )
+
+
 def get_site_samplebatch_tab(request, pk):
     from main.tools.samplebatch import filter_samples
     # if pk=0, means we want to have all the batches from the site (that we are allowed to see)
@@ -566,6 +590,8 @@ def get_site_samplebatch_tab(request, pk):
         batch = SampleBatch.objects.select_related('site').get(pk=pk)
         samples_qs = batch.sample.all()
         context = {"object": batch}
+        if request.user.is_authenticated:
+            context["batch_projects"] = batch_projects(batch)
     else:
         site = get_instance_from_string(request.GET.get('object'))
         samples_qs = Sample.objects.filter(site=site, domain='mpi_eva').order_by('name')

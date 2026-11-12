@@ -19,6 +19,8 @@ from main.tools.projects import get_project
 
 # field in the filter-form -> session-keys (the first one holds the value)
 SAMPLE_FIELDS = {
+    # logged-in users: only samples/libraries of the project (default), the key is set when switched off
+    "in_project": ["filter_all_projects"],
     "layer": ["filter_layer_pk", "filter_layer_name"],
     "culture": ["filter_culture"],
     "batch": ["filter_batch_pk", "filter_batch_name"],
@@ -36,7 +38,7 @@ LIBRARY_FIELDS = {
     "sort": ["filter_sort"],
 }
 # the filters for admins only (logged-in users)
-ADMIN_FIELDS = ["no_layer", "missing"]
+ADMIN_FIELDS = ["no_layer", "missing", "in_project"]
 
 # the settings of the analysis tables, the fields in the form are prefixed (e.g. qs_ancient)
 ANALYSIS_PREFIX = {"quicksand": "qs", "matthias": "mm", "nedflow": "ned"}
@@ -47,7 +49,7 @@ ANALYSIS_DEFAULTS = {
         "positives": False, "tableview": False, "only_project": True, "family": [],
     },
     "matthias": {"ancient": True, "positives": False, "extended": False, "only_project": True},
-    "nedflow": {"ancient": "++", "fampercent": 1.0, "positives": False, "only_project": True, "family": []},
+    "nedflow": {"ancient": "++", "fampercent": 1.0, "positives": False, "tableview": False, "only_project": True, "family": []},
 }
 
 # rows per page of the analysis tables
@@ -81,15 +83,28 @@ def analysis_defaults(request, analysis):
     return settings
 
 
+def project_only(request):
+    """
+    the project the samples and libraries are restricted to (None: no restriction).
+    not logged in: always the project, logged in: unless 'In project only' is switched off (and only with a project)
+    """
+    project = get_project(request)
+    if not request.user.is_authenticated:
+        return project
+    if project and not request.session.get("filter_all_projects"):
+        return project
+    return None
+
+
 def get_analysis_settings(request, analysis):
     """
     the current settings of an analysis table
     """
     settings = analysis_defaults(request, analysis)
     settings.update(request.session.get("filter_analyses", {}).get(analysis, {}))
+    # the libraries of the project only: set by the top-level 'In project only' filter (not per analysis anymore).
     # only logged-in users can see results of libraries outside of the project
-    if not request.user.is_authenticated:
-        settings["only_project"] = True
+    settings["only_project"] = not (request.user.is_authenticated and request.session.get("filter_all_projects"))
     return settings
 
 
@@ -148,6 +163,11 @@ def set_filter(request, field):
             request.session["filter_culture"] = cultures
         else:
             request.session.pop("filter_culture", None)
+    elif field == "in_project":
+        if field in post:
+            request.session.pop("filter_all_projects", None)
+        else:
+            request.session["filter_all_projects"] = True
     elif field in ("analyzed", "combine", "no_layer"):
         request.session[SAMPLE_FIELDS[field][0]] = field in post
     elif field == "controls":
@@ -211,6 +231,8 @@ def active_filters(request):
     """
     session = request.session
     samples, libraries, results = [], [], []
+    if session.get("filter_all_projects") and request.user.is_authenticated:
+        samples.append("All projects")
     if session.get("filter_layer_pk"):
         samples.append(f"Layer: {session['filter_layer_name']}")
     if session.get("filter_culture"):
@@ -248,7 +270,7 @@ def active_filters(request):
         "positives": lambda v: "Any family" if v else None,
         "tableview": lambda v: "Table-View" if v else None,
         "extended": lambda v: "Extended" if v else None,
-        "only_project": lambda v: "In project" if v else "All projects",
+        "only_project": lambda v: None,  # shown as the top-level 'All projects' chip
         "family": lambda v: f"Families: {', '.join(v)}" if v else None,
     }
     for analysis in ANALYSIS_DEFAULTS:

@@ -7,11 +7,10 @@ from main.tools.generic import get_instance_from_string
 from django.db.models import Q
 
 def filter_samples(request, query):
-    # check if registered, else filter for project only
-    if not request.user.is_authenticated:
-        from main.tools.projects import get_project
-        project = get_project(request)
-        query = query.filter(project=project)
+    # not logged in: only the samples of the project, logged in: unless 'In project only' is switched off
+    from main.tools.dna_filters import project_only
+    if not request.user.is_authenticated or project_only(request):
+        query = query.filter(project=project_only(request))
 
     # we have the sample-filters in request.session
     # (the layer of a sample with a parent sample is the layer of the parent, see Sample.save)
