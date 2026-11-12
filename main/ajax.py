@@ -205,8 +205,10 @@ def get_modal_context(object, request):
                     table.drop(col, axis=1, inplace=True)
                 except KeyError:
                     pass
+            # the families with the highest percentage first (reports without FamPercentage: by mapped reads)
+            sort = 'FamPercentage' if 'FamPercentage' in table.columns else 'ReadsMapped'
             context.update({
-                'table':table.sort_values('ReadsMapped', ascending=False).to_html(index=False, classes="table table-striped")
+                'table':table.sort_values(sort, ascending=False).to_html(index=False, classes="table table-striped")
             })
     
     if object.model == 'nedflow':

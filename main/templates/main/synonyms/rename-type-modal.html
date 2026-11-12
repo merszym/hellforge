@@ -1,0 +1,101 @@
+<!-- rename a synonym-type of the samples (opened by clicking a synonym-column of the sample-table) -->
+{% url 'main_synonym_rename_type' as rename_url %}
+<a href="#close" class="modal-overlay modal_close" aria-label="Close"></a>
+<div class="modal-container" style="max-width: 50rem;">
+    <div class="modal-header">
+        <a class="btn btn-clear float-right modal_close" aria-label="Close" style="cursor: pointer;"></a>
+        <div class="modal-title h5">Rename Sample Synonym</div>
+    </div>
+    <div class="modal-body">
+        <div class="content my-2">
+            {% if error %}<div class="toast toast-error">Not renamed: {{error}}</div>{% endif %}
+            {% if renamed is not None %}
+            <div class="toast toast-success">Renamed {{renamed}} synonym{{renamed|pluralize}}: <i>{{old}}</i> &rarr; <i>{{new}}</i>{% if skipped %} ({{skipped}} sample{{skipped|pluralize}} skipped){% endif %}</div>
+            <!-- reload the sample-table (the columns changed) -->
+            {% if batch %}
+            <div hx-get="{% url 'main_samplebatch_get' batch.pk %}" hx-target="#samplebatch-content-{{batch.pk}}" hx-trigger="load"></div>
+            {% else %}
+            <div hx-get="{% url 'main_samplebatch_get' 0 %}?object=site_{{site.pk}}" hx-target="#combined-samples" hx-trigger="load"></div>
+            {% endif %}
+            {% endif %}
+
+            {% if clashes %}
+            <!-- nothing renamed yet: these samples have a synonym of the new type already -->
+            <div class="toast toast-warning">
+                Nothing renamed: {{clashes|length}} sample{{clashes|length|pluralize}} already ha{{clashes|length|pluralize:"s,ve"}} a synonym <i>{{new}}</i>
+            </div>
+            <div style="max-height: 25vh; overflow-y: auto;">
+                <table class="table table-striped">
+                    <thead><tr><th>Sample</th><th>{{old|default:'(no type)'}}</th><th>{{new}} (existing)</th></tr></thead>
+                    <tbody>
+                        {% for entry in clashes %}
+                        <tr><td>{{entry.sample__name}}</td><td>{{entry.old_name}}</td><td>{{entry.name}}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <form class="my-2" hx-post="{{rename_url}}?site={{site.pk}}&batch={{batch.pk|default:''}}" hx-target="#modal-blank" style="display: flex; gap: .4rem;">
+                {% csrf_token %}
+                <input type="hidden" name="old" value="{{old}}">
+                <input type="hidden" name="new" value="{{new}}">
+                <input type="hidden" name="scope" value="{{scope}}">
+                <button class="btn btn-primary" name="clash" value="skip">Rename the others (skip these samples)</button>
+                <button class="btn" name="clash" value="rename">Rename all anyway</button>
+            </form>
+            <div class="divider"></div>
+            {% endif %}
+
+            <form hx-post="{{rename_url}}?site={{site.pk}}&batch={{batch.pk|default:''}}" hx-target="#modal-blank">
+                {% csrf_token %}
+                <div class="input-group">
+                    <span class="input-group-addon">Rename</span>
+                    <select class="form-select" name="old">
+                        {% for entry in types %}
+                        <option value="{{entry.type|default_if_none:''}}" {% if entry.type|default_if_none:'' == selected %}selected{% endif %}>{{entry.type|default_if_none:'(no type)'}}</option>
+                        {% endfor %}
+                    </select>
+                    <span class="input-group-addon">to</span>
+                    <input class="form-input" type="text" name="new" list="synonym-types" maxlength="300" autocomplete="off" required placeholder="new name or existing type">
+                    <button class="btn btn-primary input-group-btn">Rename</button>
+                </div>
+                <datalist id="synonym-types">
+                    {% for entry in types %}{% if entry.type %}<option value="{{entry.type}}">{% endif %}{% endfor %}
+                </datalist>
+                <div class="mt-1">
+                    {% if batch %}
+                    <label class="form-radio form-inline">
+                        <input type="radio" name="scope" value="batch" checked><i class="form-icon"></i> only in {{batch.name}}
+                    </label>
+                    {% endif %}
+                    <label class="form-radio form-inline">
+                        <input type="radio" name="scope" value="site" {% if not batch %}checked{% endif %}><i class="form-icon"></i> at {{site.name}}
+                    </label>
+                    <label class="form-radio form-inline">
+                        <input type="radio" name="scope" value="all"><i class="form-icon"></i> at all sites
+                    </label>
+                </div>
+                <p class="form-input-hint">Renaming to an existing type merges the two columns.</p>
+            </form>
+
+            <div class="divider"></div>
+            <h6>All sample synonyms</h6>
+            <div style="max-height: 40vh; overflow-y: auto;">
+                <table class="table table-striped table-hover">
+                    <thead style="position: sticky; top: 0; background: white;">
+                        <tr><th>Type</th>{% if batch %}<th>{{batch.name}}</th>{% endif %}<th>{{site.name}}</th><th>All sites</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in types %}
+                        <tr {% if entry.type|default_if_none:'' == selected %}class="active"{% endif %}>
+                            <td>{{entry.type|default_if_none:'(no type)'}}</td>
+                            {% if batch %}<td>{{entry.in_batch|default:''}}</td>{% endif %}
+                            <td>{{entry.at_site|default:''}}</td>
+                            <td>{{entry.total}}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,7 +1,7 @@
 <!-- pagination of a table: include with page_obj=... url='view-url' target='#element-to-swap'
      the filters are kept in the session, the page-links only add page= to the url (which can already have a query) -->
 <div class="columns col-gapless m-2" style="align-items: center;">
-    <small class="col-auto text-gray">
+    <small class="col-auto text-gray" style="padding-right: 1rem;">
         Rows {{page_obj.start_index}}&ndash;{{page_obj.end_index}} of {{page_obj.paginator.count}}
     </small>
     {% if page_obj.paginator.num_pages > 1 %}

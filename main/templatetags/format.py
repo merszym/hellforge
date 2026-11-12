@@ -28,6 +28,21 @@ def lookup(dictionary, key):
 
 
 @register.filter
+def text_color(background):
+    """
+    black or white text, whichever is more readable on the background (hex color), by the relative luminance (WCAG)
+    """
+    try:
+        channels = [int(background.lstrip("#")[i:i + 2], 16) / 255 for i in (0, 2, 4)]
+    except (ValueError, AttributeError):
+        return "black"
+    r, g, b = [c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4 for c in channels]
+    luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+    # contrast with black (L + 0.05) / 0.05 vs. with white 1.05 / (L + 0.05)
+    return "black" if (luminance + 0.05) / 0.05 >= 1.05 / (luminance + 0.05) else "white"
+
+
+@register.filter
 def count_char(value, char):
     return str(value).count(char)
 
