@@ -375,6 +375,10 @@ class Synonym(models.Model):
     def __str__(self):
         return f"{self.type}:{self.name}"
 
+    def export(self):
+        # the synonym in the downloaded tables (type:name), synonyms without a type are notes
+        return f"{self.type or 'Note'}:{self.name}"
+
 
 class DatingMethod(models.Model):
     option = models.CharField("option", max_length=200)
@@ -1267,6 +1271,7 @@ class Layer(Dateable):
         data = self.site.get_data()
         data.update({
             "Layer Name": self.name,
+            "Layer Synonyms": ";".join([x.export() for x in self.synonyms.all()]),
             "Layer Parent": self.get_highest().name,
             "Layer Profile": self.in_profile,
             "Layer Colour": self.colour_munsell,
@@ -1291,6 +1296,7 @@ class Layer(Dateable):
         # the table_columns for uploading and empty columns
         return [
             "Layer Name",
+            "Layer Synonyms",
             "Layer Parent",
             "Layer Profile",
             "Layer Colour",
@@ -1482,7 +1488,7 @@ class Sample(Dateable):
         data.update({
             "Fossil Remain": self.sample.name if self.sample else None,
             "Sample Name": self.name,
-            "Sample Synonyms": ";".join([str(x) for x in self.synonyms.all()]),
+            "Sample Synonyms": ";".join([x.export() for x in self.synonyms.all()]),
             "Sample Type": self.type,
             "Sample Year of Collection": self.year_of_collection if self.year_of_collection else self.sample.year_of_collection if self.sample else None,
             "Sample Provenience": ";".join(

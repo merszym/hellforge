@@ -82,7 +82,9 @@
     .annotation-marker .pie ~ .label { left: calc(var(--pie-size, 32px) / 2 + 2px); }
     .annotation-marker .ring { position: absolute; left: -9px; top: -9px; width: 18px; height: 18px; border-radius: 50%;
         border: 4px solid #fff; box-shadow: 0 0 2px rgba(0,0,0,.7), inset 0 0 2px rgba(0,0,0,.7); }
-    .annotation-marker .dot.none { background: #9a9a9a; }
+    /* no results: grey with a dark outline (the white outline is the 'no ancient family' ring) */
+    .annotation-marker .dot.none { background: #9a9a9a; border-color: #555; box-shadow: none; }
+    .annotation-marker.focus .dot.none { border-color: #e85600; }
     .annotation-marker.focus .pie, .annotation-marker.focus .ring { border-color: #e85600; }
     .hide-labels .annotation-marker .label { display: none; }
     .annotation-legend { background: rgba(255,255,255,.92); padding: .3rem .5rem; border-radius: .2rem; font-size: .7rem;
@@ -250,7 +252,7 @@
             })
             var note = document.createElement('div'); note.className = 'text-gray mt-1'
             note.innerHTML = '<span class="swatch" style="border: 2px solid #fff; box-shadow: 0 0 2px #000, inset 0 0 2px #000;"></span>no ancient family<br>' +
-                '<span class="swatch" style="background: #9a9a9a;"></span>no results'
+                '<span class="swatch" style="background: #9a9a9a; border: 2px solid #555; box-sizing: border-box;"></span>no results'
             content.appendChild(note)
             L.DomEvent.disableScrollPropagation(content); L.DomEvent.disableClickPropagation(content)
         }

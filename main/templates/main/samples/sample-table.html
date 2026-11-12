@@ -20,6 +20,7 @@
             {% endif %}
             <th>Type</th>
             <th>Sample</th>
+            <th style="padding: 0; margin: 0;"></th>
             {% for type in sample_synonyms %}
             {% if request.user.is_authenticated %}
             <!-- click: rename the synonym-type (in the batch, the site or everywhere) -->
@@ -36,7 +37,6 @@
             <th>Dating Type</th>
             <th>Year of Collection</th>
             <th>Sample Origin</th>
-            <th></th>
         </tr>
     </thead>
     <tbody>
