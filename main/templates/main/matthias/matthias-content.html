@@ -23,6 +23,10 @@
         <small>
             Hominidae sequences were obtained through <a href="https://github.com/mpieva/quicksand">quicksand</a>.
             Lineages were assigned by comparing diagnostic positions in the mtDNA genome.
+            {% if blacklisted_positions %}
+            Position{{blacklisted_positions|pluralize}} {{blacklisted_positions|join:", "}} {{blacklisted_positions|pluralize:"is,are"}} excluded
+            (also in the downloads): the support and its significance are recalculated without {{blacklisted_positions|pluralize:"it,them"}}.
+            {% endif %}
         </small>
     </div>
     <div class="panel-head p-2">

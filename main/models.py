@@ -1950,7 +1950,9 @@ class HumanDiagnosticPositions(models.Model):
             "p7","p5","SampleID","ExtractID","SampleType","ExperimentType","Site","ProbeSet","Description"
         ]
         duplicates = ["Ancient"]
-        data = json.loads(self.data)
+        from main.tools.matthias import apply_blacklist  # without the blacklisted diagnostic positions
+
+        data = apply_blacklist(json.loads(self.data))
         for k in exclude:
             data.pop(k, None)
         new_data = {(f"MM_{k}" if k in duplicates else k):v for k,v in data.items() } # preserve column names in data

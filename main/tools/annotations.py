@@ -6,8 +6,8 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.db.models import Q
 from django.urls import path
 from django.views.decorators.http import require_POST
-import re
 from main.models import Image, ImageAnnotation, Sample, QuicksandAnalysis, HumanDiagnosticPositions
+from main.tools.matthias import BLACKLISTED_POSITIONS, HOMININ_LINEAGES, SUPPORT
 
 
 def image_samples(image):
@@ -132,7 +132,6 @@ def quicksand_overlay(request, pk):
 
 
 # the hominin lineages of the diagnostic positions (AA163 etc.), in this order, with fixed colors
-HOMININ_LINEAGES = ["H", "N", "N-HST", "HST", "D", "D-S", "S"]
 # Neanderthal-related: blues, H(uman): yellow, Denisovan-related: reds, S(ima de los Huesos): green
 HOMININ_COLORS = {
     "N": "#1f4e9c", "N-HST": "#4a90d9", "HST": "#9cc8f0",
@@ -140,12 +139,12 @@ HOMININ_COLORS = {
     "D": "#c62828", "D-S": "#e57373",
     "S": "#2e9e4f",
 }
-# e.g. '^^^54.4% (255 / 469)': significance (^, ^^, ^^^), the supporting (diagnostic) fragments / all
-SUPPORT = re.compile(r"^(\^*)\S*% \((\d+) / (\d+)\)")
-# the supporting fragments per diagnostic position, e.g. '(2056:8)(2523:9)' (their sum: the supporting fragments above)
-DERIVED = re.compile(r"\((\d+):(\d+)\)")
-# diagnostic positions that are not counted in the pie-charts (the significance is the one of the report)
-BLACKLISTED_POSITIONS = {2955}
+def lineage_support(support):
+    """
+    the significance marker and the supporting fragments of a lineage, e.g. '^^^54.4% (255 / 469)' -> ('^^^', 255)
+    """
+    match = SUPPORT.match(str(support or ""))
+    return (match.group(1), int(match.group(2))) if match else ("", 0)
 
 
 def pluralize(items):
@@ -201,13 +200,10 @@ def hominin_overlay(request, pk):
             continue
         ancient[library.probes or ""].add(library.sample_id)
         for lineage in HOMININ_LINEAGES:
-            match = SUPPORT.match(str(values.get(f"{lineage}_support{'_deam' if deaminated else ''}") or ""))
-            if match and len(match.group(1)) >= 2:
-                # the supporting fragments without the blacklisted positions
-                derived = str(values.get(f"{lineage}{'_deam' if deaminated else ''}_der") or "")
-                fragments = sum(int(count) for position, count in DERIVED.findall(derived) if int(position) not in BLACKLISTED_POSITIONS)
-                if fragments:
-                    lineages[lineage] += fragments
+            # (prepare_data: already without the blacklisted positions, with the recalculated significance)
+            marker, fragments = lineage_support(values.get(f"{lineage}_support{'_deam' if deaminated else ''}"))
+            if len(marker) >= 2 and fragments:
+                lineages[lineage] += fragments
 
     states = {
         probe: {
@@ -222,7 +218,7 @@ def hominin_overlay(request, pk):
         f"Pie-charts: the share of each hominin mtDNA lineage in the diagnostic fragments ({sequences}). "
         "In each library: ancient with '++'; a lineage is counted if its diagnostic test is significant (at least '^^'), "
         "with the fragments that support the lineage at its diagnostic positions"
-        f"{f' (position{pluralize(BLACKLISTED_POSITIONS)} {blacklisted} excluded)' if blacklisted else ''}. "
+        f"{f' (position{pluralize(BLACKLISTED_POSITIONS)} {blacklisted} excluded and the significance recalculated without it, as in the summary script: significantly more than 10% support)' if blacklisted else ''}. "
         "Several libraries of a sample (with the selected capture probe) are merged: the fragments of each lineage are "
         "summed over the ancient libraries in which the lineage is significant; the sample is ancient if one of its "
         f"libraries is. Only libraries that passed QC{qc_scope(settings)}. The size of the pie-charts does not depend on the number of fragments."
