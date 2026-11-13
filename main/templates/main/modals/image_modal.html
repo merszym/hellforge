@@ -38,6 +38,10 @@
                         <input type="checkbox" id="annotation-labels-{{object.pk}}" checked><i class="form-icon"></i> Labels
                     </label>
                 </span>
+                <!-- the displayed part of the image (with tags, results and legend) as png -->
+                <button type="button" class="btn btn-sm" id="annotation-download-{{object.pk}}" title="Download the displayed view as PNG">
+                    <i class="icon icon-download"></i> PNG
+                </button>
             </div>
         </div>
         <div class="modal-body" style="flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column;">
@@ -78,7 +82,9 @@
     /* the size of the pie-charts is set with the slider (--pie-size on the map) */
     .annotation-marker .pie { position: absolute; width: var(--pie-size, 32px); height: var(--pie-size, 32px);
         left: calc(var(--pie-size, 32px) / -2); top: calc(var(--pie-size, 32px) / -2); border-radius: 50%;
-        border: 2px solid #fff; box-shadow: 0 0 3px rgba(0,0,0,.7); }
+        border: 1px solid #000; box-shadow: 0 0 3px rgba(0,0,0,.7); }
+    .annotation-marker .pie svg { width: 100%; height: 100%; display: block; }
+    .annotation-marker .pie line { stroke: #000; stroke-width: .5px; vector-effect: non-scaling-stroke; }
     .annotation-marker .pie ~ .label { left: calc(var(--pie-size, 32px) / 2 + 2px); }
     .annotation-marker .ring { position: absolute; left: -9px; top: -9px; width: 18px; height: 18px; border-radius: 50%;
         border: 4px solid #fff; box-shadow: 0 0 2px rgba(0,0,0,.7), inset 0 0 2px rgba(0,0,0,.7); }
@@ -150,13 +156,21 @@
                 } else {
                     // pie-chart: conic-gradient with the share of each family
                     var total = Object.values(families).reduce(function(a, b){ return a + b }, 0), start = 0
+                    var lines = ''
                     var slices = sorted(families).map(function(family){
                         var end = start + families[family] / total * 100
                         var slice = (overlay.colors[family] || '#bbbbbb') + ' ' + start + '% ' + end + '%'
+                        // the separator between the wedges: a line from the center (conic-gradient starts at the top, clockwise)
+                        if(start > 0){
+                            var angle = start / 100 * 2 * Math.PI
+                            lines += '<line x1="50" y1="50" x2="' + (50 + 50 * Math.sin(angle)) + '" y2="' + (50 - 50 * Math.cos(angle)) + '"/>'
+                        }
                         start = end
                         return slice
                     })
-                    symbol = '<span class="pie" style="background: conic-gradient(' + slices.join(', ') + ')"></span>'
+                    if(slices.length > 1){ lines += '<line x1="50" y1="50" x2="50" y2="0"/>' }
+                    symbol = '<span class="pie" style="background: conic-gradient(' + slices.join(', ') + ')">' +
+                        '<svg viewBox="0 0 100 100">' + lines + '</svg></span>'
                 }
             }
             return L.divIcon({className: 'annotation-marker' + (marker.focus ? ' focus' : ''), html: symbol + label.outerHTML, iconSize: [0, 0]})
@@ -293,6 +307,116 @@
             overlaySelect.value = data.overlay; loadOverlay()
         }
         probeSelect.addEventListener('change', function(){ probe = this.value; refresh() })
+
+        // download: the displayed part of the image is drawn on a canvas (the image in its full resolution,
+        // the tags, labels and legend as on the screen), twice the screen resolution
+        document.getElementById('annotation-download-{{object.pk}}').addEventListener('click', function(){
+            map.closePopup()
+            var size = map.getSize(), box = element.getBoundingClientRect()
+            var topLeft = map.latLngToContainerPoint([h, 0]), bottomRight = map.latLngToContainerPoint([0, w])
+            // only the visible part of the image (no grey background)
+            var x0 = Math.max(0, topLeft.x), y0 = Math.max(0, topLeft.y)
+            var x1 = Math.min(size.x, bottomRight.x), y1 = Math.min(size.y, bottomRight.y)
+            if(x1 <= x0 || y1 <= y0){ return }
+            var scale = 2, canvas = document.createElement('canvas'), ctx = canvas.getContext('2d')
+            // the legend (results overlay): beside the image, on a white strip on the right (does not cover the tags)
+            var legendRows = [], font = getComputedStyle(element).fontFamily, line = 15, gap = 12, legendWidth = 0, legendHeight = 0
+            if(overlay){
+                var totals = {}
+                Object.values(overlay.results[probe] || {}).forEach(function(families){
+                    Object.keys(families).forEach(function(f){ totals[f] = (totals[f] || 0) + families[f] })
+                })
+                legendRows = sorted(totals).map(function(f){ return {text: f, color: overlay.colors[f]} })
+                legendRows.push({text: 'no ancient family', ring: true}, {text: 'no results', none: true})
+                ctx.font = 'bold 12px ' + font; legendWidth = ctx.measureText('Families').width
+                ctx.font = '12px ' + font
+                legendRows.forEach(function(row){ legendWidth = Math.max(legendWidth, ctx.measureText(row.text).width + 16) })
+                legendWidth += 2 * gap; legendHeight = (legendRows.length + 1) * line + 2 * gap
+            }
+            var imageWidth = x1 - x0, imageHeight = y1 - y0
+            canvas.width = Math.round((imageWidth + legendWidth) * scale)
+            canvas.height = Math.round(Math.max(imageHeight, legendHeight) * scale)
+            ctx.scale(scale, scale)
+            ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height)
+            // the image (and the tags) are clipped to the image area: the strip of the legend stays free
+            ctx.save(); ctx.beginPath(); ctx.rect(0, 0, imageWidth, imageHeight); ctx.clip()
+            ctx.translate(-x0, -y0)
+            ctx.imageSmoothingQuality = 'high'
+            ctx.drawImage(picture, topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y)
+
+            var circle = function(x, y, r, fill, stroke, width){
+                ctx.beginPath(); ctx.arc(x, y, r, 0, 2 * Math.PI)
+                if(fill){ ctx.fillStyle = fill; ctx.fill() }
+                if(stroke){ ctx.strokeStyle = stroke; ctx.lineWidth = width; ctx.stroke() }
+            }
+            var pieSize = parseFloat(document.getElementById('annotation-size-{{object.pk}}').value)
+            if(map.hasLayer(tags)){
+                Object.values(markers).forEach(function(marker){
+                    var p = map.latLngToContainerPoint(marker.getLatLng()), focus = marker.focus ? '#e85600' : null
+                    var families = sampleResults(marker.annotation.sample)
+                    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.7)'; ctx.shadowBlur = 3
+                    if(!overlay){
+                        circle(p.x, p.y, focus ? 9 : 6, '#fff'); ctx.restore()
+                        circle(p.x, p.y, focus ? 7 : 4, focus || '#5755d9')
+                    } else if(families === undefined){
+                        ctx.restore(); circle(p.x, p.y, 6, focus || '#555'); circle(p.x, p.y, 4, '#9a9a9a')
+                    } else if(!Object.keys(families).length){
+                        circle(p.x, p.y, 7, null, focus || '#fff', 4); ctx.restore()
+                        circle(p.x, p.y, 5, null, 'rgba(0,0,0,.5)', .5)
+                    } else {
+                        var r = pieSize / 2
+                        circle(p.x, p.y, r, '#fff'); ctx.restore()
+                        var total = Object.values(families).reduce(function(a, b){ return a + b }, 0), angle = -Math.PI / 2
+                        var keys = sorted(families), edges = []
+                        keys.forEach(function(family){
+                            var end = angle + families[family] / total * 2 * Math.PI
+                            ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.arc(p.x, p.y, r, angle, end); ctx.closePath()
+                            ctx.fillStyle = overlay.colors[family] || '#bbbbbb'; ctx.fill()
+                            edges.push(angle); angle = end
+                        })
+                        if(keys.length > 1){
+                            ctx.strokeStyle = '#000'; ctx.lineWidth = .5
+                            edges.forEach(function(a){
+                                ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + r * Math.cos(a), p.y + r * Math.sin(a)); ctx.stroke()
+                            })
+                        }
+                        circle(p.x, p.y, r - .5, null, focus || '#000', 1)
+                    }
+                })
+                // the labels: as displayed (position, font)
+                element.querySelectorAll('.annotation-marker .label').forEach(function(label){
+                    var rect = label.getBoundingClientRect()
+                    if(!rect.width){ return }  // hidden
+                    var style = getComputedStyle(label), x = rect.left - box.left, y = rect.top - box.top
+                    ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.fillRect(x, y, rect.width, rect.height)
+                    ctx.font = style.fontWeight + ' ' + style.fontSize + ' ' + style.fontFamily
+                    ctx.fillStyle = style.color; ctx.textBaseline = 'middle'
+                    ctx.fillText(label.textContent, x + parseFloat(style.paddingLeft), y + rect.height / 2)
+                })
+            }
+            ctx.restore()
+            if(legendRows.length){
+                var lx = imageWidth + gap
+                ctx.textBaseline = 'middle'; ctx.fillStyle = '#3b4351'
+                ctx.font = 'bold 12px ' + font; ctx.fillText('Families', lx, gap + line / 2)
+                ctx.font = '12px ' + font
+                legendRows.forEach(function(row, i){
+                    var cy = gap + (i + 1.5) * line, cx = lx + 5
+                    if(row.ring){ circle(cx, cy, 4, null, '#fff', 2); circle(cx, cy, 5, null, '#555', .5); circle(cx, cy, 3, null, '#555', .5) }
+                    else if(row.none){ circle(cx, cy, 5, '#555'); circle(cx, cy, 3.5, '#9a9a9a') }
+                    else { circle(cx, cy, 5, row.color || '#bbbbbb') }
+                    ctx.fillStyle = (row.ring || row.none) ? '#7b8494' : '#3b4351'
+                    ctx.fillText(row.text, lx + 16, cy)
+                })
+            }
+            canvas.toBlob(function(blob){
+                var link = document.createElement('a')
+                link.href = URL.createObjectURL(blob)
+                link.download = '{{object.title|default:batch.name|default:"image"|slugify|default:"image"}}' + (overlay ? '_quicksand_' + (probe || 'no-probe') : '') + '.png'
+                document.body.appendChild(link); link.click(); link.remove()
+                setTimeout(function(){ URL.revokeObjectURL(link.href) }, 1000)
+            })
+        })
         if(!editable){ return }
 
         // tagging: the picked sample is placed with the next click on the image
