@@ -74,6 +74,8 @@
                 data-search-url="{% url 'main_annotation_samples' object.pk %}"
                 data-quicksand-url="{% url 'main_annotation_quicksand' object.pk %}"
                 data-hominin-url="{% url 'main_annotation_hominin' object.pk %}"></div>
+            <!-- the figure legend of the results-overlay: how the pie-charts are calculated (also in the png) -->
+            <p class="text-small text-gray mt-1 mb-0" id="annotation-caption-{{object.pk}}" style="display: none;"></p>
             {% if object.alt %}<p class="text-small text-gray mt-1">{{object.alt}}</p>{% endif %}
         </div>
     </div>
@@ -266,9 +268,13 @@
         }
         var legend = L.control({position: 'bottomright'})
         legend.onAdd = function(){ return L.DomUtil.create('div', 'annotation-legend') }
+        var caption = document.getElementById('annotation-caption-{{object.pk}}')
+        var captionText = function(){ return overlay ? 'Capture probe: ' + probeName() + '. ' + (overlay.description || '') : '' }
         var refresh = function(){
             Object.values(markers).forEach(function(marker){ marker.setIcon(icon(marker)); setEditable(marker) })
             map.closePopup()
+            caption.textContent = captionText(); caption.style.display = overlay ? '' : 'none'
+            map.invalidateSize()  // the caption changes the height of the map
             if(!overlay){ legend.remove(); return }
             legend.addTo(map)
             var content = legend.getContainer(); content.innerHTML = ''
@@ -360,8 +366,21 @@
                 legendWidth += 2 * gap; legendHeight = (legendRows.length + 1) * line + 2 * gap
             }
             var imageWidth = x1 - x0, imageHeight = y1 - y0
+            // the figure legend below the image (wrapped to the width of the png)
+            var captionLines = [], captionLine = 14
+            if(overlay){
+                ctx.font = '11px ' + font
+                var words = captionText().split(' '), current = ''
+                words.forEach(function(word){
+                    var next = current ? current + ' ' + word : word
+                    if(ctx.measureText(next).width > imageWidth + legendWidth - 2 * gap && current){ captionLines.push(current); current = word }
+                    else { current = next }
+                })
+                if(current){ captionLines.push(current) }
+            }
+            var top = Math.max(imageHeight, legendHeight)
             canvas.width = Math.round((imageWidth + legendWidth) * scale)
-            canvas.height = Math.round(Math.max(imageHeight, legendHeight) * scale)
+            canvas.height = Math.round((top + (captionLines.length ? captionLines.length * captionLine + 2 * gap : 0)) * scale)
             ctx.scale(scale, scale)
             ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height)
             // the image (and the tags) are clipped to the image area: the strip of the legend stays free
@@ -437,6 +456,10 @@
                     ctx.fillStyle = (row.ring || row.ns || row.none) ? '#7b8494' : '#3b4351'
                     ctx.fillText(row.text, lx + 16, cy)
                 })
+            }
+            if(captionLines.length){
+                ctx.font = '11px ' + font; ctx.fillStyle = '#5b657a'; ctx.textBaseline = 'middle'
+                captionLines.forEach(function(text, i){ ctx.fillText(text, gap, top + gap + (i + .5) * captionLine) })
             }
             canvas.toBlob(function(blob){
                 var link = document.createElement('a')

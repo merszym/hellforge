@@ -111,11 +111,23 @@ def quicksand_overlay(request, pk):
         for family, value in data["quicksand_results"].get(entry, {}).items():
             families[family] += value["raw"]
 
+    filters = ["is ancient (++)"]
+    if settings["percentage"] > 0:
+        filters.append(f"has at least {settings['percentage']:g}% of the reads (FamPercentage)")
+    if settings["breadth"] > 0:
+        filters.append(f"has a breadth of at least {settings['breadth']:g} (ProportionExpectedBreadth)")
+    description = (
+        f"Pie-charts: the share of each ancient mammalian family in the {data['column']} of quicksand. "
+        f"In each library, a family is counted if it {', '.join(filters[:-1]) + ' and ' + filters[-1] if len(filters) > 1 else filters[0]}. "
+        "Several libraries of a sample (with the selected capture probe) are merged: the reads of each family are summed. "
+        f"Only libraries that passed QC{qc_scope(settings)}. The size of the pie-charts does not depend on the number of reads."
+    )
     return JsonResponse({
         "column": data["column"],
         "colors": dict(data["colors"]),
         "probes": sorted_probes(results),
         "results": results,
+        "description": description,
     })
 
 
@@ -130,6 +142,18 @@ HOMININ_COLORS = {
 }
 # e.g. '^^^54.4% (255 / 469)': significance (^, ^^, ^^^), the supporting (diagnostic) fragments / all
 SUPPORT = re.compile(r"^(\^*)\S*% \((\d+) / (\d+)\)")
+# the supporting fragments per diagnostic position, e.g. '(2056:8)(2523:9)' (their sum: the supporting fragments above)
+DERIVED = re.compile(r"\((\d+):(\d+)\)")
+# diagnostic positions that are not counted in the pie-charts (the significance is the one of the report)
+BLACKLISTED_POSITIONS = {2955}
+
+
+def pluralize(items):
+    return "s" if len(items) != 1 else ""
+
+
+def qc_scope(settings):
+    return " and are in the project" if settings["only_project"] else ""
 
 
 def sorted_probes(results):
@@ -179,7 +203,11 @@ def hominin_overlay(request, pk):
         for lineage in HOMININ_LINEAGES:
             match = SUPPORT.match(str(values.get(f"{lineage}_support{'_deam' if deaminated else ''}") or ""))
             if match and len(match.group(1)) >= 2:
-                lineages[lineage] += int(match.group(2))
+                # the supporting fragments without the blacklisted positions
+                derived = str(values.get(f"{lineage}{'_deam' if deaminated else ''}_der") or "")
+                fragments = sum(int(count) for position, count in DERIVED.findall(derived) if int(position) not in BLACKLISTED_POSITIONS)
+                if fragments:
+                    lineages[lineage] += fragments
 
     states = {
         probe: {
@@ -188,8 +216,20 @@ def hominin_overlay(request, pk):
         }
         for probe, samples in results.items()
     }
+    sequences = "deaminated sequences" if deaminated else "all sequences"
+    blacklisted = ", ".join(str(x) for x in sorted(BLACKLISTED_POSITIONS))
+    description = (
+        f"Pie-charts: the share of each hominin mtDNA lineage in the diagnostic fragments ({sequences}). "
+        "In each library: ancient with '++'; a lineage is counted if its diagnostic test is significant (at least '^^'), "
+        "with the fragments that support the lineage at its diagnostic positions"
+        f"{f' (position{pluralize(BLACKLISTED_POSITIONS)} {blacklisted} excluded)' if blacklisted else ''}. "
+        "Several libraries of a sample (with the selected capture probe) are merged: the fragments of each lineage are "
+        "summed over the ancient libraries in which the lineage is significant; the sample is ancient if one of its "
+        f"libraries is. Only libraries that passed QC{qc_scope(settings)}. The size of the pie-charts does not depend on the number of fragments."
+    )
     return JsonResponse({
-        "column": "deaminated sequences" if deaminated else "all sequences",
+        "description": description,
+        "column": sequences,
         "colors": HOMININ_COLORS,
         "probes": sorted_probes(results),
         "results": results,
