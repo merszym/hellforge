@@ -22,10 +22,35 @@ def synonym_names(sample):
     return [f"{synonym.type}: {synonym.name}" if synonym.type else synonym.name for synonym in sample.synonyms.all()]
 
 
-def annotation_data(annotation):
+def layer_positions(image):
+    """
+    the positions of the layers in the main profile of the site (the order of the layers, as in the DNA tab)
+    """
+    from main.models import ProfileLayerJunction
+    from main.tools.analyzed_samples import main_profile
+
+    batch = getattr(image.gallery, "sample_batch", None)
+    if batch is None:
+        return {}
+    return dict(ProfileLayerJunction.objects.filter(profile=main_profile(batch.site)).values_list("layer_id", "position"))
+
+
+def annotation_data(annotation, positions=None):
+    # the layer of origin: the marker is colored by its culture (css-classes of the site page, mixed cultures: layer_<pk>)
+    layer = annotation.sample.layer
+    if positions is None:
+        positions = layer_positions(annotation.image)
+    # the position of the layer (or of its closest parent layer) in the profile: the order of the cultures in the legend
+    position = next((positions[pk] for pk in reversed(layer.path_ids) if pk in positions), None) if layer else None
     return {
+        "position": position,
         "pk": annotation.pk, "sample": annotation.sample_id, "name": annotation.sample.name,
         "synonyms": synonym_names(annotation.sample), "x": annotation.x, "y": annotation.y,
+        "layer": layer.name if layer else None,
+        "culture": layer.culture.name if layer and layer.culture else None,
+        # mixed cultures (the second culture of the layer)
+        "mix": next((c.name for c in layer.additional_cultures.all()), None) if layer else None,
+        "classes": (f"{layer.culture.classname if layer.culture else 'sterile'} layer_{layer.pk}") if layer else "",
     }
 
 
@@ -33,7 +58,8 @@ def image_annotations(image):
     """
     the annotations of an image for the viewer (json)
     """
-    return json.dumps([annotation_data(a) for a in image.annotations.select_related("sample").prefetch_related("sample__synonyms").order_by("sample__name")])
+    positions = layer_positions(image)
+    return json.dumps([annotation_data(a, positions) for a in image.annotations.select_related("sample__layer__culture").prefetch_related("sample__synonyms", "sample__layer__additional_cultures").order_by("sample__name")])
 
 
 @login_required

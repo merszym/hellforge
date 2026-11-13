@@ -30,20 +30,21 @@
                     <option value="hominin">Hominin mtDNA: lineages</option>
                 </select>
                 <select class="form-select select-sm" id="annotation-probe-{{object.pk}}" style="width: auto; display: none;" title="Capture probe"></select>
-                <!-- options of the results-overlay: size of the pie-charts, the sample names -->
+                <!-- options of the results-overlay -->
                 <span id="annotation-overlay-options-{{object.pk}}" style="display: none; align-items: center; gap: 1rem;">
                     <!-- hominin lineages: the diagnostic fragments of the deaminated or of all sequences -->
                     <select class="form-select select-sm" id="annotation-mode-{{object.pk}}" style="width: auto; display: none;" title="Sequences">
                         <option value="deam">Deaminated sequences</option>
                         <option value="all">All sequences</option>
                     </select>
-                    <label class="text-small" style="display: flex; align-items: center; gap: .4rem;">
-                        Size <input class="slider" type="range" id="annotation-size-{{object.pk}}" min="16" max="120" value="32" style="width: 8rem;">
-                    </label>
-                    <label class="form-switch form-inline">
-                        <input type="checkbox" id="annotation-labels-{{object.pk}}" checked><i class="form-icon"></i> Labels
-                    </label>
                 </span>
+                <!-- the size of the markers (samples and pie-charts) -->
+                <label class="text-small" style="display: flex; align-items: center; gap: .4rem;">
+                    Size <input class="slider" type="range" id="annotation-size-{{object.pk}}" min="16" max="120" value="32" style="width: 8rem;">
+                </label>
+                <label class="form-switch form-inline">
+                    <input type="checkbox" id="annotation-labels-{{object.pk}}" checked><i class="form-icon"></i> Labels
+                </label>
                 <!-- the displayed part of the image (with tags, results and legend) as png -->
                 <button type="button" class="btn btn-sm" id="annotation-download-{{object.pk}}" title="Download the displayed view as PNG">
                     <i class="icon icon-download"></i> PNG
@@ -83,11 +84,22 @@
 <style>
     .annotation-marker { background: none; border: none; }
     .annotation-marker .dot { position: absolute; left: -6px; top: -6px; width: 12px; height: 12px; border-radius: 50%;
-        background: #5755d9; border: 2px solid #fff; box-shadow: 0 0 2px rgba(0,0,0,.6); }
+        border: 2px solid #fff; box-shadow: 0 0 2px rgba(0,0,0,.6); }
+    .annotation-marker .dot:not(.layer-dot) { background: #5755d9; }
     .annotation-marker .label { position: absolute; left: 9px; top: -10px; white-space: nowrap; font-size: .7rem; font-weight: 600;
         background: rgba(255,255,255,.85); padding: 0 .25rem; border-radius: .15rem; }
-    .annotation-marker.focus .dot { background: #e85600; width: 18px; height: 18px; left: -9px; top: -9px; }
-    /* results: pie-chart (families/lineages), ring (analyzed, no family/not ancient), dark ring (hominin: ancient,
+    .annotation-marker.focus .dot { width: 18px; height: 18px; left: -9px; top: -9px; }
+    .annotation-marker.focus .dot:not(.layer-dot) { background: #e85600; }
+    /* samples: the color of the culture of the layer of origin (css-classes of the site page), without layer: white */
+    /* the size is set with the slider (--dot-size on the map), black outline */
+    .annotation-marker .dot.layer-dot { width: var(--dot-size, 12px); height: var(--dot-size, 12px);
+        left: calc(var(--dot-size, 12px) / -2); top: calc(var(--dot-size, 12px) / -2); border: 1px solid #000; }
+    .annotation-marker .dot.layer-dot.no-layer { background: #fff; }
+    .annotation-marker.focus .dot.layer-dot { width: calc(var(--dot-size, 12px) * 1.5); height: calc(var(--dot-size, 12px) * 1.5);
+        left: calc(var(--dot-size, 12px) * -.75); top: calc(var(--dot-size, 12px) * -.75); border: 2px solid #e85600; }
+    .annotation-marker .layer-dot ~ .label { left: calc(var(--dot-size, 12px) / 2 + 3px); }
+    .annotation-marker.focus .layer-dot ~ .label { left: calc(var(--dot-size, 12px) * .75 + 3px); }
+    /* results: pie-chart (families/lineages), white dot (analyzed, no family/not ancient), dark ring (hominin: ancient,
        no significant lineage), grey dot (no results) */
     /* the size of the pie-charts is set with the slider (--pie-size on the map) */
     .annotation-marker .pie { position: absolute; width: var(--pie-size, 32px); height: var(--pie-size, 32px);
@@ -98,14 +110,17 @@
     .annotation-marker .pie ~ .label { left: calc(var(--pie-size, 32px) / 2 + 2px); }
     .annotation-marker .ring { position: absolute; left: -9px; top: -9px; width: 18px; height: 18px; border-radius: 50%;
         border: 4px solid #fff; box-shadow: 0 0 2px rgba(0,0,0,.7), inset 0 0 2px rgba(0,0,0,.7); }
-    /* no results: grey with a dark outline (the white outline is the 'no ancient family' ring) */
+    /* no results: grey with a dark outline, not ancient (no ancient family): white with a dark outline */
     .annotation-marker .dot.none { background: #9a9a9a; border-color: #555; box-shadow: none; }
+    .annotation-marker .dot.none.not-ancient { background: #fff; }
     .annotation-marker.focus .dot.none { border-color: #e85600; }
     .annotation-marker .ring.ns { border-color: #222; box-shadow: 0 0 2px #fff, inset 0 0 2px #fff; }
     .annotation-marker.focus .pie, .annotation-marker.focus .ring { border-color: #e85600; }
     .hide-labels .annotation-marker .label { display: none; }
     .annotation-legend { background: rgba(255,255,255,.92); padding: .3rem .5rem; border-radius: .2rem; font-size: .7rem;
         box-shadow: 0 0 3px rgba(0,0,0,.4); max-height: 50vh; overflow-y: auto; }
+    .annotation-legend .culture-swatch { border: 1px solid #000; box-sizing: border-box; }
+    .annotation-legend .culture-swatch.no-layer { background: #fff; }
     .annotation-legend .swatch { display: inline-block; width: .7rem; height: .7rem; border-radius: 50%; margin-right: .3rem; vertical-align: middle; }
     .annotation-popup td { padding: 0 .4rem 0 0; font-size: .7rem; }
 </style>
@@ -166,13 +181,14 @@
         }
         var icon = function(marker){
             var label = document.createElement('span'); label.className = 'label'; label.textContent = marker.annotation.name
-            var symbol = '<span class="dot"></span>'
+            // samples: colored by the culture of the layer of origin
+            var symbol = '<span class="dot layer-dot ' + (marker.annotation.classes || 'no-layer') + '"></span>'
             if(overlay){
                 var families = sampleResults(marker.annotation.sample)
                 if(families === undefined){
                     symbol = '<span class="dot none"></span>'
                 } else if(!Object.keys(families).length){
-                    symbol = '<span class="ring' + (sampleState(marker.annotation.sample) === 'not-significant' ? ' ns' : '') + '"></span>'
+                    symbol = sampleState(marker.annotation.sample) === 'not-significant' ? '<span class="ring ns"></span>' : '<span class="dot none not-ancient"></span>'
                 } else {
                     // pie-chart: conic-gradient with the share of each family
                     var total = Object.values(families).reduce(function(a, b){ return a + b }, 0), start = 0
@@ -204,6 +220,10 @@
                 synonyms.textContent = marker.annotation.synonyms.join(', ')
                 content.appendChild(synonyms)
             }
+            var layer = document.createElement('div')
+            layer.textContent = 'Layer: ' + (marker.annotation.layer || 'unassigned') +
+                (marker.annotation.layer ? ' (' + (marker.annotation.culture || 'no culture') + ')' : '')
+            content.appendChild(layer)
             if(overlay){
                 var families = sampleResults(marker.annotation.sample), info = document.createElement('div')
                 if(families === undefined){
@@ -231,6 +251,7 @@
                 remove.onclick = function(){
                     post(data.deleteUrl.replace(/\/0$/, '/' + marker.annotation.pk), {}).then(function(){
                         tags.removeLayer(marker); delete markers[marker.annotation.sample]
+                        if(!overlay){ refresh() }  // the legend of the cultures
                     }).catch(function(e){ alert(e.message) })
                 }
                 content.appendChild(document.createElement('br')); content.appendChild(remove)
@@ -270,14 +291,40 @@
         legend.onAdd = function(){ return L.DomUtil.create('div', 'annotation-legend') }
         var caption = document.getElementById('annotation-caption-{{object.pk}}')
         var captionText = function(){ return overlay ? 'Capture probe: ' + probeName() + '. ' + (overlay.description || '') : '' }
+        // the cultures of the tagged samples (legend of the samples): mixed layers as 'culture / second culture'.
+        // in the order of the layers (the uppermost layer with the culture in the profile), unassigned samples last
+        var cultureRows = function(){
+            var rows = {}
+            Object.values(markers).forEach(function(marker){
+                var a = marker.annotation, classes = (a.classes || '').split(' ')
+                var position = !a.layer ? Infinity : (a.position === null || a.position === undefined ? 1e9 : a.position)
+                var row = !a.layer ? {key: 'unassigned', text: 'unassigned (no layer)', classes: 'no-layer'}
+                    : a.mix ? {key: a.culture + ' / ' + a.mix, text: (a.culture || 'no culture') + ' / ' + a.mix, classes: classes[1]}
+                    : {key: a.culture || 'no culture', text: a.culture || 'no culture', classes: classes[0]}
+                if(!rows[row.key] || position < rows[row.key].position){ row.position = position; rows[row.key] = row }
+            })
+            return Object.values(rows).sort(function(x, y){ return x.position - y.position || (x.text < y.text ? -1 : 1) })
+        }
         var refresh = function(){
             Object.values(markers).forEach(function(marker){ marker.setIcon(icon(marker)); setEditable(marker) })
             map.closePopup()
             caption.textContent = captionText(); caption.style.display = overlay ? '' : 'none'
             map.invalidateSize()  // the caption changes the height of the map
-            if(!overlay){ legend.remove(); return }
             legend.addTo(map)
             var content = legend.getContainer(); content.innerHTML = ''
+            L.DomEvent.disableScrollPropagation(content); L.DomEvent.disableClickPropagation(content)
+            if(!overlay){
+                // the samples: the cultures of the layers of origin (the colors: css-classes of the site page)
+                var title = document.createElement('strong'); title.textContent = 'Cultures'
+                content.appendChild(title)
+                cultureRows().forEach(function(entry){
+                    var row = document.createElement('div'), swatch = document.createElement('span')
+                    swatch.className = 'swatch culture-swatch ' + entry.classes
+                    row.appendChild(swatch); row.appendChild(document.createTextNode(entry.text)); content.appendChild(row)
+                })
+                if(!Object.keys(markers).length){ legend.remove() }
+                return
+            }
             var totals = {}
             Object.values(overlay.results[probe] || {}).forEach(function(families){
                 Object.keys(families).forEach(function(f){ totals[f] = (totals[f] || 0) + families[f] })
@@ -290,7 +337,7 @@
                 row.appendChild(swatch); row.appendChild(document.createTextNode(family)); content.appendChild(row)
             })
             var note = document.createElement('div'); note.className = 'text-gray mt-1'
-            note.innerHTML = '<span class="swatch" style="border: 2px solid #fff; box-shadow: 0 0 2px #000, inset 0 0 2px #000;"></span>' + config().empty + '<br>' +
+            note.innerHTML = '<span class="swatch" style="background: #fff; border: 2px solid #555; box-sizing: border-box;"></span>' + config().empty + '<br>' +
                 (config().ns ? '<span class="swatch" style="border: 2px solid #222;"></span>' + config().ns + '<br>' : '') +
                 '<span class="swatch" style="background: #9a9a9a; border: 2px solid #555; box-sizing: border-box;"></span>no results'
             content.appendChild(note)
@@ -299,12 +346,13 @@
         var overlayOptions = document.getElementById('annotation-overlay-options-{{object.pk}}')
         document.getElementById('annotation-size-{{object.pk}}').addEventListener('input', function(){
             element.style.setProperty('--pie-size', this.value + 'px')
+            element.style.setProperty('--dot-size', this.value * .375 + 'px')  // the samples: 12px at the default (32)
         })
-        // the sample names can be hidden only with the overlay (without it, the tags are the names)
+        // the sample names can be hidden (the dots/pie-charts stay)
         var labels = document.getElementById('annotation-labels-{{object.pk}}')
         var modeSelect = document.getElementById('annotation-mode-{{object.pk}}')
         modeSelect.addEventListener('change', function(){ loadOverlay() })
-        var showLabels = function(){ element.classList.toggle('hide-labels', !!overlaySelect.value && !labels.checked) }
+        var showLabels = function(){ element.classList.toggle('hide-labels', !labels.checked) }
         labels.addEventListener('change', showLabels)
         var loadOverlay = function(){
             overlayOptions.style.display = overlaySelect.value ? 'flex' : 'none'
@@ -335,6 +383,8 @@
         // opened with the results shown (?overlay=quicksand, e.g. from the quicksand table)
         if(data.overlay && overlaySelect.querySelector('option[value="' + data.overlay + '"]')){
             overlaySelect.value = data.overlay; loadOverlay()
+        } else {
+            refresh()  // the legend of the cultures
         }
         probeSelect.addEventListener('change', function(){ probe = this.value; refresh() })
 
@@ -351,6 +401,14 @@
             var scale = 2, canvas = document.createElement('canvas'), ctx = canvas.getContext('2d')
             // the legend (results overlay): beside the image, on a white strip on the right (does not cover the tags)
             var legendRows = [], font = getComputedStyle(element).fontFamily, line = 15, gap = 12, legendWidth = 0, legendHeight = 0
+            var legendTitle = overlay ? config().export : 'Cultures'
+            if(!overlay && map.hasLayer(tags)){
+                // the cultures: the colors as displayed in the legend (mixed cultures: two halves)
+                legendRows = Array.prototype.map.call(legend.getContainer() ? legend.getContainer().querySelectorAll('.culture-swatch') : [], function(swatch){
+                    var style = getComputedStyle(swatch)
+                    return {text: swatch.parentNode.textContent, colors: style.backgroundImage.match(/rgba?\([^)]*\)/g) || [style.backgroundColor]}
+                })
+            }
             if(overlay){
                 var totals = {}
                 Object.values(overlay.results[probe] || {}).forEach(function(families){
@@ -360,7 +418,9 @@
                 legendRows.push({text: config().empty, ring: true})
                 if(config().ns){ legendRows.push({text: config().ns, ns: true}) }
                 legendRows.push({text: 'no results', none: true})
-                ctx.font = 'bold 12px ' + font; legendWidth = ctx.measureText(config().export).width
+            }
+            if(legendRows.length){
+                ctx.font = 'bold 12px ' + font; legendWidth = ctx.measureText(legendTitle).width
                 ctx.font = '12px ' + font
                 legendRows.forEach(function(row){ legendWidth = Math.max(legendWidth, ctx.measureText(row.text).width + 16) })
                 legendWidth += 2 * gap; legendHeight = (legendRows.length + 1) * line + 2 * gap
@@ -401,15 +461,26 @@
                     var families = sampleResults(marker.annotation.sample)
                     ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.7)'; ctx.shadowBlur = 3
                     if(!overlay){
-                        circle(p.x, p.y, focus ? 9 : 6, '#fff'); ctx.restore()
-                        circle(p.x, p.y, focus ? 7 : 4, focus || '#5755d9')
+                        var dot = marker.getElement() && marker.getElement().querySelector('.dot'), style = dot ? getComputedStyle(dot) : null
+                        var colors = style ? (style.backgroundImage.match(/rgba?\([^)]*\)/g) || [style.backgroundColor]) : ['#fff']
+                        // as displayed: size (slider), fill (mixed cultures: two halves), outline
+                        var r = (dot ? dot.offsetWidth : 12) / 2, border = style ? parseFloat(style.borderTopWidth) : 1
+                        circle(p.x, p.y, r, '#fff'); ctx.restore()
+                        if(colors.length > 1){
+                            ctx.beginPath(); ctx.arc(p.x, p.y, r, Math.PI / 2, 3 * Math.PI / 2); ctx.fillStyle = colors[0]; ctx.fill()
+                            ctx.beginPath(); ctx.arc(p.x, p.y, r, -Math.PI / 2, Math.PI / 2); ctx.fillStyle = colors[colors.length - 1]; ctx.fill()
+                        } else {
+                            circle(p.x, p.y, r, colors[0])
+                        }
+                        circle(p.x, p.y, r - border / 2, null, style ? style.borderTopColor : '#000', border)
                     } else if(families === undefined){
                         ctx.restore(); circle(p.x, p.y, 6, focus || '#555'); circle(p.x, p.y, 4, '#9a9a9a')
                     } else if(!Object.keys(families).length){
-                        var ns = sampleState(marker.annotation.sample) === 'not-significant'
-                        if(ns){ ctx.shadowColor = 'rgba(255,255,255,.9)' }
-                        circle(p.x, p.y, 7, null, focus || (ns ? '#222' : '#fff'), 4); ctx.restore()
-                        if(!ns){ circle(p.x, p.y, 5, null, 'rgba(0,0,0,.5)', .5) }
+                        if(sampleState(marker.annotation.sample) === 'not-significant'){
+                            ctx.shadowColor = 'rgba(255,255,255,.9)'; circle(p.x, p.y, 7, null, focus || '#222', 4); ctx.restore()
+                        } else {
+                            ctx.restore(); circle(p.x, p.y, 6, focus || '#555'); circle(p.x, p.y, 4, '#fff')
+                        }
                     } else {
                         var r = pieSize / 2
                         circle(p.x, p.y, r, '#fff'); ctx.restore()
@@ -445,13 +516,20 @@
             if(legendRows.length){
                 var lx = imageWidth + gap
                 ctx.textBaseline = 'middle'; ctx.fillStyle = '#3b4351'
-                ctx.font = 'bold 12px ' + font; ctx.fillText(config().export, lx, gap + line / 2)
+                ctx.font = 'bold 12px ' + font; ctx.fillText(legendTitle, lx, gap + line / 2)
                 ctx.font = '12px ' + font
                 legendRows.forEach(function(row, i){
                     var cy = gap + (i + 1.5) * line, cx = lx + 5
-                    if(row.ring){ circle(cx, cy, 4, null, '#fff', 2); circle(cx, cy, 5, null, '#555', .5); circle(cx, cy, 3, null, '#555', .5) }
+                    if(row.ring){ circle(cx, cy, 5, '#555'); circle(cx, cy, 3.5, '#fff') }
                     else if(row.ns){ circle(cx, cy, 4, null, '#222', 2) }
                     else if(row.none){ circle(cx, cy, 5, '#555'); circle(cx, cy, 3.5, '#9a9a9a') }
+                    else if(row.colors){
+                        if(row.colors.length > 1){
+                            ctx.beginPath(); ctx.arc(cx, cy, 5, Math.PI / 2, 3 * Math.PI / 2); ctx.fillStyle = row.colors[0]; ctx.fill()
+                            ctx.beginPath(); ctx.arc(cx, cy, 5, -Math.PI / 2, Math.PI / 2); ctx.fillStyle = row.colors[row.colors.length - 1]; ctx.fill()
+                        } else { circle(cx, cy, 5, row.colors[0]) }
+                        circle(cx, cy, 4.5, null, '#000', 1)
+                    }
                     else { circle(cx, cy, 5, row.color || '#bbbbbb') }
                     ctx.fillStyle = (row.ring || row.ns || row.none) ? '#7b8494' : '#3b4351'
                     ctx.fillText(row.text, lx + 16, cy)
@@ -522,7 +600,7 @@
             if(!picked || !editing){ return }
             var position = fromLatLng(e.latlng)
             post(data.saveUrl, {sample: picked.pk, x: position.x, y: position.y})
-                .then(function(saved){ addMarker(saved); reset(); if(overlay){ loadOverlay() } })
+                .then(function(saved){ addMarker(saved); reset(); overlay ? loadOverlay() : refresh() })
                 .catch(function(err){ alert(err.message) })
         })
     }
