@@ -6,7 +6,8 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.db.models import Q
 from django.urls import path
 from django.views.decorators.http import require_POST
-from main.models import Image, ImageAnnotation, Sample, QuicksandAnalysis
+import re
+from main.models import Image, ImageAnnotation, Sample, QuicksandAnalysis, HumanDiagnosticPositions
 
 
 def image_samples(image):
@@ -86,7 +87,6 @@ def quicksand_overlay(request, pk):
     """
     from main.tools.quicksand import prepare_data
     from main.tools.dna_filters import get_analysis_settings
-    from main.tools.analyzed_samples import probe_translations
 
     image = Image.objects.get(pk=pk)
     query = QuicksandAnalysis.objects.filter(
@@ -111,18 +111,89 @@ def quicksand_overlay(request, pk):
         for family, value in data["quicksand_results"].get(entry, {}).items():
             families[family] += value["raw"]
 
-    # the probes with the number of samples with results: the most samples (then the most with families) first
-    names = probe_translations()
-    probes = sorted(
-        results,
-        key=lambda probe: (len(results[probe]), sum(1 for families in results[probe].values() if families)),
-        reverse=True,
-    )
     return JsonResponse({
         "column": data["column"],
         "colors": dict(data["colors"]),
-        "probes": [{"value": probe, "name": names.get(probe, probe or "No probes"), "samples": len(results[probe])} for probe in probes],
+        "probes": sorted_probes(results),
         "results": results,
+    })
+
+
+# the hominin lineages of the diagnostic positions (AA163 etc.), in this order, with fixed colors
+HOMININ_LINEAGES = ["H", "N", "N-HST", "HST", "D", "D-S", "S"]
+# Neanderthal-related: blues, H(uman): yellow, Denisovan-related: reds, S(ima de los Huesos): green
+HOMININ_COLORS = {
+    "N": "#1f4e9c", "N-HST": "#4a90d9", "HST": "#9cc8f0",
+    "H": "#f5c400",
+    "D": "#c62828", "D-S": "#e57373",
+    "S": "#2e9e4f",
+}
+# e.g. '^^^54.4% (255 / 469)': significance (^, ^^, ^^^), the supporting (diagnostic) fragments / all
+SUPPORT = re.compile(r"^(\^*)\S*% \((\d+) / (\d+)\)")
+
+
+def sorted_probes(results):
+    """
+    the probes with the number of samples with results: the most samples (then the most with a pie-chart) first
+    """
+    from main.tools.analyzed_samples import probe_translations
+
+    names = probe_translations()
+    probes = sorted(
+        results,
+        key=lambda probe: (len(results[probe]), sum(1 for values in results[probe].values() if values)),
+        reverse=True,
+    )
+    return [{"value": probe, "name": names.get(probe, probe or "No probes"), "samples": len(results[probe])} for probe in probes]
+
+
+def hominin_overlay(request, pk):
+    """
+    the hominin mtDNA lineages (diagnostic positions) of the tagged samples, for the pie-charts on the image.
+    per capture-probe: {probe: {sample-pk: {lineage: fragments}}} and the states without pie-chart
+    {probe: {sample-pk: 'not-ancient' | 'not-significant'}}.
+    a library is ancient with '++', a lineage is significant with at least '^^'. the pie-chart: the diagnostic
+    fragments of the significant lineages (of the ancient libraries, summed per sample).
+    ?mode=deam (default): the deaminated sequences, all: all sequences
+    """
+    from main.tools.matthias import prepare_data
+    from main.tools.dna_filters import get_analysis_settings
+
+    deaminated = request.GET.get("mode", "deam") != "all"
+    image = Image.objects.get(pk=pk)
+    query = HumanDiagnosticPositions.objects.filter(
+        analyzedsample__sample__in=image.annotations.values("sample_id")
+    ).select_related("analyzedsample")
+    # the filters of the hominin table (qc, project)
+    settings = get_analysis_settings(request, "matthias")
+    data = prepare_data(request, query, only_project=settings["only_project"])
+
+    results = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
+    ancient = defaultdict(set)  # probe: the samples with an ancient library
+    for entry in data["object_list"]:
+        library, values = entry.analyzedsample, data["results"][entry]
+        lineages = results[library.probes or ""][library.sample_id]  # analyzed (also if nothing is shown)
+        if values.get("Ancient") != "++":
+            continue
+        ancient[library.probes or ""].add(library.sample_id)
+        for lineage in HOMININ_LINEAGES:
+            match = SUPPORT.match(str(values.get(f"{lineage}_support{'_deam' if deaminated else ''}") or ""))
+            if match and len(match.group(1)) >= 2:
+                lineages[lineage] += int(match.group(2))
+
+    states = {
+        probe: {
+            sample: ("not-significant" if sample in ancient[probe] else "not-ancient")
+            for sample, lineages in samples.items() if not lineages
+        }
+        for probe, samples in results.items()
+    }
+    return JsonResponse({
+        "column": "deaminated sequences" if deaminated else "all sequences",
+        "colors": HOMININ_COLORS,
+        "probes": sorted_probes(results),
+        "results": results,
+        "states": states,
     })
 
 
@@ -131,4 +202,5 @@ urlpatterns = [
     path("delete/<int:pk>", delete_annotation, name="main_annotation_delete"),
     path("image/<int:pk>/samples", search_samples, name="main_annotation_samples"),
     path("image/<int:pk>/quicksand", quicksand_overlay, name="main_annotation_quicksand"),
+    path("image/<int:pk>/hominin", hominin_overlay, name="main_annotation_hominin"),
 ]
