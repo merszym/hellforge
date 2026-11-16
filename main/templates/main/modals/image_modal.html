@@ -45,6 +45,10 @@
                 <label class="form-switch form-inline">
                     <input type="checkbox" id="annotation-labels-{{object.pk}}" checked><i class="form-icon"></i> Labels
                 </label>
+                <!-- how the pie-charts are calculated: shown (and added to the png) only after clicking the info-icon -->
+                <button type="button" class="btn btn-sm btn-link tooltip" id="annotation-info-{{object.pk}}" data-tooltip="Show how the pie-charts are calculated" style="display: none;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align: middle;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12" y2="8"/></svg>
+                </button>
                 <!-- the displayed part of the image (with tags, results and legend) as png -->
                 <button type="button" class="btn btn-sm" id="annotation-download-{{object.pk}}" title="Download the displayed view as PNG">
                     <i class="icon icon-download"></i> PNG
@@ -117,6 +121,7 @@
     .annotation-marker .ring.ns { border-color: #222; box-shadow: 0 0 2px #fff, inset 0 0 2px #fff; }
     .annotation-marker.focus .pie, .annotation-marker.focus .ring { border-color: #e85600; }
     .hide-labels .annotation-marker .label { display: none; }
+    [id^=annotation-info-].active { color: #fff; background: #5755d9; border-radius: 50%; }
     .annotation-legend { background: rgba(255,255,255,.92); padding: .3rem .5rem; border-radius: .2rem; font-size: .7rem;
         box-shadow: 0 0 3px rgba(0,0,0,.4); max-height: 50vh; overflow-y: auto; }
     .annotation-legend .culture-swatch { border: 1px solid #000; box-sizing: border-box; }
@@ -290,6 +295,8 @@
         var legend = L.control({position: 'bottomright'})
         legend.onAdd = function(){ return L.DomUtil.create('div', 'annotation-legend') }
         var caption = document.getElementById('annotation-caption-{{object.pk}}')
+        var info = document.getElementById('annotation-info-{{object.pk}}'), showInfo = false
+        info.addEventListener('click', function(){ showInfo = !showInfo; refresh() })
         var captionText = function(){ return overlay ? 'Capture probe: ' + probeName() + '. ' + (overlay.description || '') : '' }
         // the cultures of the tagged samples (legend of the samples): mixed layers as 'culture / second culture'.
         // in the order of the layers (the uppermost layer with the culture in the profile), unassigned samples last
@@ -308,7 +315,8 @@
         var refresh = function(){
             Object.values(markers).forEach(function(marker){ marker.setIcon(icon(marker)); setEditable(marker) })
             map.closePopup()
-            caption.textContent = captionText(); caption.style.display = overlay ? '' : 'none'
+            caption.textContent = captionText(); caption.style.display = overlay && showInfo ? '' : 'none'
+            info.style.display = overlay ? '' : 'none'; info.classList.toggle('active', showInfo)
             map.invalidateSize()  // the caption changes the height of the map
             legend.addTo(map)
             var content = legend.getContainer(); content.innerHTML = ''
@@ -428,7 +436,7 @@
             var imageWidth = x1 - x0, imageHeight = y1 - y0
             // the figure legend below the image (wrapped to the width of the png)
             var captionLines = [], captionLine = 14
-            if(overlay){
+            if(overlay && showInfo){
                 ctx.font = '11px ' + font
                 var words = captionText().split(' '), current = ''
                 words.forEach(function(word){
