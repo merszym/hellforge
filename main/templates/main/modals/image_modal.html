@@ -142,6 +142,30 @@
         var map = L.map(element, {crs: L.CRS.Simple, minZoom: -6, maxZoom: 3, zoomSnap: 0.25, attributionControl: false, keyboard: false})
         L.imageOverlay(data.image, bounds).addTo(map)
         map.fitBounds(bounds)
+        // below +/-: fit the image to the full height or width of the map (exact zoom, not the zoom-steps).
+        // the other direction keeps the current center
+        var fitTo = function(axis){
+            var size = map.getSize(), center = map.getCenter()
+            var zoom = Math.log2(axis === 'height' ? size.y / h : size.x / w)
+            var target = axis === 'height' ? [h / 2, center.lng] : [center.lat, w / 2]
+            var snap = map.options.zoomSnap
+            map.options.zoomSnap = 0
+            map.setView(target, zoom)
+            map.options.zoomSnap = snap
+        }
+        var fit = L.control({position: 'topleft'})
+        fit.onAdd = function(){
+            var bar = L.DomUtil.create('div', 'leaflet-bar')
+            ;[['height', '↕', 'Fit to the full height'], ['width', '↔', 'Fit to the full width']].forEach(function(b){
+                var a = L.DomUtil.create('a', '', bar)
+                a.href = '#'; a.innerHTML = b[1]; a.title = b[2]; a.setAttribute('role', 'button')
+                a.style.fontSize = '16px'
+                L.DomEvent.on(a, 'click', function(e){ L.DomEvent.stop(e); fitTo(b[0]) })
+            })
+            L.DomEvent.disableClickPropagation(bar)
+            return bar
+        }
+        fit.addTo(map)
         // relative position (x: left-right, y: top-bottom, 0-1) <-> leaflet coordinates (y from the bottom)
         var toLatLng = function(x, y){ return [h * (1 - y), w * x] }
         var fromLatLng = function(ll){
