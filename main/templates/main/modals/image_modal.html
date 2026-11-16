@@ -214,8 +214,13 @@
             // undefined: no results, {}: analyzed without (ancient) families
             return overlay ? (overlay.results[probe] || {})[sample] : undefined
         }
+        // the highest value first, or in a fixed order (overlay.order: the clades in the order of the reference)
         var sorted = function(families){
-            return Object.keys(families).sort(function(a, b){ return families[b] - families[a] })
+            var order = (overlay && overlay.order) || []
+            var rank = function(key){ var i = order.indexOf(key); return i > -1 ? i : order.length }
+            return Object.keys(families).sort(function(a, b){
+                return order.length ? (rank(a) - rank(b) || families[b] - families[a]) : families[b] - families[a]
+            })
         }
         var icon = function(marker){
             var label = document.createElement('span'); label.className = 'label'; label.textContent = marker.annotation.name

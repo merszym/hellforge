@@ -315,9 +315,10 @@ def clade_overlay(request, pk):
         for sample in results[family]:
             results[family][sample] = {clade: round(n, 1) for clade, n in results[family][sample].items()}
 
-    colors = {}
+    colors, order = {}, []
     for reference in references.values():
         colors.update((reference.color_palette or {}) if reference else {})
+        order += reference.clade_order() if reference else []
     filters = [f"at least {settings['clademinseqs']} unique sequences (pseudoaligned)",
                f"less than {settings['cladesinkratio']:g} estimated counts in the sink (unassigned genomes) per estimated count with clade"]
     if settings["cladelinked"]:
@@ -332,6 +333,7 @@ def clade_overlay(request, pk):
     return JsonResponse({
         "column": "estimated counts",
         "colors": colors,
+        "order": order,  # the clades in the order of the references (pies, legend), otherwise by value
         "probes": sorted_probes(results),
         "results": results,
         "description": description,

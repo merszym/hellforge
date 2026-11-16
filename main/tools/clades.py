@@ -163,10 +163,13 @@ def clade_rows(request, site):
     family = next((f for f in settings["family"] if f in families), families[0] if families else None)
 
     rows = []
+    # the clades in the order of the reference (labels-file), unknown clades (e.g. renamed) after them
+    reference = CladeReference.latest(family) if family else None
+    clade_order = reference.clade_order() if reference else []
+    rank = lambda clade: (clade_order.index(clade), "") if clade in clade_order else (len(clade_order), clade)
     query = results.filter(family=family).select_related(
         *[f"analyzedsample__{x}" for x in LIBRARY_LAYER_RELATED], *LIBRARY_LAYER_RELATED
     ).prefetch_related("libraries", "sample__image_annotations", "analyzedsample__sample__image_annotations")  # eye-icon
-    reference = CladeReference.latest(family) if family else None
     for analysis in query:
         libs = [analysis.analyzedsample] if analysis.analyzedsample else [l for l in analysis.libraries.all() if l.pk in order]
         if not libs:
@@ -189,7 +192,7 @@ def clade_rows(request, site):
             "total": total,
             "shown": shown,
             "sink": sink,
-            "clades": dict(sorted(clades.items(), key=lambda x: -x[1]["raw"])),
+            "clades": dict(sorted(clades.items(), key=lambda x: rank(x[0]))),
             "position": min(order[lib.pk] for lib in libs),
         })
     rows.sort(key=lambda row: row["position"])
@@ -202,7 +205,7 @@ def clade_rows(request, site):
     # the colors from the palette of the reference (in its order), clades without color: grey
     palette = (reference.color_palette or {}) if reference else {}
     present = {clade for row in rows for clade in row["clades"]}
-    columns = [c for c in palette if c in present] + sorted(present - palette.keys())
+    columns = sorted(present, key=rank)
     colors = [(clade, palette.get(clade, "#bbbbbb")) for clade in columns]
     return {
         "rows": rows,

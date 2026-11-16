@@ -2041,6 +2041,10 @@ class CladeReference(models.Model):
     def latest(cls, family):
         return cls.objects.filter(family=family).order_by("-pk").first()
 
+    def clade_order(self):
+        """the clades in the order of the labels-file (first appearance)"""
+        return list(dict.fromkeys(self.clades().values()))
+
     def clades(self):
         """{genome: clade}"""
         result = {}
