@@ -393,9 +393,9 @@
                                 <option value="{{option}}" {% if option == probe %}selected{% endif %}>{{option}}</option>
                             {% endfor %}
                         </select>
-                        <p class="form-input-hint">for the 'sample' lines: all libraries of the sample with this probe are linked to the result</p>
+                        <p class="form-input-hint">for the 'sample' lines: all libraries of the sample with this probe are linked to the result. Samples without libraries of this probe are skipped (existing results are kept)</p>
                     </div>
-                    <p class="form-input-hint">One family per file (bowtie2_name). Each line has a 'library' (of this run and pool) or a 'sample' (merged data, sample name of this site). A new upload replaces the results of the library/sample and family.</p>
+                    <p class="form-input-hint">One family per file (bowtie2_name). Each line has a 'library' (of this run and pool) or a 'sample' (merged data, sample name of any site). A new upload replaces the results of the library/sample and family.</p>
                     <input name="file" type="file" required>
                     <button class="btn">OK</button>
                 </form>

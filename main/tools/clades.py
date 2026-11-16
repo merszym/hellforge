@@ -27,11 +27,31 @@ def get_library(library, runid, seqpool):
     return AnalyzedSample.objects.get(Q(library=library) | Q(capture=library), seqrun=runid, seqpool=seqpool)
 
 
+class AmbiguousSample(Exception):
+    pass
+
+
+def get_sample(name, site):
+    """
+    the sample of a 'sample' line (merged data): by name, from any site. if the name is used at several sites,
+    the sample of the site of the upload, otherwise it is ambiguous (AmbiguousSample)
+    """
+    samples = list(Sample.objects.filter(name=name).select_related("site"))
+    if len(samples) > 1:
+        samples = [sample for sample in samples if sample.site_id == site.pk] or samples
+    if len(samples) > 1:
+        raise AmbiguousSample(f"{name} ({', '.join(sorted({str(s.site) for s in samples}))})")
+    if not samples:
+        raise Sample.DoesNotExist(name)
+    return samples[0]
+
+
 def handle_clade_report(request, file):
     """
     the counts-per-genome sheet of one family (bowtie2_name), several libraries and/or samples (merged data):
-    each line has either a 'library' (with the sequencing run and pool of the form) or a 'sample' (name, of this site).
-    for a sample, all its libraries with the probe of the form are linked as the merged libraries.
+    each line has either a 'library' (with the sequencing run and pool of the form) or a 'sample' (name, of any site).
+    for a sample, all its libraries with the probe of the form are linked as the merged libraries (without such libraries
+    the line is ignored, an existing result is kept).
     a new upload replaces the result of the library/sample and family
     """
     site = get_instance_from_string(request.POST.get("object"))
@@ -67,8 +87,10 @@ def handle_clade_report(request, file):
         return done(messages.ERROR, "Sequencing ID is missing (needed for the libraries)")
 
     probe = request.POST.get("probe", "")  # merged data: the libraries of the sample with this probe
+    if (df["sample"] != "").any() and not probe:
+        return done(messages.ERROR, "Probe is missing (needed to link the libraries of the samples)")
 
-    imported, not_found = [], []
+    imported, not_found, ambiguous, no_libraries = [], [], [], []
     for (library, sample), report in df.groupby(["library", "sample"]):
         name = library or sample
         try:
@@ -77,12 +99,23 @@ def handle_clade_report(request, file):
             if library:
                 target = {"analyzedsample": get_library(library, runid, seqpool)}
             elif sample:
-                target = {"sample": Sample.objects.get(name=sample, site=site)}
+                target = {"sample": get_sample(sample, site)}
             else:
                 raise ValueError("no library or sample")
+        except AmbiguousSample as e:
+            ambiguous.append(str(e))
+            continue
         except Exception:
             not_found.append(name or "(empty)")
             continue
+        if sample:
+            # merged data: only saved (and an existing result replaced) if libraries of the sample with the probe exist.
+            # the same table uploaded with another probe complements the samples with libraries of that probe
+            libraries = list(AnalyzedSample.objects.filter(sample=target["sample"], probes=probe))
+            if not libraries:
+                no_libraries.append(sample)
+                continue
+            name = f"{sample} ({len(libraries)} {'library' if len(libraries) == 1 else 'libraries'})"
         first = report.iloc[0]
         meta = {k: (None if pd.isna(v) else (v.item() if hasattr(v, "item") else v))
                 for k, v in first.items() if k not in GENOME_COLUMNS + ID_COLUMNS}
@@ -91,11 +124,13 @@ def handle_clade_report(request, file):
             family=family, **target, defaults={"version": version, "meta": meta, "data": data}
         )
         if sample:
-            libraries = AnalyzedSample.objects.filter(sample=target["sample"], probes=probe) if probe else []
             analysis.libraries.set(libraries)
-            name = f"{sample} ({len(libraries)} {probe or 'no probe'} libraries)"
         imported.append(name)
 
+    if ambiguous:
+        messages.add_message(request, messages.WARNING, f"{', '.join(ambiguous)}: sample name at several sites, ignored for upload")
+    if no_libraries:
+        messages.add_message(request, messages.WARNING, f"{', '.join(no_libraries)}: no {probe} libraries of the sample, ignored for upload")
     if not_found:
         messages.add_message(request, messages.WARNING, f"{', '.join(not_found)}: not found in the database, ignored for upload")
     if imported:
