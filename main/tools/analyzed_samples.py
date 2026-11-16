@@ -463,8 +463,6 @@ def validate_library_sheet(rows, site):
                 try:
                     number = float(value) if value else None
                     if integer and number is not None:
-                        if not number.is_integer():
-                            raise ValueError
                         number = int(number)
                     values[field] = number
                 except ValueError:
