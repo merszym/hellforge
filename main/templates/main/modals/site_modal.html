@@ -348,6 +348,60 @@
             </div>
         </div>
 
+        {% elif type == "clade_upload" %}
+
+        {# ------------------------- #}
+        {#   CLADES MODAL            #}
+        {# ------------------------- #}
+
+        <!-- counts per genome of one family: libraries (sequencing run + pool) and/or samples (merged data) -->
+        <div class="modal-body">
+            <div class="content my-2">
+                <form
+                    hx-encoding="multipart/form-data"
+                    hx-post="{% url 'main_upload' %}?type=clades"
+                    hx-target="#modal-blank"
+                    hx-validate="true">
+                    {% csrf_token %}
+                    <input type="hidden" name="object" value="site_{{object.pk}}">
+                    <label class="form-label" for="sequencing">Sequencing Run</label>
+                    <select class="form-select" id="sequencing" name="sequencing">
+                        {% if seqrun %}
+                        <option value="{{seqrun}}">{{seqrun}}</option>
+                        {% else %}
+                        <option value="">---</option>
+                        {% endif%}
+                        {% for option in seqruns %}
+                            <option value="{{option}}">{{option}}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-group">
+                        <label class="form-label" for="seqpool">Sequenced Pool</label>
+                        <input class="form-input" type="text" id="seqpool" name="seqpool"
+                        placeholder="P.A.1234" pattern="P\.[A-Z]\.[0-9]+" {% if seqpool %} value="{{seqpool}}" {% endif %}>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="version">Script version</label>
+                        <input class="form-input" type="text" id="version" name="version" placeholder="bace0a0" {% if clade_version %}value="{{clade_version}}"{% endif %} required="" pattern="v[0-9]+(\.[0-9]+)*|[0-9a-fA-F]{7,40}">
+                        <p class="form-input-hint">please use the git commit hash (or a version like v2.1)</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="probe">Probe (merged data)</label>
+                        <select class="form-select" id="probe" name="probe">
+                            <option value="">---</option>
+                            {% for option in probes %}
+                                <option value="{{option}}" {% if option == probe %}selected{% endif %}>{{option}}</option>
+                            {% endfor %}
+                        </select>
+                        <p class="form-input-hint">for the 'sample' lines: all libraries of the sample with this probe are linked to the result</p>
+                    </div>
+                    <p class="form-input-hint">One family per file (bowtie2_name). Each line has a 'library' (of this run and pool) or a 'sample' (merged data, sample name of this site). A new upload replaces the results of the library/sample and family.</p>
+                    <input name="file" type="file" required>
+                    <button class="btn">OK</button>
+                </form>
+            </div>
+        </div>
+
         {% elif type == "matthias_upload" %}
 
         {# ------------------------- #}

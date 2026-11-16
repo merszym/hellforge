@@ -1,0 +1,151 @@
+{% load format %}
+{% comment %}the clades of one family (sub-tab of the Mammalian mtDNA tab), with the filters and settings of quicksand.
+   the family chips set the family of quicksand (the same selection in both tables){% endcomment %}
+{% url 'main_dna_filters_update' object.pk as filter_url %}
+
+<div id="clade-display">
+    <div class="p-2">
+        <h3>Mammalian mtDNA: Clades{% if family %} of {{family}}{% endif %}</h3>
+        <small>
+            The estimated number of sequences per reference genome (kallisto), summed per clade of the family
+            {% if reference %}(clade assignment: {{reference.family}} {{reference.version}}){% endif %}.
+            Only results with at least {{clademinseqs}} unique sequences (pseudoaligned) are shown, and with less than {{cladesinkratio}}
+            estimated counts in the 'sink' (unassigned genomes) per estimated count assigned to a clade.
+            Clades with less than {{clademincounts}} estimated counts or {{cladepercent}}% of the estimated counts assigned to a clade are not shown,
+            the percentages are relative to the clades that are shown. The length of the bars is relative to the highest estimated counts.
+            Results of merged libraries are shown once per sample, if any of the libraries passes the filters.
+        </small>
+    </div>
+    <div class="panel-head p-2">
+        <div class="has-icon-left">
+            <input class="form-input" id="clade-list-search" type="text" placeholder="Type to filter table by content" style="width:50%;">
+            <i class="form-icon icon icon-search"></i>
+        </div>
+    </div>
+
+    <div class="panel-body p-0">
+        {% if rows %}
+        <div class="panel" style="max-height:{% if tableview %}700px{% else %}500px{% endif %}; overflow:scroll;">
+        <table class="table table-striped">
+            <thead style="position: sticky; top:0; background-color: white; z-index: 100;">
+                <tr>
+                    {% include 'main/analyzed_samples/sort-header.html' with key='layer' label='Layer' site_pk=object.pk %}
+                    <th>Sample</th>
+                    <th style="padding: 0; margin: 0;"></th>
+                    <th>Type</th>
+                    <th>Libraries</th>
+                    <th>Probe</th>
+                    {% include 'main/analyzed_samples/sort-header.html' with key='seqrun' label='Sequencing Run' site_pk=object.pk %}
+                    <th>Version</th>
+                    <th class="tooltip tooltip-bottom" data-tooltip="{{family}} ancient (++) in quicksand in the library (any of the merged libraries)">quicksand</th>
+                    <th class="tooltip tooltip-bottom" data-tooltip="Estimated counts assigned to a clade (in the sink)">Estimated Counts</th>
+                    {% if tableview %}
+                        {% for clade, color in colors %}<th nowrap>{{clade}}</th>{% endfor %}
+                    {% else %}
+                    <th>Clades</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                {% with sample=row.sample analysis=row.analysis %}
+                <tr class="clade-tr">
+                    <td nowrap class="{{sample.layer.culture.classname|default:'sterile'}}">{{sample.layer.name|default:'unassigned'}}</td>
+                    <td nowrap>{{sample.name}}</td>
+                    <td nowrap style="padding: 0; margin: 0;">
+                        {# the images the sample is tagged on: opens the image with the quicksand results (probe of the libraries) #}
+                        {% for annotation in sample.image_annotations.all %}
+                        <a class="modal_open tooltip tooltip-right text-gray" data-tooltip="Show on image" style="cursor: pointer;"
+                            hx-get="{% url 'main_modal_get' %}"
+                            hx-vals='{"object":"image_{{annotation.image_id}}", "type":"display", "focus":"{{sample.pk}}", "overlay":"quicksand", "probe":"{{row.probes|first|default:''|escapejs}}"}'
+                            hx-target="#modal-blank">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </a>
+                        {% endfor %}
+                    </td>
+                    <td nowrap>{{sample.type|default:''}}</td>
+                    <td nowrap>
+                        {% for lib in row.libraries %}{{lib.library}}{% if not forloop.last %}, {% endif %}{% endfor %}
+                        {% if analysis.sample %}<span class="text-gray">(merged)</span>{% endif %}
+                    </td>
+                    <td nowrap>{{row.probes|join:", "}}</td>
+                    <td nowrap>{{row.seqruns|join:", "}}</td>
+                    <td nowrap class="tooltip tooltip-left"
+                        data-tooltip="{{analysis.meta.n_pseudoaligned|default:'?'}} of {{analysis.meta.n_processed|default:'?'}} sequences pseudoaligned">{{analysis.version}}</td>
+                    <td nowrap>{% if row.quicksand %}<i class="icon icon-check text-success"></i>{% else %}<span class="text-gray">-</span>{% endif %}</td>
+                    <td nowrap>{{row.total|floatformat:"0"}} <span class="text-gray">({{row.sink|floatformat:"0"}})</span></td>
+                    {% if tableview %}
+                        {% for clade, color in colors %}
+                        {% with value=row.clades|lookup:clade %}
+                        <td nowrap class="p-1 {% if value %}tooltip tooltip-left{% endif %}"
+                            {% if value %}style="background-color: {{color}}; color: {{color|text_color}};"
+                            data-tooltip="{{clade}} ({{value.raw|floatformat:'1'}} estimated counts)"{% endif %}>
+                            {% if value %}{{value.percent|floatformat:"0"}}%{% endif %}
+                        </td>
+                        {% endwith %}
+                        {% endfor %}
+                    {% else %}
+                    <td nowrap style="min-width: 300px; display: flex;">
+                        {% for clade, value in row.clades.items %}
+                        {% with color=colors_dict|lookup:clade %}
+                        <span class="p-1 tooltip tooltip-left"
+                            data-tooltip="{{clade}} ({{value.percent|floatformat:'1'}}%, {{value.raw|floatformat:'1'}} estimated counts)"
+                            style="width: {{value.display|floatformat:'2'}}%; min-width: max-content; background-color: {{color}}; color: {{color|text_color}};">
+                            {{value.raw|floatformat:"0"}}</span>
+                        {% endwith %}
+                        {% empty %}
+                        <span class="text-gray">No clade above the cutoffs</span>
+                        {% endfor %}
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endwith %}
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% else %}
+        <div class="empty">
+            <div class="empty-icon"><i class="icon icon-flag"></i></div>
+            <p class="empty-title h5">No clade results{% if family %} for {{family}}{% endif %} with the current filters</p>
+        </div>
+        {% endif %}
+
+        <!-- the family (one at a time) and the link to quicksand. not part of the filter-form: posted directly -->
+        <div class="m-2" style="display: flex; flex-wrap: wrap; align-items: center; gap: .2rem;">
+            <small class="text-gray mr-2">Family:</small>
+            {% for entry in families %}
+            <label class="chip-toggle">
+                <input type="radio" name="clade_family_choice" {% if entry == family %}checked{% endif %}
+                    hx-post="{{filter_url}}" hx-trigger="change" hx-target="#dna-filters-samples"
+                    hx-vals='{"_fields": "qs_family", "qs_family": "{{entry|escapejs}}"}'>
+                <span class="chip">{{entry}}</span>
+            </label>
+            {% endfor %}
+            <small class="text-gray ml-2 mr-2">Show only:</small>
+            <label class="chip-toggle" title="Only results of libraries in which {{family}} is ancient (++) in quicksand (with the quicksand cutoffs)">
+                <input type="checkbox" {% if cladelinked %}checked{% endif %}
+                    hx-post="{{filter_url}}" hx-trigger="change" hx-target="#dna-filters-samples"
+                    hx-vals='{"_fields": "qs_cladelinked"{% if not cladelinked %}, "qs_cladelinked": "on"{% endif %}}'>
+                <span class="chip">Ancient in quicksand</span>
+            </label>
+        </div>
+        {% if colors %}
+        <div class="m-2" style="display: flex; flex-wrap: wrap; align-items: center; gap: .2rem;">
+            <small class="text-gray mr-2">Clades:</small>
+            {% for clade, color in colors %}
+            <span class="chip"><span style="display: inline-block; width: .6rem; height: .6rem; margin-right: .3rem; background-color: {{color}};"></span>{{clade}}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    $('#clade-list-search').on("keyup", function() {
+        var value = $(this).val().toLowerCase();
+        $("tr.clade-tr").each(function() {
+            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+        });
+    });
+</script>

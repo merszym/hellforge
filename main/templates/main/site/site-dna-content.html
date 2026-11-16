@@ -3,7 +3,7 @@
 <ul class="tab" id="DNA-list">
     <li id="DNA-tab_AA75" class="tab-item active DNA"
         data-group="DNA-tab"
-        data-show="site_dna_content"
+        data-show="DNA-tab_AA75-content"
         data-object="AA75"
         data-analysis="quicksand">
         <a style="cursor:pointer;">Mammalian mtDNA</a>
@@ -29,20 +29,44 @@
         })
         // the side-panel shows the settings of this analysis
         $('#dna-layout').attr('data-analysis', $(this).attr('data-analysis'))
-        // reload the table, if the filters changed while it was hidden
-        var panel = document.getElementById($(this).attr('data-show'))
-        if(panel && panel.dataset.stale){
-            delete panel.dataset.stale
-            htmx.trigger(panel, 'dna-refresh')
-        }
+        dnaRefreshStale(document.getElementById($(this).attr('data-show')))
     })
+    // the sub-tabs of the Mammalian mtDNA tab (quicksand, clades)
+    $('body').off('click.mammaltab').on('click.mammaltab', '.Mammal', function(){
+        dnaRefreshStale(document.getElementById($(this).attr('data-show')))
+    })
+    // reload the shown table(s), if the filters changed while it was hidden
+    function dnaRefreshStale(panel){
+        if(!panel){ return }
+        [panel].concat(Array.from(panel.querySelectorAll('.dna-analysis-panel'))).forEach(function(table){
+            if(table.dataset.stale && table.offsetParent !== null){
+                delete table.dataset.stale
+                htmx.trigger(table, 'dna-refresh')
+            }
+        })
+    }
     </script>
 </ul>
 
 <!-- the analysis tables: loaded when shown, reloaded (dna-refresh) when the filters change -->
-<div class="my-2 panel tab-panel dna-analysis-panel" id="site_dna_content" data-group="DNA-tab" data-analysis="quicksand"
-    hx-get="{% url 'main_site_getquicksand' object.pk %}" hx-trigger="load once, dna-refresh">
-    <div class="loading loading-lg m-2"></div>
+<!-- Mammalian mtDNA: quicksand and (if there are clade results) the clades of single families, both with the quicksand settings -->
+<div class="my-2 tab-panel" id="DNA-tab_AA75-content" data-group="DNA-tab">
+    {% if has_clades %}
+    <ul class="tab">
+        <li class="tab-item active Mammal" data-group="Mammal-tab" data-show="site_dna_content"><a style="cursor:pointer;">quicksand</a></li>
+        <li class="tab-item Mammal" data-group="Mammal-tab" data-show="site_clade_content"><a style="cursor:pointer;">Clades</a></li>
+    </ul>
+    {% endif %}
+    <div class="panel tab-panel dna-analysis-panel" id="site_dna_content" data-group="Mammal-tab" data-analysis="quicksand"
+        hx-get="{% url 'main_site_getquicksand' object.pk %}" hx-trigger="load once, dna-refresh">
+        <div class="loading loading-lg m-2"></div>
+    </div>
+    {% if has_clades %}
+    <div style="display: none;" class="panel tab-panel dna-analysis-panel" id="site_clade_content" data-group="Mammal-tab" data-analysis="quicksand"
+        hx-get="{% url 'main_site_getclades' object.pk %}" hx-trigger="intersect once, dna-refresh">
+        <div class="loading loading-lg m-2"></div>
+    </div>
+    {% endif %}
 </div>
 
 <div style="display: none;" class="my-2 panel tab-panel dna-analysis-panel" id="DNA-tab_AA163-content" data-group="DNA-tab" data-analysis="matthias"

@@ -9,6 +9,7 @@ from main.models import (
     QuicksandAnalysis,
     HumanDiagnosticPositions,
     NedflowAnalysis,
+    FamilyAnalysis,
     ProjectTag,
     Profile,
     ProfileLayerJunction,
@@ -34,8 +35,10 @@ from django.core.paginator import Paginator
 def get_site_dna_content(request, pk):
     
     site = Site.objects.get(pk=int(pk))
-    context = {"object": site}
-   
+    # the clades sub-tab of the Mammalian mtDNA tab: only if the site has clade results
+    has_clades = FamilyAnalysis.objects.filter(Q(sample__site=site) | Q(analyzedsample__sample__site=site)).exists()
+    context = {"object": site, "has_clades": has_clades}
+
     return render(request, "main/site/site-dna-content.html", context)
 
 
@@ -185,6 +188,8 @@ def prefetch_for_table(query, project=None):
         Prefetch('quicksand_analysis', queryset=QuicksandAnalysis.objects.order_by('pk').defer('data')),
         Prefetch('matthias_analysis', queryset=HumanDiagnosticPositions.objects.defer('data')),
         Prefetch('nedflow_analysis', queryset=NedflowAnalysis.objects.order_by('pk').defer('data')),
+        Prefetch('family_analysis', queryset=FamilyAnalysis.objects.order_by('family').defer('data', 'meta')),
+        Prefetch('merged_family_analysis', queryset=FamilyAnalysis.objects.order_by('family').defer('data', 'meta')),  # merged data
     )
 
 

@@ -1586,6 +1586,16 @@ class AnalyzedSample(models.Model):
     def __str__(self):
         return f"{self.library}_{self.seqrun}"
 
+    @property
+    def clade_versions(self):
+        """the versions of the clade analyses (of the library and merged) with their families: [(version, "Bovidae, Hyaenidae (merged)")]"""
+        versions = {}
+        for analysis in self.family_analysis.all():
+            versions.setdefault(analysis.version, []).append(analysis.family)
+        for analysis in self.merged_family_analysis.all():
+            versions.setdefault(analysis.version, []).append(f"{analysis.family} (merged)")
+        return [(version, ", ".join(sorted(families))) for version, families in versions.items()]
+
     def get_data(self, for_upload=False, **kwargs):
         # for an entry, return a dict {'col': data} that is used for the export of the data
         # if only for re-upload, include less information and the 'object' column
@@ -2001,6 +2011,101 @@ class NedflowAnalysis(models.Model):
             "analyzedsample__seqrun",
             "analyzedsample__probes",
         ]
+
+#
+#
+# mammalian per-family analysis: estimated counts per reference genome, summed per clade
+#
+#
+
+class CladeReference(models.Model):
+    """
+    the genome -> clade assignment of one family (the labels-file, version tracked on GitHub). uploaded in the admin.
+    data: the rows of the labels-file [{"Name": genome, "Species": ..., "Haplogroup": ..., ...}, ...]
+    clade = "Species (Haplogroup)" or "Species" without haplogroup. results always use the newest version of the family
+    """
+    family = models.CharField("Family", max_length=100)
+    version = models.CharField("Version", max_length=100)
+    data = models.JSONField("Labels", blank=True, null=True)
+    color_palette = models.JSONField("Color Palette", blank=True, null=True)  # {clade: color}
+
+    class Meta:
+        unique_together = [("family", "version")]
+
+    def __str__(self):
+        return f"{self.family} {self.version}"
+
+    @classmethod
+    def latest(cls, family):
+        return cls.objects.filter(family=family).order_by("-pk").first()
+
+    def clades(self):
+        """{genome: clade}"""
+        result = {}
+        for row in self.data or []:
+            species = (row.get("Species") or "").strip()
+            haplogroup = (row.get("Haplogroup") or "").strip()
+            result[row["Name"]] = f"{species} ({haplogroup})" if haplogroup else species
+        return result
+
+
+class FamilyAnalysis(models.Model):
+    """
+    the estimated counts per genome (kallisto) of one family, for one library (analyzedsample) or one sample (merged data)
+    data: {genome: est_counts}, meta: the information of the run (n_processed, kallisto_version, ...)
+    """
+    version = models.CharField("Version", max_length=100, blank=True, null=True)
+    family = models.CharField("Family", max_length=100)
+    analyzedsample = models.ForeignKey(
+        AnalyzedSample,
+        verbose_name="analyzedsample",
+        related_name="family_analysis",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+    sample = models.ForeignKey(  # merged data of the sample
+        Sample,
+        verbose_name="sample",
+        related_name="family_analysis",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+    # merged data: the libraries of the sample that went into the result (selected by probe at the upload)
+    libraries = models.ManyToManyField(AnalyzedSample, verbose_name="merged libraries", related_name="merged_family_analysis", blank=True)
+    meta = models.JSONField("Run Information", blank=True, null=True)
+    data = models.JSONField("Estimated Counts", blank=True, null=True)
+
+    class Meta:
+        constraints = [
+            # either a library or a sample
+            models.CheckConstraint(
+                condition=Q(analyzedsample__isnull=False, sample__isnull=True) | Q(analyzedsample__isnull=True, sample__isnull=False),
+                name="familyanalysis_library_or_sample",
+            ),
+            # one result per library/sample and family (a new upload replaces it)
+            models.UniqueConstraint(fields=["analyzedsample", "family"], condition=Q(analyzedsample__isnull=False), name="familyanalysis_unique_library"),
+            models.UniqueConstraint(fields=["sample", "family"], condition=Q(sample__isnull=False), name="familyanalysis_unique_sample"),
+        ]
+
+    def __str__(self):
+        return f"{self.family} {self.version}: {self.analyzedsample or self.sample}"
+
+    @property
+    def model(self):
+        return "familyanalysis"
+
+    def clade_counts(self, reference=None):
+        """{clade: summed est_counts}, with the newest reference of the family. genomes without clade -> 'sink'"""
+        reference = reference or CladeReference.latest(self.family)
+        clades = reference.clades() if reference else {}
+        counts = {}
+        for genome, count in (self.data or {}).items():
+            clade = clades.get(genome, "sink")
+            counts[clade] = counts.get(clade, 0) + count
+        return counts
+
 
 models = {
     "site": Site,

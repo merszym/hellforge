@@ -17,6 +17,7 @@ from .models import (
     SampleBatch,
     Sample,
     ProjectTag,
+    FamilyAnalysis,
 )
 from django.db.models import Q
 from django.urls import reverse, path
@@ -154,12 +155,18 @@ def get_modal_context(object, request):
                     }
                 )
     if object.model == "site":
-        if context["type"] in ["quicksand_upload","matthias_upload", "nedflow_upload"]:
+        if context["type"] in ["quicksand_upload","matthias_upload", "nedflow_upload", "clade_upload"]:
             context.update(
                 {
                     "seqpool":request.GET.get('seqpool',''),
                     "seqrun":request.GET.get('seqrun',''),
                     "lane":request.GET.get('lane',''),
+                    "probe": request.GET.get('probe', ''),
+                    # the version of the last clade upload
+                    "clade_version": getattr(FamilyAnalysis.objects.order_by('-pk').first(), 'version', ''),
+                    "probes": sorted(set(
+                        AnalyzedSample.objects.filter(sample__site=object).exclude(probes=None).exclude(probes="").values_list("probes", flat=True)
+                    )),
                     "seqruns": sorted(
                         list(
                             set(
@@ -302,6 +309,11 @@ def upload(request):
         from main.tools.nedflow import handle_nedflow_report
 
         return handle_nedflow_report(request, file)
+
+    if type == "clades":
+        from main.tools.clades import handle_clade_report
+
+        return handle_clade_report(request, file)
 
     if type == "matthias":
         from main.tools.matthias import handle_file_upload

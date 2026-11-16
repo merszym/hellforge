@@ -161,6 +161,26 @@
             <input type="hidden" name="_fields" value="qs_breadth">
             <input class="form-input input-sm dna-live" type="text" inputmode="decimal" name="qs_breadth" id="qs-breadth" value="{{settings.breadth}}">
         </div>
+        <div class="form-group">
+            <label class="form-label" for="qs-cladepercent">Clades: Percentage Cutoff</label>
+            <input type="hidden" name="_fields" value="qs_cladepercent">
+            <input class="form-input input-sm dna-live" type="text" inputmode="decimal" name="qs_cladepercent" id="qs-cladepercent" value="{{settings.cladepercent}}">
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="qs-clademinseqs">Clades: Min. unique sequences</label>
+            <input type="hidden" name="_fields" value="qs_clademinseqs">
+            <input class="form-input input-sm dna-live" type="text" inputmode="numeric" name="qs_clademinseqs" id="qs-clademinseqs" value="{{settings.clademinseqs}}">
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="qs-clademincounts">Clades: Min. estimated counts per clade</label>
+            <input type="hidden" name="_fields" value="qs_clademincounts">
+            <input class="form-input input-sm dna-live" type="text" inputmode="decimal" name="qs_clademincounts" id="qs-clademincounts" value="{{settings.clademincounts}}">
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="qs-cladesinkratio">Clades: Max. sink / clade counts</label>
+            <input type="hidden" name="_fields" value="qs_cladesinkratio">
+            <input class="form-input input-sm dna-live" type="text" inputmode="decimal" name="qs_cladesinkratio" id="qs-cladesinkratio" value="{{settings.cladesinkratio}}">
+        </div>
         <input type="hidden" name="_fields" value="qs_ancient">
         <input type="hidden" name="_fields" value="qs_tableview">
         <label class="chip-toggle">

@@ -116,6 +116,18 @@
             {% endif %}
         </div>
     </td>
+    <td>
+        <div style="display: flex; gap:1px;">
+            <span nowrap>{% for version, families in object.clade_versions %}<span class="tooltip" data-tooltip="{{families}}">{{version}}</span>{% if not forloop.last %}, {% endif %}{% endfor %}</span>
+            {% if request.user.is_authenticated %}
+                <a class="tooltip tooltip-left modal_open"
+                hx-get="{{modal_url}}"
+                hx-vals='{"object":"site_{{site.pk}}","type":"clade_upload", "seqrun":"{{object.seqrun}}", "lane":"{{object.lane}}", "seqpool":"{{object.seqpool}}", "probe":"{{object.probes|default:''}}"}'
+                hx-target="#modal-blank"
+                data-tooltip="Add clade analysis (counts per genome of one family)"><i class="icon icon-plus"></i></a>
+            {% endif %}
+        </div>
+    </td>
     
     {% if request.user.is_authenticated %}
     <td>

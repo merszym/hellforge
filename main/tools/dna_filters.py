@@ -47,6 +47,9 @@ ANALYSIS_DEFAULTS = {
     "quicksand": {
         "column": "ReadsDeduped", "percentage": 0.5, "breadth": 0.5, "ancient": True,
         "positives": False, "tableview": False, "only_project": True, "family": [],
+        # clades (sub-tab of quicksand): only the results of families that are ancient in quicksand, the cutoff of the clades (%),
+        # the required number of unique sequences (n_pseudoaligned)
+        "cladelinked": False, "cladepercent": 10.0, "clademinseqs": 50, "clademincounts": 30.0, "cladesinkratio": 0.4,
     },
     "matthias": {"ancient": True, "positives": False, "extended": False, "only_project": True},
     "nedflow": {"ancient": "++", "fampercent": 1.0, "positives": False, "tableview": False, "only_project": True, "family": []},
@@ -218,6 +221,11 @@ def set_filter(request, field):
                 value = float(post.get(field, default))
             except ValueError:
                 return
+        elif isinstance(default, int):
+            try:
+                value = int(float(post.get(field, default)))
+            except ValueError:
+                return
         else:
             value = post.get(field, "").strip()
         analyses = request.session.get("filter_analyses", {})
@@ -272,6 +280,11 @@ def active_filters(request):
         "extended": lambda v: "Extended" if v else None,
         "only_project": lambda v: None,  # shown as the top-level 'All projects' chip
         "family": lambda v: f"Families: {', '.join(v)}" if v else None,
+        "cladelinked": lambda v: "Clades: Ancient in quicksand" if v else None,
+        "cladepercent": lambda v: f"Clades ≥ {v}%",
+        "clademinseqs": lambda v: f"Clades: ≥ {v} unique sequences",
+        "clademincounts": lambda v: f"Clades: ≥ {v} estimated counts",
+        "cladesinkratio": lambda v: f"Clades: sink ratio < {v}",
     }
     for analysis in ANALYSIS_DEFAULTS:
         defaults = analysis_defaults(request, analysis)
