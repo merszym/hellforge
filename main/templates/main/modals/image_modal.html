@@ -50,6 +50,10 @@
                 <button type="button" class="btn btn-sm btn-link tooltip" id="annotation-info-{{object.pk}}" data-tooltip="Show how the pie-charts are calculated" style="display: none;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align: middle;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12" y2="8"/></svg>
                 </button>
+                <!-- the highlighted sample (opened from a table): remove the highlighting -->
+                <button type="button" class="btn btn-sm btn-link" id="annotation-unfocus-{{object.pk}}" title="Remove the highlighting of the sample" style="display: none;">
+                    <i class="icon icon-cross"></i> Clear highlight
+                </button>
                 <!-- the displayed part of the image (with tags, results and legend) as png -->
                 <button type="button" class="btn btn-sm" id="annotation-download-{{object.pk}}" title="Download the displayed view as PNG">
                     <i class="icon icon-download"></i> PNG
@@ -341,8 +345,15 @@
             })
             return Object.values(rows).sort(function(x, y){ return x.position - y.position || (x.text < y.text ? -1 : 1) })
         }
+        var unfocus = document.getElementById('annotation-unfocus-{{object.pk}}')
+        unfocus.addEventListener('click', function(){
+            data.focus = ''
+            Object.values(markers).forEach(function(marker){ marker.focus = false })
+            refresh()
+        })
         var refresh = function(){
             Object.values(markers).forEach(function(marker){ marker.setIcon(icon(marker)); setEditable(marker) })
+            unfocus.style.display = Object.values(markers).some(function(marker){ return marker.focus }) ? '' : 'none'
             map.closePopup()
             caption.textContent = captionText(); caption.style.display = overlay && showInfo ? '' : 'none'
             info.style.display = overlay ? '' : 'none'; info.classList.toggle('active', showInfo)

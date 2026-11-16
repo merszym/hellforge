@@ -37,14 +37,14 @@
                 {% include 'main/analyzed_samples/family-header.html' with lead=10 %}
                 {% endif %}
                 <tr>
-                    {% include 'main/analyzed_samples/sort-header.html' with key='layer' label='Layer' site_pk=object.pk %}
+                    {% include 'main/analyzed_samples/sort-header.html' with key='layer' label='Layer' site_pk=object.pk default_sort='layer' %}
                     <th>Layer Parent</th>
                     <th>Sample</th>
                     <th>Type</th>
                     <th>Library</th>
                     <th>Capture</th>
                     <th>Probe</th>
-                    {% include 'main/analyzed_samples/sort-header.html' with key='seqrun' label='Sequencing Run' site_pk=object.pk %}
+                    {% include 'main/analyzed_samples/sort-header.html' with key='seqrun' label='Sequencing Run' site_pk=object.pk default_sort='layer' %}
                     <th>Tag</th>
                     <th>Version</th>
                     {% if tableview %}

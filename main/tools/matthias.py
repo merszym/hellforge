@@ -230,9 +230,9 @@ def table_rows(request, site):
 
     query = HumanDiagnosticPositions.objects.filter(analyzedsample__in=analyzed_samples).select_related(
         *[f'analyzedsample__{x}' for x in LIBRARY_LAYER_RELATED]
-    )
+    ).prefetch_related("analyzedsample__sample__image_annotations")  # the images the sample is tagged on (eye-icon)
     # the same order as the library-table
-    query = sort_libraries(request, query, site, prefix="analyzedsample__")
+    query = sort_libraries(request, query, site, prefix="analyzedsample__", default="layer")
 
     # the settings are set in the side-panel of the DNA tab (main/tools/dna_filters.py)
     settings = get_analysis_settings(request, "matthias")

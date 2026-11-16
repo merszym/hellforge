@@ -146,7 +146,7 @@ def clade_rows(request, site):
     libraries = get_libraries(request, site.pk, return_query=True).filter(qc_pass=True)
     if settings["only_project"]:
         libraries = libraries.filter(project=get_project(request))
-    order = {pk: i for i, pk in enumerate(sort_libraries(request, libraries, site).values_list("pk", flat=True))}
+    order = {pk: i for i, pk in enumerate(sort_libraries(request, libraries, site, default="layer").values_list("pk", flat=True))}
 
     # the families that are ancient (++) in quicksand (with the cutoffs of the quicksand settings)
     quicksand = prepare_data(

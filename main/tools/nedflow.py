@@ -335,7 +335,7 @@ def table_rows(request, site):
         *[f'analyzedsample__{x}' for x in LIBRARY_LAYER_RELATED]
     )
     # the same order as the library-table
-    query = sort_libraries(request, query, site, prefix="analyzedsample__")
+    query = sort_libraries(request, query, site, prefix="analyzedsample__", default="layer")
 
 
     # the settings are set in the side-panel of the DNA tab (main/tools/dna_filters.py)

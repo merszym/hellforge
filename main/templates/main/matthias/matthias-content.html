@@ -43,13 +43,14 @@
         <table class="table table-striped">
             <thead style="position: sticky; top:0; background-color: white; z-index: 100;">
                 <tr>
-                    {% include 'main/analyzed_samples/sort-header.html' with key='layer' label='Layer' site_pk=object.pk %}
+                    {% include 'main/analyzed_samples/sort-header.html' with key='layer' label='Layer' site_pk=object.pk default_sort='layer' %}
                     <th>Sample</th>
+                    <th style="padding: 0; margin: 0;"></th>
                     <th>Type</th>
                     <th>Library</th>
                     <th>Capture</th>
                     <th>Probe</th>
-                    {% include 'main/analyzed_samples/sort-header.html' with key='seqrun' label='Sequencing Run' site_pk=object.pk %}
+                    {% include 'main/analyzed_samples/sort-header.html' with key='seqrun' label='Sequencing Run' site_pk=object.pk default_sort='layer' %}
                     <th>Tag</th>
                     <th>Positions</th>
                     <th>Ancient</th>
@@ -89,6 +90,17 @@
                         {% else %}
                         Control
                         {% endif %}
+                    </td>
+                    <td nowrap style="padding: 0; margin: 0;">
+                        {# the images the sample is tagged on: opens the image with the hominin lineages (probe of this library) #}
+                        {% for annotation in ana.sample.image_annotations.all %}
+                        <a class="modal_open tooltip tooltip-right text-gray" data-tooltip="Show on image" style="cursor: pointer;"
+                            hx-get="{% url 'main_modal_get' %}"
+                            hx-vals='{"object":"image_{{annotation.image_id}}", "type":"display", "focus":"{{ana.sample_id}}", "overlay":"hominin", "probe":"{{ana.probes|default:''|escapejs}}"}'
+                            hx-target="#modal-blank">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </a>
+                        {% endfor %}
                     </td>
                     <td nowrap>
                         {% if ana.sample %}

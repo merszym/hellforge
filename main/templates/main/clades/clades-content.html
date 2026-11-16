@@ -35,13 +35,13 @@
         <table class="table table-striped">
             <thead style="position: sticky; top:0; background-color: white; z-index: 100;">
                 <tr>
-                    {% include 'main/analyzed_samples/sort-header.html' with key='layer' label='Layer' site_pk=object.pk %}
+                    {% include 'main/analyzed_samples/sort-header.html' with key='layer' label='Layer' site_pk=object.pk default_sort='layer' %}
                     <th>Sample</th>
                     <th style="padding: 0; margin: 0;"></th>
                     <th>Type</th>
                     <th>Libraries</th>
                     <th>Probe</th>
-                    {% include 'main/analyzed_samples/sort-header.html' with key='seqrun' label='Sequencing Run' site_pk=object.pk %}
+                    {% include 'main/analyzed_samples/sort-header.html' with key='seqrun' label='Sequencing Run' site_pk=object.pk default_sort='layer' %}
                     <th>Version</th>
                     <th class="tooltip tooltip-bottom" data-tooltip="{{family}} ancient (++) in quicksand in the library (any of the merged libraries)">quicksand</th>
                     <th class="tooltip tooltip-bottom" data-tooltip="Estimated counts assigned to a clade (in the sink)">Estimated Counts</th>

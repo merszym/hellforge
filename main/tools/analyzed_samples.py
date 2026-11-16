@@ -95,6 +95,8 @@ def search_libraries(query, text):
 # the order of the libraries (and of the analysis results), set in the table-headers
 LIBRARY_SORTS = ["batch", "seqrun", "pool", "layer"]
 DEFAULT_LIBRARY_SORT = "seqrun"
+# the results tables (quicksand, clades, hominin, NED-Flow): by layer, until a sort is selected (then shared with the libraries)
+DEFAULT_RESULTS_SORT = "layer"
 
 
 def main_profile(site):
@@ -105,13 +107,13 @@ def main_profile(site):
     return profiles.filter(name="Main Profile").first() or profiles.order_by("pk").first()
 
 
-def sort_libraries(request, query, site, prefix=""):
+def sort_libraries(request, query, site, prefix="", default=DEFAULT_LIBRARY_SORT):
     """
     order the libraries (prefix='' ) or the analysis results (prefix='analyzedsample__') by the sort of the DNA tab:
     batch, seqrun (sequencing run and lane), pool or layer (position in the main profile).
     controls (without sample) are last when sorting by batch or layer
     """
-    sort = request.session.get("filter_sort", DEFAULT_LIBRARY_SORT)
+    sort = request.session.get("filter_sort", default)
     f = lambda field: F(prefix + field).asc(nulls_last=True)
     run = [f("seqrun"), f("lane"), f("library")]
     if sort == "batch":
