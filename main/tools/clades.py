@@ -110,6 +110,26 @@ def handle_clade_report(request, file):
 SINK = "sink"  # genomes without clade, not in the percentages
 
 
+def filter_clades(analysis, reference, settings):
+    """
+    the clades of a result with the filters of the settings (quicksand settings of the DNA tab):
+    returns (valid, {clade: est_counts} of the clades passing the cutoffs, est_counts with clade, est_counts in the sink)
+    """
+    counts = analysis.clade_counts(reference)
+    sink = counts.pop(SINK, 0)
+    total = sum(counts.values())
+    # at least the required number of unique sequences (n_pseudoaligned of kallisto)
+    if (analysis.meta or {}).get("n_pseudoaligned", 0) < settings["clademinseqs"]:
+        return False, {}, total, sink
+    # too many estimated counts in the sink (relative to the counts with clade): the result is not valid
+    if not total or sink / total >= settings["cladesinkratio"]:
+        return False, {}, total, sink
+    # only the clades with at least the estimated counts and the percentage (of the estimated counts with clade)
+    counts = {clade: n for clade, n in counts.items()
+              if n > 0 and n >= settings["clademincounts"] and 100 * n / total >= settings["cladepercent"]}
+    return True, counts, total, sink
+
+
 def clade_rows(request, site):
     """
     the clade results of one family, one row per result (library or sample with its merged libraries).
@@ -154,19 +174,9 @@ def clade_rows(request, site):
         in_quicksand = any(family in found.get(lib.pk, ()) for lib in libs)
         if settings["cladelinked"] and not in_quicksand:
             continue
-        # at least the required number of unique sequences (n_pseudoaligned of kallisto)
-        if (analysis.meta or {}).get("n_pseudoaligned", 0) < settings["clademinseqs"]:
+        valid, counts, total, sink = filter_clades(analysis, reference, settings)
+        if not valid:
             continue
-        counts = analysis.clade_counts(reference)
-        sink = counts.pop(SINK, 0)
-        total = sum(counts.values())
-        # too many estimated counts in the sink (relative to the counts with clade): the result is not valid
-        if not total or sink / total >= settings["cladesinkratio"]:
-            continue
-        # only the clades with at least the estimated counts and the percentage (of the estimated counts with clade),
-        # the percentages are then relative to the clades that are shown
-        counts = {clade: n for clade, n in counts.items()
-                  if n > 0 and n >= settings["clademincounts"] and 100 * n / total >= settings["cladepercent"]}
         shown = sum(counts.values())
         clades = {clade: {"raw": n, "percent": 100 * n / shown} for clade, n in counts.items()}
         rows.append({

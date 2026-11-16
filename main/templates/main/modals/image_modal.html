@@ -28,6 +28,7 @@
                     <option value="">Samples</option>
                     <option value="quicksand">Quicksand: ancient families</option>
                     <option value="hominin">Hominin mtDNA: lineages</option>
+                    <option value="clades">Mammalian clades</option>
                 </select>
                 <select class="form-select select-sm" id="annotation-probe-{{object.pk}}" style="width: auto; display: none;" title="Capture probe"></select>
                 <!-- options of the results-overlay -->
@@ -78,7 +79,8 @@
                 data-delete-url="{% url 'main_annotation_delete' 0 %}"
                 data-search-url="{% url 'main_annotation_samples' object.pk %}"
                 data-quicksand-url="{% url 'main_annotation_quicksand' object.pk %}"
-                data-hominin-url="{% url 'main_annotation_hominin' object.pk %}"></div>
+                data-hominin-url="{% url 'main_annotation_hominin' object.pk %}"
+                data-clades-url="{% url 'main_annotation_clades' object.pk %}"></div>
             <!-- the figure legend of the results-overlay: how the pie-charts are calculated (also in the png) -->
             <p class="text-small text-gray mt-1 mb-0" id="annotation-caption-{{object.pk}}" style="display: none;"></p>
             {% if object.alt %}<p class="text-small text-gray mt-1">{{object.alt}}</p>{% endif %}
@@ -198,6 +200,9 @@
                         empty: 'no ancient family'},
             hominin: {url: data.homininUrl, name: 'hominin mtDNA', heading: 'Hominin lineages', export: 'Lineages',
                       empty: 'not ancient', ns: 'ancient, no significant lineage'},
+            // clades: selected by family (instead of the capture probe)
+            clades: {url: data.cladesUrl, name: 'clade', heading: 'Clades', export: 'Clades', select: 'Family',
+                     empty: 'no clade passing the filters'},
         }
         var config = function(){ return OVERLAYS[overlaySelect.value] || OVERLAYS.quicksand }
         var sampleState = function(sample){ return ((overlay.states || {})[probe] || {})[sample] }
@@ -321,7 +326,7 @@
         var caption = document.getElementById('annotation-caption-{{object.pk}}')
         var info = document.getElementById('annotation-info-{{object.pk}}'), showInfo = false
         info.addEventListener('click', function(){ showInfo = !showInfo; refresh() })
-        var captionText = function(){ return overlay ? 'Capture probe: ' + probeName() + '. ' + (overlay.description || '') : '' }
+        var captionText = function(){ return overlay ? (config().select || 'Capture probe') + ': ' + probeName() + '. ' + (overlay.description || '') : '' }
         // the cultures of the tagged samples (legend of the samples): mixed layers as 'culture / second culture'.
         // in the order of the layers (the uppermost layer with the culture in the profile), unassigned samples last
         var cultureRows = function(){
@@ -408,6 +413,7 @@
                 probe = values.indexOf(current) > -1 ? current : (values.length ? values[0] : '')
                 probeSelect.value = probe
                 probeSelect.style.display = ''; probeSelect.disabled = result.probes.length < 2
+                probeSelect.title = config().select || 'Capture probe'
                 refresh()
             })
         }

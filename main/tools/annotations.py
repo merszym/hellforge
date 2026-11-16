@@ -259,10 +259,90 @@ def hominin_overlay(request, pk):
     })
 
 
+def clade_overlay(request, pk):
+    """
+    the clades (mammalian per-family analysis) of the tagged samples, for the pie-charts on the image. per family:
+    {family: {sample-pk: {clade: est_counts}}}. the filters are the clade settings of the quicksand tab (DNA tab).
+    a sample: its merged result (if the result of one of the merged libraries can be seen), otherwise the results
+    of its libraries are summed (each library with the filters)
+    """
+    from main.models import AnalyzedSample, FamilyAnalysis, CladeReference
+    from main.tools.clades import filter_clades
+    from main.tools.dna_filters import get_analysis_settings
+    from main.tools.projects import get_project
+    from main.tools.quicksand import prepare_data
+
+    image = Image.objects.get(pk=pk)
+    samples = image.annotations.values("sample_id")
+    settings = get_analysis_settings(request, "quicksand")
+    libraries = AnalyzedSample.objects.filter(sample__in=samples, qc_pass=True)
+    if settings["only_project"]:
+        libraries = libraries.filter(project=get_project(request))
+    allowed = set(libraries.values_list("pk", flat=True))
+
+    # 'Ancient in quicksand': the families that are ancient in the libraries (with the quicksand cutoffs)
+    found = defaultdict(set)
+    if settings["cladelinked"]:
+        quicksand = prepare_data(
+            request, QuicksandAnalysis.objects.filter(analyzedsample__in=libraries).select_related("analyzedsample"),
+            column=settings["column"], percentage=settings["percentage"], breadth=settings["breadth"],
+            ancient=True, only_project=settings["only_project"],
+        )
+        for entry, families in quicksand["quicksand_results"].items():
+            found[entry.analyzedsample_id].update(families)
+
+    groups = defaultdict(list)  # (family, sample): the results
+    query = FamilyAnalysis.objects.filter(Q(sample__in=samples) | Q(analyzedsample__sample__in=samples)) \
+        .select_related("analyzedsample").prefetch_related("libraries")
+    for analysis in query:
+        libs = [analysis.analyzedsample_id] if analysis.analyzedsample_id else [l.pk for l in analysis.libraries.all()]
+        libs = [lib for lib in libs if lib in allowed]
+        if libs:
+            groups[(analysis.family, analysis.sample_id or analysis.analyzedsample.sample_id)].append((analysis, libs))
+
+    references = {family: CladeReference.latest(family) for family in {family for family, sample in groups}}
+    results = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
+    for (family, sample), entries in groups.items():
+        merged = [entry for entry in entries if entry[0].sample_id]
+        clades = results[family][sample]  # analyzed (also if nothing is shown)
+        for analysis, libs in merged[:1] or entries:
+            if settings["cladelinked"] and not any(family in found[lib] for lib in libs):
+                continue
+            valid, counts, total, sink = filter_clades(analysis, references[family], settings)
+            for clade, n in counts.items():
+                clades[clade] += n
+    for family in results:
+        for sample in results[family]:
+            results[family][sample] = {clade: round(n, 1) for clade, n in results[family][sample].items()}
+
+    colors = {}
+    for reference in references.values():
+        colors.update((reference.color_palette or {}) if reference else {})
+    filters = [f"at least {settings['clademinseqs']} unique sequences (pseudoaligned)",
+               f"less than {settings['cladesinkratio']:g} estimated counts in the sink (unassigned genomes) per estimated count with clade"]
+    if settings["cladelinked"]:
+        filters.append("the family ancient (++) in quicksand")
+    description = (
+        "Pie-charts: the share of each clade of the selected family in the estimated counts (kallisto, summed per clade). "
+        f"A result is used if it has {', '.join(filters[:-1])} and {filters[-1]}; "
+        f"a clade is counted with at least {settings['clademincounts']:g} estimated counts and {settings['cladepercent']:g}% of the estimated counts with clade. "
+        "The merged result of a sample is used if there is one, otherwise the clades of its libraries are summed. "
+        f"Only libraries that passed QC{qc_scope(settings)}. The size of the pie-charts does not depend on the estimated counts."
+    )
+    return JsonResponse({
+        "column": "estimated counts",
+        "colors": colors,
+        "probes": sorted_probes(results),
+        "results": results,
+        "description": description,
+    })
+
+
 urlpatterns = [
     path("image/<int:pk>/save", save_annotation, name="main_annotation_save"),
     path("delete/<int:pk>", delete_annotation, name="main_annotation_delete"),
     path("image/<int:pk>/samples", search_samples, name="main_annotation_samples"),
     path("image/<int:pk>/quicksand", quicksand_overlay, name="main_annotation_quicksand"),
     path("image/<int:pk>/hominin", hominin_overlay, name="main_annotation_hominin"),
+    path("image/<int:pk>/clades", clade_overlay, name="main_annotation_clades"),
 ]

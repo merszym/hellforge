@@ -1593,7 +1593,9 @@ class AnalyzedSample(models.Model):
         for analysis in self.family_analysis.all():
             versions.setdefault(analysis.version, []).append(analysis.family)
         for analysis in self.merged_family_analysis.all():
-            versions.setdefault(analysis.version, []).append(f"{analysis.family} (merged)")
+            # a single 'merged' library: no merged notice
+            merged = len(analysis.libraries.all()) > 1
+            versions.setdefault(analysis.version, []).append(f"{analysis.family} (merged)" if merged else analysis.family)
         return [(version, ", ".join(sorted(families))) for version, families in versions.items()]
 
     def get_data(self, for_upload=False, **kwargs):

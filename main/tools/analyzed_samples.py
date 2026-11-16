@@ -189,7 +189,7 @@ def prefetch_for_table(query, project=None):
         Prefetch('matthias_analysis', queryset=HumanDiagnosticPositions.objects.defer('data')),
         Prefetch('nedflow_analysis', queryset=NedflowAnalysis.objects.order_by('pk').defer('data')),
         Prefetch('family_analysis', queryset=FamilyAnalysis.objects.order_by('family').defer('data', 'meta')),
-        Prefetch('merged_family_analysis', queryset=FamilyAnalysis.objects.order_by('family').defer('data', 'meta')),  # merged data
+        Prefetch('merged_family_analysis', queryset=FamilyAnalysis.objects.order_by('family').defer('data', 'meta').prefetch_related('libraries')),  # merged data
     )
 
 

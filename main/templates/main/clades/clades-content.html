@@ -5,8 +5,14 @@
 
 <div id="clade-display">
     <div class="p-2">
-        <h3>Mammalian mtDNA: Clades{% if family %} of {{family}}{% endif %}</h3>
-        <small>
+        <!-- the description (filters, calculation) is shown with the info-icon, the state stays while the table reloads -->
+        <h3>Mammalian mtDNA: Clades{% if family %} of {{family}}{% endif %}
+            <a class="btn btn-link btn-sm tooltip tooltip-right" id="clade-info" data-tooltip="Show how the clades are calculated"
+                onclick="window.cladeInfo = !window.cladeInfo; document.getElementById('clade-description').hidden = !window.cladeInfo">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align: middle;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12" y2="8"/></svg>
+            </a>
+        </h3>
+        <small id="clade-description" hidden>
             The estimated number of sequences per reference genome (kallisto), summed per clade of the family
             {% if reference %}(clade assignment: {{reference.family}} {{reference.version}}){% endif %}.
             Only results with at least {{clademinseqs}} unique sequences (pseudoaligned) are shown, and with less than {{cladesinkratio}}
@@ -53,11 +59,11 @@
                     <td nowrap class="{{sample.layer.culture.classname|default:'sterile'}}">{{sample.layer.name|default:'unassigned'}}</td>
                     <td nowrap>{{sample.name}}</td>
                     <td nowrap style="padding: 0; margin: 0;">
-                        {# the images the sample is tagged on: opens the image with the quicksand results (probe of the libraries) #}
+                        {# the images the sample is tagged on: opens the image with the clades of this family #}
                         {% for annotation in sample.image_annotations.all %}
                         <a class="modal_open tooltip tooltip-right text-gray" data-tooltip="Show on image" style="cursor: pointer;"
                             hx-get="{% url 'main_modal_get' %}"
-                            hx-vals='{"object":"image_{{annotation.image_id}}", "type":"display", "focus":"{{sample.pk}}", "overlay":"quicksand", "probe":"{{row.probes|first|default:''|escapejs}}"}'
+                            hx-vals='{"object":"image_{{annotation.image_id}}", "type":"display", "focus":"{{sample.pk}}", "overlay":"clades", "probe":"{{family|escapejs}}"}'
                             hx-target="#modal-blank">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                         </a>
@@ -66,7 +72,7 @@
                     <td nowrap>{{sample.type|default:''}}</td>
                     <td nowrap>
                         {% for lib in row.libraries %}{{lib.library}}{% if not forloop.last %}, {% endif %}{% endfor %}
-                        {% if analysis.sample %}<span class="text-gray">(merged)</span>{% endif %}
+                        {% if analysis.libraries.all|length > 1 %}<span class="text-gray">(merged)</span>{% endif %}
                     </td>
                     <td nowrap>{{row.probes|join:", "}}</td>
                     <td nowrap>{{row.seqruns|join:", "}}</td>
@@ -142,6 +148,7 @@
 </div>
 
 <script>
+    document.getElementById('clade-description').hidden = !window.cladeInfo
     $('#clade-list-search').on("keyup", function() {
         var value = $(this).val().toLowerCase();
         $("tr.clade-tr").each(function() {
