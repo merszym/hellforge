@@ -68,4 +68,9 @@
             <i class="icon icon-download"></i>
         </a>
     </button>
+    {% if has_coordinates %}
+    <!-- all samples of the site with X, Y, Z coordinates (origin) in 3d, with the results as pie-charts -->
+    <span class="btn modal_open tooltip tooltip-right" data-tooltip="Show all samples of the site with X, Y, Z coordinates in 3D"
+        hx-get="{% url 'main_view3d' 'site' object.pk %}" hx-target="#modal-blank">3D view</span>
+    {% endif %}
 </div>

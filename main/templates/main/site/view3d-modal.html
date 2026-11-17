@@ -5,7 +5,7 @@
     <div class="modal-container" style="max-width: 92vw; width: 92vw; height: 92vh; max-height: 92vh; display: flex; flex-direction: column;">
         <div class="modal-header">
             <a class="btn btn-clear float-right modal_close" aria-label="Close" style="cursor: pointer;"></a>
-            <div class="modal-title h5">{{object.site.name}}: {{object.name}} <small class="text-gray">(3D, samples with X, Y, Z)</small></div>
+            <div class="modal-title h5">{{title}} <small class="text-gray">(3D, samples with X, Y, Z)</small></div>
             <div class="mt-1" style="display: flex; flex-wrap: wrap; align-items: center; gap: .25rem 1rem;">
                 <select class="form-select select-sm" id="view3d-overlay" style="width: auto;">
                     <option value="">Samples</option>
@@ -73,7 +73,7 @@
     var labels = document.getElementById('view3d-labels')
     var info = document.getElementById('view3d-info'), footer = document.getElementById('view3d-footer'), showInfo = false
     info.addEventListener('click', function(){ showInfo = !showInfo; refresh() })
-    var URL = "{% url 'main_view3d_overlay' object.pk 'OVERLAY' %}"
+    var URL = "{{overlay_url}}"
     var OVERLAYS = {
         quicksand: {name: 'quicksand', heading: 'Ancient families', select: 'Capture probe', empty: 'no ancient family'},
         hominin: {name: 'hominin mtDNA', heading: 'Hominin lineages', select: 'Capture probe', empty: 'not ancient', ns: 'ancient, no significant lineage'},
@@ -416,7 +416,7 @@
         captionLines.forEach(function(text, i){ out.fillText(text, gap, height + gap + (i + 1) * line - 3) })
         canvasOut.toBlob(function(blob){
             var link = document.createElement('a'); link.href = URL_OBJECT.createObjectURL(blob)
-            link.download = '{{object.site.name|slugify}}_{{object.name|slugify}}_3d' + (overlay ? '_' + overlaySelect.value + '_' + (probe || 'none') : '') + '.png'
+            link.download = '{{title|slugify}}_3d' + (overlay ? '_' + overlaySelect.value + '_' + (probe || 'none') : '') + '.png'
             document.body.appendChild(link); link.click(); link.remove()
             setTimeout(function(){ URL_OBJECT.revokeObjectURL(link.href) }, 1000)
         })

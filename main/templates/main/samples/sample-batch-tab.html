@@ -92,7 +92,7 @@
             <div class="empty" style="min-height:200px; min-width:200px;">
                 <p class="empty-subtitle">Samples with X, Y, Z</p>
                 <div class="empty-action">
-                    <button class="btn btn-primary modal_open" hx-get="{% url 'main_view3d' object.pk %}" hx-target="#modal-blank">3D view</button>
+                    <button class="btn btn-primary modal_open" hx-get="{% url 'main_view3d' 'batch' object.pk %}" hx-target="#modal-blank">3D view</button>
                 </div>
             </div>
             {% endif %}

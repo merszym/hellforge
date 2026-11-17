@@ -480,10 +480,14 @@ def get_site_batches(request, pk):
         and not (filtered and batch.sample_count == 0)
     }
 
+    from main.tools.view3d import has_coordinates
+
     context = {
         "batches": batch_sample_dict,
         "object": object,
         "filtered": filtered,
+        # samples with X, Y, Z in the origin: the 3d-view of the site
+        "has_coordinates": has_coordinates(request, site=object),
     }
     return render(request, "main/site/site-sample-batches.html", context)
 
@@ -592,7 +596,7 @@ def get_site_samplebatch_tab(request, pk):
         from main.tools.view3d import has_coordinates
 
         # samples with X, Y, Z in the origin: the 3d-view (in the gallery)
-        context = {"object": batch, "has_coordinates": has_coordinates(request, batch)}
+        context = {"object": batch, "has_coordinates": has_coordinates(request, batch=batch)}
         if request.user.is_authenticated:
             context["batch_projects"] = batch_projects(batch)
     else:
