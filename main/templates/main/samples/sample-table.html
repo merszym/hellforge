@@ -36,7 +36,15 @@
             <th>Sample Dating</th>
             <th>Dating Type</th>
             <th>Year of Collection</th>
+            {% if request.user.is_authenticated %}
+            <!-- click: rename a key of the sample origin (in the batch, the site or everywhere) -->
+            <th nowrap class="modal_open" style="cursor: pointer;" title="Rename origin keys"
+                hx-get="{% url 'main_sample_rename_provenience' %}"
+                hx-vals='{"site": "{{site.pk}}", "batch": "{{batch.pk|default:''}}"}'
+                hx-target="#modal-blank">Sample Origin</th>
+            {% else %}
             <th>Sample Origin</th>
+            {% endif %}
         </tr>
     </thead>
     <tbody>

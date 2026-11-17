@@ -374,8 +374,79 @@ def update_sample_provenience(request):
     )
 
 
+def load_provenience(sample):
+    try:
+        return json.loads(sample.provenience) if sample.provenience else {}
+    except (TypeError, ValueError):
+        return {}
+
+
+@login_required
+def rename_provenience_key(request):
+    """
+    rename a key of the sample origin (provenience: {key: value}) in the batch, the site or everywhere,
+    the order of the keys is kept. samples with the new key already: listed, then skipped or overwritten
+    """
+    from collections import Counter
+
+    site = Site.objects.get(pk=request.GET.get("site"))
+    batch = SampleBatch.objects.filter(pk=request.GET.get("batch") or None).first()
+    context = {"site": site, "batch": batch, "selected": request.GET.get("key", "")}
+    samples = Sample.objects.exclude(provenience=None).exclude(provenience="")
+
+    if request.method == "POST":
+        old, new = request.POST.get("old", ""), request.POST.get("new", "").strip()
+        scope = request.POST.get("scope", "site")
+        context["selected"] = old
+        if not new:
+            context["error"] = "The new name is empty"
+        elif new == old:
+            context["error"] = "The new name is the same as the old one"
+        elif ":" in new or ";" in new:
+            context["error"] = "The name cannot contain ':' or ';' (used in the upload-sheet)"
+        else:
+            scoped = samples.filter(batch=batch) if scope == "batch" else samples.filter(site=site) if scope == "site" else samples
+            entries = [(sample, data) for sample in scoped.select_related("site") for data in [load_provenience(sample)] if old in data]
+            clashes = [(sample, data) for sample, data in entries if new in data]
+            clash = request.POST.get("clash", "")  # skip the samples with the new key or overwrite its value
+            if clashes and clash not in ["skip", "overwrite"]:
+                context.update({
+                    "clashes": [{"sample": sample, "old_value": data[old], "new_value": data[new]} for sample, data in clashes],
+                    "old": old, "new": new, "scope": scope,
+                })
+            else:
+                renamed = 0
+                for sample, data in entries:
+                    if new in data and clash == "skip":
+                        continue
+                    value = data[old]
+                    # the same position, an existing new key is replaced
+                    data = {(new if key == old else key): (value if key == old else v) for key, v in data.items() if key != new}
+                    sample.provenience = json.dumps(data)
+                    sample.save(update_fields=["provenience"])
+                    renamed += 1
+                context.update({"renamed": renamed, "old": old, "new": new, "selected": new,
+                                "skipped": len(clashes) if clash == "skip" else 0})
+
+    # all keys, with the number of samples in the batch, the site and in total
+    total, at_site, in_batch = Counter(), Counter(), Counter()
+    for sample in samples.only("provenience", "site_id", "batch_id"):
+        keys = load_provenience(sample).keys()
+        total.update(keys)
+        if sample.site_id == site.pk:
+            at_site.update(keys)
+        if batch and sample.batch_id == batch.pk:
+            in_batch.update(keys)
+    context["keys"] = [
+        {"key": key, "total": total[key], "at_site": at_site[key], "in_batch": in_batch[key]}
+        for key in sorted(total, key=str.lower)
+    ]
+    return render(request, "main/samples/rename-provenience-modal.html", context)
+
+
 urlpatterns = [
     path("save", save_verified, name="ajax_save_verified_samples"),
+    path("rename-provenience", rename_provenience_key, name="main_sample_rename_provenience"),
     path("add", add_human_remain, name="main_sample_create"),
     path("update-base", update_samplebase, name="sample-edit"),
     path("update-layer", update_samplelayer, name="sample-layer-update"),
