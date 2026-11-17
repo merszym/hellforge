@@ -10,6 +10,7 @@ import main.tools as tools
 from django.db.models import Q
 import pandas as pd
 import json
+import io
 from django.contrib.auth.decorators import (
     login_required,
 )  # this is for now, make smarter later
@@ -65,8 +66,8 @@ def handle_samplebatch_file(request, file):
     all_layers = [x.name for x in site.layer.all()]
     all_fossils = [x.name for x in Sample.objects.filter(site=site, domain='archaeology')]
 
-    # filter for expected/unexpected columns
-    expected = Sample.table_columns()
+    # filter for expected/unexpected columns ('object': the sample to update, see the download for upload)
+    expected = ["object"] + Sample.table_columns()
     issues = []
     if dropped := [x for x in df.columns if x not in expected]:
         issues.append(f"Dropped Table Columns: {','.join(dropped)}")
@@ -101,6 +102,41 @@ def handle_samplebatch_file(request, file):
         )
         df.drop(fossil_wrong.index, inplace=True)
 
+    # the samples to update ('object': sample_<pk> of this site) and the new samples (unique names at the site)
+    if "object" not in df.columns:
+        df.insert(0, "object", None)
+    df["object"] = df["object"].apply(lambda x: str(x).strip() if x == x and str(x).strip() else None)
+    df["Sample Name"] = df["Sample Name"].apply(lambda x: str(x).strip() if x == x and str(x).strip() else None)
+    site_samples = {s.pk: s.name for s in Sample.objects.filter(site=site)}
+    remove, names = [], {}
+    for index, row in df.iterrows():
+        obj, name = row["object"], row["Sample Name"]
+        if not name:
+            issues.append(f"Removed row without Sample Name{f' ({obj})' if obj else ''}")
+            remove.append(index)
+            continue
+        if obj:
+            model, _, pk = obj.partition("_")
+            if model != "sample" or not pk.isdigit() or int(pk) not in site_samples:
+                issues.append(f"Removed {name}: object '{obj}' is not a sample of this site")
+                remove.append(index)
+                continue
+            pk = int(pk)
+        else:
+            pk = None
+        # the name must stay unique at the site (new samples, renamed samples)
+        if other := [k for k, v in site_samples.items() if v == name and k != pk]:
+            hint = "" if pk else f" (to update it, add sample_{other[0]} in the 'object' column)"
+            issues.append(f"Removed {name}: a sample with this name exists at the site{hint}")
+            remove.append(index)
+            continue
+        if name in names or (pk and pk in names.values()):
+            issues.append(f"Removed {name}: more than once in the sheet")
+            remove.append(index)
+            continue
+        names[name] = pk
+    df.drop(remove, inplace=True)
+
     # add the sample batch
     df.insert(0, "Sample Batch", batch.name)
 
@@ -120,14 +156,22 @@ def handle_samplebatch_file(request, file):
     )
 
 
+def present(value):
+    """a value of the upload-sheet is given (not empty, None or NaN: empty cells come back as None from the json)"""
+    return value is not None and value == value and str(value).strip() != ""
+
+
 @login_required
 def save_verified(request):
-    df = pd.read_json(request.POST.get("batch-data"))
+    df = pd.read_json(io.StringIO(request.POST.get("batch-data")))
+    upload_batch = SampleBatch.objects.filter(pk=request.POST.get("batch") or None).first()
     site = Site.objects.get(pk=int(request.POST.get("site")))
     df.convert_dtypes()
 
     # go through the layers
     df["Layer Name"] = df["Layer Name"].fillna("unknown")
+    if "object" not in df.columns:
+        df["object"] = None
     for layer, dat in df.groupby("Layer Name"):
         if layer == "unknown":
             l = None
@@ -135,6 +179,7 @@ def save_verified(request):
             l = Layer.objects.filter(site=site, name=layer).first()
 
         for (
+            obj,
             batch,
             fossil,
             sample,
@@ -143,6 +188,7 @@ def save_verified(request):
             yoc,
             provenience,
         ) in zip(
+            dat["object"],
             dat["Sample Batch"],
             dat["Fossil Remain"],
             dat["Sample Name"],
@@ -151,10 +197,18 @@ def save_verified(request):
             dat["Sample Year of Collection"],
             dat["Sample Provenience"],
         ):
-            # check if a sample exists already, get it
-            s, created = Sample.objects.get_or_create(name=sample, site=site)
+            # 'object': update this sample (also its name), otherwise a new sample (the name must be unique at the site)
+            if present(obj):
+                s = Sample.objects.get(pk=int(str(obj).split("_")[1]), site=site)
+                if Sample.objects.filter(site=site, name=sample).exclude(pk=s.pk).exists():
+                    continue
+                s.name = sample
+            else:
+                if Sample.objects.filter(site=site, name=sample).exists():
+                    continue
+                s = Sample.objects.create(name=sample, site=site)
             # if layer is given: Update the layer
-            if fossil==fossil:
+            if present(fossil):
                 # the sample gets the layer of the parent (see Sample.save)
                 parent = Sample.objects.get(site=site, domain='archaeology', name=fossil)
                 s.sample = parent
@@ -168,7 +222,7 @@ def save_verified(request):
             s.project.add(project)
             # add synonyms
             # since synonyms are stored as id_label:id, id_label2:id2
-            if synonyms == synonyms and synonyms:
+            if present(synonyms):
                 sample_synonyms = s.synonyms.all()
                 for syn in synonyms.split(";"):
                     syn_label, syn_name = syn.split(":", 1)
@@ -188,7 +242,7 @@ def save_verified(request):
             # Type
             s.type = type
             # year of collection
-            s.year_of_collection = int(yoc) if yoc == yoc else None
+            s.year_of_collection = int(float(yoc)) if present(yoc) else None
             # provenience
             # thats a json, so collect key:value pairs from the cell...
             try:
@@ -197,7 +251,7 @@ def save_verified(request):
                 # doesnt exist yet
                 prov = json.loads("{}")
             new_prov = dict()
-            if provenience and provenience == provenience:
+            if present(provenience):
                 for item in provenience.split(";"):
                     k, v = item.split(":")
                     new_prov[k.strip()] = v.strip()
@@ -207,7 +261,7 @@ def save_verified(request):
 
     from main.tools.site import get_site_samplebatch_tab
 
-    return get_site_samplebatch_tab(request, batch.pk)
+    return get_site_samplebatch_tab(request, upload_batch.pk if upload_batch else batch.pk)
 
 
 def add_human_remain(request):

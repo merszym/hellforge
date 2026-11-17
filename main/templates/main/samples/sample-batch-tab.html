@@ -38,6 +38,14 @@
             data-tooltip="Download Sheet-Template">
             <i class="icon icon-download"></i>
         </span>
+        {% if object.sample.first %}
+        <!-- the samples of the batch in the format of the upload-sheet (edit and upload again) -->
+        <a class="btn tooltip tooltip-right" target="_blank"
+            href="{% url 'main_samplebatch_downloadforupload' object.pk %}"
+            data-tooltip="Download for Upload">
+            <i class="icon icon-download"></i>
+        </a>
+        {% endif %}
         <form
             hx-encoding='multipart/form-data'
             hx-post="{% url 'main_upload' %}?type=samplebatch&batch={{object.pk}}"

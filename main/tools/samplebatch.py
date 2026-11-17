@@ -1,7 +1,10 @@
+import json
 from main.models import SampleBatch
 from main.ajax import get_modal
 from django import forms
 from django.urls import path
+from django.utils.text import slugify
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from main.tools.generic import get_instance_from_string
 from django.db.models import Q
@@ -70,6 +73,38 @@ def update(request, pk):
     return get_modal(request)
 
 
+def download_for_upload(request, pk):
+    """
+    the samples of the batch in the format of the upload-sheet (Sample.table_columns), to edit and upload again.
+    the 'object' column (sample_<pk>) identifies the samples: the upload updates them (also the name)
+    """
+    from main.models import Sample
+    from main.tools.generic import download_csv
+
+    batch = SampleBatch.objects.get(pk=pk)
+    # the columns of the upload (the ages are calculated, not uploaded)
+    columns = ["object"] + [x for x in Sample.table_columns() if not x.startswith("Sample Age")]
+
+    def row(sample):
+        # only the own values of the sample: the parent is the layer (or the fossil), nothing is inherited
+        # (a sample with a fossil gets the layer of the fossil, the upload sets it from the fossil)
+        return {
+            "object": f"sample_{sample.pk}",
+            "Layer Name": sample.layer.name if sample.layer and not sample.sample else None,
+            "Fossil Remain": sample.sample.name if sample.sample else None,
+            "Sample Name": sample.name,
+            "Sample Synonyms": ";".join(x.export() for x in sample.synonyms.all()),
+            "Sample Type": sample.type,
+            "Sample Year of Collection": sample.year_of_collection,
+            "Sample Provenience": ";".join(f"{k}:{v}" for k, v in json.loads(sample.provenience).items()) if sample.provenience else None,
+        }
+
+    samples = batch.sample.select_related("layer", "sample").prefetch_related("synonyms").order_by("name")
+    rows = (row(sample) for sample in samples)
+    return download_csv(rows, name=f"{slugify(batch.name)}_for_upload.csv", columns=columns)
+
+
 urlpatterns = [
     path("<int:pk>/update", update, name="main_samplebatch_update"),
+    path("<int:pk>/download-for-upload", login_required(download_for_upload), name="main_samplebatch_downloadforupload"),
 ]

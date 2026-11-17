@@ -86,6 +86,7 @@
                     {% csrf_token %}
                     <textarea name="batch-data" type="text" style="display:none;">{{json}}</textarea>
                     <input name="site" value="{{site.pk}}" style="display:none;">
+                    <input name="batch" value="{{batch.pk}}" style="display:none;">
 
                 <br>
                 <button class="btn modal_close">Confirm</button>
