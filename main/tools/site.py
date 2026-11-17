@@ -589,7 +589,10 @@ def get_site_samplebatch_tab(request, pk):
     if pk != 0:
         batch = SampleBatch.objects.select_related('site').get(pk=pk)
         samples_qs = batch.sample.all()
-        context = {"object": batch}
+        from main.tools.view3d import has_coordinates
+
+        # samples with X, Y, Z in the origin: the 3d-view (in the gallery)
+        context = {"object": batch, "has_coordinates": has_coordinates(request, batch)}
         if request.user.is_authenticated:
             context["batch_projects"] = batch_projects(batch)
     else:

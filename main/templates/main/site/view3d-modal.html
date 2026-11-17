@@ -1,0 +1,427 @@
+<!-- the samples of the site with X, Y, Z coordinates (origin) in 3d. the results (overlays of the image viewer) as pie-charts.
+     drag: rotate, shift+drag / right-drag: move, wheel: zoom, double-click: reset -->
+<div id="view3d-modal" class="modal modal-lg active" style="z-index: 1000">
+    <a style="cursor:pointer;" class="modal-overlay modal_close" aria-label="Close"></a>
+    <div class="modal-container" style="max-width: 92vw; width: 92vw; height: 92vh; max-height: 92vh; display: flex; flex-direction: column;">
+        <div class="modal-header">
+            <a class="btn btn-clear float-right modal_close" aria-label="Close" style="cursor: pointer;"></a>
+            <div class="modal-title h5">{{object.site.name}}: {{object.name}} <small class="text-gray">(3D, samples with X, Y, Z)</small></div>
+            <div class="mt-1" style="display: flex; flex-wrap: wrap; align-items: center; gap: .25rem 1rem;">
+                <select class="form-select select-sm" id="view3d-overlay" style="width: auto;">
+                    <option value="">Samples</option>
+                    <option value="quicksand">Quicksand: ancient families</option>
+                    <option value="hominin">Hominin mtDNA: lineages</option>
+                    <option value="clades">Mammalian clades</option>
+                </select>
+                <select class="form-select select-sm" id="view3d-probe" style="width: auto; display: none;"></select>
+                <select class="form-select select-sm" id="view3d-mode" style="width: auto; display: none;" title="Sequences">
+                    <option value="deam">Deaminated sequences</option>
+                    <option value="all">All sequences</option>
+                </select>
+                <label class="text-small" style="display: flex; align-items: center; gap: .4rem;">
+                    Size <input class="slider" type="range" id="view3d-size" min="8" max="80" value="24" style="width: 8rem;">
+                </label>
+                <label class="form-switch form-inline">
+                    <input type="checkbox" id="view3d-labels" checked><i class="form-icon"></i> Labels
+                </label>
+                <!-- how the pie-charts are calculated: shown below the view -->
+                <button type="button" class="btn btn-sm btn-link tooltip" id="view3d-info" data-tooltip="Show how the pie-charts are calculated" style="display: none;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align: middle;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12" y2="8"/></svg>
+                </button>
+                <span class="btn-group">
+                    <button type="button" class="btn btn-sm" data-view="side" title="View from the side (X-Z)">Side</button>
+                    <button type="button" class="btn btn-sm" data-view="front" title="View from the front (Y-Z)">Front</button>
+                    <button type="button" class="btn btn-sm" data-view="top" title="View from above (X-Y)">Top</button>
+                    <button type="button" class="btn btn-sm" data-view="reset" title="Reset the view">Reset</button>
+                </span>
+                <!-- the displayed view (with the results and the legend) as png -->
+                <button type="button" class="btn btn-sm" id="view3d-download" title="Download the displayed view as PNG">
+                    <i class="icon icon-download"></i> PNG
+                </button>
+            </div>
+        </div>
+        <div class="modal-body" style="flex: 1; min-height: 0; overflow: hidden; position: relative; padding: 0;">
+            <div id="view3d-stage" style="position: absolute; inset: 0; background: #fff; overflow: hidden; cursor: grab; user-select: none;">
+                <canvas id="view3d-canvas" style="position: absolute; inset: 0;"></canvas>
+                <div id="view3d-markers" style="position: absolute; inset: 0;"></div>
+                <div id="view3d-popup" class="annotation-legend annotation-popup" style="position: absolute; display: none; z-index: 100000; max-width: 20rem;"></div>
+                <div id="view3d-legend" class="annotation-legend" style="position: absolute; right: .5rem; bottom: .5rem; z-index: 100000;"></div>
+                <div class="text-tiny text-gray" style="position: absolute; left: .5rem; bottom: .3rem; z-index: 100000;">
+                    drag: rotate &middot; shift+drag: move &middot; wheel: zoom &middot; double-click: reset
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer" id="view3d-footer" style="padding-top: .3rem; display: none;">
+            <p class="text-small text-gray m-0" id="view3d-caption" style="text-align: left;"></p>
+        </div>
+    </div>
+</div>
+{% include 'main/annotations/marker-style.html' %}
+<style>
+    #view3d-markers .annotation-marker { position: absolute; width: 0; height: 0; cursor: pointer; }
+    #view3d-stage.hide-labels .annotation-marker .label { display: none; }
+    #view3d-info.active { color: #fff; background: #5755d9; border-radius: 50%; }
+</style>
+<script>
+(function(){
+    var samples = JSON.parse('{{samples|escapejs}}')
+    var stage = document.getElementById('view3d-stage'), canvas = document.getElementById('view3d-canvas')
+    var layer = document.getElementById('view3d-markers'), popup = document.getElementById('view3d-popup')
+    var legend = document.getElementById('view3d-legend'), caption = document.getElementById('view3d-caption')
+    var overlaySelect = document.getElementById('view3d-overlay'), probeSelect = document.getElementById('view3d-probe')
+    var modeSelect = document.getElementById('view3d-mode'), sizeSlider = document.getElementById('view3d-size')
+    var labels = document.getElementById('view3d-labels')
+    var info = document.getElementById('view3d-info'), footer = document.getElementById('view3d-footer'), showInfo = false
+    info.addEventListener('click', function(){ showInfo = !showInfo; refresh() })
+    var URL = "{% url 'main_view3d_overlay' object.pk 'OVERLAY' %}"
+    var OVERLAYS = {
+        quicksand: {name: 'quicksand', heading: 'Ancient families', select: 'Capture probe', empty: 'no ancient family'},
+        hominin: {name: 'hominin mtDNA', heading: 'Hominin lineages', select: 'Capture probe', empty: 'not ancient', ns: 'ancient, no significant lineage'},
+        clades: {name: 'clade', heading: 'Clades', select: 'Family', empty: 'no clade passing the filters'},
+    }
+    var overlay = null, probe = ''
+
+    // the coordinates: centered, the same scale on all axes (meters)
+    var mean = function(axis){ return samples.reduce(function(s, p){ return s + p[axis] }, 0) / samples.length }
+    var center = {x: mean('x'), y: mean('y'), z: mean('z')}
+    var extent = function(axis){
+        var values = samples.map(function(p){ return p[axis] })
+        return [Math.min.apply(null, values), Math.max.apply(null, values)]
+    }
+    var box = {x: extent('x'), y: extent('y'), z: extent('z')}
+    var span = Math.max(box.x[1] - box.x[0], box.y[1] - box.y[0], box.z[1] - box.z[0]) || 1
+
+    // the view: rotation around the vertical axis (yaw) and the tilt (pitch: 0 from the side, 90 from above)
+    var DEFAULT = {yaw: -0.6, pitch: 0.35, zoom: 1, panX: 0, panY: 0}
+    var view = Object.assign({}, DEFAULT)
+    var project = function(x, y, z){
+        var dx = x - center.x, dy = y - center.y, dz = z - center.z
+        var cy = Math.cos(view.yaw), sy = Math.sin(view.yaw), cp = Math.cos(view.pitch), sp = Math.sin(view.pitch)
+        var x1 = dx * cy - dy * sy, y1 = dx * sy + dy * cy
+        var depth = y1 * cp - dz * sp, up = y1 * sp + dz * cp
+        var scale = Math.min(stage.clientWidth, stage.clientHeight) * 0.55 / span * view.zoom
+        return {u: stage.clientWidth / 2 + view.panX + x1 * scale, v: stage.clientHeight / 2 + view.panY - up * scale, depth: depth}
+    }
+
+    // the box of the samples with the axes and the coordinates of the corners
+    var drawBox = function(){
+        var ratio = window.devicePixelRatio || 1
+        canvas.width = stage.clientWidth * ratio; canvas.height = stage.clientHeight * ratio
+        canvas.style.width = stage.clientWidth + 'px'; canvas.style.height = stage.clientHeight + 'px'
+        var ctx = canvas.getContext('2d'); ctx.setTransform(ratio, 0, 0, ratio, 0, 0)
+        ctx.clearRect(0, 0, stage.clientWidth, stage.clientHeight)
+        var corner = function(i, j, k){ return project(box.x[i], box.y[j], box.z[k]) }
+        var line = function(a, b, color, width){
+            ctx.strokeStyle = color; ctx.lineWidth = width; ctx.beginPath(); ctx.moveTo(a.u, a.v); ctx.lineTo(b.u, b.v); ctx.stroke()
+        }
+        // the floor (lowest z) with a grid, then the edges of the box
+        var steps = 4
+        for(var n = 0; n <= steps; n++){
+            var f = n / steps, gx = box.x[0] + f * (box.x[1] - box.x[0]), gy = box.y[0] + f * (box.y[1] - box.y[0])
+            line(project(gx, box.y[0], box.z[0]), project(gx, box.y[1], box.z[0]), '#e3e5ea', 1)
+            line(project(box.x[0], gy, box.z[0]), project(box.x[1], gy, box.z[0]), '#e3e5ea', 1)
+        }
+        ;[[0,0,0,1,0,0],[0,1,0,1,1,0],[0,0,0,0,1,0],[1,0,0,1,1,0],[0,0,1,1,0,1],[0,1,1,1,1,1],[0,0,1,0,1,1],[1,0,1,1,1,1],
+          [0,0,0,0,0,1],[1,0,0,1,0,1],[0,1,0,0,1,1],[1,1,0,1,1,1]].forEach(function(e){
+            line(corner(e[0], e[1], e[2]), corner(e[3], e[4], e[5]), '#c4c8d0', 1)
+        })
+        // the axes from the corner with the lowest values, with their ranges
+        var origin = corner(0, 0, 0)
+        line(origin, corner(1, 0, 0), '#c62828', 2); line(origin, corner(0, 1, 0), '#2e9e4f', 2); line(origin, corner(0, 0, 1), '#1f4e9c', 2)
+        ctx.font = '11px sans-serif'; ctx.fillStyle = '#555'
+        var fmt = function(v){ return Math.abs(v) >= 1000 ? v.toFixed(1) : v.toFixed(2) }
+        var text = function(p, label){ ctx.fillText(label, p.u + 4, p.v - 4) }
+        text(corner(1, 0, 0), 'X ' + fmt(box.x[1])); text(corner(0, 1, 0), 'Y ' + fmt(box.y[1])); text(corner(0, 0, 1), 'Z ' + fmt(box.z[1]))
+        text(origin, fmt(box.x[0]) + ' / ' + fmt(box.y[0]) + ' / ' + fmt(box.z[0]))
+    }
+
+    var URL_OBJECT = window.URL
+    var fillColor = function(style){
+        if(style.backgroundImage && style.backgroundImage !== 'none'){
+            var match = style.backgroundImage.match(/rgba?\([^)]*\)/)
+            if(match){ return match[0] }
+        }
+        return style.backgroundColor
+    }
+
+    // the markers (as in the image viewer): culture of the layer, or the pie-chart of the results
+    var total = function(values){ return Object.values(values).reduce(function(a, b){ return a + b }, 0) }
+    var sorted = function(values){
+        var order = (overlay && overlay.order) || []
+        var rank = function(key){ var i = order.indexOf(key); return i > -1 ? i : order.length }
+        return Object.keys(values).sort(function(a, b){
+            return order.length ? (rank(a) - rank(b) || values[b] - values[a]) : values[b] - values[a]
+        })
+    }
+    var results = function(sample){ return overlay ? (overlay.results[probe] || {})[sample.sample] : undefined }
+    var state = function(sample){ return ((overlay.states || {})[probe] || {})[sample.sample] }
+    var symbol = function(sample){
+        if(!overlay){ return '<span class="dot layer-dot ' + (sample.classes || 'no-layer') + '"></span>' }
+        var values = results(sample)
+        if(values === undefined){ return '<span class="dot none"></span>' }
+        if(!Object.keys(values).length){
+            return state(sample) === 'not-significant' ? '<span class="ring ns"></span>' : '<span class="dot none not-ancient"></span>'
+        }
+        var sum = total(values), start = 0, lines = ''
+        var slices = sorted(values).map(function(key){
+            var end = start + values[key] / sum * 100
+            if(start > 0){
+                var angle = start / 100 * 2 * Math.PI
+                lines += '<line x1="50" y1="50" x2="' + (50 + 50 * Math.sin(angle)) + '" y2="' + (50 - 50 * Math.cos(angle)) + '"/>'
+            }
+            var slice = (overlay.colors[key] || '#bbbbbb') + ' ' + start + '% ' + end + '%'
+            start = end
+            return slice
+        })
+        if(slices.length > 1){ lines += '<line x1="50" y1="50" x2="50" y2="0"/>' }
+        return '<span class="pie" style="background: conic-gradient(' + slices.join(', ') + ')"><svg viewBox="0 0 100 100">' + lines + '</svg></span>'
+    }
+    var markers = samples.map(function(sample){
+        var marker = document.createElement('div'); marker.className = 'annotation-marker'
+        marker.addEventListener('click', function(e){ e.stopPropagation(); showPopup(sample, marker) })
+        layer.appendChild(marker)
+        return {sample: sample, element: marker}
+    })
+    var drawMarkers = function(){
+        markers.forEach(function(m){
+            var p = project(m.sample.x, m.sample.y, m.sample.z)
+            m.element.style.left = p.u + 'px'; m.element.style.top = p.v + 'px'
+            // the closer, the higher (in front)
+            m.element.style.zIndex = Math.round(10000 - p.depth / span * 5000)
+        })
+    }
+    var draw = function(){ drawBox(); drawMarkers(); popup.style.display = 'none' }
+
+    var showPopup = function(sample, marker){
+        var content = '<strong></strong><div class="text-gray syn"></div><div class="lay"></div><div class="res"></div>'
+        popup.innerHTML = content
+        popup.querySelector('strong').textContent = sample.name
+        popup.querySelector('.syn').textContent = (sample.synonyms || []).join(', ')
+        popup.querySelector('.lay').textContent = 'Layer: ' + (sample.layer || 'unassigned') + (sample.layer ? ' (' + (sample.culture || 'no culture') + ')' : '') +
+            ' · X ' + sample.x + ', Y ' + sample.y + ', Z ' + sample.z
+        var res = popup.querySelector('.res')
+        if(overlay){
+            var values = results(sample)
+            if(values === undefined){ res.className = 'res text-gray'; res.textContent = 'No ' + OVERLAYS[overlaySelect.value].name + ' results' }
+            else if(!Object.keys(values).length){
+                var text = state(sample) === 'not-significant' ? OVERLAYS[overlaySelect.value].ns : OVERLAYS[overlaySelect.value].empty
+                res.className = 'res text-gray'; res.textContent = text.charAt(0).toUpperCase() + text.slice(1)
+            } else {
+                var sum = total(values), table = document.createElement('table')
+                sorted(values).forEach(function(key){
+                    var row = table.insertRow()
+                    var swatch = document.createElement('span'); swatch.className = 'swatch'; swatch.style.background = overlay.colors[key] || '#bbbbbb'
+                    row.insertCell().appendChild(swatch); row.cells[0].appendChild(document.createTextNode(key))
+                    row.insertCell().textContent = values[key].toLocaleString()
+                    row.insertCell().textContent = (values[key] / sum * 100).toFixed(1) + '%'
+                })
+                res.appendChild(table)
+            }
+        }
+        popup.style.display = ''
+        var x = parseFloat(marker.style.left) + 14, y = parseFloat(marker.style.top) + 14
+        popup.style.left = Math.min(x, stage.clientWidth - popup.offsetWidth - 8) + 'px'
+        popup.style.top = Math.min(y, stage.clientHeight - popup.offsetHeight - 8) + 'px'
+    }
+
+    // the legend: the cultures (in the order of the layers) or the families/lineages/clades of the shown pie-charts
+    var swatchRow = function(color, text, className){
+        var row = document.createElement('div'), swatch = document.createElement('span')
+        swatch.className = 'swatch ' + (className || ''); if(color){ swatch.style.background = color }
+        row.appendChild(swatch); row.appendChild(document.createTextNode(text)); return row
+    }
+    var drawLegend = function(){
+        legend.innerHTML = ''
+        var heading = document.createElement('strong')
+        legend.appendChild(heading)
+        if(!overlay){
+            heading.textContent = 'Cultures'
+            var rows = {}
+            samples.forEach(function(s){
+                var key = s.culture ? s.culture + (s.mix ? ' / ' + s.mix : '') : (s.layer ? 'no culture' : 'no layer')
+                var position = s.position === null || s.position === undefined ? 1e9 : s.position
+                if(!(key in rows) || position < rows[key].position){ rows[key] = {position: position, classes: s.classes || 'no-layer'} }
+            })
+            Object.keys(rows).sort(function(a, b){ return rows[a].position - rows[b].position }).forEach(function(key){
+                legend.appendChild(swatchRow(null, key, 'culture-swatch ' + rows[key].classes))
+            })
+            return
+        }
+        heading.textContent = OVERLAYS[overlaySelect.value].heading
+        var totals = {}
+        Object.values(overlay.results[probe] || {}).forEach(function(values){
+            Object.keys(values).forEach(function(key){ totals[key] = (totals[key] || 0) + values[key] })
+        })
+        sorted(totals).forEach(function(key){ legend.appendChild(swatchRow(overlay.colors[key] || '#bbbbbb', key)) })
+        legend.appendChild(swatchRow('#fff', OVERLAYS[overlaySelect.value].empty, 'culture-swatch'))
+        legend.appendChild(swatchRow('#9a9a9a', 'no results', 'culture-swatch'))
+    }
+    var refresh = function(){
+        markers.forEach(function(m){
+            m.element.innerHTML = symbol(m.sample) + '<span class="label"></span>'
+            m.element.querySelector('.label').textContent = m.sample.name
+        })
+        drawLegend(); draw()
+        caption.textContent = overlay ? (OVERLAYS[overlaySelect.value].select + ': ' + (probeSelect.selectedOptions[0] || {}).textContent + '. ' + (overlay.description || '')) : ''
+        info.style.display = overlay ? '' : 'none'; info.classList.toggle('active', showInfo)
+        footer.style.display = overlay && showInfo ? '' : 'none'
+    }
+
+    // the results: the overlays of the image viewer, for the samples of this view
+    var loadOverlay = function(){
+        var name = overlaySelect.value
+        modeSelect.style.display = name === 'hominin' ? '' : 'none'
+        if(!name){ overlay = null; probeSelect.style.display = 'none'; refresh(); return }
+        var current = probe
+        fetch(URL.replace('OVERLAY', name) + (name === 'hominin' ? '?mode=' + modeSelect.value : '')).then(function(r){ return r.json() }).then(function(result){
+            overlay = result
+            probeSelect.innerHTML = ''
+            result.probes.forEach(function(p){
+                var option = document.createElement('option'); option.value = p.value
+                option.textContent = p.name + ' (' + p.samples + ' sample' + (p.samples === 1 ? '' : 's') + ')'
+                probeSelect.appendChild(option)
+            })
+            if(!result.probes.length){ probeSelect.innerHTML = '<option>No ' + OVERLAYS[name].name + ' results</option>' }
+            var values = result.probes.map(function(p){ return p.value })
+            probe = values.indexOf(current) > -1 ? current : (values.length ? values[0] : '')
+            probeSelect.value = probe; probeSelect.title = OVERLAYS[name].select
+            probeSelect.style.display = ''; probeSelect.disabled = result.probes.length < 2
+            refresh()
+        })
+    }
+    overlaySelect.addEventListener('change', function(){ probe = ''; loadOverlay() })
+    modeSelect.addEventListener('change', loadOverlay)
+    probeSelect.addEventListener('change', function(){ probe = this.value; refresh() })
+    var setSize = function(){
+        stage.style.setProperty('--pie-size', sizeSlider.value + 'px'); stage.style.setProperty('--dot-size', Math.round(sizeSlider.value / 2) + 'px')
+    }
+    sizeSlider.addEventListener('input', setSize)
+    labels.addEventListener('change', function(){ stage.classList.toggle('hide-labels', !labels.checked) })
+
+    // rotate (drag), move (shift/right drag), zoom (wheel), reset (double-click), fixed views
+    var drag = null
+    stage.addEventListener('contextmenu', function(e){ e.preventDefault() })
+    stage.addEventListener('pointerdown', function(e){
+        if(e.target.closest('.annotation-marker, .annotation-legend')){ return }
+        drag = {x: e.clientX, y: e.clientY, pan: e.shiftKey || e.button === 2}
+        stage.setPointerCapture(e.pointerId); stage.style.cursor = 'grabbing'
+    })
+    stage.addEventListener('pointermove', function(e){
+        if(!drag){ return }
+        var dx = e.clientX - drag.x, dy = e.clientY - drag.y
+        drag.x = e.clientX; drag.y = e.clientY
+        if(drag.pan){ view.panX += dx; view.panY += dy }
+        else {
+            view.yaw += dx * 0.01
+            view.pitch = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, view.pitch + dy * 0.01))
+        }
+        draw()
+    })
+    stage.addEventListener('pointerup', function(){ drag = null; stage.style.cursor = 'grab' })
+    stage.addEventListener('wheel', function(e){
+        e.preventDefault()
+        // zoom towards the mouse
+        var rect = stage.getBoundingClientRect(), factor = Math.exp(-e.deltaY * 0.0015)
+        var mx = e.clientX - rect.left - stage.clientWidth / 2 - view.panX, my = e.clientY - rect.top - stage.clientHeight / 2 - view.panY
+        view.zoom *= factor; view.panX -= mx * (factor - 1); view.panY -= my * (factor - 1)
+        draw()
+    }, {passive: false})
+    stage.addEventListener('dblclick', function(){ view = Object.assign({}, DEFAULT); draw() })
+    stage.addEventListener('click', function(){ popup.style.display = 'none' })
+    document.querySelectorAll('#view3d-modal [data-view]').forEach(function(button){
+        button.addEventListener('click', function(){
+            var views = {side: {yaw: 0, pitch: 0}, front: {yaw: -Math.PI / 2, pitch: 0}, top: {yaw: 0, pitch: Math.PI / 2}, reset: DEFAULT}
+            view = Object.assign({}, DEFAULT, views[this.dataset.view]); draw()
+        })
+    })
+    if(window.ResizeObserver){ new ResizeObserver(draw).observe(stage) }
+
+    // png: the displayed view (box, markers, labels) with the legend on a white strip on the right and the caption
+    // (if shown with the info-icon) below
+    document.getElementById('view3d-download').addEventListener('click', function(){
+        var scale = 2, width = stage.clientWidth, height = stage.clientHeight, gap = 12, line = 15
+        var ctx = document.createElement('canvas').getContext('2d')
+        ctx.font = '12px sans-serif'
+        // the legend: the rows as shown
+        var legendTitle = legend.querySelector('strong').textContent
+        var legendRows = Array.prototype.map.call(legend.querySelectorAll('div'), function(row){
+            var swatch = row.querySelector('.swatch'), style = getComputedStyle(swatch)
+            return {text: row.textContent, color: fillColor(style), outline: swatch.classList.contains('culture-swatch')}
+        })
+        var legendWidth = Math.max.apply(null, legendRows.map(function(r){ return ctx.measureText(r.text).width }).concat([ctx.measureText(legendTitle).width])) + 40
+        var captionLines = []
+        if(overlay && showInfo){
+            var words = caption.textContent.split(' '), current = ''
+            words.forEach(function(word){
+                if(ctx.measureText(current + ' ' + word).width > width + legendWidth - 2 * gap){ captionLines.push(current); current = word }
+                else { current = current ? current + ' ' + word : word }
+            })
+            if(current){ captionLines.push(current) }
+        }
+        var canvasOut = document.createElement('canvas')
+        canvasOut.width = (width + legendWidth) * scale
+        canvasOut.height = (height + (captionLines.length ? captionLines.length * line + 2 * gap : 0)) * scale
+        var out = canvasOut.getContext('2d'); out.scale(scale, scale)
+        out.fillStyle = '#fff'; out.fillRect(0, 0, width + legendWidth, canvasOut.height / scale)
+        out.fillStyle = getComputedStyle(stage).backgroundColor; out.fillRect(0, 0, width, height)
+        out.drawImage(canvas, 0, 0, width, height)
+        var circle = function(x, y, r, fill, stroke, lineWidth){
+            out.beginPath(); out.arc(x, y, r, 0, 2 * Math.PI)
+            if(fill){ out.fillStyle = fill; out.fill() }
+            if(stroke){ out.strokeStyle = stroke; out.lineWidth = lineWidth || 1; out.stroke() }
+        }
+        // the markers: far ones first
+        markers.slice().sort(function(a, b){ return a.element.style.zIndex - b.element.style.zIndex }).forEach(function(m){
+            var x = parseFloat(m.element.style.left), y = parseFloat(m.element.style.top)
+            if(x < -50 || y < -50 || x > width + 50 || y > height + 50){ return }
+            var pie = m.element.querySelector('.pie'), dot = m.element.querySelector('.dot'), ring = m.element.querySelector('.ring')
+            var radius = 6
+            if(pie){
+                var values = results(m.sample), sum = total(values), start = -Math.PI / 2, keys = sorted(values)
+                radius = pie.offsetWidth / 2
+                keys.forEach(function(key){
+                    var end = start + values[key] / sum * 2 * Math.PI
+                    out.beginPath(); out.moveTo(x, y); out.arc(x, y, radius, start, end); out.closePath()
+                    out.fillStyle = overlay.colors[key] || '#bbbbbb'; out.fill()
+                    if(keys.length > 1){ out.strokeStyle = '#000'; out.lineWidth = .5; out.stroke() }
+                    start = end
+                })
+                circle(x, y, radius, null, '#000', 1)
+            } else if(ring){
+                radius = 9; circle(x, y, 7, null, '#222', 4)
+            } else if(dot){
+                radius = dot.offsetWidth / 2
+                circle(x, y, radius - .5, fillColor(getComputedStyle(dot)), '#000', 1)
+            }
+            var label = m.element.querySelector('.label')
+            if(label && labels.checked){
+                out.font = '600 11px sans-serif'
+                var w = out.measureText(label.textContent).width + 6, lx = x + radius + 3, ly = y - 8
+                out.fillStyle = 'rgba(255,255,255,.85)'; out.fillRect(lx, ly, w, 16)
+                out.fillStyle = '#222'; out.textBaseline = 'middle'; out.fillText(label.textContent, lx + 3, ly + 8)
+            }
+        })
+        // the legend strip
+        out.textBaseline = 'middle'; out.font = 'bold 12px sans-serif'; out.fillStyle = '#222'
+        var lx = width + gap, ly = gap + 8
+        out.fillText(legendTitle, lx, ly)
+        out.font = '12px sans-serif'
+        legendRows.forEach(function(row){
+            ly += line + 2
+            circle(lx + 6, ly, 5, row.color, row.outline ? '#000' : null, 1)
+            out.fillStyle = '#222'; out.fillText(row.text, lx + 16, ly)
+        })
+        // the caption
+        out.font = '12px sans-serif'; out.fillStyle = '#555'; out.textBaseline = 'alphabetic'
+        captionLines.forEach(function(text, i){ out.fillText(text, gap, height + gap + (i + 1) * line - 3) })
+        canvasOut.toBlob(function(blob){
+            var link = document.createElement('a'); link.href = URL_OBJECT.createObjectURL(blob)
+            link.download = '{{object.site.name|slugify}}_{{object.name|slugify}}_3d' + (overlay ? '_' + overlaySelect.value + '_' + (probe || 'none') : '') + '.png'
+            document.body.appendChild(link); link.click(); link.remove()
+            setTimeout(function(){ URL_OBJECT.revokeObjectURL(link.href) }, 1000)
+        })
+    })
+
+    setSize(); refresh()
+})()
+</script>

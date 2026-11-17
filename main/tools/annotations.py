@@ -35,23 +35,28 @@ def layer_positions(image):
     return dict(ProfileLayerJunction.objects.filter(profile=main_profile(batch.site)).values_list("layer_id", "position"))
 
 
-def annotation_data(annotation, positions=None):
+def sample_data(sample, positions):
+    """the sample of a marker (image or 3d-view): name, layer and the culture (colors, order of the legend)"""
     # the layer of origin: the marker is colored by its culture (css-classes of the site page, mixed cultures: layer_<pk>)
-    layer = annotation.sample.layer
-    if positions is None:
-        positions = layer_positions(annotation.image)
+    layer = sample.layer
     # the position of the layer (or of its closest parent layer) in the profile: the order of the cultures in the legend
     position = next((positions[pk] for pk in reversed(layer.path_ids) if pk in positions), None) if layer else None
     return {
         "position": position,
-        "pk": annotation.pk, "sample": annotation.sample_id, "name": annotation.sample.name,
-        "synonyms": synonym_names(annotation.sample), "x": annotation.x, "y": annotation.y,
+        "sample": sample.pk, "name": sample.name,
+        "synonyms": synonym_names(sample),
         "layer": layer.name if layer else None,
         "culture": layer.culture.name if layer and layer.culture else None,
         # mixed cultures (the second culture of the layer)
         "mix": next((c.name for c in layer.additional_cultures.all()), None) if layer else None,
         "classes": (f"{layer.culture.classname if layer.culture else 'sterile'} layer_{layer.pk}") if layer else "",
     }
+
+
+def annotation_data(annotation, positions=None):
+    if positions is None:
+        positions = layer_positions(annotation.image)
+    return dict(sample_data(annotation.sample, positions), pk=annotation.pk, x=annotation.x, y=annotation.y)
 
 
 def image_annotations(image):
@@ -105,7 +110,12 @@ def search_samples(request, pk):
     )
 
 
-def quicksand_overlay(request, pk):
+def tagged_samples(pk, samples=None):
+    """the samples of the overlay: the samples tagged on the image, or the given samples (e.g. the 3d-view of a site)"""
+    return samples if samples is not None else Image.objects.get(pk=pk).annotations.values("sample_id")
+
+
+def quicksand_overlay(request, pk, samples=None):
     """
     the ancient families (quicksand) of the tagged samples, for the pie-charts on the image. per capture-probe:
     {probe: {sample-pk: {family: reads}}}, the reads of several libraries of a sample (same probe) are summed.
@@ -114,9 +124,8 @@ def quicksand_overlay(request, pk):
     from main.tools.quicksand import prepare_data
     from main.tools.dna_filters import get_analysis_settings
 
-    image = Image.objects.get(pk=pk)
     query = QuicksandAnalysis.objects.filter(
-        analyzedsample__sample__in=image.annotations.values("sample_id")
+        analyzedsample__sample__in=tagged_samples(pk, samples)
     ).select_related("analyzedsample")
     settings = get_analysis_settings(request, "quicksand")
     data = prepare_data(
@@ -196,7 +205,7 @@ def sorted_probes(results):
     return [{"value": probe, "name": names.get(probe, probe or "No probes"), "samples": len(results[probe])} for probe in probes]
 
 
-def hominin_overlay(request, pk):
+def hominin_overlay(request, pk, samples=None):
     """
     the hominin mtDNA lineages (diagnostic positions) of the tagged samples, for the pie-charts on the image.
     per capture-probe: {probe: {sample-pk: {lineage: fragments}}} and the states without pie-chart
@@ -209,9 +218,8 @@ def hominin_overlay(request, pk):
     from main.tools.dna_filters import get_analysis_settings
 
     deaminated = request.GET.get("mode", "deam") != "all"
-    image = Image.objects.get(pk=pk)
     query = HumanDiagnosticPositions.objects.filter(
-        analyzedsample__sample__in=image.annotations.values("sample_id")
+        analyzedsample__sample__in=tagged_samples(pk, samples)
     ).select_related("analyzedsample")
     # the filters of the hominin table (qc, project)
     settings = get_analysis_settings(request, "matthias")
@@ -259,7 +267,7 @@ def hominin_overlay(request, pk):
     })
 
 
-def clade_overlay(request, pk):
+def clade_overlay(request, pk, samples=None):
     """
     the clades (mammalian per-family analysis) of the tagged samples, for the pie-charts on the image. per family:
     {family: {sample-pk: {clade: est_counts}}}. the filters are the clade settings of the quicksand tab (DNA tab).
@@ -272,8 +280,7 @@ def clade_overlay(request, pk):
     from main.tools.projects import get_project
     from main.tools.quicksand import prepare_data
 
-    image = Image.objects.get(pk=pk)
-    samples = image.annotations.values("sample_id")
+    samples = tagged_samples(pk, samples)
     settings = get_analysis_settings(request, "quicksand")
     libraries = AnalyzedSample.objects.filter(sample__in=samples, qc_pass=True)
     if settings["only_project"]:

@@ -31,6 +31,7 @@ urlpatterns = [
     path("analyzed-samples/", include("main.tools.analyzed_samples")),
     path("quicksand/", include("main.tools.quicksand")),
     path("clades/", include("main.tools.clades")),
+    path("3d/", include("main.tools.view3d")),
     path("nedflow/", include("main.tools.nedflow")),
     path("matthias/", include("main.tools.matthias")),
     path("ajax/", include("main.ajax")),

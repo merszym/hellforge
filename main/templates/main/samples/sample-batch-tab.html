@@ -63,7 +63,7 @@
             <input id="samplebatch-fileinput-{{object.pk}}" type="file" name="file" style="display:none">
         </form>
         {% endif %}
-        {% if object.gallery.image.first or request.user.is_authenticated %}
+        {% if object.gallery.image.first or request.user.is_authenticated or has_coordinates %}
         <span 
             class="btn tooltip tooltip-right gallery-toggle"
             data-toggle="gallery-{{object.pk}}" 
@@ -83,10 +83,19 @@
         {% endfor %}
     </div>
     {% endif %}
-    {% if object.gallery.image.first or request.user.is_authenticated %}
+    {% if object.gallery.image.first or request.user.is_authenticated or has_coordinates %}
     <div style="display: none;" id="gallery-{{object.pk}}">
         <h4>Gallery</h4>
         <div class="my-2" id="gallery_{{object.gallery.pk}}" style="display: flex; gap:5px; overflow: scroll;">
+            {% if has_coordinates %}
+            <!-- the samples with X, Y, Z coordinates (origin) in 3d, with the results as pie-charts -->
+            <div class="empty" style="min-height:200px; min-width:200px;">
+                <p class="empty-subtitle">Samples with X, Y, Z</p>
+                <div class="empty-action">
+                    <button class="btn btn-primary modal_open" hx-get="{% url 'main_view3d' object.pk %}" hx-target="#modal-blank">3D view</button>
+                </div>
+            </div>
+            {% endif %}
             {% for image in object.gallery.image.all %}
             {% include 'main/samples/gallery-image.html' %}
             {% endfor %}
