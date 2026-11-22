@@ -145,6 +145,18 @@ def handle_clade_report(request, file):
 SINK = "sink"  # genomes without clade, not in the percentages
 
 
+def clade_warning(analysis, total, sink, settings):
+    """why a result is not valid (None: valid): too few unique sequences (n_pseudoaligned) or too much in the sink"""
+    unique = (analysis.meta or {}).get("n_pseudoaligned", 0)
+    if unique < settings["clademinseqs"]:
+        return f"Not valid: {unique} unique sequences (< {settings['clademinseqs']})"
+    if not total:
+        return "Not valid: no estimated counts with clade"
+    if sink / total >= settings["cladesinkratio"]:
+        return f"Not valid: sink / clade counts {sink / total:.3g} (\u2265 {settings['cladesinkratio']:g})"
+    return None
+
+
 def filter_clades(analysis, reference, settings):
     """
     the clades of a result with the filters of the settings (quicksand settings of the DNA tab):
@@ -153,11 +165,9 @@ def filter_clades(analysis, reference, settings):
     counts = analysis.clade_counts(reference)
     sink = counts.pop(SINK, 0)
     total = sum(counts.values())
-    # at least the required number of unique sequences (n_pseudoaligned of kallisto)
-    if (analysis.meta or {}).get("n_pseudoaligned", 0) < settings["clademinseqs"]:
-        return False, {}, total, sink
-    # too many estimated counts in the sink (relative to the counts with clade): the result is not valid
-    if not total or sink / total >= settings["cladesinkratio"]:
+    # at least the required number of unique sequences (n_pseudoaligned of kallisto), not too many estimated counts
+    # in the sink (relative to the counts with clade): otherwise the result is not valid
+    if clade_warning(analysis, total, sink, settings):
         return False, {}, total, sink
     # only the clades with at least the estimated counts and the percentage (of the estimated counts with clade)
     counts = {clade: n for clade, n in counts.items()
@@ -212,9 +222,9 @@ def clade_rows(request, site):
         in_quicksand = any(family in found.get(lib.pk, ()) for lib in libs)
         if settings["cladelinked"] and not in_quicksand:
             continue
+        # results that are not valid are shown with the reason (instead of the clades)
         valid, counts, total, sink = filter_clades(analysis, reference, settings)
-        if not valid:
-            continue
+        warning = None if valid else clade_warning(analysis, total, sink, settings)
         shown = sum(counts.values())
         clades = {clade: {"raw": n, "percent": 100 * n / shown} for clade, n in counts.items()}
         rows.append({
@@ -227,6 +237,7 @@ def clade_rows(request, site):
             "total": total,
             "shown": shown,
             "sink": sink,
+            "warning": warning,
             "clades": dict(sorted(clades.items(), key=lambda x: rank(x[0]))),
             "position": min(order[lib.pk] for lib in libs),
         })

@@ -80,7 +80,12 @@
                         data-tooltip="{{analysis.meta.n_pseudoaligned|default:'?'}} of {{analysis.meta.n_processed|default:'?'}} sequences pseudoaligned">{{analysis.version}}</td>
                     <td nowrap>{% if row.quicksand %}<i class="icon icon-check text-success"></i>{% else %}<span class="text-gray">-</span>{% endif %}</td>
                     <td nowrap>{{row.total|floatformat:"0"}} <span class="text-gray">({{row.sink|floatformat:"0"}})</span></td>
-                    {% if tableview %}
+                    {% if row.warning %}
+                    <!-- not valid (too few unique sequences, too much in the sink): as no clade above the cutoffs (the reason on hover) -->
+                    <td nowrap {% if tableview %}colspan="{{colors|length|default:1}}"{% endif %}>
+                        <span class="text-gray" title="{{row.warning}}">No clade above the cutoffs</span>
+                    </td>
+                    {% elif tableview %}
                         {% for clade, color in colors %}
                         {% with value=row.clades|lookup:clade %}
                         <td nowrap class="p-1 {% if value %}tooltip tooltip-left{% endif %}"
