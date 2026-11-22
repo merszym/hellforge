@@ -212,7 +212,7 @@ def quicksand_overlay(request, pk, samples=None, projects=None):
     return JsonResponse({
         "column": data["column"],
         "colors": dict(data["colors"]),
-        "probes": sorted_probes(results, probe_members),
+        "probes": sorted_probes(results, probe_members, first="Mammalian mtDNA"),
         "results": results,
         "description": description,
     })
@@ -244,22 +244,30 @@ def qc_scope(settings):
     return " and are in the project" if settings["only_project"] else ""
 
 
-def sorted_probes(results, members=None):
+def sorted_probes(results, members=None, first=None, alphabetical=False):
     """
     the probes with the number of samples with results: the most samples (then the most with a pie-chart) first.
+    first: the probes with this translation first (the default selection, e.g. 'Mammalian mtDNA'); alphabetical: by name
     members (probes grouped by their translation): the name is the translation with its probes, e.g. 'Human mtDNA (AA163, AA22)'
     """
     from main.tools.analyzed_samples import probe_translations
+    from main.models import ProbeTranslationTable
 
     names = probe_translations()
     if members:
         names = {key: f"{key or 'No probes'} ({', '.join(sorted(p or 'no probe' for p in probes))})" if probes != {key} else names.get(key, key or "No probes")
                  for key, probes in members.items()}
-    probes = sorted(
-        results,
-        key=lambda probe: (len(results[probe]), sum(1 for values in results[probe].values() if values)),
-        reverse=True,
-    )
+    # the translation of a probe (grouped by translation: the key is the translation)
+    contents = dict(ProbeTranslationTable.objects.values_list("probes", "content")) if first else {}
+    preferred = lambda probe: probe == first or contents.get(probe) == first
+    if alphabetical:
+        probes = sorted(results, key=lambda probe: str(probe).lower())
+    else:
+        probes = sorted(
+            results,
+            key=lambda probe: (preferred(probe), len(results[probe]), sum(1 for values in results[probe].values() if values)),
+            reverse=True,
+        )
     return [{"value": probe, "name": names.get(probe, probe or "No probes"), "samples": len(results[probe])} for probe in probes]
 
 
@@ -319,7 +327,7 @@ def hominin_overlay(request, pk, samples=None, projects=None):
         "description": description,
         "column": sequences,
         "colors": HOMININ_COLORS,
-        "probes": sorted_probes(results, probe_members),
+        "probes": sorted_probes(results, probe_members, first="Human mtDNA"),
         "results": results,
         "states": states,
     })
@@ -398,7 +406,7 @@ def clade_overlay(request, pk, samples=None, projects=None):
         "column": "estimated counts",
         "colors": colors,
         "order": order,  # the clades in the order of the references (pies, legend), otherwise by value
-        "probes": sorted_probes(results),
+        "probes": sorted_probes(results, alphabetical=True),
         "results": results,
         "description": description,
     })
