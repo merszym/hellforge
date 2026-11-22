@@ -1,0 +1,536 @@
+{% comment %}the results map: the dated samples of the selected projects on the timeline (one row per country), the samples in
+   the selected time window (overlapping with their age range) on the map: one marker per site, the results of the
+   samples merged (the overlays of the image viewer, with the global cutoffs that can be changed here).
+   used on its own page (no project selected) and in the project page (the project selected){% endcomment %}
+<div id="rmap" style="--pie-size: 28px; --dot-size: 14px;">
+    <!-- the projects (the samples of a project are loaded when it is selected for the first time) -->
+    <div class="mb-2" style="display: flex; flex-wrap: wrap; align-items: center; gap: .2rem;">
+        <small class="text-gray mr-1">Projects:</small>
+        <!-- select several projects at once -->
+        <span class="chip rmap-select" data-select-projects="published" title="Select all published projects">Published</span>
+        {% if request.user.is_authenticated %}
+        <span class="chip rmap-select" data-select-projects="all" title="Select all projects">All</span>
+        {% endif %}
+        <span class="chip rmap-select mr-2" data-select-projects="none" title="Deselect all projects">None</span>
+        {% for project in projects %}
+        {% ifchanged project.published %}{% if not forloop.first %}<small class="text-gray ml-2 mr-1">Not published:</small>{% endif %}{% endifchanged %}
+        {% with ref=project.ref.first %}
+        <label class="chip-toggle" title="{{project.name}}{% if not project.published %} (not published){% endif %}">
+            <input type="checkbox" class="rmap-project" value="{{project.pk}}" data-published="{{project.published|yesno:'1,0'}}" {% if project.pk in selected %}checked{% endif %}>
+            {% if project.published %}
+            <span class="chip">{{ref.parsedInline|default:ref.short|default:project.name|truncatechars:30}}</span>
+            {% else %}
+            <span class="chip text-gray"><i>{{project.name|truncatechars:30}}</i></span>
+            {% endif %}
+        </label>
+        {% endwith %}
+        {% empty %}
+        <span class="text-gray">No projects</span>
+        {% endfor %}
+    </div>
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: .25rem 1rem;" class="mb-2">
+        <select class="form-select select-sm" id="rmap-overlay" style="width: auto;">
+            <option value="">Samples</option>
+            <option value="quicksand">Quicksand: ancient families</option>
+            <option value="hominin">Hominin mtDNA: lineages</option>
+            <option value="clades">Mammalian clades</option>
+        </select>
+        <select class="form-select select-sm" id="rmap-probe" style="width: auto; display: none;"></select>
+        <select class="form-select select-sm" id="rmap-mode" style="width: auto; display: none;" title="Sequences">
+            <option value="deam">Deaminated sequences</option>
+            <option value="all">All sequences</option>
+        </select>
+        <!-- the cutoffs of the results (the same for all projects), the ones of the shown results -->
+        <span id="rmap-cutoffs" style="display: none; align-items: center; gap: .5rem;">
+            {% for key, label, value, analyses in cutoffs %}
+            <label class="text-small" data-for="{{analyses}}" style="display: none; align-items: center; gap: .25rem;" title="{{label}}">
+                {{label}} <input class="form-input input-sm rmap-cutoff" name="{{key}}" value="{{value}}" inputmode="decimal" style="width: 4rem;">
+            </label>
+            {% endfor %}
+        </span>
+        <label class="text-small" style="display: flex; align-items: center; gap: .4rem;">
+            Size <input class="slider" type="range" id="rmap-size" min="12" max="80" value="28" style="width: 7rem;">
+        </label>
+        <label class="form-switch form-inline">
+            <input type="checkbox" id="rmap-labels"><i class="form-icon"></i> Labels
+        </label>
+        <!-- the sites without results (grey) are hidden by default -->
+        <label class="form-switch form-inline" id="rmap-hide-empty-switch" style="display: none;">
+            <input type="checkbox" id="rmap-hide-empty" checked><i class="form-icon"></i> Hide sites without results
+        </label>
+        <button type="button" class="btn btn-sm btn-link tooltip" id="rmap-info" data-tooltip="Show how the pie-charts are calculated" style="display: none;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align: middle;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12" y2="8"/></svg>
+        </button>
+    </div>
+    <div style="position: relative;">
+        <div id="rmap-map" style="height: 60vh; min-height: 400px; background: #f1f1f1;"></div>
+        <div id="rmap-zoomhint" style="display: none;">Ctrl + scroll to zoom the map</div>
+        <div class="rmap-busy" style="display: none;"><div class="loading loading-lg"></div></div>
+    </div>
+    <p class="text-small text-gray mt-1 mb-0" id="rmap-caption" style="display: none;"></p>
+    <div class="mt-2" style="display: flex; justify-content: space-between; align-items: baseline;">
+        <span style="display: flex; align-items: baseline; gap: .4rem;">
+            <span class="text-small">Time window from</span>
+            <input class="form-input input-sm" id="rmap-from" inputmode="decimal" style="width: 5rem;" title="the older end (ka)">
+            <span class="text-small">to</span>
+            <input class="form-input input-sm" id="rmap-to" inputmode="decimal" style="width: 5rem;" title="the younger end (ka)">
+            <span class="text-small">ka</span>
+            <strong id="rmap-window" class="ml-2"></strong>
+        </span>
+        <span class="text-tiny text-gray">drag on the timeline: select a time window, drag it to move it, its edges to resize it; double-click: all samples</span>
+    </div>
+    <div style="position: relative;">
+        <div id="rmap-timeline-box" style="position: relative; max-height: 420px; overflow-y: auto; border: 1px solid #e7e9ed;">
+            <canvas id="rmap-timeline" style="display: block; width: 100%; cursor: crosshair;"></canvas>
+            <div id="rmap-tip" class="annotation-legend" style="position: absolute; display: none; pointer-events: none; z-index: 10;"></div>
+        </div>
+        <div class="rmap-busy" style="display: none;"><div class="loading loading-lg"></div></div>
+    </div>
+    <!-- the range of the timeline (e.g. only the last 100 ka): the full window is this range -->
+    <div class="mt-1" style="display: flex; align-items: baseline; gap: .4rem;">
+        <span class="text-small">Show the timeline from</span>
+        <input class="form-input input-sm" id="rmap-range-from" inputmode="decimal" style="width: 5rem;" placeholder="oldest">
+        <span class="text-small">to</span>
+        <input class="form-input input-sm" id="rmap-range-to" inputmode="decimal" style="width: 5rem;" placeholder="youngest">
+        <span class="text-small">ka</span>
+        <button type="button" class="btn btn-sm btn-link" id="rmap-range-reset">all ages</button>
+        <label class="form-switch form-inline ml-2">
+            <input type="checkbox" id="rmap-log"><i class="form-icon"></i> Log time-scale
+        </label>
+    </div>
+</div>
+{% include 'main/annotations/marker-style.html' %}
+<style>
+    #rmap .leaflet-div-icon.annotation-marker { background: none; border: none; }
+    #rmap.hide-labels .annotation-marker .label { display: none; }
+    #rmap-info.active { color: #fff; background: #5755d9; border-radius: 50%; }
+    #rmap .site-count { position: absolute; left: calc(var(--dot-size) / -2); top: calc(var(--dot-size) / -2);
+        width: var(--dot-size); height: var(--dot-size); border-radius: 50%; background: #5755d9; border: 1px solid #000;
+        color: #fff; font-size: 9px; line-height: calc(var(--dot-size) - 2px); text-align: center; }
+    #rmap .chip-toggle .chip, #rmap .rmap-select { height: 1.3rem; padding: 0 .4rem; font-size: .7rem; }
+    /* the chips selecting several projects at once: light blue */
+    #rmap .rmap-select { margin: 0 .1rem; cursor: pointer; user-select: none; background: #dbeafe; color: #1e4e8c; }
+    #rmap .rmap-select:hover { background: #bfdbfe; }
+    #rmap-zoomhint { position: absolute; inset: 0; z-index: 999; display: flex; align-items: center; justify-content: center;
+        background: rgba(0,0,0,.35); color: #fff; font-size: 1.1rem; pointer-events: none; }
+    #rmap .rmap-busy { position: absolute; inset: 0; background: rgba(255,255,255,.6); z-index: 1000;
+        display: flex; align-items: center; justify-content: center; }
+</style>
+<script>
+(function(){
+    var SAMPLES_URL = "{% url 'main_results_map_samples' 0 %}", OVERLAY_URL = "{% url 'main_results_map_overlay' 'OVERLAY' %}"
+    var root = document.getElementById('rmap')
+    var overlaySelect = document.getElementById('rmap-overlay'), probeSelect = document.getElementById('rmap-probe')
+    var modeSelect = document.getElementById('rmap-mode'), sizeSlider = document.getElementById('rmap-size')
+    var labels = document.getElementById('rmap-labels'), logScale = document.getElementById('rmap-log')
+    var info = document.getElementById('rmap-info'), caption = document.getElementById('rmap-caption'), showInfo = false
+    var cutoffs = document.getElementById('rmap-cutoffs')
+    var hideEmpty = document.getElementById('rmap-hide-empty')
+    hideEmpty.addEventListener('change', function(){ updateMap() })
+    var OVERLAYS = {
+        quicksand: {name: 'quicksand', heading: 'Ancient families', select: 'Capture probe', empty: 'no ancient family'},
+        hominin: {name: 'hominin mtDNA', heading: 'Hominin lineages', select: 'Capture probe', empty: 'not ancient', ns: 'ancient, no significant lineage'},
+        clades: {name: 'clade', heading: 'Clades', select: 'Family', empty: 'no clade passing the filters'},
+    }
+    var overlay = null, probe = ''
+
+    // ---------- the data: the samples of the projects (loaded once per project), the selected projects ----------
+    var loaded = {}, samples = [], sites = {}
+    var selected = function(){ return Array.from(root.querySelectorAll('.rmap-project:checked')).map(function(x){ return x.value }) }
+    var busy = 0
+    var setBusy = function(change){
+        busy += change
+        root.querySelectorAll('.rmap-busy').forEach(function(el){ el.style.display = busy > 0 ? 'flex' : 'none' })
+    }
+    var loadProjects = function(){
+        var missing = selected().filter(function(pk){ return !loaded[pk] })
+        setBusy(1)
+        return Promise.all(missing.map(function(pk){
+            return fetch(SAMPLES_URL.replace(/0$/, pk)).then(function(r){ return r.json() }).then(function(data){ loaded[pk] = data })
+        })).finally(function(){ setBusy(-1) })
+    }
+    // the samples of the selected projects (a sample in several projects: once)
+    var combine = function(){
+        var bySample = {}
+        sites = {}
+        selected().forEach(function(pk){
+            if(!loaded[pk]){ return }
+            loaded[pk].samples.forEach(function(s){ bySample[s.sample] = s })
+            Object.assign(sites, loaded[pk].sites)
+        })
+        samples = Object.values(bySample)
+    }
+
+    // ---------- the timeline: the age (years before present), older on the left ----------
+    var oldest = 1, youngest = 1, lanes = [], top = 0
+    var range = null, dom = {old: 1, young: 0, low: 1}  // the range set below the timeline, the shown ages (low: log-scale)
+    var win = {old: 1, young: 0}, full = true  // the selected time window (full: all samples)
+    var canvas = document.getElementById('rmap-timeline'), box = document.getElementById('rmap-timeline-box'), tip = document.getElementById('rmap-tip')
+    var GUTTER = 120, AXIS = 22, BAR = 3, GAP = 1, MAXROWS = 12
+    var layout = function(){
+        oldest = samples.length ? Math.max.apply(null, samples.map(function(s){ return s.upper })) * 1.02 : 100000
+        youngest = samples.length ? Math.max(1, Math.min.apply(null, samples.map(function(s){ return s.lower })) * 0.98) : 1
+        // without a range: from the oldest to the youngest of the selected samples
+        dom = range ? {old: range.old, young: range.young, low: Math.max(range.young, 1)} : {old: oldest, young: youngest, low: youngest}
+        if(full || win.young > dom.old || win.old < dom.young){ win = {old: dom.old, young: dom.young}; full = true }
+        win.old = Math.min(win.old, dom.old); win.young = Math.max(win.young, dom.young)
+        // the rows of the countries: the samples packed into sub-rows (overlapping age ranges side by side)
+        var countries = {}
+        samples.filter(function(s){ return s.upper >= dom.young && s.lower <= dom.old }).forEach(function(s){
+            (countries[sites[s.site].country] = countries[sites[s.site].country] || []).push(s)
+        })
+        lanes = Object.keys(countries).sort().map(function(country){
+            // the samples with the same age range (e.g. of one layer): one line
+            var groups = {}
+            countries[country].forEach(function(s){
+                var key = s.upper + '|' + s.lower + '|' + s.infinite
+                var group = groups[key] = groups[key] || {upper: s.upper, lower: s.lower, infinite: s.infinite, samples: []}
+                group.samples.push(s)
+            })
+            var rows = [], placed = []
+            Object.values(groups).sort(function(a, b){ return b.upper - a.upper }).forEach(function(s){
+                var row = rows.findIndex(function(end){ return end > s.upper })
+                if(row === -1){ row = rows.length < MAXROWS ? rows.length : rows.indexOf(Math.max.apply(null, rows)) }
+                rows[row] = s.lower; placed.push({s: s, row: row})
+            })
+            return {country: country, samples: placed, rows: Math.max(rows.length, 1)}
+        })
+        top = AXIS
+        // (at least the height of the country name)
+        lanes.forEach(function(lane){ lane.top = top; lane.height = Math.max(18, lane.rows * (BAR + GAP) + 6); top += lane.height })
+    }
+    var x = function(age){
+        var width = canvas.clientWidth - GUTTER - 10
+        if(logScale.checked){
+            var lo = Math.log(dom.low), hi = Math.log(dom.old)
+            return GUTTER + (hi - Math.log(Math.max(age, dom.low))) / (hi - lo || 1) * width
+        }
+        return GUTTER + (dom.old - age) / (dom.old - dom.young || 1) * width
+    }
+    var age = function(px){
+        var width = canvas.clientWidth - GUTTER - 10, f = Math.min(1, Math.max(0, (px - GUTTER) / width))
+        if(logScale.checked){
+            var lo = Math.log(dom.low), hi = Math.log(dom.old)
+            return Math.exp(hi - f * (hi - lo))
+        }
+        return dom.old - f * (dom.old - dom.young)
+    }
+    var caught = function(s){ return s.upper >= win.young && s.lower <= win.old }
+    // the window set as numbers (ka): from (older) - to (younger)
+    var fromInput = document.getElementById('rmap-from'), toInput = document.getElementById('rmap-to')
+    var setWindow = function(){
+        var a = parseFloat(fromInput.value.replace(',', '.')) * 1000, b = parseFloat(toInput.value.replace(',', '.')) * 1000
+        if(isNaN(a) || isNaN(b)){ return }
+        win = {old: Math.max(a, b), young: Math.max(0, Math.min(a, b))}
+        full = win.old >= dom.old && win.young <= dom.young
+        drawTimeline(); updateMap()
+    }
+    ;[fromInput, toInput].forEach(function(input){
+        input.addEventListener('change', setWindow)
+        input.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ setWindow() } })
+    })
+    var fmt = function(years){ return years >= 1000 ? (years / 1000).toLocaleString(undefined, {maximumFractionDigits: years >= 10000 ? 0 : 1}) + ' ka' : Math.round(years) + ' a' }
+
+    var drawTimeline = function(){
+        var ratio = window.devicePixelRatio || 1, width = box.clientWidth, height = Math.max(top + 4, 60)
+        canvas.width = width * ratio; canvas.height = height * ratio; canvas.style.height = height + 'px'
+        var ctx = canvas.getContext('2d'); ctx.setTransform(ratio, 0, 0, ratio, 0, 0); ctx.clearRect(0, 0, width, height)
+        if(!samples.length){
+            ctx.font = '13px sans-serif'; ctx.fillStyle = '#888'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+            ctx.fillText(selected().length ? 'No dated samples with a site location' : 'Select one or more projects', width / 2, height / 2)
+            document.getElementById('rmap-window').textContent = ''
+            return
+        }
+        // the axis (ticks)
+        ctx.font = '10px sans-serif'; ctx.fillStyle = '#666'; ctx.strokeStyle = '#e7e9ed'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'
+        var ticks = []
+        if(logScale.checked){
+            [100, 200, 500].forEach(function(f){ for(var p = 1; p < 1e7; p *= 10){ var t = f * p / 100; if(t >= dom.low && t <= dom.old){ ticks.push(t) } } })
+        } else {
+            var span = dom.old - dom.young, step = Math.pow(10, Math.floor(Math.log10(span / 5))); if(span / step > 10){ step *= 2 }
+            for(var t = Math.ceil(dom.young / step) * step; t <= dom.old; t += step){ ticks.push(t) }
+        }
+        ticks.forEach(function(t){
+            var px = x(t); ctx.beginPath(); ctx.moveTo(px, AXIS - 4); ctx.lineTo(px, height); ctx.stroke(); ctx.fillText(fmt(t), px, 12)
+        })
+        // the countries and their samples
+        ctx.textAlign = 'left'; ctx.textBaseline = 'middle'
+        lanes.forEach(function(lane, i){
+            if(i % 2){ ctx.fillStyle = 'rgba(0,0,0,.025)'; ctx.fillRect(0, lane.top, width, lane.height) }
+            ctx.fillStyle = '#333'; ctx.font = '11px sans-serif'
+            ctx.fillText(lane.country.length > 18 ? lane.country.slice(0, 17) + '…' : lane.country, 4, lane.top + Math.min(lane.height, 20) / 2)
+            lane.samples.forEach(function(p){
+                var s = p.s, y = lane.top + 3 + p.row * (BAR + GAP)
+                ctx.fillStyle = caught(s) ? '#5755d9' : '#c9cbd3'
+                // (clipped to the range of the timeline)
+                if(s.infinite){
+                    if(s.upper <= dom.old && s.upper >= dom.young){ ctx.beginPath(); ctx.arc(x(s.upper), y + BAR / 2, 2.2, 0, 2 * Math.PI); ctx.fill() }
+                } else {
+                    var x1 = Math.max(GUTTER, x(Math.min(s.upper, dom.old))), x2 = Math.min(width - 2, x(Math.max(s.lower, dom.young)))
+                    ctx.fillRect(x1, y, Math.max(x2 - x1, 2), BAR)
+                }
+            })
+        })
+        // the window (a typed window beyond the samples: drawn at the edges)
+        var w1 = Math.max(GUTTER, x(win.old)), w2 = Math.min(width - 2, x(win.young))
+        ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fillRect(GUTTER, AXIS, w1 - GUTTER, height); ctx.fillRect(w2, AXIS, width - w2, height)
+        ctx.strokeStyle = '#e85600'; ctx.lineWidth = 2; ctx.strokeRect(w1, AXIS - 2, w2 - w1, height - AXIS)
+        ctx.fillStyle = '#e85600'; ctx.fillRect(w1 - 3, AXIS - 6, 6, 10); ctx.fillRect(w2 - 3, AXIS - 6, 6, 10)
+        ctx.lineWidth = 1
+        document.getElementById('rmap-window').textContent = samples.filter(caught).length + ' of ' + samples.length + ' dated samples'
+        // the numbers of the window (not while typing)
+        var ka = function(years){ return String(Math.round(years / 100) / 10) }
+        if(document.activeElement !== fromInput){ fromInput.value = ka(win.old) }
+        if(document.activeElement !== toInput){ toInput.value = ka(win.young) }
+    }
+
+    // dragging: the edges resize the window, inside it moves, outside (or in the full window) a new window is drawn
+    var drag = null
+    canvas.addEventListener('pointerdown', function(e){
+        if(!samples.length){ return }
+        var px = e.offsetX, w1 = x(win.old), w2 = x(win.young)
+        if(px < GUTTER){ return }
+        if(!full && Math.abs(px - w1) < 6){ drag = {edge: 'old'} }
+        else if(!full && Math.abs(px - w2) < 6){ drag = {edge: 'young'} }
+        else if(!full && px > w1 && px < w2){ drag = {move: true, start: px, old: w1, young: w2} }
+        else { drag = {anchor: age(px)}; win.old = win.young = age(px); full = false }
+        canvas.setPointerCapture(e.pointerId)
+    })
+    canvas.addEventListener('pointermove', function(e){
+        var px = e.offsetX
+        if(drag){
+            if(drag.move){
+                var shift = px - drag.start, left = Math.max(GUTTER, Math.min(drag.old + shift, x(dom.young) - (drag.young - drag.old)))
+                win.old = age(left); win.young = age(left + drag.young - drag.old)
+            } else if(drag.anchor !== undefined){
+                var a = age(px); win.old = Math.max(a, drag.anchor); win.young = Math.min(a, drag.anchor)
+            } else {
+                win[drag.edge] = age(px)
+                if(win.old < win.young){ var t = win.old; win.old = win.young; win.young = t; drag.edge = drag.edge === 'old' ? 'young' : 'old' }
+            }
+            drawTimeline(); scheduleMap(); return
+        }
+        // the sample under the mouse
+        var lane = lanes.find(function(l){ return e.offsetY >= l.top && e.offsetY < l.top + l.height })
+        var hit = lane && lane.samples.find(function(p){
+            var y = lane.top + 3 + p.row * (BAR + GAP)
+            return e.offsetY >= y - 1 && e.offsetY <= y + BAR + 1 && px >= x(p.s.upper) - 3 && px <= x(p.s.lower) + 3
+        })
+        if(hit){
+            // the samples of the line: their number, sites and layers, the names (the first ones)
+            var group = hit.s, list = group.samples
+            var unique = function(values){ return values.filter(function(v, i){ return v && values.indexOf(v) === i }) }
+            var names = list.map(function(s){ return s.name }).sort()
+            tip.textContent = (list.length > 1 ? list.length + ' samples: ' : '') + names.slice(0, 8).join(', ') + (names.length > 8 ? ', …' : '') +
+                ' · ' + unique(list.map(function(s){ return sites[s.site].name })).join(', ') +
+                (unique(list.map(function(s){ return s.layer })).length ? ' · ' + unique(list.map(function(s){ return s.layer })).join(', ') : '') + ' · ' +
+                (group.infinite ? '> ' + fmt(group.upper) : fmt(group.upper) + ' – ' + fmt(group.lower))
+            tip.style.display = ''; tip.style.left = Math.min(px + 12, box.clientWidth - tip.offsetWidth - 4) + 'px'; tip.style.top = (e.offsetY + 12) + 'px'
+        } else { tip.style.display = 'none' }
+    })
+    canvas.addEventListener('pointerup', function(){
+        // a click without dragging: all samples again
+        if(drag && drag.anchor !== undefined && win.old - win.young < 1){ win = {old: dom.old, young: dom.young}; full = true; drawTimeline() }
+        drag = null; updateMap()
+    })
+    canvas.addEventListener('pointerleave', function(){ tip.style.display = 'none' })
+    canvas.addEventListener('dblclick', function(){ win = {old: dom.old, young: dom.young}; full = true; drawTimeline(); updateMap() })
+    // the range of the timeline
+    var rangeFrom = document.getElementById('rmap-range-from'), rangeTo = document.getElementById('rmap-range-to')
+    var setRange = function(){
+        // an empty end: the youngest selected sample
+        var a = parseFloat(rangeFrom.value.replace(',', '.')) * 1000
+        var b = rangeTo.value.trim() ? parseFloat(rangeTo.value.replace(',', '.')) * 1000 : youngest
+        if(!rangeFrom.value.trim()){ range = null }
+        else if(isNaN(a) || isNaN(b) || a === b){ return }
+        else { range = {old: Math.max(a, b), young: Math.max(0, Math.min(a, b))} }
+        full = true; layout(); drawTimeline(); updateMap()
+    }
+    ;[rangeFrom, rangeTo].forEach(function(input){
+        input.addEventListener('change', setRange)
+        input.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ setRange() } })
+    })
+    document.getElementById('rmap-range-reset').addEventListener('click', function(){ rangeFrom.value = ''; rangeTo.value = ''; setRange() })
+    logScale.addEventListener('change', drawTimeline)
+
+    // ---------- the map: one marker per site with samples in the window ----------
+    // the wheel scrolls the page; ctrl + wheel zooms the map (a hint when scrolling over the map without ctrl)
+    var map = L.map('rmap-map', {worldCopyJump: true, scrollWheelZoom: false}).setView([45, 20], 3)
+    var zoomHint = document.getElementById('rmap-zoomhint'), hintTimer = null, lastZoom = 0
+    map.getContainer().addEventListener('wheel', function(e){
+        if(!e.ctrlKey){
+            zoomHint.style.display = 'flex'; clearTimeout(hintTimer)
+            hintTimer = setTimeout(function(){ zoomHint.style.display = 'none' }, 1200)
+            return
+        }
+        e.preventDefault(); zoomHint.style.display = 'none'
+        if(Date.now() - lastZoom < 200){ return }
+        lastZoom = Date.now()
+        map.setZoomAround(map.mouseEventToContainerPoint(e), map.getZoom() + (e.deltaY < 0 ? 1 : -1))
+    }, {passive: false})
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 18, attribution: '&copy; OpenStreetMap'}).addTo(map)
+    var markers = L.layerGroup().addTo(map)
+    var legend = L.control({position: 'bottomright'})
+    legend.onAdd = function(){ var div = L.DomUtil.create('div', 'annotation-legend'); L.DomEvent.disableScrollPropagation(div); return div }
+    legend.addTo(map)
+    var fit = function(){
+        var points = Object.values(sites).map(function(s){ return [s.lat, s.lon] })
+        if(points.length){ map.fitBounds(points, {padding: [20, 20], maxZoom: 8}) }
+    }
+
+    var sorted = function(values){
+        var order = (overlay && overlay.order) || []
+        var rank = function(key){ var i = order.indexOf(key); return i > -1 ? i : order.length }
+        return Object.keys(values).sort(function(a, b){ return order.length ? (rank(a) - rank(b) || values[b] - values[a]) : values[b] - values[a] })
+    }
+    var total = function(values){ return Object.values(values).reduce(function(a, b){ return a + b }, 0) }
+    // the results of a site: the results of its samples in the window, merged (summed).
+    // undefined: no results, {}: analyzed without (ancient) results; ns: not significant (hominin)
+    var siteResults = function(list){
+        var merged, ns = false
+        list.forEach(function(s){
+            var values = (overlay.results[probe] || {})[s.sample]
+            if(values === undefined){ return }
+            merged = merged || {}
+            Object.keys(values).forEach(function(key){ merged[key] = (merged[key] || 0) + values[key] })
+            if(((overlay.states || {})[probe] || {})[s.sample] === 'not-significant'){ ns = true }
+        })
+        return {values: merged, ns: ns}
+    }
+    var pie = function(values){
+        var sum = total(values), start = 0, lines = ''
+        var slices = sorted(values).map(function(key){
+            var end = start + values[key] / sum * 100
+            if(start > 0){
+                var angle = start / 100 * 2 * Math.PI
+                lines += '<line x1="50" y1="50" x2="' + (50 + 50 * Math.sin(angle)) + '" y2="' + (50 - 50 * Math.cos(angle)) + '"/>'
+            }
+            var slice = (overlay.colors[key] || '#bbbbbb') + ' ' + start + '% ' + end + '%'; start = end; return slice
+        })
+        if(slices.length > 1){ lines += '<line x1="50" y1="50" x2="50" y2="0"/>' }
+        return '<span class="pie" style="background: conic-gradient(' + slices.join(', ') + ')"><svg viewBox="0 0 100 100">' + lines + '</svg></span>'
+    }
+    var escape = function(text){ var span = document.createElement('span'); span.textContent = text; return span.innerHTML }
+    var updateMap = function(){
+        markers.clearLayers()
+        var bySite = {}
+        samples.filter(caught).forEach(function(s){ (bySite[s.site] = bySite[s.site] || []).push(s) })
+        var totals = {}
+        Object.keys(bySite).forEach(function(pk){
+            var site = sites[pk], list = bySite[pk], symbol, popupResults = ''
+            if(!overlay){
+                symbol = '<span class="site-count">' + list.length + '</span>'
+            } else {
+                var r = siteResults(list)
+                if(r.values === undefined && hideEmpty.checked){ return }
+                if(r.values === undefined){ symbol = '<span class="dot none"></span>'; popupResults = '<div class="text-gray">No ' + OVERLAYS[overlaySelect.value].name + ' results</div>' }
+                else if(!Object.keys(r.values).length){
+                    var state = r.ns ? OVERLAYS[overlaySelect.value].ns : OVERLAYS[overlaySelect.value].empty
+                    symbol = r.ns ? '<span class="ring ns"></span>' : '<span class="dot none not-ancient"></span>'
+                    popupResults = '<div class="text-gray">' + escape(state.charAt(0).toUpperCase() + state.slice(1)) + '</div>'
+                } else {
+                    symbol = pie(r.values)
+                    var sum = total(r.values)
+                    popupResults = '<table>' + sorted(r.values).map(function(key){
+                        totals[key] = (totals[key] || 0) + r.values[key]
+                        return '<tr><td><span class="swatch" style="background:' + (overlay.colors[key] || '#bbbbbb') + '"></span>' + escape(key) +
+                            '</td><td>' + r.values[key].toLocaleString() + '</td><td>' + (r.values[key] / sum * 100).toFixed(1) + '%</td></tr>'
+                    }).join('') + '</table>'
+                }
+            }
+            var icon = L.divIcon({className: 'annotation-marker', html: symbol + '<span class="label">' + escape(site.name) + '</span>', iconSize: [0, 0]})
+            var names = list.map(function(s){ return s.name }).sort()
+            L.marker([site.lat, site.lon], {icon: icon}).bindPopup(
+                '<div class="annotation-popup"><strong>' + escape(site.name) + '</strong> <a href="' + site.url + '" target="_blank">open</a>' +
+                '<div class="text-gray">' + escape(site.country) + ' · ' + list.length + ' sample' + (list.length === 1 ? '' : 's') + ' in the window</div>' +
+                '<div class="text-gray text-tiny" style="max-width: 18rem;">' + escape(names.slice(0, 30).join(', ') + (names.length > 30 ? ', …' : '')) + '</div>' +
+                popupResults + '</div>'
+            ).addTo(markers)
+        })
+        // the legend: the families/lineages/clades of the shown sites
+        var div = legend.getContainer(); div.innerHTML = ''
+        if(!overlay){ div.innerHTML = '<strong>Samples</strong><div class="text-gray">number of samples per site<br>in the time window</div>'; return }
+        div.innerHTML = '<strong>' + OVERLAYS[overlaySelect.value].heading + '</strong>'
+        sorted(totals).forEach(function(key){
+            div.insertAdjacentHTML('beforeend', '<div><span class="swatch" style="background:' + (overlay.colors[key] || '#bbbbbb') + '"></span>' + escape(key) + '</div>')
+        })
+        div.insertAdjacentHTML('beforeend', '<div><span class="swatch culture-swatch" style="background:#fff"></span>' + escape(OVERLAYS[overlaySelect.value].empty) + '</div>')
+        if(!hideEmpty.checked){ div.insertAdjacentHTML('beforeend', '<div><span class="swatch culture-swatch" style="background:#9a9a9a"></span>no results</div>') }
+    }
+    // while dragging: at most every 150 ms
+    var pending = null
+    var scheduleMap = function(){ if(!pending){ pending = setTimeout(function(){ pending = null; updateMap() }, 150) } }
+
+    var refreshInfo = function(){
+        caption.textContent = overlay ? (OVERLAYS[overlaySelect.value].select + ': ' + ((probeSelect.selectedOptions[0] || {}).textContent || '') + '. ' +
+            'Sites: the results of their samples in the time window are summed. ' + (overlay.description || '')) : ''
+        info.style.display = overlay ? '' : 'none'; info.classList.toggle('active', showInfo)
+        caption.style.display = overlay && showInfo ? '' : 'none'
+    }
+    info.addEventListener('click', function(){ showInfo = !showInfo; refreshInfo() })
+
+    // the results: the overlays of the image viewer, for the samples of the selected projects (with the cutoffs)
+    var request = 0
+    var loadOverlay = function(){
+        var name = overlaySelect.value
+        modeSelect.style.display = name === 'hominin' ? '' : 'none'
+        cutoffs.style.display = name ? 'flex' : 'none'
+        document.getElementById('rmap-hide-empty-switch').style.display = name ? '' : 'none'
+        cutoffs.querySelectorAll('[data-for]').forEach(function(label){ label.style.display = label.dataset.for.split(' ').indexOf(name) > -1 ? 'flex' : 'none' })
+        if(!name || !selected().length){ overlay = null; probeSelect.style.display = 'none'; refreshInfo(); updateMap(); return }
+        var params = new URLSearchParams({projects: selected().join(',')})
+        if(name === 'hominin'){ params.set('mode', modeSelect.value) }
+        cutoffs.querySelectorAll('.rmap-cutoff').forEach(function(input){ if(input.value.trim()){ params.set(input.name, input.value.trim().replace(',', '.')) } })
+        var current = probe, id = ++request
+        setBusy(1)
+        fetch(OVERLAY_URL.replace('OVERLAY', name) + '?' + params).then(function(r){ return r.json() }).then(function(result){
+            if(id !== request){ return }  // an older request (the selection changed in the meantime)
+            overlay = result
+            probeSelect.innerHTML = ''
+            result.probes.forEach(function(p){
+                var option = document.createElement('option'); option.value = p.value
+                option.textContent = p.name + ' (' + p.samples + ' sample' + (p.samples === 1 ? '' : 's') + ')'
+                probeSelect.appendChild(option)
+            })
+            if(!result.probes.length){ probeSelect.innerHTML = '<option>No ' + OVERLAYS[name].name + ' results</option>' }
+            var values = result.probes.map(function(p){ return p.value })
+            probe = values.indexOf(current) > -1 ? current : (values.length ? values[0] : '')
+            probeSelect.value = probe; probeSelect.title = OVERLAYS[name].select
+            probeSelect.style.display = ''; probeSelect.disabled = result.probes.length < 2
+            refreshInfo(); updateMap()
+        }).finally(function(){ setBusy(-1) })
+    }
+    // the projects changed: load the samples of new projects, then the results
+    var changeProjects = function(){
+        loadProjects().then(function(){
+            combine(); layout(); drawTimeline(); fit(); updateMap(); loadOverlay()
+        })
+    }
+    root.querySelectorAll('.rmap-project').forEach(function(input){ input.addEventListener('change', changeProjects) })
+    // several projects at once (one reload)
+    root.querySelectorAll('[data-select-projects]').forEach(function(button){
+        button.addEventListener('click', function(){
+            var which = this.dataset.selectProjects
+            root.querySelectorAll('.rmap-project').forEach(function(input){
+                input.checked = which === 'all' || (which === 'published' && input.dataset.published === '1')
+            })
+            changeProjects()
+        })
+    })
+    overlaySelect.addEventListener('change', function(){ probe = ''; loadOverlay() })
+    modeSelect.addEventListener('change', loadOverlay)
+    var cutoffTimer = null
+    cutoffs.querySelectorAll('.rmap-cutoff').forEach(function(input){
+        input.addEventListener('input', function(){ clearTimeout(cutoffTimer); cutoffTimer = setTimeout(loadOverlay, 700) })
+    })
+    probeSelect.addEventListener('change', function(){ probe = this.value; refreshInfo(); updateMap() })
+    sizeSlider.addEventListener('input', function(){
+        root.style.setProperty('--pie-size', sizeSlider.value + 'px'); root.style.setProperty('--dot-size', Math.max(12, Math.round(sizeSlider.value / 2)) + 'px')
+    })
+    labels.addEventListener('change', function(){ root.classList.toggle('hide-labels', !labels.checked) })
+    root.classList.add('hide-labels')
+
+    if(window.ResizeObserver){ new ResizeObserver(function(){ drawTimeline(); map.invalidateSize() }).observe(box) }
+    changeProjects()
+})()
+</script>

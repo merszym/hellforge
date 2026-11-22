@@ -23,9 +23,38 @@
 </style>
 <span id="get_location_data" data-url="{% url 'main_project_geo' %}?object={{object.pk}}"></span>
 
-<div class='columns'>
-    <div class="column col-4 col-xl-12 p-2" style="position: relative;">
-        <h3 class="text-center">Details</h3>
+<!-- the project (details and sites) and the map with the timeline of the samples (full width, loaded when opened),
+     the buttons of the project on the right -->
+<div style="display: flex; align-items: center; gap: 1rem;">
+    <ul class="tab tab-block" style="flex: 1; margin: 0;">
+        <li class="tab-item active" data-group="project-main" data-show="project-main-panel" style="cursor: pointer;">
+            <a><h4 class="m-0">Project Details</h4></a>
+        </li>
+        <li class="tab-item" data-group="project-main" data-show="project-map-panel" style="cursor: pointer;"
+            hx-get="{% url 'main_results_map' %}?embed&project={{object.pk}}" hx-target="#project-map-panel" hx-trigger="click once">
+            <a><h4 class="m-0">Map &amp; Timeline</h4></a>
+        </li>
+    </ul>
+    <div style="white-space: nowrap;">
+        {% if request.user.is_authenticated %}
+        <a class="btn btn-primary tooltip tooltip-left" href="{% url 'main_project_update' object.pk %}" data-tooltip="Edit Project">
+            <i class="icon icon-edit"></i>
+        </a>
+        {% endif %}
+        <span class="share_button btn btn-primary tooltip tooltip-left" onclick="copyClipboard(`{{request.scheme}}://{{request.get_host}}{% url 'main_project_checkout' object.namespace %}?pw={{object.public_password}}`)" data-tooltip="Copy Share Link">
+            <i class="icon icon-link"></i>
+        </span>
+        <a class="btn btn-primary tooltip tooltip-left" href="{% url 'main_project_close' %}" data-tooltip="Log out">
+            <i class="icon icon-shutdown"></i>
+        </a>
+    </div>
+</div>
+<div class="tab-panel p-2" data-group="project-main" id="project-map-panel" style="display: none;">
+    <div class="loading loading-lg m-2"></div>
+</div>
+<!-- the two columns: the same header (tabs) and the same height of the panels -->
+<div class='columns tab-panel' data-group="project-main" id="project-main-panel">
+    <div class="column col-4 col-xl-12 p-2">
         <ul class="tab">
             <li data-group="project" class="tab-item active" style="cursor:pointer;"
                 hx-get="{% url 'main_project_overview' %}"
@@ -33,35 +62,24 @@
                 hx-vals='{"object":"{{object.pk}}"}'
                 hx-trigger="load,click"
                 >
-                <a>Overview</a>
+                <a><h5 class="m-0">Overview</h5></a>
             </li>
             <li data-group="project" class="tab-item" style="cursor:pointer;"
                 hx-get="{% url 'main_render_description' object.project_description.first.pk %}?origin=project"
                 hx-target="#project-panel-1">
-                <a>Description</a>
+                <a><h5 class="m-0">Description</h5></a>
             </li>
         </ul>
-        <div style="position:absolute; right:5%; top:10px">
-            {% if request.user.is_authenticated %}
-            <a class="btn btn-primary tooltip tooltip-left" href="{% url 'main_project_update' object.pk %}" data-tooltip="Edit Project">
-                <i class="icon icon-edit"></i>
-            </a>
-            {% endif %}
-            <span class="share_button btn btn-primary tooltip tooltip-right" onclick="copyClipboard(`{{request.scheme}}://{{request.get_host}}{% url 'main_project_checkout' object.namespace %}?pw={{object.public_password}}`)" data-tooltip="Copy Share Link">
-                <i class="icon icon-link"></i>
-            </span>
-            <a class="btn btn-primary tooltip tooltip-right" href="{% url 'main_project_close' %}" data-tooltip="Log out">
-                <i class="icon icon-shutdown"></i>
-            </a>
-        </div>
         <!-- Project Overview Tab -->
-        <div id="project-panel-1" class="panel">
+        <div id="project-panel-1" class="panel" style="height: 720px; overflow: auto;">
         </div>
     </div>
-    <div class="column">
-        <div id="project-content" class="my-2">
-            <h3 class="text-center">Site Overview</h3>
-            <div class="tab-panel m-2 p-2 panel" data-group="project-main" id="project-sample-overview" style="max-height:720px;overflow: scroll;">
+    <div class="column p-2">
+        <div id="project-content">
+            <ul class="tab">
+                <li class="tab-item active"><a><h5 class="m-0">Sites</h5></a></li>
+            </ul>
+            <div class="p-2 panel" id="project-sample-overview" style="height: 720px; overflow: auto;">
                 <div class="panel-header" style="position: sticky; top: 0;">
                     <div class="has-icon-left">
                         <input class="form-input" id="list-search" type="text" placeholder="Filter" style="width:50%;">

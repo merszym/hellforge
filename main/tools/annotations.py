@@ -110,24 +110,75 @@ def search_samples(request, pk):
     )
 
 
+def overlay_settings(request, analysis, projects=None):
+    """
+    the filters of the overlay: the settings of the DNA tab (the libraries of the active project), or for several
+    projects (the results map): the global defaults, the numbers can be set in the request (e.g. ?percentage=1),
+    the libraries of these projects (settings['projects'])
+    """
+    from main.tools.dna_filters import get_analysis_settings, ANALYSIS_DEFAULTS
+
+    if projects is None:
+        return get_analysis_settings(request, analysis)
+    settings = dict(ANALYSIS_DEFAULTS[analysis], only_project=False, projects=projects)
+    for key, default in ANALYSIS_DEFAULTS[analysis].items():
+        if key in request.GET and isinstance(default, (int, float)) and not isinstance(default, bool):
+            try:
+                settings[key] = type(default)(float(request.GET[key]))
+            except ValueError:
+                pass
+    return settings
+
+
+def probe_groups(settings):
+    """
+    the key of the probe-selection of a library: its capture probe. for several projects (results map): the translation
+    of the probe (e.g. 'Human mtDNA' for AA163 and AA22), probes without (unambiguous) translation stay as they are.
+    returns (key function, {key: set of the probes}) - the probes of each key are collected when the keys are used
+    """
+    from main.models import ProbeTranslationTable
+
+    members = defaultdict(set)
+    translations = {}
+    if settings.get("projects") is not None:
+        entries = defaultdict(set)
+        for probes, content in ProbeTranslationTable.objects.values_list("probes", "content"):
+            entries[probes].add(content)
+        translations = {probes: next(iter(contents)) for probes, contents in entries.items() if len(contents) == 1 and next(iter(contents))}
+
+    def key(probes):
+        probes = probes or ""
+        group = translations.get(probes, probes)
+        members[group].add(probes)
+        return group
+
+    return key, (members if translations else None)
+
+
+def in_projects(query, settings, prefix="analyzedsample__"):
+    """the results/libraries of the selected projects (results map)"""
+    if settings.get("projects") is None:
+        return query
+    return query.filter(**{f"{prefix}project__in": settings["projects"]}).distinct()
+
+
 def tagged_samples(pk, samples=None):
     """the samples of the overlay: the samples tagged on the image, or the given samples (e.g. the 3d-view of a site)"""
     return samples if samples is not None else Image.objects.get(pk=pk).annotations.values("sample_id")
 
 
-def quicksand_overlay(request, pk, samples=None):
+def quicksand_overlay(request, pk, samples=None, projects=None):
     """
     the ancient families (quicksand) of the tagged samples, for the pie-charts on the image. per capture-probe:
     {probe: {sample-pk: {family: reads}}}, the reads of several libraries of a sample (same probe) are summed.
     the filters (column, cutoffs, project) are the settings of the quicksand tab, only ancient families
     """
     from main.tools.quicksand import prepare_data
-    from main.tools.dna_filters import get_analysis_settings
 
-    query = QuicksandAnalysis.objects.filter(
+    settings = overlay_settings(request, "quicksand", projects)
+    query = in_projects(QuicksandAnalysis.objects.filter(
         analyzedsample__sample__in=tagged_samples(pk, samples)
-    ).select_related("analyzedsample")
-    settings = get_analysis_settings(request, "quicksand")
+    ).select_related("analyzedsample"), settings)
     data = prepare_data(
         request,
         query,
@@ -138,11 +189,12 @@ def quicksand_overlay(request, pk, samples=None):
         only_project=settings["only_project"],
     )
 
+    probe_key, probe_members = probe_groups(settings)  # the probe-selection (several projects: by translation)
     results = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
     for entry in data["object_list"]:
         library = entry.analyzedsample
         # samples without ancient families are included (empty): analyzed, but negative
-        families = results[library.probes or ""][library.sample_id]
+        families = results[probe_key(library.probes)][library.sample_id]
         for family, value in data["quicksand_results"].get(entry, {}).items():
             families[family] += value["raw"]
 
@@ -160,7 +212,7 @@ def quicksand_overlay(request, pk, samples=None):
     return JsonResponse({
         "column": data["column"],
         "colors": dict(data["colors"]),
-        "probes": sorted_probes(results),
+        "probes": sorted_probes(results, probe_members),
         "results": results,
         "description": description,
     })
@@ -187,16 +239,22 @@ def pluralize(items):
 
 
 def qc_scope(settings):
+    if settings.get("projects") is not None:
+        return " and are in the selected projects"
     return " and are in the project" if settings["only_project"] else ""
 
 
-def sorted_probes(results):
+def sorted_probes(results, members=None):
     """
-    the probes with the number of samples with results: the most samples (then the most with a pie-chart) first
+    the probes with the number of samples with results: the most samples (then the most with a pie-chart) first.
+    members (probes grouped by their translation): the name is the translation with its probes, e.g. 'Human mtDNA (AA163, AA22)'
     """
     from main.tools.analyzed_samples import probe_translations
 
     names = probe_translations()
+    if members:
+        names = {key: f"{key or 'No probes'} ({', '.join(sorted(p or 'no probe' for p in probes))})" if probes != {key} else names.get(key, key or "No probes")
+                 for key, probes in members.items()}
     probes = sorted(
         results,
         key=lambda probe: (len(results[probe]), sum(1 for values in results[probe].values() if values)),
@@ -205,7 +263,7 @@ def sorted_probes(results):
     return [{"value": probe, "name": names.get(probe, probe or "No probes"), "samples": len(results[probe])} for probe in probes]
 
 
-def hominin_overlay(request, pk, samples=None):
+def hominin_overlay(request, pk, samples=None, projects=None):
     """
     the hominin mtDNA lineages (diagnostic positions) of the tagged samples, for the pie-charts on the image.
     per capture-probe: {probe: {sample-pk: {lineage: fragments}}} and the states without pie-chart
@@ -215,24 +273,24 @@ def hominin_overlay(request, pk, samples=None):
     ?mode=deam (default): the deaminated sequences, all: all sequences
     """
     from main.tools.matthias import prepare_data
-    from main.tools.dna_filters import get_analysis_settings
 
     deaminated = request.GET.get("mode", "deam") != "all"
-    query = HumanDiagnosticPositions.objects.filter(
-        analyzedsample__sample__in=tagged_samples(pk, samples)
-    ).select_related("analyzedsample")
     # the filters of the hominin table (qc, project)
-    settings = get_analysis_settings(request, "matthias")
+    settings = overlay_settings(request, "matthias", projects)
+    query = in_projects(HumanDiagnosticPositions.objects.filter(
+        analyzedsample__sample__in=tagged_samples(pk, samples)
+    ).select_related("analyzedsample"), settings)
     data = prepare_data(request, query, only_project=settings["only_project"])
 
+    probe_key, probe_members = probe_groups(settings)  # the probe-selection (several projects: by translation)
     results = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
     ancient = defaultdict(set)  # probe: the samples with an ancient library
     for entry in data["object_list"]:
         library, values = entry.analyzedsample, data["results"][entry]
-        lineages = results[library.probes or ""][library.sample_id]  # analyzed (also if nothing is shown)
+        lineages = results[probe_key(library.probes)][library.sample_id]  # analyzed (also if nothing is shown)
         if values.get("Ancient") != "++":
             continue
-        ancient[library.probes or ""].add(library.sample_id)
+        ancient[probe_key(library.probes)].add(library.sample_id)
         for lineage in HOMININ_LINEAGES:
             # (prepare_data: already without the blacklisted positions, with the recalculated significance)
             marker, fragments = lineage_support(values.get(f"{lineage}_support{'_deam' if deaminated else ''}"))
@@ -261,13 +319,13 @@ def hominin_overlay(request, pk, samples=None):
         "description": description,
         "column": sequences,
         "colors": HOMININ_COLORS,
-        "probes": sorted_probes(results),
+        "probes": sorted_probes(results, probe_members),
         "results": results,
         "states": states,
     })
 
 
-def clade_overlay(request, pk, samples=None):
+def clade_overlay(request, pk, samples=None, projects=None):
     """
     the clades (mammalian per-family analysis) of the tagged samples, for the pie-charts on the image. per family:
     {family: {sample-pk: {clade: est_counts}}}. the filters are the clade settings of the quicksand tab (DNA tab).
@@ -276,13 +334,12 @@ def clade_overlay(request, pk, samples=None):
     """
     from main.models import AnalyzedSample, FamilyAnalysis, CladeReference
     from main.tools.clades import filter_clades
-    from main.tools.dna_filters import get_analysis_settings
     from main.tools.projects import get_project
     from main.tools.quicksand import prepare_data
 
     samples = tagged_samples(pk, samples)
-    settings = get_analysis_settings(request, "quicksand")
-    libraries = AnalyzedSample.objects.filter(sample__in=samples, qc_pass=True)
+    settings = overlay_settings(request, "quicksand", projects)
+    libraries = in_projects(AnalyzedSample.objects.filter(sample__in=samples, qc_pass=True), settings, prefix="")
     if settings["only_project"]:
         libraries = libraries.filter(project=get_project(request))
     allowed = set(libraries.values_list("pk", flat=True))

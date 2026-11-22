@@ -1,0 +1,9 @@
+{% extends 'main/base.html' %}
+{% block head %}
+<title>Hellforge | All Results</title>
+{% endblock %}
+{% block headline %}<a href="/" class="text-light">All Results</a>{% endblock %}
+{% block body %}
+<!-- the results of the samples of the selected projects: map and timeline (the same view as in the project page) -->
+{% include 'main/results_map/results-map.html' %}
+{% endblock %}
