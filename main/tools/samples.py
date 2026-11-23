@@ -105,8 +105,10 @@ def handle_samplebatch_file(request, file):
     # the samples to update ('object': sample_<pk> of this site) and the new samples (unique names at the site)
     if "object" not in df.columns:
         df.insert(0, "object", None)
-    df["object"] = df["object"].apply(lambda x: str(x).strip() if x == x and str(x).strip() else None)
-    df["Sample Name"] = df["Sample Name"].apply(lambda x: str(x).strip() if x == x and str(x).strip() else None)
+    # empty cells (None, NaN, '') -> None
+    clean = lambda x: str(x).strip() if pd.notna(x) and str(x).strip() else None
+    df["object"] = df["object"].apply(clean)
+    df["Sample Name"] = df["Sample Name"].apply(clean)
     site_samples = {s.pk: s.name for s in Sample.objects.filter(site=site)}
     remove, names = [], {}
     for index, row in df.iterrows():
